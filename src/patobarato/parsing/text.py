@@ -10,7 +10,7 @@ from decimal import Decimal, InvalidOperation
 # A number as written in Spanish posts: "1.299,99", "1299", "29.99", "29,99".
 AMOUNT = r"\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d+(?:[.,]\d{1,2})?"
 _NOT_PART_OF_NUMBER = r"(?<![\d.,])"
-_NOT_PERCENT = r"(?!\s*%)"
+_NOT_PERCENT = r"(?!\d|[.,]\d|\s*%)"  # also blocks backtracking to a shorter number
 
 # An amount with a currency: "249,99€", "249,99 €", "€249,99", "249,99 EUR".
 MONEY_RE = re.compile(

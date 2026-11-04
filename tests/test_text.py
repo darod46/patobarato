@@ -105,3 +105,9 @@ def test_title_truncated():
 
 def test_hashtags():
     assert parse_hashtags("#Auriculares #sony #auriculares") == ["auriculares", "sony"]
+
+
+def test_percentage_not_previous_price():
+    info = parse_prices("Auriculares 3€\nAntes 50%")
+    assert info.price == Decimal("3")
+    assert info.previous_price is None
