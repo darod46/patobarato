@@ -19,6 +19,11 @@ export function SearchBox({ value, onChange }: Props) {
 
   useEffect(() => () => clearTimeout(timer.current), [])
 
+  // An external change to value supersedes any pending typed text.
+  useEffect(() => {
+    clearTimeout(timer.current)
+  }, [value])
+
   return (
     <input
       type="search"

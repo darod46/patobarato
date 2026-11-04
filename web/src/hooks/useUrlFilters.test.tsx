@@ -31,6 +31,14 @@ describe('useUrlFilters', () => {
     expect(location.search).not.toContain('q=')
   })
 
+  it('setQ with whitespace only removes the param', () => {
+    history.replaceState(null, '', '/?q=lego')
+    const { result } = renderHook(() => useUrlFilters())
+    act(() => result.current.setQ('   '))
+    expect(location.search).toBe('')
+    expect(result.current.q).toBe('')
+  })
+
   it('clear removes both params', () => {
     history.replaceState(null, '', '/?q=lego&tag=juguetes')
     const { result } = renderHook(() => useUrlFilters())

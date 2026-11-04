@@ -34,3 +34,18 @@ describe('SearchBox', () => {
     expect(screen.getByLabelText('Buscar chollos')).toHaveValue('')
   })
 })
+
+describe('SearchBox external value change', () => {
+  it('cancels a pending debounce when value changes externally', () => {
+    vi.useFakeTimers()
+    const onChange = vi.fn()
+    const { rerender } = render(<SearchBox value="" onChange={onChange} />)
+    fireEvent.change(screen.getByLabelText('Buscar chollos'), { target: { value: 'sony' } })
+    rerender(<SearchBox value="lego" onChange={onChange} />)
+    act(() => {
+      vi.advanceTimersByTime(500)
+    })
+    expect(onChange).not.toHaveBeenCalled()
+    expect(screen.getByLabelText('Buscar chollos')).toHaveValue('lego')
+  })
+})
