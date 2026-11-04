@@ -29,13 +29,24 @@ PREVIOUS_KEYWORD_RE = re.compile(
 PREVIOUS_GAP = 20
 STRIKETHROUGH_RE = re.compile(r"~~(.*?)~~", re.DOTALL)
 # Keywords (accent-free, lowercase) that make the amount right after them the price.
-PRICE_KEYWORD_RE = re.compile(r"\b(?:precio|ahora|oferta)\s*[:\-]?\s*$")
+PRICE_KEYWORD_RE = re.compile(r"\b(?:precio final|precio|ahora|oferta)\s*[:\-]?\s*$")
+# An amount followed by one of these (accent-free, lowercase) is a discount, not a price.
+DISCOUNT_SUFFIX_RE = re.compile(r"\s*(?:de\s+)?(?:descuento|dto)\b")
 
 COUPON_KEYWORD_RE = re.compile(r"\bcupon\b")
 COUPON_CODE_RE = re.compile(r"^(?:\s*`(?P<tick>[A-Z0-9]{4,})`|[^:`]{0,25}:\s*`?(?P<code>[A-Z0-9]{4,})\b)")
 COUPON_MAX_LENGTH = 60
 
-URL_RE = re.compile(r"https?://\S+|\bwww\.\S+", re.IGNORECASE)
+# Common TLDs of deal links; a bare "name.tld" with one of these is a link.
+_LINK_TLDS = r"es|com|net|org|eu|to|ly|co|io|me|gl|link|info|shop|store|de|fr|it|uk"
+URL_RE = re.compile(
+    r"https?://\S+"
+    r"|\bwww\.\S+"
+    r"|\b(?:[a-z0-9-]+\.)+[a-z]{2,}/\S*"  # domain.tld/path, e.g. amzn.to/3abcd
+    rf"|\b(?:[a-z0-9-]+\.)+(?:{_LINK_TLDS})\b(?![.\-])(?:[?#]\S*)?"  # bare domain.tld
+    r"|\S*[?&]tag=\S*",  # any leftover affiliate parameter
+    re.IGNORECASE,
+)
 # Leading decoration (emojis, bullets, punctuation) before the first word character.
 LEADING_NOISE_RE = re.compile(r"^[\W_]+")
 # Headline formulas such as "OFERTA:" or "CHOLLO -".
@@ -109,7 +120,9 @@ def _find_price(folded: str, previous_span: tuple[int, int] | None) -> Decimal |
         if previous_span and m.start() < previous_span[1] and m.end() > previous_span[0]:
             continue
         value = _money_value(m)
-        if value is None:
+        if value is None or value <= 0:
+            continue
+        if DISCOUNT_SUFFIX_RE.match(folded, m.end()):
             continue
         if PRICE_KEYWORD_RE.search(folded[: m.start()]):
             return value
@@ -150,6 +163,11 @@ def parse_title(text: str) -> str:
         if line:
             return line[:TITLE_MAX_LENGTH].rstrip()
     return ""
+
+
+def strip_urls(text: str) -> str:
+    """Removes every link-like token (with or without scheme) and tidies spaces."""
+    return " ".join(URL_RE.sub(" ", text).split())
 
 
 def parse_hashtags(text: str) -> list[str]:

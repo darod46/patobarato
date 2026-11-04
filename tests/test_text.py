@@ -111,3 +111,43 @@ def test_percentage_not_previous_price():
     info = parse_prices("Auriculares 3€\nAntes 50%")
     assert info.price == Decimal("3")
     assert info.previous_price is None
+
+
+# --- I3: scheme-less links in titles ------------------------------------------
+
+
+def test_title_strips_schemeless_links():
+    assert parse_title("amzn.to/3abcd Auriculares Sony 29,99€") == "Auriculares Sony"
+    title = parse_title("Ver en amazon.es/dp/B000000000?tag=otro-21\n9,99€")
+    assert title == "Ver en"
+
+
+def test_title_keeps_versions_and_model_names():
+    assert parse_title("Sony WH-1000XM5 v2.0 negro 29,99€") == "Sony WH-1000XM5 v2.0 negro"
+
+
+# --- M10: price sanity -----------------------------------------------------------
+
+
+def test_zero_price_rejected():
+    assert parse_prices("Regalo 0€").price is None
+    assert parse_prices("Gratis 0,00€").price is None
+
+
+def test_zero_amount_skipped_for_next_price():
+    assert parse_prices("Envío 0€\nAuriculares 19,99€").price == Decimal("19.99")
+
+
+def test_discount_amount_is_not_price():
+    info = parse_prices("Auriculares 5€ de descuento con cupón\n19,99€")
+    assert info.price == Decimal("19.99")
+
+
+@pytest.mark.parametrize("suffix", ["dto", "de dto", "de descuento", "DTO."])
+def test_discount_suffixes(suffix):
+    assert parse_prices(f"Ratón 3€ {suffix}\nAhora 9,99€").price == Decimal("9.99")
+    assert parse_prices(f"Ratón 3€ {suffix} y 9,99€").price == Decimal("9.99")
+
+
+def test_precio_final_keyword():
+    assert parse_prices("Pack 2x 3€\nPrecio final 12,50€").price == Decimal("12.50")
