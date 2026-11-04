@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -7,7 +8,7 @@ import httpx
 import pytest
 
 from patobarato.config import Settings
-from patobarato.core.pipeline import Pipeline
+from patobarato.core.pipeline import MIN_PUBLISH_INTERVAL_SECONDS, Pipeline
 from patobarato.models import OfferStatus, SourceMessage
 from patobarato.parsing.links import UrlResolver
 from patobarato.storage.repository import InMemoryRepository
@@ -90,16 +91,38 @@ def publisher():
     return FakePublisher()
 
 
+class FakeTime:
+    """Monotonic clock plus a sleep that advances it instantly."""
+
+    def __init__(self) -> None:
+        self.now = 0.0
+        self.sleeps: list[float] = []
+
+    def monotonic(self) -> float:
+        return self.now
+
+    async def sleep(self, seconds: float) -> None:
+        self.sleeps.append(seconds)
+        self.now += seconds
+
+
 @pytest.fixture
-def make_pipeline(repo, resolver, publisher):
-    def factory(photo_provider=_no_photo, pub=None) -> Pipeline:
+def fake_time():
+    return FakeTime()
+
+
+@pytest.fixture
+def make_pipeline(repo, resolver, publisher, fake_time):
+    def factory(photo_provider=_no_photo, pub=None, repository=None) -> Pipeline:
         return Pipeline(
-            repo,
+            repository or repo,
             resolver,
             pub or publisher,
             photo_provider,
             _settings(),
             clock=lambda: NOW,
+            sleep=fake_time.sleep,
+            monotonic=fake_time.monotonic,
         )
 
     return factory
@@ -264,3 +287,121 @@ async def test_listener_error_does_not_stop_worker(
     assert any(
         r.name == "patobarato.pipeline" and r.exc_info for r in caplog.records
     )
+
+
+# --- M9: persistence failure after a successful publish ---------------------------
+
+
+class FlakyRepository(InMemoryRepository):
+    """Fails the first ``n`` insert_publication / PUBLISHED status writes."""
+
+    def __init__(self, publication_failures: int = 0, status_failures: int = 0) -> None:
+        super().__init__()
+        self.publication_failures = publication_failures
+        self.status_failures = status_failures
+        self.publication_attempts = 0
+
+    async def insert_publication(self, *args, **kwargs) -> int:
+        self.publication_attempts += 1
+        if self.publication_failures > 0:
+            self.publication_failures -= 1
+            raise RuntimeError("supabase down")
+        return await super().insert_publication(*args, **kwargs)
+
+    async def set_offer_status(self, offer_id, status) -> None:
+        if status == OfferStatus.PUBLISHED and self.status_failures > 0:
+            self.status_failures -= 1
+            raise RuntimeError("supabase down")
+        await super().set_offer_status(offer_id, status)
+
+
+async def test_publication_insert_retried_once(make_pipeline, publisher):
+    flaky = FlakyRepository(publication_failures=1)
+    pipeline = make_pipeline(repository=flaky)
+
+    assert await pipeline.process(_msg()) == [OfferStatus.PUBLISHED]
+
+    assert flaky.publication_attempts == 2
+    assert len(flaky.publications()) == 1
+    assert flaky.offer_statuses() == [OfferStatus.PUBLISHED]
+    assert len(publisher.calls) == 1
+
+
+async def test_publication_insert_failing_twice_is_logged_not_raised(
+    make_pipeline, publisher, caplog
+):
+    flaky = FlakyRepository(publication_failures=2)
+    pipeline = make_pipeline(repository=flaky)
+
+    with caplog.at_level(logging.ERROR, logger="patobarato.pipeline"):
+        statuses = await pipeline.process(_msg())
+
+    assert statuses == [OfferStatus.PUBLISHED]
+    assert flaky.publication_attempts == 2
+    assert flaky.publications() == []
+    assert flaky.offer_statuses() == [OfferStatus.PUBLISHED]
+    [record] = [r for r in caplog.records if "publicado pero no registrado" in r.getMessage()]
+    assert record.levelno == logging.ERROR
+    assert "-100123" in record.getMessage()  # chat_id
+    assert "message_id=1" in record.getMessage()
+
+
+async def test_published_status_retried_once(make_pipeline):
+    flaky = FlakyRepository(status_failures=1)
+    pipeline = make_pipeline(repository=flaky)
+
+    assert await pipeline.process(_msg()) == [OfferStatus.PUBLISHED]
+
+    assert flaky.offer_statuses() == [OfferStatus.PUBLISHED]
+    assert flaky.publication_attempts == 1
+
+
+async def test_published_status_failing_twice_does_not_stop_worker(
+    make_pipeline, publisher, caplog
+):
+    flaky = FlakyRepository(status_failures=2)
+    pipeline = make_pipeline(repository=flaky)
+    worker = asyncio.create_task(pipeline.run())
+    try:
+        with caplog.at_level(logging.ERROR, logger="patobarato.pipeline"):
+            await pipeline.submit(_msg(message_id=1, price="249,99€"))
+            await pipeline.submit(_msg(source_id=2, message_id=2, price="199,99€"))
+            await _wait_for(lambda: len(publisher.calls) == 2 and len(flaky.publications()) == 2)
+    finally:
+        await _stop(worker)
+
+    assert flaky.publication_attempts == 2  # not re-inserted by the status retry
+    assert any("publicado pero no registrado" in r.getMessage() for r in caplog.records)
+
+
+# --- M11: pacing between publications -----------------------------------------------
+
+
+async def test_consecutive_publications_are_spaced(make_pipeline, publisher, fake_time):
+    pipeline = make_pipeline()
+
+    await pipeline.process(_msg(source_id=1, price="249,99€"))
+    await pipeline.process(_msg(source_id=2, price="199,99€"))
+
+    assert len(publisher.calls) == 2
+    assert fake_time.sleeps == [MIN_PUBLISH_INTERVAL_SECONDS]
+    assert MIN_PUBLISH_INTERVAL_SECONDS >= 3
+
+
+async def test_no_wait_when_interval_already_passed(make_pipeline, publisher, fake_time):
+    pipeline = make_pipeline()
+
+    await pipeline.process(_msg(source_id=1, price="249,99€"))
+    fake_time.now += 2
+    await pipeline.process(_msg(source_id=2, price="199,99€"))
+    fake_time.now += 10
+    await pipeline.process(_msg(source_id=3, price="149,99€"))
+
+    assert len(publisher.calls) == 3
+    assert fake_time.sleeps == [pytest.approx(1.0)]
+
+
+async def test_first_publication_does_not_wait(make_pipeline, fake_time):
+    await make_pipeline().process(_msg())
+
+    assert fake_time.sleeps == []
