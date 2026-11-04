@@ -17,7 +17,7 @@ type Props = {
   now: Date
 }
 
-const GRID = 'grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 lg:gap-6'
+const GRID = 'grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5'
 
 export function DealFeed({ q, tag, onTag, onClear, fetchDeals, fetchHashtags, now }: Props) {
   const { deals, status, hasMore, loadingMore, loadMore, retry } = useDeals(fetchDeals, { q, tag })
