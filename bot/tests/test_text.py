@@ -164,3 +164,34 @@ def test_title_keeps_struck_words_without_markers():
 def test_coupon_description_drops_strikethrough_markers():
     info = parse_prices("Cafetera 59,99€\nCupón: ~~5€~~ 10€ de descuento")
     assert info.coupon is not None and "~~" not in info.coupon
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("✨Joma - Camiseta Deportiva Manga Larga Hombre✨\n\n💶precio oferta 9,99€", "Joma - Camiseta Deportiva Manga Larga Hombre"),
+        ("✨Cecotec Accesorios Freidora de aire ✨\n💶precio oferta 13,90€", "Cecotec Accesorios Freidora de aire"),
+        ("Auriculares 🎧 Sony WH-1000XM5 🔥 29,99€", "Auriculares Sony WH-1000XM5"),
+        ("Cable USB-C (2 m) 9,99€", "Cable USB-C (2 m)"),
+    ],
+)
+def test_title_drops_emojis_anywhere(raw, expected):
+    assert parse_title(raw) == expected
+
+
+def test_title_drops_marketing_lead_in_and_sales_clause():
+    raw = (
+        "🍊 Resultados profesionales en casa: Esta depiladora IPL Braun Silk-Expert Pro 5 "
+        "es tu mejor aliada contra el vello y hoy baja a precio mínimo en Amazon\n"
+        "💰 299,99 € ~~441,55 €~~ (-32%)"
+    )
+    assert parse_title(raw) == "Depiladora IPL Braun Silk-Expert Pro 5"
+
+
+def test_title_starting_with_demonstrative_keeps_the_product():
+    raw = "Este robot aspirador Roborock Q7 Max está rebajadísimo hoy 199€"
+    assert parse_title(raw) == "Robot aspirador Roborock Q7 Max"
+
+
+def test_title_with_colon_but_no_lead_in_is_kept():
+    assert parse_title("Xiaomi Redmi Note 13: 8GB + 256GB 189€") == "Xiaomi Redmi Note 13: 8GB + 256GB"

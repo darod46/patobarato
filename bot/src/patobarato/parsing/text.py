@@ -56,6 +56,19 @@ TITLE_FORMULA_RE = re.compile(
     re.IGNORECASE,
 )
 TITLE_TRAILING_RE = re.compile(r"[\s:\-–—|]+$")
+# Symbols kept in titles even though Unicode classes them like emojis.
+_KEPT_SYMBOLS = frozenset("©®™°")
+# Invisible emoji joiners / presentation selectors.
+_EMOJI_GLUE = frozenset("\u200d\ufe0e\ufe0f")
+# Marketing sentences: "Lead-in: Esta depiladora X es tu mejor aliada…" or
+# "Este robot X está rebajado…". The product follows the demonstrative.
+_DEMONSTRATIVE = r"(?:este|esta|estos|estas|esto)"
+TITLE_LEAD_IN_RE = re.compile(rf"^(?:[^:]{{3,80}}:\s+)?{_DEMONSTRATIVE}\s+(?P<product>.+)$", re.IGNORECASE)
+# Where the sales pitch starts after the product name in such sentences.
+TITLE_PITCH_RE = re.compile(
+    r"\s+(?:es|está|están|son|hoy|ahora|baja|bajan|se\s+queda|cae|vuelve)\b.*$",
+    re.IGNORECASE,
+)
 TITLE_MAX_LENGTH = 200
 
 HASHTAG_RE = re.compile(r"(?<!\w)#(\w+)")
@@ -154,13 +167,35 @@ def parse_prices(text: str) -> PriceInfo:
     return PriceInfo(price, previous, _find_coupon(unicodedata.normalize("NFC", text), folded))
 
 
+def _strip_emojis(text: str) -> str:
+    return "".join(
+        ch
+        for ch in text
+        if ch in _KEPT_SYMBOLS
+        or (ch not in _EMOJI_GLUE and unicodedata.category(ch) not in ("So", "Sk", "Cs"))
+    )
+
+
+def _strip_marketing(title: str) -> str:
+    """Turns a sales sentence into the product name it talks about."""
+    match = TITLE_LEAD_IN_RE.match(title)
+    if not match:
+        return title
+    product = TITLE_PITCH_RE.sub("", match.group("product")).strip()
+    if len(product.split()) < 2:
+        return title
+    return product[0].upper() + product[1:]
+
+
 def parse_title(text: str) -> str:
     for line in text.splitlines():
         line = URL_RE.sub("", line)
         line = MONEY_RE.sub("", line).replace(STRIKE_MARK, "")
+        line = _strip_emojis(line)
         line = LEADING_NOISE_RE.sub("", line)
         line = TITLE_FORMULA_RE.sub("", line)
         line = TITLE_TRAILING_RE.sub("", " ".join(line.split()))
+        line = _strip_marketing(line)
         if line:
             return line[:TITLE_MAX_LENGTH].rstrip()
     return ""
