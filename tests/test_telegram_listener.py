@@ -1,0 +1,236 @@
+from datetime import UTC, datetime
+
+import httpx
+from telethon.tl import functions, types
+
+from patobarato.models import SourceMessage
+from patobarato.parsing.links import UrlResolver
+from patobarato.sources.telegram_listener import make_photo_provider, to_source_message
+
+NOW = datetime(2026, 11, 4, 12, 0, tzinfo=UTC)
+CANONICAL = "https://www.amazon.es/dp/B09XS7JWHH"
+
+
+def _message(text: str = "", entities=None, reply_markup=None, media=None) -> types.Message:
+    return types.Message(
+        id=42,
+        peer_id=types.PeerChannel(channel_id=777),
+        date=NOW,
+        message=text,
+        entities=entities,
+        reply_markup=reply_markup,
+        media=media,
+    )
+
+
+def _photo(photo_id: int = 1) -> types.Photo:
+    return types.Photo(
+        id=photo_id,
+        access_hash=0,
+        file_reference=b"",
+        date=NOW,
+        sizes=[],
+        dc_id=1,
+    )
+
+
+def _webpage_media(url: str, photo=None) -> types.MessageMediaWebPage:
+    return types.MessageMediaWebPage(
+        webpage=types.WebPage(id=1, url=url, display_url=url, hash=0, photo=photo)
+    )
+
+
+def test_urls_from_text_entities_buttons_and_webpage():
+    text = "Oferta https://amzn.to/aaa y ver aquí #Chollo"
+    plain = "https://amzn.to/aaa"
+    entities = [
+        types.MessageEntityUrl(offset=text.index(plain), length=len(plain)),
+        types.MessageEntityTextUrl(
+            offset=text.index("aquí"), length=4, url="https://amzn.to/bbb"
+        ),
+    ]
+    markup = types.ReplyInlineMarkup(
+        rows=[
+            # Telethon 1.45 layer: URL buttons are KeyboardInlineButton with a
+            # InlineButtonTypeUrl type (KeyboardButtonUrl no longer exists).
+            types.KeyboardInlineButtonRow(
+                buttons=[
+                    types.KeyboardInlineButton(
+                        text="Comprar", type=types.InlineButtonTypeUrl("https://amzn.to/ccc")
+                    ),
+                    types.KeyboardInlineButton(
+                        text="Me gusta", type=types.InlineButtonTypeCallback(b"x")
+                    ),
+                    types.KeyboardInlineButton(
+                        text="Otra vez", type=types.InlineButtonTypeUrl("https://amzn.to/aaa")
+                    ),
+                ]
+            )
+        ]
+    )
+    media = _webpage_media("https://www.amazon.es/dp/B000000001")
+
+    msg = to_source_message(
+        _message(text, entities, markup, media), source_id=3, now=NOW, preview_photo=None
+    )
+
+    assert msg.urls == [
+        "https://amzn.to/aaa",
+        "https://amzn.to/bbb",
+        "https://amzn.to/ccc",
+        "https://www.amazon.es/dp/B000000001",
+    ]
+    assert msg.source_id == 3
+    assert msg.message_id == 42
+    assert msg.text == text
+    assert msg.received_at == NOW
+    assert msg.preview_url == "https://www.amazon.es/dp/B000000001"
+
+
+def test_url_entity_offsets_use_utf16_units():
+    text = "🔥 https://amzn.to/zzz"
+    entities = [types.MessageEntityUrl(offset=3, length=19)]  # 🔥 is 2 UTF-16 units
+
+    msg = to_source_message(_message(text, entities), 1, NOW, None)
+
+    assert msg.urls == ["https://amzn.to/zzz"]
+
+
+def test_hashtags_from_entities():
+    text = "Super #Chollo en #Auriculares y #chollo"
+    entities = [
+        types.MessageEntityHashtag(offset=text.index("#Chollo"), length=7),
+        types.MessageEntityHashtag(offset=text.index("#Auriculares"), length=12),
+        types.MessageEntityHashtag(offset=text.index("#chollo"), length=7),
+    ]
+
+    msg = to_source_message(_message(text, entities), 1, NOW, None)
+
+    assert msg.hashtags == ["chollo", "auriculares"]
+
+
+def test_message_without_text():
+    raw = _message()
+    raw.message = None
+
+    msg = to_source_message(raw, 1, NOW, None)
+
+    assert msg.text == ""
+    assert msg.urls == []
+    assert msg.hashtags == []
+    assert msg.preview_url is None
+    assert msg.preview_photo is None
+
+
+def test_preview_photo_is_passed_through():
+    async def loader() -> bytes | None:
+        return b"img"
+
+    msg = to_source_message(_message("x"), 1, NOW, loader)
+
+    assert msg.preview_photo is loader
+
+
+class FakeReader:
+    """Stands in for the Telethon reader client."""
+
+    def __init__(self, preview_result=None) -> None:
+        self.preview_result = preview_result
+        self.requests: list = []
+        self.downloads: list = []
+
+    async def __call__(self, request):
+        self.requests.append(request)
+        return self.preview_result
+
+    async def download_media(self, media, file):
+        assert file is bytes
+        self.downloads.append(media)
+        return f"photo-{media.id}".encode()
+
+
+def _resolver() -> UrlResolver:
+    def handler(request: httpx.Request) -> httpx.Response:
+        targets = {
+            "/same": "https://www.amazon.es/dp/B09XS7JWHH?ref=x",
+            "/other": "https://www.amazon.es/dp/B000000001",
+        }
+        return httpx.Response(301, headers={"Location": targets[request.url.path]})
+
+    return UrlResolver(httpx.AsyncClient(transport=httpx.MockTransport(handler)))
+
+
+def _source_msg(preview_url: str | None, has_photo: bool) -> SourceMessage:
+    async def loader() -> bytes | None:
+        return b"source-preview"
+
+    return SourceMessage(
+        source_id=1,
+        message_id=1,
+        text="",
+        urls=[],
+        hashtags=[],
+        received_at=NOW,
+        preview_photo=loader if has_photo else None,
+        preview_url=preview_url,
+    )
+
+
+async def test_photo_provider_uses_source_preview_for_same_asin():
+    reader = FakeReader()
+    provider = make_photo_provider(reader, _resolver())
+
+    photo = await provider(_source_msg("https://amzn.to/same", True), CANONICAL)
+
+    assert photo == b"source-preview"
+    assert reader.requests == []
+
+
+async def test_photo_provider_falls_back_to_preview_request_for_other_asin():
+    reader = FakeReader(
+        types.messages.WebPagePreview(
+            media=_webpage_media(CANONICAL, _photo(9)), chats=[], users=[]
+        )
+    )
+    provider = make_photo_provider(reader, _resolver())
+
+    photo = await provider(_source_msg("https://amzn.to/other", True), CANONICAL)
+
+    assert photo == b"photo-9"
+    [request] = reader.requests
+    assert isinstance(request, functions.messages.GetWebPagePreviewRequest)
+    assert request.message == CANONICAL
+
+
+async def test_photo_provider_accepts_bare_media_result():
+    reader = FakeReader(_webpage_media(CANONICAL, _photo(5)))
+    provider = make_photo_provider(reader, _resolver())
+
+    photo = await provider(_source_msg(None, False), CANONICAL)
+
+    assert photo == b"photo-5"
+
+
+async def test_photo_provider_returns_none_without_any_photo():
+    reader = FakeReader(
+        types.messages.WebPagePreview(
+            media=_webpage_media(CANONICAL, None), chats=[], users=[]
+        )
+    )
+    provider = make_photo_provider(reader, _resolver())
+
+    photo = await provider(_source_msg("https://amzn.to/other", True), CANONICAL)
+
+    assert photo is None
+    assert reader.downloads == []
+
+
+async def test_photo_provider_returns_none_for_empty_preview():
+    reader = FakeReader(
+        types.messages.WebPagePreview(
+            media=types.MessageMediaEmpty(), chats=[], users=[]
+        )
+    )
+    provider = make_photo_provider(reader, _resolver())
+
+    assert await provider(_source_msg(None, False), CANONICAL) is None

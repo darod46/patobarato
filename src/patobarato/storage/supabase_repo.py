@@ -35,7 +35,7 @@ class SupabaseRepository:
         def run():
             return (
                 self._client.table("sources")
-                .select("id, identifier, country")
+                .select("id, identifier, country, invite_link")
                 .eq("active", True)
                 .order("id")
                 .execute()
@@ -43,7 +43,12 @@ class SupabaseRepository:
 
         response = await asyncio.to_thread(run)
         return [
-            Source(id=row["id"], identifier=row["identifier"], country=row["country"])
+            Source(
+                id=row["id"],
+                identifier=row["identifier"],
+                country=row["country"],
+                invite_link=row.get("invite_link"),
+            )
             for row in response.data
         ]
 
