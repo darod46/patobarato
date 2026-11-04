@@ -69,6 +69,7 @@ async def test_publish_with_photo_uses_send_file_and_button(sleep):
     [row] = kwargs["buttons"]
     assert row.text == BUTTON_TEXT
     assert row.type.url == URL
+    assert row.style.bg_success is True
     sleep.assert_not_called()
 
 
@@ -85,6 +86,7 @@ async def test_publish_without_photo_uses_send_message(sleep):
     assert kwargs["parse_mode"] == "html"
     assert kwargs["link_preview"] is False
     assert kwargs["buttons"][0].type.url == URL
+    assert kwargs["buttons"][0].style.bg_success is True
 
 
 async def test_flood_wait_retries_then_succeeds(sleep):

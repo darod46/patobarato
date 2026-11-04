@@ -27,7 +27,7 @@ it('shows every caption line in order plus the button', () => {
     '🎟️ Cupón: AHORRA5',
     '#sony #audio',
   ])
-  const link = screen.getByRole('link', { name: '🛒 Ver en Amazon' })
+  const link = screen.getByRole('link', { name: '🛒 Ver oferta en Amazon' })
   expect(link).toHaveAttribute('href', 'https://amzn.to/x')
   expect(link).toHaveAttribute('target', '_blank')
   expect(link).toHaveAttribute('rel', 'sponsored noopener noreferrer')
@@ -39,5 +39,5 @@ it('shows only title, price and button for a minimal deal', () => {
   )
   const lines = Array.from(container.querySelectorAll('[data-line]')).map((n) => n.textContent)
   expect(lines).toEqual(['🦆 Auriculares Sony', '✅ Precio: 80,00 €'])
-  expect(screen.getByRole('link', { name: '🛒 Ver en Amazon' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: '🛒 Ver oferta en Amazon' })).toBeInTheDocument()
 })

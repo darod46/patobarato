@@ -91,7 +91,7 @@ def test_discount_percent_rounds():
 
 
 def test_button_text():
-    assert BUTTON_TEXT == "🛒 Ver en Amazon"
+    assert BUTTON_TEXT == "🛒 Ver oferta en Amazon"
 
 
 # --- I3: foreign links never reach the caption ------------------------------------

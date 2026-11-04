@@ -35,9 +35,9 @@ export function TelegramPreview({ deal }: { deal: Deal }) {
         href={deal.affiliateUrl}
         target="_blank"
         rel="sponsored noopener noreferrer"
-        className="rounded-lg bg-zinc-700 py-2.5 text-center font-semibold text-white hover:bg-zinc-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+        className="rounded-lg bg-[#2b8a3e] py-2.5 text-center font-semibold text-white hover:bg-[#237032] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
       >
-        🛒 Ver en Amazon
+        🛒 Ver oferta en Amazon
       </a>
     </div>
   )

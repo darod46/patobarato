@@ -5,7 +5,9 @@ from decimal import ROUND_HALF_UP, Decimal
 from patobarato.models import ParsedOffer
 from patobarato.parsing.text import strip_urls
 
-BUTTON_TEXT = "🛒 Ver en Amazon"
+BUTTON_TEXT = "🛒 Ver oferta en Amazon"
+# Telegram only offers blue, green or red buttons; green reads as "buy".
+BUTTON_STYLE = "success"
 
 _INVALID_TAG_CHARS = re.compile(r"[^a-z0-9_áéíóúñü]")
 

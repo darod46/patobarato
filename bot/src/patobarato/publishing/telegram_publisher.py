@@ -7,7 +7,7 @@ import logging
 from telethon import Button, TelegramClient, utils
 from telethon.errors import FloodWaitError, RPCError, ServerError
 
-from patobarato.publishing.format import BUTTON_TEXT
+from patobarato.publishing.format import BUTTON_STYLE, BUTTON_TEXT
 
 logger = logging.getLogger("patobarato.telegram_publisher")
 
@@ -59,7 +59,7 @@ class TelegramPublisher:
             attempt += 1
 
     async def _send(self, caption: str, button_url: str, photo: bytes | None):
-        buttons = [Button.url(BUTTON_TEXT, button_url)]
+        buttons = [Button.url(BUTTON_TEXT, button_url, style=BUTTON_STYLE)]
         if photo is None:
             return await self._client.send_message(
                 self._target,
