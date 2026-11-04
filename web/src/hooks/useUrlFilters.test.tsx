@@ -39,6 +39,13 @@ describe('useUrlFilters', () => {
     expect(result.current.q).toBe('')
   })
 
+  it('setQ keeps a trailing space in q and the URL', () => {
+    const { result } = renderHook(() => useUrlFilters())
+    act(() => result.current.setQ('lego '))
+    expect(result.current.q).toBe('lego ')
+    expect(location.search).toBe('?q=lego+')
+  })
+
   it('clear removes both params', () => {
     history.replaceState(null, '', '/?q=lego&tag=juguetes')
     const { result } = renderHook(() => useUrlFilters())

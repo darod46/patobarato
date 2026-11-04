@@ -29,7 +29,7 @@ export function useUrlFilters() {
   }, [])
 
   const setQ = useCallback((q: string) => {
-    write('replace', { q: q.trim() })
+    write('replace', { q: q.trim() ? q : '' })
     setFilters(read())
   }, [])
   const setTag = useCallback((tag: string | null) => {
