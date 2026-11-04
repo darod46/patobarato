@@ -36,6 +36,8 @@ class Repository(Protocol):
 
     async def set_offer_status(self, offer_id: int, status: OfferStatus) -> None: ...
 
+    async def set_product_image(self, product_id: int, image_url: str) -> None: ...
+
     async def get_last_publication(
         self, product_id: int, country: str
     ) -> LastPublication | None: ...
@@ -61,6 +63,7 @@ class InMemoryRepository(Repository):
         self._source_names: dict[str, str] = {}
         self._products: dict[tuple[str, str, str], int] = {}
         self.product_titles: dict[int, str] = {}
+        self.product_images: dict[int, str] = {}
         self._offers: dict[int, dict] = {}
         self._offer_keys: dict[tuple[int, int, int], int] = {}
         self._publications: list[dict] = []
@@ -141,6 +144,9 @@ class InMemoryRepository(Repository):
         offer = self._offers.get(offer_id)
         if offer is not None:
             offer["status"] = status
+
+    async def set_product_image(self, product_id: int, image_url: str) -> None:
+        self.product_images[product_id] = image_url
 
     def offer_statuses(self) -> list[OfferStatus]:
         """Offer statuses in insertion order (for tests)."""

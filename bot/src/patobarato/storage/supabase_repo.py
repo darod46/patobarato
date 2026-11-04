@@ -126,6 +126,22 @@ class SupabaseRepository:
 
         await asyncio.to_thread(run)
 
+    async def set_product_image(self, product_id: int, image_url: str) -> None:
+        def run():
+            return (
+                self._client.table("products")
+                .update(
+                    {
+                        "image_url": image_url,
+                        "updated_at": datetime.now(UTC).isoformat(),
+                    }
+                )
+                .eq("id", product_id)
+                .execute()
+            )
+
+        await asyncio.to_thread(run)
+
     async def get_last_publication(
         self, product_id: int, country: str
     ) -> LastPublication | None:

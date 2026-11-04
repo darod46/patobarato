@@ -18,6 +18,7 @@ from patobarato.core.pipeline import Pipeline
 from patobarato.parsing.links import UrlResolver
 from patobarato.publishing.telegram_publisher import TelegramPublisher
 from patobarato.sources.telegram_listener import TelegramListener, make_photo_provider
+from patobarato.storage.images import SupabaseImageStore
 from patobarato.storage.supabase_repo import SupabaseRepository
 
 logger = logging.getLogger("patobarato.main")
@@ -93,12 +94,16 @@ async def run(settings: Settings) -> int:
 
     async with httpx.AsyncClient(timeout=settings.http_timeout_seconds) as http:
         resolver = UrlResolver(http)
-        repo = SupabaseRepository(
-            create_client(settings.supabase_url, settings.supabase_service_key)
-        )
+        supabase = create_client(settings.supabase_url, settings.supabase_service_key)
+        repo = SupabaseRepository(supabase)
         publisher = TelegramPublisher(bot, settings.target_channel)
         pipeline = Pipeline(
-            repo, resolver, publisher, make_photo_provider(reader, resolver), settings
+            repo,
+            resolver,
+            publisher,
+            make_photo_provider(reader, resolver),
+            settings,
+            image_store=SupabaseImageStore(supabase),
         )
         listener = TelegramListener(
             reader,

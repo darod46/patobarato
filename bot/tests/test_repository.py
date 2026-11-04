@@ -108,3 +108,9 @@ async def test_insert_offer_stores_normalized_unique_hashtags():
     offer = dataclasses.replace(make_offer(), hashtags=["Sony", "sony", "Auri-culares", "#"])
     offer_id = await repo.insert_offer(product_id, source.id, 1, offer, "raw", NOW)
     assert repo.offer_hashtags(offer_id) == ["sony", "auriculares"]
+
+
+async def test_set_product_image_is_stored():
+    repo = InMemoryRepository()
+    await repo.set_product_image(7, "https://img/x.jpg")
+    assert repo.product_images == {7: "https://img/x.jpg"}
