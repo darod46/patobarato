@@ -4,7 +4,9 @@ import argparse
 import asyncio
 import logging
 import sys
+from collections.abc import Coroutine
 from pathlib import Path
+from typing import Any
 
 import httpx
 from pydantic import ValidationError
@@ -32,14 +34,42 @@ def _client(session_path: str, settings: Settings) -> TelegramClient:
     )
 
 
-async def login(settings: Settings) -> None:
+async def login(settings: Settings) -> int:
     client = _client(settings.telegram_session_path, settings)
-    await client.start()
     try:
+        await client.start()
         me = await client.get_me()
         print(f"Sesión iniciada como {me.first_name} (id {me.id}).")
+        return 0
+    except Exception as e:
+        logger.debug("Login failed", exc_info=True)
+        print(f"No se pudo iniciar sesión: {e}", file=sys.stderr)
+        return 1
     finally:
         await client.disconnect()
+
+
+async def _supervise(**named_coros: Coroutine[Any, Any, Any]) -> int:
+    """Runs the coroutines until the first one ends or raises, then stops the rest.
+
+    None of them should ever finish, so any finish is reported as a failure (1).
+    """
+    tasks = {
+        asyncio.create_task(coro, name=name): name for name, coro in named_coros.items()
+    }
+    done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+    for task in pending:
+        task.cancel()
+    await asyncio.gather(*pending, return_exceptions=True)
+    for task in done:
+        name = tasks[task]
+        if task.cancelled():
+            logger.error("Task %s was cancelled; stopping", name)
+        elif (exc := task.exception()) is not None:
+            logger.error("Task %s failed; stopping", name, exc_info=exc)
+        else:
+            logger.error("Task %s ended unexpectedly; stopping", name)
+    return 1
 
 
 async def run(settings: Settings) -> int:
@@ -68,15 +98,14 @@ async def run(settings: Settings) -> int:
         await listener.start()
         logger.info("PatoBarato en marcha; publicando en %s", settings.target_channel)
         try:
-            await asyncio.gather(
-                pipeline.run(),
-                listener.run_refresh_loop(),
-                reader.run_until_disconnected(),
+            return await _supervise(
+                pipeline=pipeline.run(),
+                refresh=listener.run_refresh_loop(),
+                reader=reader.run_until_disconnected(),
             )
         finally:
             await reader.disconnect()
             await bot.disconnect()
-    return 0
 
 
 def _config_error_message(error: ValidationError) -> str:
@@ -116,8 +145,7 @@ def main(argv: list[str] | None = None) -> int:
         return EXIT_CONFIG_ERROR
 
     if args.command == "login":
-        asyncio.run(login(settings))
-        return 0
+        return asyncio.run(login(settings))
     try:
         return asyncio.run(run(settings))
     except KeyboardInterrupt:
