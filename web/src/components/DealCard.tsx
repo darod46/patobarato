@@ -10,17 +10,24 @@ export function DealCard({ deal, now, onTagClick }: Props) {
   const [failed, setFailed] = useState(false)
   const discount =
     deal.previousPrice !== null ? discountPercent(deal.price, deal.previousPrice) : null
-  const src = failed || !deal.imageUrl ? PLACEHOLDER : deal.imageUrl
+  const isPlaceholder = failed || !deal.imageUrl
+  const src = isPlaceholder ? PLACEHOLDER : deal.imageUrl!
 
   return (
     <article className="flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white transition-shadow hover:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)]">
-      <div className="aspect-square bg-zinc-50 p-4">
+      {/* Square box whatever the image's aspect ratio; the image never sizes it. */}
+      <div className="relative aspect-square overflow-hidden bg-zinc-50">
         <img
           src={src}
           alt={deal.title}
           loading="lazy"
           onError={() => setFailed(true)}
-          className="h-full w-full object-contain"
+          data-placeholder={isPlaceholder || undefined}
+          className={
+            isPlaceholder
+              ? 'absolute inset-0 m-auto h-[55%] w-[55%] object-contain opacity-90'
+              : 'absolute inset-0 h-full w-full object-contain p-4'
+          }
         />
       </div>
       <div className="flex flex-1 flex-col gap-3 p-4">

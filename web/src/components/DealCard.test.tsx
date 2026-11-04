@@ -48,11 +48,13 @@ describe('DealCard', () => {
     const img = screen.getByRole('img')
     expect(img).toHaveAttribute('src', full.imageUrl)
     expect(img).toHaveAttribute('alt', full.title)
+    expect(img).not.toHaveAttribute('data-placeholder')
   })
 
   it('renders a minimal deal with placeholder', () => {
     const { container } = render(<DealCard deal={minimal} now={now} onTagClick={() => {}} />)
     expect(screen.getByRole('img')).toHaveAttribute('src', '/pato-placeholder.svg')
+    expect(screen.getByRole('img')).toHaveAttribute('data-placeholder', 'true')
     expect(container.textContent).not.toContain('%')
     expect(container.querySelector('s')).toBeNull()
     expect(screen.queryByTestId('coupon')).toBeNull()
