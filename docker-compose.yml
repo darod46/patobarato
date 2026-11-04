@@ -1,6 +1,8 @@
 services:
   bot:
-    build: .
+    # Built for arm64 by .github/workflows/docker.yml on every push to main.
+    # On the server: docker compose pull && docker compose up -d
+    image: ghcr.io/davidr_gco/patobarato:latest
     env_file: .env
     volumes:
       - ./data:/app/data

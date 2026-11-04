@@ -64,6 +64,24 @@ El resto tiene valores por defecto razonables (`TARGET_CHANNEL=@patobarato`, `AF
 
 ## 4. Puesta en marcha con Docker
 
+### Imagen
+
+Cada push a `main` lanza la action `.github/workflows/docker.yml`: pasa los tests, construye la imagen para **arm64** (el servidor Ampere de Oracle) y la publica en `ghcr.io/davidr_gco/patobarato` con las etiquetas `latest` y el SHA corto del commit.
+
+En el servidor solo hacen falta `docker-compose.yml`, `.env` y la carpeta `data/`:
+
+```
+mkdir -p ~/patobarato/data && cd ~/patobarato
+sudo chown 1000:1000 data
+# copia aquí docker-compose.yml y .env
+docker login ghcr.io -u <usuario-github>   # contraseña: un token con permiso read:packages
+docker compose pull
+```
+
+Para actualizar tras un nuevo push: `docker compose pull && docker compose up -d`.
+
+### Sesiones y arranque
+
 Primero hay que iniciar sesión una vez con la cuenta lectora (te pedirá teléfono, código y, si lo tiene, la contraseña de 2 pasos):
 
 ```
