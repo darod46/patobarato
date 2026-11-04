@@ -1,0 +1,24 @@
+@import "@fontsource/plus-jakarta-sans/400.css";
+@import "@fontsource/plus-jakarta-sans/500.css";
+@import "@fontsource/plus-jakarta-sans/600.css";
+@import "@fontsource/plus-jakarta-sans/700.css";
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --color-carbon: #09090b;
+  --color-carbon-soft: #27272a;
+  --color-amber: #f59e0b;
+  --color-amber-ink: #d97706;
+  --color-mint: #10b981;
+  --color-zinc-50: #fafafa;
+  --color-zinc-100: #f4f4f5;
+  --color-zinc-200: #e4e4e7;
+  --color-zinc-400: #a1a1aa;
+  --color-zinc-500: #71717a;
+  --color-surface: #fbf8ff;
+}
+
+@utility price {
+  font-variant-numeric: tabular-nums;
+}
