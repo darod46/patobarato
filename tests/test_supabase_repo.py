@@ -31,8 +31,16 @@ def repo(client):
 
 
 @pytest.fixture
-def asin():
-    return "T" + uuid.uuid4().hex[:9].upper()
+def asin(client):
+    value = "T" + uuid.uuid4().hex[:9].upper()
+    yield value
+    products = client.table("products").select("id").eq("asin", value).execute().data
+    ids = [p["id"] for p in products]
+    if ids:
+        # offers/publications of these products are removed by the source fixture
+        client.table("publications").delete().in_("product_id", ids).execute()
+        client.table("offers").delete().in_("product_id", ids).execute()
+        client.table("products").delete().in_("id", ids).execute()
 
 
 def make_offer(asin: str, title: str = "Pato") -> ParsedOffer:

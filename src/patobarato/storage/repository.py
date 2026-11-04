@@ -45,7 +45,7 @@ class Repository(Protocol):
     ) -> int: ...
 
 
-class InMemoryRepository:
+class InMemoryRepository(Repository):
     """Test double that mirrors the database uniqueness rules."""
 
     def __init__(self) -> None:
@@ -112,7 +112,17 @@ class InMemoryRepository:
         return offer_id
 
     async def set_offer_status(self, offer_id: int, status: OfferStatus) -> None:
-        self._offers[offer_id]["status"] = status
+        offer = self._offers.get(offer_id)
+        if offer is not None:
+            offer["status"] = status
+
+    def offer_statuses(self) -> list[OfferStatus]:
+        """Offer statuses in insertion order (for tests)."""
+        return [offer["status"] for offer in self._offers.values()]
+
+    def publications(self) -> list[dict]:
+        """Copies of the stored publications in insertion order (for tests)."""
+        return [dict(p) for p in self._publications]
 
     async def get_last_publication(
         self, product_id: int, country: str

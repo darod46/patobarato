@@ -119,7 +119,7 @@ class SupabaseRepository:
         def run():
             return (
                 self._client.table("publications")
-                .select("published_price, published_at, status")
+                .select("published_price::text, published_at, status")
                 .eq("product_id", product_id)
                 .eq("country", country)
                 .order("published_at", desc=True)
@@ -132,7 +132,7 @@ class SupabaseRepository:
             return None
         row = response.data[0]
         return LastPublication(
-            published_price=Decimal(str(row["published_price"])),
+            published_price=Decimal(row["published_price"]),
             published_at=_parse_timestamp(row["published_at"]),
             status=PublicationStatus(row["status"]),
         )

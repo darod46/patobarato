@@ -1,7 +1,7 @@
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
-from patobarato.models import ParsedOffer
+from patobarato.models import OfferStatus, ParsedOffer
 from patobarato.storage.repository import InMemoryRepository
 
 NOW = datetime(2026, 11, 4, 12, 0, tzinfo=UTC)
@@ -70,3 +70,20 @@ async def test_inactive_sources_excluded():
     active = repo.add_source("@activo")
     repo.add_source("@inactivo", active=False)
     assert await repo.get_active_sources() == [active]
+
+
+async def test_test_helpers_and_unknown_offer_status_noop():
+    repo = InMemoryRepository()
+    source = repo.add_source("@canal")
+    offer = make_offer()
+    product_id = await repo.upsert_product(offer)
+    offer_id = await repo.insert_offer(product_id, source.id, 1, offer, "raw", NOW)
+    await repo.set_offer_status(999, OfferStatus.PUBLISHED)
+    assert repo.offer_statuses() == [OfferStatus.PENDING]
+    await repo.set_offer_status(offer_id, OfferStatus.PUBLISHED)
+    await repo.insert_publication(
+        offer_id, product_id, "ES", -100, 7, Decimal("9.99"), "url", NOW
+    )
+    assert repo.offer_statuses() == [OfferStatus.PUBLISHED]
+    (pub,) = repo.publications()
+    assert pub["message_id"] == 7 and pub["offer_id"] == offer_id
