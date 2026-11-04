@@ -27,6 +27,7 @@ PREVIOUS_KEYWORD_RE = re.compile(
 )
 # Max characters between the keyword and its amount.
 PREVIOUS_GAP = 20
+STRIKE_MARK = "~~"  # added by the listener around strikethrough text
 STRIKETHROUGH_RE = re.compile(r"~~(.*?)~~", re.DOTALL)
 # Keywords (accent-free, lowercase) that make the amount right after them the price.
 PRICE_KEYWORD_RE = re.compile(r"\b(?:precio final|precio|ahora|oferta)\s*[:\-]?\s*$")
@@ -138,7 +139,7 @@ def _find_coupon(text: str, folded: str) -> str | None:
         code = COUPON_CODE_RE.match(rest)
         if code:
             return code.group("tick") or code.group("code")
-        description = rest.strip(" \t:-–—`")
+        description = " ".join(rest.replace(STRIKE_MARK, "").split()).strip(" \t:-–—`")
         if description:
             return description[:COUPON_MAX_LENGTH].rstrip()
     return None
@@ -156,7 +157,7 @@ def parse_prices(text: str) -> PriceInfo:
 def parse_title(text: str) -> str:
     for line in text.splitlines():
         line = URL_RE.sub("", line)
-        line = MONEY_RE.sub("", line)
+        line = MONEY_RE.sub("", line).replace(STRIKE_MARK, "")
         line = LEADING_NOISE_RE.sub("", line)
         line = TITLE_FORMULA_RE.sub("", line)
         line = TITLE_TRAILING_RE.sub("", " ".join(line.split()))

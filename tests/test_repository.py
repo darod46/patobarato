@@ -65,11 +65,22 @@ async def test_last_publication_is_most_recent():
     assert await repo.get_last_publication(product_id, "FR") is None
 
 
-async def test_inactive_sources_excluded():
+async def test_sync_sources_registers_new_channels_once():
     repo = InMemoryRepository()
-    active = repo.add_source("@activo")
-    repo.add_source("@inactivo", active=False)
-    assert await repo.get_active_sources() == [active]
+    first = await repo.sync_sources({"-1001": "Uno", "-1002": "Dos"}, "ES")
+    again = await repo.sync_sources({"-1001": "Uno", "-1002": "Dos"}, "ES")
+    assert [s.identifier for s in first] == ["-1001", "-1002"]
+    assert {s.country for s in first} == {"ES"}
+    assert again == first
+    assert repo.source_names() == {"-1001": "Uno", "-1002": "Dos"}
+
+
+async def test_sync_sources_returns_only_active_requested_channels():
+    repo = InMemoryRepository()
+    repo.add_source("-1002", active=False)
+    repo.add_source("-1003")
+    synced = await repo.sync_sources({"-1001": "Uno", "-1002": "Dos"}, "ES")
+    assert [s.identifier for s in synced] == ["-1001"]
 
 
 async def test_test_helpers_and_unknown_offer_status_noop():

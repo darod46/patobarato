@@ -117,7 +117,7 @@ El diseño debe permitir añadir otra fuente (la API de Amazon) que produzca el 
 
 - Python 3.12 + **Telethon** para la cuenta lectora y para publicar con el bot (una sola librería), y **supabase-py** para la base de datos.
 - Las 4 tablas y los estados descritos en la sección 6.
-- La lista de canales se guarda en la tabla `sources` (editable desde Supabase), no en un fichero.
+- Canales de origen: todos los canales de difusión a los que está suscrita la cuenta lectora (decisión del usuario, 2026-11-04). El bot los registra solo en `sources` (identificador = peer id numérico); se excluye el canal de destino y se respeta `active = false`. Ya no hay unión automática por enlace de invitación.
 - Sin precio no se publica.
 - Solo se procesan mensajes nuevos: ni historial ni ediciones.
 - Si un mensaje trae varios productos, se separan cuando se puede; si no, se usa el primero.

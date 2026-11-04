@@ -151,3 +151,16 @@ def test_discount_suffixes(suffix):
 
 def test_precio_final_keyword():
     assert parse_prices("Pack 2x 3€\nPrecio final 12,50€").price == Decimal("12.50")
+
+
+def test_title_drops_strikethrough_markers():
+    assert parse_title("Auriculares Sony ~~49,99€~~ 29,99€") == "Auriculares Sony"
+
+
+def test_title_keeps_struck_words_without_markers():
+    assert parse_title("~~Ratón~~ Teclado Logitech 19,99€") == "Ratón Teclado Logitech"
+
+
+def test_coupon_description_drops_strikethrough_markers():
+    info = parse_prices("Cafetera 59,99€\nCupón: ~~5€~~ 10€ de descuento")
+    assert info.coupon is not None and "~~" not in info.coupon

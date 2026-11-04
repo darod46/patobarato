@@ -49,7 +49,6 @@ class Source:
     id: int
     identifier: str
     country: str
-    invite_link: str | None = None
 
 
 @dataclass(frozen=True)

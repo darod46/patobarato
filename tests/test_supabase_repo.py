@@ -113,16 +113,17 @@ async def test_last_publication_is_most_recent(repo, source, asin):
     assert last.status is PublicationStatus.ACTIVE
 
 
-async def test_inactive_sources_excluded(repo, client, source):
-    inactive = (
-        client.table("sources")
-        .insert({"identifier": "@off_" + uuid.uuid4().hex[:8], "active": False})
-        .execute()
-        .data[0]
-    )
+async def test_sync_sources_registers_once_and_skips_inactive(repo, client):
+    new_id = "-100" + str(uuid.uuid4().int)[:10]
+    off_id = "-100" + str(uuid.uuid4().int)[:10]
+    client.table("sources").insert({"identifier": off_id, "active": False}).execute()
     try:
-        ids = {s.id for s in await repo.get_active_sources()}
-        assert source["id"] in ids
-        assert inactive["id"] not in ids
+        first = await repo.sync_sources({new_id: "Nuevo", off_id: "Apagado"}, "ES")
+        again = await repo.sync_sources({new_id: "Nuevo", off_id: "Apagado"}, "ES")
+        assert [s.identifier for s in first] == [new_id]
+        assert first[0].country == "ES"
+        assert again == first
+        rows = client.table("sources").select("name").eq("identifier", new_id).execute()
+        assert [r["name"] for r in rows.data] == ["Nuevo"]
     finally:
-        client.table("sources").delete().eq("id", inactive["id"]).execute()
+        client.table("sources").delete().in_("identifier", [new_id, off_id]).execute()

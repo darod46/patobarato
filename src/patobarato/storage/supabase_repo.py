@@ -31,11 +31,22 @@ class SupabaseRepository:
     def __init__(self, client: Client) -> None:
         self._client = client
 
-    async def get_active_sources(self) -> list[Source]:
+    async def sync_sources(self, channels: dict[str, str], country: str) -> list[Source]:
+        if not channels:
+            return []
+        rows = [
+            {"identifier": identifier, "name": name, "country": country}
+            for identifier, name in channels.items()
+        ]
+
         def run():
+            self._client.table("sources").upsert(
+                rows, on_conflict="type,identifier", ignore_duplicates=True
+            ).execute()
             return (
                 self._client.table("sources")
-                .select("id, identifier, country, invite_link")
+                .select("id, identifier, country")
+                .in_("identifier", list(channels))
                 .eq("active", True)
                 .order("id")
                 .execute()
@@ -43,12 +54,7 @@ class SupabaseRepository:
 
         response = await asyncio.to_thread(run)
         return [
-            Source(
-                id=row["id"],
-                identifier=row["identifier"],
-                country=row["country"],
-                invite_link=row.get("invite_link"),
-            )
+            Source(id=row["id"], identifier=row["identifier"], country=row["country"])
             for row in response.data
         ]
 

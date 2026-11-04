@@ -12,7 +12,9 @@ from patobarato.models import (
 
 
 class Repository(Protocol):
-    async def get_active_sources(self) -> list[Source]: ...
+    async def sync_sources(self, channels: dict[str, str], country: str) -> list[Source]:
+        """Registers unknown channels (identifier -> name) and returns the active ones."""
+        ...
 
     async def upsert_product(self, offer: ParsedOffer) -> int: ...
 
@@ -50,6 +52,7 @@ class InMemoryRepository(Repository):
 
     def __init__(self) -> None:
         self._sources: list[tuple[Source, bool]] = []
+        self._source_names: dict[str, str] = {}
         self._products: dict[tuple[str, str, str], int] = {}
         self.product_titles: dict[int, str] = {}
         self._offers: dict[int, dict] = {}
@@ -71,8 +74,20 @@ class InMemoryRepository(Repository):
         self._sources.append((source, active))
         return source
 
-    async def get_active_sources(self) -> list[Source]:
-        return [source for source, active in self._sources if active]
+    def source_names(self) -> dict[str, str]:
+        return dict(self._source_names)
+
+    async def sync_sources(self, channels: dict[str, str], country: str) -> list[Source]:
+        known = {source.identifier for source, _ in self._sources}
+        for identifier, name in channels.items():
+            if identifier not in known:
+                self.add_source(identifier, country=country)
+                self._source_names[identifier] = name
+        return [
+            source
+            for source, active in self._sources
+            if active and source.identifier in channels
+        ]
 
     async def upsert_product(self, offer: ParsedOffer) -> int:
         key = (offer.store, offer.country, offer.asin)

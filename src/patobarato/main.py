@@ -101,7 +101,12 @@ async def run(settings: Settings) -> int:
             repo, resolver, publisher, make_photo_provider(reader, resolver), settings
         )
         listener = TelegramListener(
-            reader, repo, pipeline, settings.sources_refresh_seconds
+            reader,
+            repo,
+            pipeline,
+            target=settings.target_channel,
+            refresh_seconds=settings.sources_refresh_seconds,
+            country=settings.default_country,
         )
         await listener.start()
         logger.info("PatoBarato en marcha; publicando en %s", settings.target_channel)

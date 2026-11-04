@@ -60,7 +60,7 @@ El resto tiene valores por defecto razonables (`TARGET_CHANNEL=@patobarato`, `AF
 | --- | --- | --- |
 | `DEFAULT_COUNTRY` | `ES` | País por defecto. En v1 solo se admite `ES`; el país de cada oferta sale del dominio del enlace (`amazon.es`). |
 | `HTTP_TIMEOUT_SECONDS` | `10.0` | Tiempo máximo, en segundos, de cada petición HTTP al resolver enlaces acortados (`amzn.to`, `bit.ly`...). |
-| `SOURCES_REFRESH_SECONDS` | `300` | Cada cuánto se recarga la tabla `sources`. |
+| `SOURCES_REFRESH_SECONDS` | `300` | Cada cuánto se repasan los canales de la cuenta lectora. |
 
 ## 4. Puesta en marcha con Docker
 
@@ -89,25 +89,13 @@ Alternativa: usar un volumen con nombre en `docker-compose.yml` (`volumes: [bot-
 
 Los ficheros `*.session` equivalen a tener la cuenta abierta: no los compartas ni los subas al repositorio.
 
-## 5. Añadir canales de origen
+## 5. Canales de origen
 
-Los canales que se leen están en la tabla `sources` de Supabase. Añade filas desde el panel (Table Editor) o con SQL:
+El bot lee **todos los canales de difusión a los que está suscrita la cuenta lectora**. Para añadir un canal, únete a él desde la app de Telegram con esa cuenta; para dejar de leerlo, sal del canal.
 
-```sql
--- Canal público
-insert into sources (identifier, name) values ('@canal_de_chollos', 'Canal de chollos');
-
--- Canal privado: se guarda el enlace de invitación
-insert into sources (identifier, name, invite_link)
-values ('-1001234567890', 'Canal privado', 'https://t.me/+AbCdEfGhIjK');
-```
-
-- `identifier`: el @usuario del canal; para un canal privado, su identificador numérico (por ejemplo `-1001234567890`). No pongas un nombre inventado: se buscaría como @usuario y podría coincidir con otro canal.
-- `invite_link`: **obligatorio para canales privados**. Un canal privado no tiene @usuario, así que si la cuenta lectora aún no es miembro el bot solo puede encontrarlo y unirse con este enlace. Si el canal exige aprobación del administrador, el bot envía la solicitud y no la repite hasta pasadas 6 horas.
-- `country`: `ES` por defecto (v1 solo soporta Amazon España).
-- `active`: ponlo a `false` para dejar de leer un canal.
-
-El bot recarga la lista de canales cada `SOURCES_REFRESH_SECONDS` segundos (300 por defecto), así que no hace falta reiniciarlo. Cada canal se resuelve una sola vez; solo se vuelve a buscar si cambias su `identifier` o su `invite_link`.
+- Cada `SOURCES_REFRESH_SECONDS` segundos (300 por defecto) el bot repasa los canales de la cuenta y apunta los nuevos en la tabla `sources` de Supabase, con su identificador numérico (`-100…`), su nombre y el país `DEFAULT_COUNTRY`. No hace falta reiniciarlo.
+- No se leen grupos, chats privados ni el propio canal de destino (`TARGET_CHANNEL`).
+- Para silenciar un canal sin salir de él, pon `active = false` en su fila de `sources`.
 
 ## 6. Amazon Afiliados
 
