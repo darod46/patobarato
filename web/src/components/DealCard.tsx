@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { currentPlatform, linkTarget, openAmazon } from '../lib/amazonLink'
 import { discountPercent, formatPrice, timeAgo } from '../lib/format'
 import type { Deal } from '../lib/types'
 
@@ -8,6 +9,7 @@ type Props = { deal: Deal; now: Date; onTagClick: (tag: string) => void }
 
 export function DealCard({ deal, now, onTagClick }: Props) {
   const [failed, setFailed] = useState(false)
+  const [platform] = useState(currentPlatform)
   const discount =
     deal.previousPrice !== null ? discountPercent(deal.price, deal.previousPrice) : null
   const isPlaceholder = failed || !deal.imageUrl
@@ -71,23 +73,26 @@ export function DealCard({ deal, now, onTagClick }: Props) {
           <span className="text-xs text-zinc-500">{timeAgo(deal.publishedAt, now)}</span>
           <a
             href={deal.affiliateUrl}
-            target="_blank"
+            target={linkTarget(platform)}
             rel="sponsored noopener noreferrer"
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-carbon py-2.5 text-sm font-semibold text-white transition-colors hover:bg-carbon-soft"
+            onClick={(event) => openAmazon(event, deal.affiliateUrl, platform)}
+            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-amber px-4 py-3 text-base font-bold text-carbon shadow-sm transition-colors hover:bg-[#d97706] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-carbon"
           >
-            Ver en Amazon
             <svg
               aria-hidden="true"
               viewBox="0 0 24 24"
-              className="h-4 w-4"
+              className="h-5 w-5"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="2.2"
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <circle cx="9" cy="20" r="1.5" />
+              <circle cx="18" cy="20" r="1.5" />
+              <path d="M2 3h3l2.7 12.4a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.5L21 8H6.2" />
             </svg>
+            Ver en Amazon
           </a>
         </div>
       </div>

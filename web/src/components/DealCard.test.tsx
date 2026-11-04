@@ -75,3 +75,19 @@ describe('DealCard', () => {
     expect(onTagClick).toHaveBeenCalledWith('sony')
   })
 })
+
+describe('DealCard Amazon button on mobile', () => {
+  it('opens in the same tab on iPhone so iOS can hand it to the Amazon app', () => {
+    const ua = vi
+      .spyOn(navigator, 'userAgent', 'get')
+      .mockReturnValue('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15')
+    try {
+      render(<DealCard deal={full} now={now} onTagClick={() => {}} />)
+      const link = screen.getByRole('link', { name: /Ver en Amazon/ })
+      expect(link).not.toHaveAttribute('target')
+      expect(link).toHaveAttribute('href', full.affiliateUrl)
+    } finally {
+      ua.mockRestore()
+    }
+  })
+})
