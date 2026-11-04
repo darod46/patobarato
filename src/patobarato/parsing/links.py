@@ -13,11 +13,20 @@ _ASIN_PATH = re.compile(
     r"/(?:dp|gp/product|gp/aw/d|exec/obidos/ASIN|o/ASIN)/([A-Za-z0-9]{10})(?:/|$)"
 )
 _MAX_REDIRECTS = 10
+_HAS_SCHEME = re.compile(r"^[a-z][a-z0-9+.\-]*://", re.IGNORECASE)
+
+
+def with_scheme(url: str) -> str:
+    """Adds ``https://`` to scheme-less links such as ``amzn.to/abc``."""
+    url = url.strip()
+    if _HAS_SCHEME.match(url):
+        return url
+    return "https:" + url if url.startswith("//") else "https://" + url
 
 
 def _host(url: str) -> str:
     try:
-        return (urlparse(url).hostname or "").lower()
+        return (urlparse(with_scheme(url)).hostname or "").lower()
     except ValueError:
         return ""
 
@@ -39,7 +48,7 @@ def country_from_url(url: str) -> str | None:
 
 def asin_from_url(url: str) -> str | None:
     try:
-        path = urlparse(url).path
+        path = urlparse(with_scheme(url)).path
     except ValueError:
         return None
     match = _ASIN_PATH.search(path)
@@ -68,7 +77,11 @@ class UrlResolver:
         self._client = client
 
     async def resolve(self, url: str) -> str | None:
-        current = url
+        """Returns the Amazon URL the link leads to, or None.
+
+        Network errors and malformed URLs give None; other errors propagate.
+        """
+        current = with_scheme(url)
         try:
             for _ in range(_MAX_REDIRECTS + 1):
                 if is_amazon_url(current):
@@ -80,6 +93,6 @@ class UrlResolver:
                     if not response.is_redirect or not location:
                         return None
                 current = urljoin(current, location)
-        except httpx.HTTPError:
+        except (httpx.HTTPError, httpx.InvalidURL, ValueError):
             return None
         return None

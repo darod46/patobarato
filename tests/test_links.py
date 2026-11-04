@@ -127,3 +127,62 @@ async def test_resolve_failure_returns_none():
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
         assert await UrlResolver(client).resolve("https://amzn.to/abc") is None
+
+
+# --- I6: scheme-less links and malformed URLs -----------------------------------
+
+
+def test_schemeless_helpers():
+    assert is_amazon_url("www.amazon.es/dp/B09XS7JWHH")
+    assert country_from_url("amazon.es/dp/B09XS7JWHH") == "ES"
+    assert asin_from_url("www.amazon.es/dp/B09XS7JWHH") == "B09XS7JWHH"
+    assert not is_amazon_url("amzn.to/abc")
+
+
+async def test_resolve_schemeless_shortener_is_followed():
+    target = "https://www.amazon.es/dp/B09XS7JWHH"
+    requested: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requested.append(str(request.url))
+        return httpx.Response(301, headers={"Location": target})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        assert await UrlResolver(client).resolve("amzn.to/abc") == target
+    assert requested == ["https://amzn.to/abc"]
+
+
+async def test_resolve_schemeless_amazon_url_makes_no_request():
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise AssertionError("no request expected")
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        result = await UrlResolver(client).resolve("www.amazon.es/dp/B09XS7JWHH")
+    assert result == "https://www.amazon.es/dp/B09XS7JWHH"
+    assert asin_from_url(result) == "B09XS7JWHH"
+    assert country_from_url(result) == "ES"
+
+
+async def test_resolve_malformed_location_returns_none():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(302, headers={"Location": "http://a]/"})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        assert await UrlResolver(client).resolve("https://amzn.to/abc") is None
+
+
+async def test_resolve_invalid_url_returns_none():
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise AssertionError("no request expected")
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        assert await UrlResolver(client).resolve("https://\x00x/") is None
+
+
+async def test_resolve_does_not_swallow_unexpected_errors():
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise RuntimeError("bug")
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        with pytest.raises(RuntimeError):
+            await UrlResolver(client).resolve("https://amzn.to/abc")
