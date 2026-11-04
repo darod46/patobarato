@@ -66,7 +66,7 @@ El resto tiene valores por defecto razonables (`TARGET_CHANNEL=@patobarato`, `AF
 
 ### Imagen
 
-Cada push a `main` lanza la action `.github/workflows/docker.yml`: pasa los tests, construye la imagen para **arm64** (el servidor Ampere de Oracle) y la publica en `ghcr.io/davidr_gco/patobarato` con las etiquetas `latest` y el SHA corto del commit.
+Cada push a `main` lanza la action `.github/workflows/docker.yml`: pasa los tests, construye la imagen para **arm64** (el servidor Ampere de Oracle) y la publica en `ghcr.io/darod46/patobarato` con las etiquetas `latest` y el SHA corto del commit.
 
 En el servidor solo hacen falta `docker-compose.yml`, `.env` y la carpeta `data/`:
 

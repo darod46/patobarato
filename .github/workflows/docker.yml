@@ -11,7 +11,7 @@ permissions:
 
 env:
   # GHCR image names must be lowercase.
-  IMAGE: ghcr.io/davidr_gco/patobarato
+  IMAGE: ghcr.io/darod46/patobarato
 
 jobs:
   test:
