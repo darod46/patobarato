@@ -1,3 +1,4 @@
+import dataclasses
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
@@ -98,3 +99,12 @@ async def test_test_helpers_and_unknown_offer_status_noop():
     assert repo.offer_statuses() == [OfferStatus.PUBLISHED]
     (pub,) = repo.publications()
     assert pub["message_id"] == 7 and pub["offer_id"] == offer_id
+
+
+async def test_insert_offer_stores_normalized_unique_hashtags():
+    repo = InMemoryRepository()
+    source = repo.add_source("@canal")
+    product_id = await repo.upsert_product(make_offer())
+    offer = dataclasses.replace(make_offer(), hashtags=["Sony", "sony", "Auri-culares", "#"])
+    offer_id = await repo.insert_offer(product_id, source.id, 1, offer, "raw", NOW)
+    assert repo.offer_hashtags(offer_id) == ["sony", "auriculares"]

@@ -21,7 +21,7 @@ def discount_percent(price: Decimal, previous: Decimal) -> int:
     return int(percent.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
 
 
-def _normalize_hashtag(tag: str) -> str:
+def normalize_hashtag(tag: str) -> str:
     return _INVALID_TAG_CHARS.sub("", tag.lower())
 
 
@@ -38,7 +38,7 @@ def _build(offer: ParsedOffer, title: str, coupon: str | None) -> str:
         )
     if coupon:
         lines.append(f"🎟️ Cupón: <code>{html.escape(coupon)}</code>")
-    tags = [t for t in (_normalize_hashtag(h) for h in offer.hashtags) if t]
+    tags = [t for t in (normalize_hashtag(h) for h in offer.hashtags) if t]
     if tags:
         lines.append("")
         lines.append(" ".join(f"#{t}" for t in tags))

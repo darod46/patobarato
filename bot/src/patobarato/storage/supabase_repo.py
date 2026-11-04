@@ -12,6 +12,7 @@ from patobarato.models import (
     PublicationStatus,
     Source,
 )
+from patobarato.storage.repository import clean_hashtags
 
 UNIQUE_VIOLATION = "23505"
 
@@ -97,6 +98,7 @@ class SupabaseRepository:
             "previous_price": _money(offer.previous_price),
             "currency": "EUR",
             "coupon": offer.coupon,
+            "hashtags": clean_hashtags(offer.hashtags),
             "raw_text": raw_text,
             "status": OfferStatus.PENDING.value,
             "detected_at": detected_at.isoformat(),

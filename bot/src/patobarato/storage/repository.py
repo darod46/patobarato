@@ -9,6 +9,12 @@ from patobarato.models import (
     PublicationStatus,
     Source,
 )
+from patobarato.publishing.format import normalize_hashtag
+
+
+def clean_hashtags(tags: list[str]) -> list[str]:
+    """Normalize hashtags, dropping empties and duplicates (order kept)."""
+    return list(dict.fromkeys(t for t in map(normalize_hashtag, tags) if t))
 
 
 class Repository(Protocol):
@@ -120,11 +126,16 @@ class InMemoryRepository(Repository):
             "price": offer.price,
             "previous_price": offer.previous_price,
             "coupon": offer.coupon,
+            "hashtags": clean_hashtags(offer.hashtags),
             "raw_text": raw_text,
             "status": OfferStatus.PENDING,
             "detected_at": detected_at,
         }
         return offer_id
+
+    def offer_hashtags(self, offer_id: int) -> list[str]:
+        """Stored hashtags of an offer (for tests)."""
+        return list(self._offers[offer_id]["hashtags"])
 
     async def set_offer_status(self, offer_id: int, status: OfferStatus) -> None:
         offer = self._offers.get(offer_id)

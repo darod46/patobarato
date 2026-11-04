@@ -1,3 +1,4 @@
+import dataclasses
 import os
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -91,6 +92,14 @@ async def test_insert_offer_duplicate_returns_none(repo, source, asin):
     assert first is not None
     assert again is None
     await repo.set_offer_status(first, OfferStatus.PUBLISHED)
+
+
+async def test_insert_offer_stores_hashtags(repo, client, source, asin):
+    product_id = await repo.upsert_product(make_offer(asin))
+    offer = dataclasses.replace(make_offer(asin), hashtags=["Sony", "auriculares"])
+    offer_id = await repo.insert_offer(product_id, source["id"], 7, offer, "raw", NOW)
+    row = client.table("offers").select("hashtags").eq("id", offer_id).execute().data[0]
+    assert row["hashtags"] == ["sony", "auriculares"]
 
 
 async def test_last_publication_is_most_recent(repo, source, asin):
