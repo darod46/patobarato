@@ -142,6 +142,19 @@ class SupabaseRepository:
 
         await asyncio.to_thread(run)
 
+    async def get_products_without_image(self) -> list[tuple[int, str, str]]:
+        def run():
+            return (
+                self._client.table("products")
+                .select("id, asin, country")
+                .is_("image_url", "null")
+                .order("id")
+                .execute()
+            )
+
+        response = await asyncio.to_thread(run)
+        return [(row["id"], row["asin"], row["country"]) for row in response.data]
+
     async def get_last_publication(
         self, product_id: int, country: str
     ) -> LastPublication | None:

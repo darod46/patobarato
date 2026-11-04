@@ -1,4 +1,4 @@
-"""Command-line entrypoint: ``python -m patobarato login|run``."""
+"""Command-line entrypoint: ``python -m patobarato login|run|backfill-images``."""
 
 import argparse
 import asyncio
@@ -14,11 +14,12 @@ from supabase import create_client
 from telethon import TelegramClient
 
 from patobarato.config import Settings, get_settings
+from patobarato.core.backfill import backfill_images
 from patobarato.core.pipeline import Pipeline
 from patobarato.parsing.links import UrlResolver
 from patobarato.publishing.telegram_publisher import TelegramPublisher
+from patobarato.sources.amazon_page import AmazonImageFinder
 from patobarato.sources.telegram_listener import TelegramListener, make_photo_provider
-from patobarato.storage.images import SupabaseImageStore
 from patobarato.storage.supabase_repo import SupabaseRepository
 
 logger = logging.getLogger("patobarato.main")
@@ -92,10 +93,14 @@ async def run(settings: Settings) -> int:
         await reader.disconnect()
         return 1
 
-    async with httpx.AsyncClient(timeout=settings.http_timeout_seconds) as http:
+    async with (
+        httpx.AsyncClient(timeout=settings.http_timeout_seconds) as http,
+        httpx.AsyncClient(timeout=settings.http_timeout_seconds) as amazon_http,
+    ):
         resolver = UrlResolver(http)
-        supabase = create_client(settings.supabase_url, settings.supabase_service_key)
-        repo = SupabaseRepository(supabase)
+        repo = SupabaseRepository(
+            create_client(settings.supabase_url, settings.supabase_service_key)
+        )
         publisher = TelegramPublisher(bot, settings.target_channel)
         pipeline = Pipeline(
             repo,
@@ -103,7 +108,7 @@ async def run(settings: Settings) -> int:
             publisher,
             make_photo_provider(reader, resolver),
             settings,
-            image_store=SupabaseImageStore(supabase),
+            image_finder=AmazonImageFinder(amazon_http),
         )
         listener = TelegramListener(
             reader,
@@ -127,6 +132,16 @@ async def run(settings: Settings) -> int:
             await bot.disconnect()
 
 
+async def backfill(settings: Settings) -> int:
+    repo = SupabaseRepository(
+        create_client(settings.supabase_url, settings.supabase_service_key)
+    )
+    async with httpx.AsyncClient(timeout=settings.http_timeout_seconds) as http:
+        found, missing = await backfill_images(repo, AmazonImageFinder(http))
+    print(f"Imágenes encontradas: {found}. Sin imagen: {missing}.")
+    return 0
+
+
 def _config_error_message(error: ValidationError) -> str:
     missing = [
         ".".join(str(part) for part in err["loc"]).upper()
@@ -148,7 +163,7 @@ def _config_error_message(error: ValidationError) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="patobarato")
-    parser.add_argument("command", choices=["login", "run"])
+    parser.add_argument("command", choices=["login", "run", "backfill-images"])
     args = parser.parse_args(argv)
 
     logging.basicConfig(
@@ -165,6 +180,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "login":
         return asyncio.run(login(settings))
+    if args.command == "backfill-images":
+        return asyncio.run(backfill(settings))
     try:
         return asyncio.run(run(settings))
     except KeyboardInterrupt:

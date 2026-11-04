@@ -13,7 +13,7 @@ from patobarato.models import OfferStatus, ParsedOffer, SourceMessage
 from patobarato.parsing.extract import extract_offers
 from patobarato.parsing.links import UrlResolver, build_affiliate_url
 from patobarato.publishing.format import format_caption
-from patobarato.storage.images import ImageStore
+from patobarato.sources.amazon_page import ImageFinder
 from patobarato.storage.repository import Repository
 
 logger = logging.getLogger("patobarato.pipeline")
@@ -55,7 +55,7 @@ class Pipeline:
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         monotonic: Callable[[], float] = time.monotonic,
         publish_interval_seconds: float = MIN_PUBLISH_INTERVAL_SECONDS,
-        image_store: ImageStore | None = None,
+        image_finder: ImageFinder | None = None,
     ) -> None:
         self._repo = repo
         self._resolver = resolver
@@ -66,7 +66,7 @@ class Pipeline:
         self._sleep = sleep
         self._monotonic = monotonic
         self._publish_interval = publish_interval_seconds
-        self._image_store = image_store
+        self._image_finder = image_finder
         self._last_publish: float | None = None
         self._queue: asyncio.Queue[SourceMessage] = asyncio.Queue()
 
@@ -166,12 +166,13 @@ class Pipeline:
             lambda: self._repo.set_offer_status(offer_id, OfferStatus.PUBLISHED),
             f"Mensaje publicado pero no registrado (estado de la oferta): {what}",
         )
-        if photo and self._image_store is not None:
+        if self._image_finder is not None:
             try:
-                url = await self._image_store.upload(offer.country, offer.asin, photo)
-                await self._repo.set_product_image(product_id, url)
+                url = await self._image_finder.find(offer.asin, offer.country)
+                if url:
+                    await self._repo.set_product_image(product_id, url)
             except Exception:
-                logger.error("Photo upload failed for %s", offer.asin, exc_info=True)
+                logger.error("Image lookup failed for %s", offer.asin, exc_info=True)
         return OfferStatus.PUBLISHED
 
     async def _wait_publish_slot(self) -> None:

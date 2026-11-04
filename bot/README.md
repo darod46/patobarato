@@ -127,3 +127,13 @@ pytest
 ```
 
 Las pruebas de integración contra Supabase solo se ejecutan si defines `SUPABASE_TEST_URL` y `SUPABASE_TEST_KEY` (usa un proyecto de pruebas, no el de producción).
+
+## Imágenes de producto
+
+Al publicar una oferta, el bot abre la página del producto en amazon.es y guarda en `products.image_url` el enlace a su imagen principal (`m.media-amazon.com`, 500 px). La web enlaza esa imagen directamente; no se descarga ni se guarda. Si Amazon devuelve un captcha o un error, la oferta se publica igual y la web muestra el pato. En el log aparecen las líneas `Amazon image for … found/not found (ok=…, failed=…)` para ver cuántas veces lo consigue.
+
+Para buscar la imagen de los productos que aún no la tienen (espera 3 s entre peticiones):
+
+```
+docker compose run --rm bot backfill-images
+```

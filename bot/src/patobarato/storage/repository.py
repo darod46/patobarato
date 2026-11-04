@@ -38,6 +38,10 @@ class Repository(Protocol):
 
     async def set_product_image(self, product_id: int, image_url: str) -> None: ...
 
+    async def get_products_without_image(self) -> list[tuple[int, str, str]]:
+        """``(product_id, asin, country)`` of products with no image yet."""
+        ...
+
     async def get_last_publication(
         self, product_id: int, country: str
     ) -> LastPublication | None: ...
@@ -147,6 +151,13 @@ class InMemoryRepository(Repository):
 
     async def set_product_image(self, product_id: int, image_url: str) -> None:
         self.product_images[product_id] = image_url
+
+    async def get_products_without_image(self) -> list[tuple[int, str, str]]:
+        return sorted(
+            (product_id, asin, country)
+            for (_store, country, asin), product_id in self._products.items()
+            if product_id not in self.product_images
+        )
 
     def offer_statuses(self) -> list[OfferStatus]:
         """Offer statuses in insertion order (for tests)."""

@@ -114,7 +114,7 @@ def fake_time():
 @pytest.fixture
 def make_pipeline(repo, resolver, publisher, fake_time):
     def factory(
-        photo_provider=_no_photo, pub=None, repository=None, image_store=None
+        photo_provider=_no_photo, pub=None, repository=None, image_finder=None
     ) -> Pipeline:
         return Pipeline(
             repository or repo,
@@ -125,7 +125,7 @@ def make_pipeline(repo, resolver, publisher, fake_time):
             clock=lambda: NOW,
             sleep=fake_time.sleep,
             monotonic=fake_time.monotonic,
-            image_store=image_store,
+            image_finder=image_finder,
         )
 
     return factory
@@ -410,57 +410,49 @@ async def test_first_publication_does_not_wait(make_pipeline, fake_time):
     assert fake_time.sleeps == []
 
 
-class FakeImageStore:
-    def __init__(self, fail: bool = False) -> None:
+class FakeImageFinder:
+    def __init__(self, url: str | None = "https://m.media-amazon.com/images/I/X._AC_SL500_.jpg", fail: bool = False) -> None:
+        self.url = url
         self.fail = fail
-        self.calls: list[tuple[str, str, bytes]] = []
+        self.calls: list[tuple[str, str]] = []
 
-    async def upload(self, country: str, asin: str, data: bytes) -> str:
-        self.calls.append((country, asin, data))
+    async def find(self, asin: str, country: str) -> str | None:
+        self.calls.append((asin, country))
         if self.fail:
-            raise RuntimeError("storage down")
-        return f"https://img/{country}/{asin}.jpg"
+            raise RuntimeError("amazon down")
+        return self.url
 
 
-async def _jpg_photo(msg: SourceMessage, url: str) -> bytes | None:
-    return b"jpg"
+async def test_published_offer_stores_amazon_image_link(make_pipeline, repo):
+    finder = FakeImageFinder()
+    await make_pipeline(image_finder=finder).process(_msg())
+    assert finder.calls == [("B09XS7JWHH", "ES")]
+    assert list(repo.product_images.values()) == [
+        "https://m.media-amazon.com/images/I/X._AC_SL500_.jpg"
+    ]
 
 
-async def test_published_photo_is_uploaded_and_stored(make_pipeline, repo):
-    store = FakeImageStore()
-    pipeline = make_pipeline(photo_provider=_jpg_photo, image_store=store)
-    await pipeline.process(_msg())
-    assert store.calls == [("ES", "B09XS7JWHH", b"jpg")]
-    assert list(repo.product_images.values()) == ["https://img/ES/B09XS7JWHH.jpg"]
-
-
-async def test_photo_upload_failure_still_publishes(make_pipeline, repo, caplog):
-    store = FakeImageStore(fail=True)
-    pipeline = make_pipeline(photo_provider=_jpg_photo, image_store=store)
-    with caplog.at_level(logging.ERROR, logger="patobarato.pipeline"):
-        statuses = await pipeline.process(_msg())
+async def test_no_image_found_leaves_product_without_image(make_pipeline, repo):
+    finder = FakeImageFinder(url=None)
+    statuses = await make_pipeline(image_finder=finder).process(_msg())
     assert statuses == [OfferStatus.PUBLISHED]
-    assert repo.offer_statuses() == [OfferStatus.PUBLISHED]
+    assert repo.product_images == {}
+
+
+async def test_image_lookup_failure_still_publishes(make_pipeline, repo, caplog):
+    finder = FakeImageFinder(fail=True)
+    with caplog.at_level(logging.ERROR, logger="patobarato.pipeline"):
+        statuses = await make_pipeline(image_finder=finder).process(_msg())
+    assert statuses == [OfferStatus.PUBLISHED]
     assert len(repo.publications()) == 1
     assert repo.product_images == {}
     assert any(
-        r.levelno == logging.ERROR
-        and r.name == "patobarato.pipeline"
-        and "B09XS7JWHH" in r.getMessage()
+        r.levelno == logging.ERROR and "B09XS7JWHH" in r.getMessage()
         for r in caplog.records
     )
 
 
-async def test_no_upload_without_photo(make_pipeline):
-    store = FakeImageStore()
-    await make_pipeline(image_store=store).process(_msg())
-    assert store.calls == []
-
-
-async def test_no_upload_when_publish_fails(make_pipeline):
-    store = FakeImageStore()
-    pipeline = make_pipeline(
-        photo_provider=_jpg_photo, pub=FakePublisher(fail=True), image_store=store
-    )
-    await pipeline.process(_msg())
-    assert store.calls == []
+async def test_no_image_lookup_when_publish_fails(make_pipeline):
+    finder = FakeImageFinder()
+    await make_pipeline(pub=FakePublisher(fail=True), image_finder=finder).process(_msg())
+    assert finder.calls == []

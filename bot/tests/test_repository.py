@@ -114,3 +114,11 @@ async def test_set_product_image_is_stored():
     repo = InMemoryRepository()
     await repo.set_product_image(7, "https://img/x.jpg")
     assert repo.product_images == {7: "https://img/x.jpg"}
+
+
+async def test_products_without_image_lists_only_missing_ones():
+    repo = InMemoryRepository()
+    with_image = await repo.upsert_product(make_offer(asin="B000000001"))
+    without = await repo.upsert_product(make_offer(asin="B000000002"))
+    await repo.set_product_image(with_image, "https://img/x.jpg")
+    assert await repo.get_products_without_image() == [(without, "B000000002", "ES")]
