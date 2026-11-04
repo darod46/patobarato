@@ -54,7 +54,13 @@ Rellena como mínimo:
 | `SUPABASE_URL` | URL del proyecto de Supabase |
 | `SUPABASE_SERVICE_KEY` | `service_role key` (secreta, nunca la subas al repositorio) |
 
-El resto tiene valores por defecto razonables (`TARGET_CHANNEL=@patobarato`, `AFFILIATE_TAG=patobarato-21`, `REPUBLISH_AFTER_DAYS=7`, `STALE_AFTER_MINUTES=30`...). Para probar sin tocar el canal real, pon `TARGET_CHANNEL` apuntando a un canal de pruebas.
+El resto tiene valores por defecto razonables (`TARGET_CHANNEL=@patobarato`, `AFFILIATE_TAG=patobarato-21`, `REPUBLISH_AFTER_DAYS=7`, `STALE_AFTER_MINUTES=30`...). Para probar sin tocar el canal real, pon `TARGET_CHANNEL` apuntando a un canal de pruebas. `TARGET_CHANNEL`, `AFFILIATE_TAG` y las variables obligatorias no pueden quedar vacías.
+
+| Variable opcional | Por defecto | Descripción |
+| --- | --- | --- |
+| `DEFAULT_COUNTRY` | `ES` | País por defecto. En v1 solo se admite `ES`; el país de cada oferta sale del dominio del enlace (`amazon.es`). |
+| `HTTP_TIMEOUT_SECONDS` | `10.0` | Tiempo máximo, en segundos, de cada petición HTTP al resolver enlaces acortados (`amzn.to`, `bit.ly`...). |
+| `SOURCES_REFRESH_SECONDS` | `300` | Cada cuánto se recarga la tabla `sources`. |
 
 ## 4. Puesta en marcha con Docker
 
@@ -93,15 +99,15 @@ insert into sources (identifier, name) values ('@canal_de_chollos', 'Canal de ch
 
 -- Canal privado: se guarda el enlace de invitación
 insert into sources (identifier, name, invite_link)
-values ('canal_privado', 'Canal privado', 'https://t.me/+AbCdEfGhIjK');
+values ('-1001234567890', 'Canal privado', 'https://t.me/+AbCdEfGhIjK');
 ```
 
-- `identifier`: el @usuario del canal (o su identificador si es privado).
-- `invite_link`: solo para canales privados; el bot lo usa para unirse al canal.
+- `identifier`: el @usuario del canal; para un canal privado, su identificador numérico (por ejemplo `-1001234567890`). No pongas un nombre inventado: se buscaría como @usuario y podría coincidir con otro canal.
+- `invite_link`: **obligatorio para canales privados**. Un canal privado no tiene @usuario, así que si la cuenta lectora aún no es miembro el bot solo puede encontrarlo y unirse con este enlace. Si el canal exige aprobación del administrador, el bot envía la solicitud y no la repite hasta pasadas 6 horas.
 - `country`: `ES` por defecto (v1 solo soporta Amazon España).
 - `active`: ponlo a `false` para dejar de leer un canal.
 
-El bot recarga la lista de canales cada `SOURCES_REFRESH_SECONDS` segundos (300 por defecto), así que no hace falta reiniciarlo.
+El bot recarga la lista de canales cada `SOURCES_REFRESH_SECONDS` segundos (300 por defecto), así que no hace falta reiniciarlo. Cada canal se resuelve una sola vez; solo se vuelve a buscar si cambias su `identifier` o su `invite_link`.
 
 ## 6. Amazon Afiliados
 
