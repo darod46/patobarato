@@ -4,7 +4,9 @@ type Filters = { q: string; tag: string | null }
 
 function read(): Filters {
   const params = new URLSearchParams(window.location.search)
-  return { q: params.get('q') ?? '', tag: params.get('tag') || null }
+  const rawTag = (params.get('tag') ?? '').toLowerCase()
+  const tag = /^[\p{L}\p{N}_]+$/u.test(rawTag) ? rawTag : null
+  return { q: params.get('q') ?? '', tag }
 }
 
 function write(mode: 'push' | 'replace', changes: Partial<Filters>) {

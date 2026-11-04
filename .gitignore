@@ -9,6 +9,7 @@ __pycache__/
 supabase/.temp/
 web/node_modules/
 web/dist/
-web/.env*
-!web/.env.example
+.env
+.env.*
+!**/.env.example
 recursos/*.mp4

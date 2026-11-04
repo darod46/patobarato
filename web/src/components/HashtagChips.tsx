@@ -6,7 +6,7 @@ type Props = {
 
 const base = 'rounded-full px-3 py-1 text-sm font-medium transition-colors'
 const on = 'bg-carbon text-white'
-const off = 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200'
+const off = 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
 
 export function HashtagChips({ tags, active, onSelect }: Props) {
   const shown = active && !tags.includes(active) ? [active, ...tags] : tags

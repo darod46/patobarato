@@ -11,7 +11,7 @@ export function Footer() {
             href="https://t.me/patobarato"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-semibold text-carbon underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+            className="font-semibold text-carbon underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-carbon"
           >
             Canal de Telegram
           </a>

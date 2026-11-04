@@ -55,6 +55,13 @@ describe('useUrlFilters', () => {
     expect(result.current.tag).toBeNull()
   })
 
+  it('lowercases the tag and rejects invalid ones', () => {
+    history.replaceState(null, '', '/?tag=LEGO')
+    expect(renderHook(() => useUrlFilters()).result.current.tag).toBe('lego')
+    history.replaceState(null, '', '/?tag=a%7D')
+    expect(renderHook(() => useUrlFilters()).result.current.tag).toBeNull()
+  })
+
   it('reacts to popstate', () => {
     const { result } = renderHook(() => useUrlFilters())
     act(() => {

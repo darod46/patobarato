@@ -24,7 +24,10 @@ export function timeAgo(iso: string, now: Date): string {
   return `hace ${days} ${days === 1 ? 'día' : 'días'}`
 }
 
-/** Escapes LIKE/ILIKE wildcards so user text is matched literally. */
+/**
+ * Escapes LIKE/ILIKE wildcards so user text is matched literally. PostgREST also treats `*`
+ * as a wildcard and cannot escape it, so it becomes a single-char wildcard.
+ */
 export function escapeIlike(text: string): string {
-  return text.replace(/[\\%_]/g, '\\$&')
+  return text.replace(/[\\%_]/g, '\\$&').replace(/\*/g, '_')
 }

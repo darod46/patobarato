@@ -19,9 +19,10 @@ type Props = {
 }
 
 // Bound lazily so the Supabase client (and its env vars) is only needed when actually fetching.
-const defaultFetchDeals: DealsFetcher = (params) => api.fetchDeals(getSupabase(), params)
-const defaultFetchHashtags = () => api.fetchHashtags(getSupabase())
-const defaultFetchLatestDeal = () => api.fetchLatestDeal(getSupabase())
+// Async so a missing-env throw becomes a rejected promise the UI handles instead of crashing React.
+const defaultFetchDeals: DealsFetcher = async (params) => api.fetchDeals(getSupabase(), params)
+const defaultFetchHashtags = async () => api.fetchHashtags(getSupabase())
+const defaultFetchLatestDeal = async () => api.fetchLatestDeal(getSupabase())
 
 export default function App({
   fetchDeals = defaultFetchDeals,

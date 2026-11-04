@@ -39,7 +39,7 @@ export function DealFeed({ q, tag, onTag, onClear, fetchDeals, fetchHashtags, no
 
   return (
     <div className="flex flex-col gap-6">
-      {tags.length > 0 && <HashtagChips tags={tags} active={tag} onSelect={onTag} />}
+      {(tags.length > 0 || tag) && <HashtagChips tags={tags} active={tag} onSelect={onTag} />}
       {status === 'loading' && (
         <div data-testid="feed-skeletons" className={GRID}>
           {Array.from({ length: 6 }, (_, i) => (

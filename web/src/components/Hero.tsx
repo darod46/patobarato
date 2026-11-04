@@ -1,5 +1,5 @@
 const FOCUS =
-  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber'
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-carbon'
 
 export function Hero() {
   return (

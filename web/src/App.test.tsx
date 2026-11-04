@@ -46,6 +46,20 @@ it('renders header, hero, feed, telegram block and footer', async () => {
   ).toBeInTheDocument()
 })
 
+it('still renders the page shell and an error state when env vars are missing', async () => {
+  vi.stubEnv('VITE_SUPABASE_URL', '')
+  vi.stubEnv('VITE_SUPABASE_ANON_KEY', '')
+  try {
+    render(<App now={new Date('2026-11-04T12:00:00Z')} />)
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    expect(screen.getByRole('banner')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
+    expect(screen.getByText(/En calidad de Afiliado de Amazon/)).toBeInTheDocument()
+  } finally {
+    vi.unstubAllEnvs()
+  }
+})
+
 it('contains none of the mockup invented claims', async () => {
   const { container } = setup()
   await waitFor(() => expect(screen.getAllByText(/Auriculares Sony/).length).toBeGreaterThan(0))

@@ -73,6 +73,13 @@ describe('DealFeed', () => {
     expect(fetchDeals).toHaveBeenCalledTimes(2)
   })
 
+  it('shows the active tag chip even when no chips were loaded', async () => {
+    setup({ tag: 'lego', fetchHashtags: vi.fn().mockResolvedValue([]) })
+    await screen.findByText('Chollo 1')
+    expect(screen.getByRole('button', { name: '#lego' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Todos' })).toBeInTheDocument()
+  })
+
   it('renders no chips and no error when hashtags fail', async () => {
     setup({ fetchHashtags: vi.fn().mockRejectedValue(new Error('x')) })
     await screen.findByText('Chollo 1')

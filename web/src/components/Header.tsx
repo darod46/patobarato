@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 const FOCUS =
-  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber'
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-carbon'
 
 export function Header({ search }: { search: ReactNode }) {
   return (

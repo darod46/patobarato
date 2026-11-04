@@ -28,7 +28,7 @@ export function DealCard({ deal, now, onTagClick }: Props) {
         {deal.coupon && (
           <div
             data-testid="coupon"
-            className="rounded-lg bg-zinc-100 px-2.5 py-1.5 text-xs text-zinc-500"
+            className="rounded-lg bg-zinc-100 px-2.5 py-1.5 text-xs text-zinc-600"
           >
             {deal.coupon}
           </div>
@@ -38,7 +38,7 @@ export function DealCard({ deal, now, onTagClick }: Props) {
             {formatPrice(deal.price)}
           </span>
           {deal.previousPrice !== null && (
-            <s className="price text-sm text-zinc-400">{formatPrice(deal.previousPrice)}</s>
+            <s className="price text-sm text-zinc-500">{formatPrice(deal.previousPrice)}</s>
           )}
           {discount !== null && (
             <span className="rounded-full bg-amber/12 px-2 py-0.5 text-xs font-bold text-amber-ink">
@@ -53,7 +53,7 @@ export function DealCard({ deal, now, onTagClick }: Props) {
                 key={tag}
                 type="button"
                 onClick={() => onTagClick(tag)}
-                className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs text-zinc-500 hover:bg-zinc-200"
+                className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs text-zinc-600 hover:bg-zinc-200"
               >
                 #{tag}
               </button>
@@ -61,7 +61,7 @@ export function DealCard({ deal, now, onTagClick }: Props) {
           </div>
         )}
         <div className="mt-auto flex flex-col gap-2 pt-1">
-          <span className="text-xs text-zinc-400">{timeAgo(deal.publishedAt, now)}</span>
+          <span className="text-xs text-zinc-500">{timeAgo(deal.publishedAt, now)}</span>
           <a
             href={deal.affiliateUrl}
             target="_blank"

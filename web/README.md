@@ -6,7 +6,7 @@ La web solo lee las vistas públicas `web_deals` y `web_hashtags` de Supabase. N
 
 ## Requisitos
 
-- Node.js 22 o superior.
+- Node.js 22.12 o superior.
 - npm.
 
 ## Desarrollo local
@@ -22,7 +22,7 @@ Edita `.env.local` y rellena las dos variables:
 - `VITE_SUPABASE_URL`: la URL del proyecto, con el formato `https://<ref>.supabase.co`.
 - `VITE_SUPABASE_ANON_KEY`: la clave pública (anon/public) del proyecto. Está en Supabase → Project Settings → API Keys.
 
-**Nunca uses la clave `service_role` en la web.** Es una clave con acceso total a la base de datos y no debe aparecer en el frontend ni en `.env.local`. La clave anon es pública por diseño; el acceso real lo limitan las políticas de las vistas.
+**Nunca uses la clave `service_role` en la web.** Es una clave con acceso total a la base de datos y no debe aparecer en el frontend ni en `.env.local`. La clave anon es pública por diseño; el acceso real lo limitan los permisos (grants) concedidos sobre las vistas.
 
 Después arranca el servidor de desarrollo:
 

@@ -75,6 +75,18 @@ describe('useDeals', () => {
     expect(result.current.loadingMore).toBe(false)
   })
 
+  it('skips deals already present when loading more', async () => {
+    const fetcher = vi.fn(async (p: { page: number }) =>
+      p.page === 0
+        ? { deals: [deal(1), deal(2)], hasMore: true }
+        : { deals: [deal(2), deal(3)], hasMore: false },
+    )
+    const { result } = renderHook(() => useDeals(fetcher, { q: '', tag: null }))
+    await waitFor(() => expect(result.current.status).toBe('ready'))
+    act(() => result.current.loadMore())
+    await waitFor(() => expect(ids(result.current.deals)).toEqual([1, 2, 3]))
+  })
+
   it('reports error and retries', async () => {
     const fetcher = vi
       .fn()

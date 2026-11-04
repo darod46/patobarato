@@ -37,6 +37,10 @@ describe('timeAgo', () => {
 })
 
 describe('escapeIlike', () => {
+  it('replaces PostgREST * wildcards with a single-char wildcard', () => {
+    expect(escapeIlike('a*b')).toBe('a_b')
+  })
+
   it('escapes wildcard characters and backslashes', () => {
     expect(escapeIlike('50% a_b\\c')).toBe('50\\% a\\_b\\\\c')
   })

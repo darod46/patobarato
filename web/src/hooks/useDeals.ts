@@ -60,7 +60,10 @@ export function useDeals(fetcher: DealsFetcher, filters: { q: string; tag: strin
       .then((res) => {
         if (id !== requestId.current) return
         page.current = next
-        setDeals((prev) => [...prev, ...res.deals])
+        setDeals((prev) => {
+          const seen = new Set(prev.map((d) => d.publicationId))
+          return [...prev, ...res.deals.filter((d) => !seen.has(d.publicationId))]
+        })
         setHasMore(res.hasMore)
         setLoadingMore(false)
       })
