@@ -1,10 +1,12 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 
 import httpx
 from telethon.tl import functions, types
 
 from patobarato.models import SourceMessage
 from patobarato.parsing.links import UrlResolver
+from patobarato.parsing.text import parse_prices
 from patobarato.sources.telegram_listener import make_photo_provider, to_source_message
 
 NOW = datetime(2026, 11, 4, 12, 0, tzinfo=UTC)
@@ -234,3 +236,46 @@ async def test_photo_provider_returns_none_for_empty_preview():
     provider = make_photo_provider(reader, _resolver())
 
     assert await provider(_source_msg(None, False), CANONICAL) is None
+
+
+def test_strikethrough_entity_is_wrapped_respecting_utf16_offsets():
+    text = "🎧 Auriculares Sony\n49,99€ 29,99€"
+    # The emoji is 2 UTF-16 units, so the entity offset is 1 more than the str index.
+    entities = [
+        types.MessageEntityStrike(offset=text.index("49,99€") + 1, length=len("49,99€"))
+    ]
+
+    msg = to_source_message(_message(text, entities), 1, NOW, None)
+
+    assert msg.text == "🎧 Auriculares Sony\n~~49,99€~~ 29,99€"
+    prices = parse_prices(msg.text)
+    assert prices.price == Decimal("29.99")
+    assert prices.previous_price == Decimal("49.99")
+
+
+def test_received_at_is_message_date_when_earlier_than_clock():
+    raw = _message("x")
+    raw.date = NOW - timedelta(minutes=40)
+
+    assert to_source_message(raw, 1, NOW, None).received_at == NOW - timedelta(minutes=40)
+
+
+def test_received_at_is_never_after_clock():
+    raw = _message("x")
+    raw.date = NOW + timedelta(minutes=5)
+
+    assert to_source_message(raw, 1, NOW, None).received_at == NOW
+
+
+def test_received_at_without_message_date_uses_clock():
+    raw = _message("x")
+    raw.date = None
+
+    assert to_source_message(raw, 1, NOW, None).received_at == NOW
+
+
+def test_received_at_naive_message_date_is_utc():
+    raw = _message("x")
+    raw.date = (NOW - timedelta(minutes=1)).replace(tzinfo=None)
+
+    assert to_source_message(raw, 1, NOW, None).received_at == NOW - timedelta(minutes=1)
