@@ -18,7 +18,11 @@ from patobarato.core.backfill import backfill_images
 from patobarato.core.pipeline import Pipeline
 from patobarato.parsing.links import UrlResolver
 from patobarato.publishing.telegram_publisher import TelegramPublisher
-from patobarato.sources.amazon_page import AmazonImageFinder
+from patobarato.sources.amazon_page import (
+    AmazonImageFinder,
+    ChainImageFinder,
+    PrecioRealImageFinder,
+)
 from patobarato.sources.telegram_listener import TelegramListener, make_photo_provider
 from patobarato.storage.supabase_repo import SupabaseRepository
 
@@ -75,6 +79,11 @@ async def _supervise(**named_coros: Coroutine[Any, Any, Any]) -> int:
     return 1
 
 
+def _image_finder(http: httpx.AsyncClient) -> ChainImageFinder:
+    """Amazon's own page first; PrecioReal when Amazon gives no image."""
+    return ChainImageFinder([AmazonImageFinder(http), PrecioRealImageFinder(http)])
+
+
 async def run(settings: Settings) -> int:
     reader = _client(settings.telegram_session_path, settings)
     await reader.connect()
@@ -108,7 +117,7 @@ async def run(settings: Settings) -> int:
             publisher,
             make_photo_provider(reader, resolver),
             settings,
-            image_finder=AmazonImageFinder(amazon_http),
+            image_finder=_image_finder(amazon_http),
         )
         listener = TelegramListener(
             reader,
@@ -137,7 +146,7 @@ async def backfill(settings: Settings) -> int:
         create_client(settings.supabase_url, settings.supabase_service_key)
     )
     async with httpx.AsyncClient(timeout=settings.http_timeout_seconds) as http:
-        found, missing = await backfill_images(repo, AmazonImageFinder(http))
+        found, missing = await backfill_images(repo, _image_finder(http))
     print(f"Imágenes encontradas: {found}. Sin imagen: {missing}.")
     return 0
 

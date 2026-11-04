@@ -113,3 +113,66 @@ async def test_finder_returns_none_for_unknown_country():
         raise AssertionError("must not request")
 
     assert await _finder(handler).find("B0GS1K5XQ8", "FR") is None
+
+
+# --- PrecioReal fallback and finder chain -----------------------------------------
+
+from patobarato.sources.amazon_page import ChainImageFinder, PrecioRealImageFinder  # noqa: E402
+
+PR_PAGE = (
+    '<html><head><title>Braun depiladora</title>'
+    '<meta property="og:image" content="https://m.media-amazon.com/images/I/81wV8t9yIkL._AC_UL320_.jpg">'
+    "</head></html>"
+)
+
+
+async def test_preciorreal_finder_reads_og_image_and_resizes():
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return httpx.Response(200, text=PR_PAGE)
+
+    finder = PrecioRealImageFinder(httpx.AsyncClient(transport=httpx.MockTransport(handler)))
+    url = await finder.find("B09QQS92GP", "ES")
+
+    assert url == "https://m.media-amazon.com/images/I/81wV8t9yIkL._AC_SL500_.jpg"
+    assert str(seen[0].url) == "https://precioreal.com/oferta/amazon_b09qqs92gp"
+
+
+async def test_preciorreal_finder_ignores_non_amazon_images_and_errors():
+    other = '<meta property="og:image" content="https://precioreal.com/logo.png">'
+    for response in (httpx.Response(200, text=other), httpx.Response(404, text="")):
+        finder = PrecioRealImageFinder(
+            httpx.AsyncClient(transport=httpx.MockTransport(lambda r, resp=response: resp))
+        )
+        assert await finder.find("B09QQS92GP", "ES") is None
+
+
+class _Fixed:
+    def __init__(self, url, fail=False):
+        self.url, self.fail, self.calls = url, fail, 0
+
+    async def find(self, asin, country):
+        self.calls += 1
+        if self.fail:
+            raise RuntimeError("boom")
+        return self.url
+
+
+async def test_chain_returns_first_found_and_stops():
+    first, second = _Fixed("https://m.media-amazon.com/images/I/A.jpg"), _Fixed("x")
+    assert await ChainImageFinder([first, second]).find("B0", "ES") == "https://m.media-amazon.com/images/I/A.jpg"
+    assert second.calls == 0
+
+
+async def test_chain_falls_back_on_none_or_error():
+    first, second = _Fixed(None, fail=True), _Fixed("https://m.media-amazon.com/images/I/B.jpg")
+    assert await ChainImageFinder([first, second]).find("B0", "ES") == "https://m.media-amazon.com/images/I/B.jpg"
+
+
+async def test_amazon_no_image_log_includes_page_title(caplog):
+    page = "<html><head><title>Amazon.es: ¿Algo ha ido mal?</title></head></html>"
+    with caplog.at_level(logging.WARNING, logger="patobarato.amazon"):
+        await _finder(lambda request: httpx.Response(200, text=page)).find("B0GS1K5XQ8", "ES")
+    assert any("Algo ha ido mal" in r.getMessage() for r in caplog.records)
