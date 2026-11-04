@@ -24,6 +24,7 @@ logger = logging.getLogger("patobarato.main")
 
 BOT_SESSION_PATH = "data/bot.session"
 LOGIN_FIRST_MESSAGE = "Ejecuta primero: docker compose run --rm bot login"
+BOT_START_FAILED_MESSAGE = "No se pudo iniciar el bot (revisa TELEGRAM_BOT_TOKEN)"
 EXIT_CONFIG_ERROR = 2
 
 
@@ -81,7 +82,14 @@ async def run(settings: Settings) -> int:
         return 1
 
     bot = _client(BOT_SESSION_PATH, settings)
-    await bot.start(bot_token=settings.telegram_bot_token)
+    try:
+        await bot.start(bot_token=settings.telegram_bot_token)
+    except Exception as e:
+        logger.debug("Bot login failed", exc_info=True)
+        print(f"{BOT_START_FAILED_MESSAGE}: {e}", file=sys.stderr)
+        await bot.disconnect()
+        await reader.disconnect()
+        return 1
 
     async with httpx.AsyncClient(timeout=settings.http_timeout_seconds) as http:
         resolver = UrlResolver(http)
@@ -102,6 +110,7 @@ async def run(settings: Settings) -> int:
                 pipeline=pipeline.run(),
                 refresh=listener.run_refresh_loop(),
                 reader=reader.run_until_disconnected(),
+                bot=bot.run_until_disconnected(),
             )
         finally:
             await reader.disconnect()

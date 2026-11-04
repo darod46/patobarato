@@ -3,12 +3,12 @@ import logging
 from types import SimpleNamespace
 
 import pytest
-from telethon.errors import PhoneCodeInvalidError
+from telethon.errors import AccessTokenInvalidError, PhoneCodeInvalidError
 
 import patobarato.main as main_module
 
-from patobarato.config import get_settings
-from patobarato.main import EXIT_CONFIG_ERROR, _supervise, login, main
+from patobarato.config import Settings, get_settings
+from patobarato.main import EXIT_CONFIG_ERROR, _supervise, login, main, run
 
 REQUIRED = [
     "TELEGRAM_API_ID",
@@ -120,3 +120,89 @@ async def test_login_failure_prints_spanish_message_and_returns_1(monkeypatch, c
     assert "No se pudo iniciar sesión" in err
     assert "Traceback" not in err
     assert client.disconnected
+
+
+# --- I7: bot connection supervised, bot login failure handled ----------------
+
+
+class _FakeClient:
+    def __init__(self, start_error: Exception | None = None) -> None:
+        self.start_error = start_error
+        self.disconnected = False
+        self.handlers: list = []
+
+    async def connect(self) -> None:
+        pass
+
+    async def is_user_authorized(self) -> bool:
+        return True
+
+    async def start(self, bot_token=None):
+        if self.start_error is not None:
+            raise self.start_error
+        return self
+
+    async def run_until_disconnected(self) -> None:
+        await asyncio.Event().wait()
+
+    def add_event_handler(self, handler, event) -> None:
+        self.handlers.append(handler)
+
+    async def disconnect(self) -> None:
+        self.disconnected = True
+
+
+def _run_settings() -> Settings:
+    return Settings(
+        _env_file=None,
+        telegram_api_id=1,
+        telegram_api_hash="hash",
+        telegram_bot_token="token",
+        supabase_url="https://example.supabase.co",
+        supabase_service_key="key",
+    )
+
+
+@pytest.fixture
+def fake_clients(monkeypatch):
+    clients = {"reader": _FakeClient(), "bot": _FakeClient()}
+
+    def make(path, settings):
+        return clients["bot"] if path == main_module.BOT_SESSION_PATH else clients["reader"]
+
+    monkeypatch.setattr(main_module, "_client", make)
+    monkeypatch.setattr(main_module, "create_client", lambda url, key: object())
+    monkeypatch.setattr(main_module, "SupabaseRepository", lambda client: object())
+    return clients
+
+
+async def test_run_supervises_bot_connection(fake_clients, monkeypatch):
+    supervised: list[str] = []
+
+    async def fake_supervise(**coros):
+        supervised.extend(coros)
+        for coro in coros.values():
+            coro.close()
+        return 1
+
+    monkeypatch.setattr(main_module, "_supervise", fake_supervise)
+
+    assert await run(_run_settings()) == 1
+
+    assert sorted(supervised) == ["bot", "pipeline", "reader", "refresh"]
+    assert fake_clients["reader"].disconnected
+    assert fake_clients["bot"].disconnected
+
+
+async def test_run_bot_login_failure_is_reported_in_spanish(fake_clients, capsys):
+    fake_clients["bot"].start_error = AccessTokenInvalidError(request=None)
+
+    code = await run(_run_settings())
+
+    assert code == 1
+    err = capsys.readouterr().err
+    assert "No se pudo iniciar el bot" in err
+    assert "TELEGRAM_BOT_TOKEN" in err
+    assert "Traceback" not in err
+    assert fake_clients["reader"].disconnected
+    assert fake_clients["bot"].disconnected
