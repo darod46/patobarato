@@ -3,6 +3,7 @@ name: Docker image
 on:
   push:
     branches: [main]
+    paths: ["bot/**", ".github/workflows/docker.yml"]
   workflow_dispatch:
 
 permissions:
@@ -16,6 +17,9 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bot
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -46,7 +50,7 @@ jobs:
             type=sha,format=short
       - uses: docker/build-push-action@v6
         with:
-          context: .
+          context: bot
           platforms: linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
