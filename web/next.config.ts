@@ -17,6 +17,12 @@ const nextConfig: NextConfig = {
         has: [{ type: 'query', key: 'q' }],
         headers: [{ key: 'X-Robots-Tag', value: 'noindex' }],
       },
+      {
+        // Internal target of the `/?q=` / `/?tag=` rewrites; header rules match the original
+        // request path, so only direct hits on /buscar get this.
+        source: '/buscar',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex' }],
+      },
     ]
   },
   async rewrites() {

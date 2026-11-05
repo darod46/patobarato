@@ -156,3 +156,25 @@ it('fetches the URL filters after hydrating even with initial data', async () =>
     history.replaceState(null, '', '/')
   }
 })
+
+it('renders crawlable link chips and marks a legacy ?tag= as current', async () => {
+  history.replaceState(null, '', '/?tag=sony')
+  try {
+    render(
+      <HomeClient
+        now="2026-11-04T12:00:00Z"
+        initialDeals={{ q: '', tag: null, deals: [deal], hasMore: false }}
+        initialTags={['sony', 'hogar']}
+        fetchDeals={vi.fn().mockResolvedValue({ deals: [deal], hasMore: false })}
+        fetchLatestDeal={vi.fn().mockResolvedValue(null)}
+      />,
+    )
+    expect(screen.getByRole('link', { name: '#hogar' })).toHaveAttribute('href', '/chollos/hogar')
+    expect(screen.getByRole('link', { name: '#sony' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: 'Todos' })).toHaveAttribute('href', '/')
+    expect(screen.queryByRole('button', { name: '#sony' })).not.toBeInTheDocument()
+    await screen.findAllByText(/Auriculares Sony/)
+  } finally {
+    history.replaceState(null, '', '/')
+  }
+})

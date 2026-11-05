@@ -25,7 +25,8 @@ const loadTag = cache(async (param: string) => {
   const client = getSupabase()
   const [page, count] = await Promise.all([
     fetchDeals(client, { tag, page: 0 }),
-    fetchHashtagCount(client, tag),
+    // The count only decides indexing; on failure fall back to the deals fetched.
+    fetchHashtagCount(client, tag).catch(() => null),
   ])
   if (page.deals.length === 0) return null
   return { tag, page, count: count ?? page.deals.length }
