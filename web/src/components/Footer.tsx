@@ -1,7 +1,5 @@
-import { useState } from 'react'
-
-export function Footer() {
-  const [year] = useState(() => new Date().getFullYear())
+/** `year` comes from the server render time so server and client HTML always match. */
+export function Footer({ year }: { year: number }) {
   return (
     <footer className="border-t border-zinc-200 bg-white py-10">
       <div className="mx-auto flex max-w-[1280px] flex-col gap-4 px-4 text-sm text-zinc-500 md:px-8">

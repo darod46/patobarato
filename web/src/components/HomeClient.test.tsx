@@ -40,6 +40,7 @@ it('renders header, hero, feed, telegram block and footer', async () => {
   )
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/chollos/)
   expect(screen.getByRole('heading', { name: 'Chollos' })).toBeInTheDocument()
+  expect(screen.getByText('© 2026 PatoBarato')).toBeInTheDocument()
   await waitFor(() => expect(screen.getAllByText(/Auriculares Sony/).length).toBeGreaterThan(1))
   expect(
     screen.getByText(

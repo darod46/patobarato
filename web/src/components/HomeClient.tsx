@@ -60,7 +60,7 @@ export function HomeClient({
         </section>
         <TelegramBlock fetchLatestDeal={fetchLatestDeal} />
       </main>
-      <Footer />
+      <Footer year={new Date(now).getUTCFullYear()} />
     </div>
   )
 }

@@ -56,7 +56,7 @@ El despliegue es automático desde el repositorio `darod46/patobarato`.
 1. En Vercel, pulsa **Add New… → Project** e importa el repositorio `darod46/patobarato`.
 2. En la configuración del proyecto:
    - **Root Directory:** `web`.
-   - **Framework Preset:** Next.js.
+   - **Framework Preset:** no hace falta cambiarlo; `web/vercel.json` fija `"framework": "nextjs"`.
 3. En **Environment Variables**, añade `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` para los entornos **Production** y **Preview**. Usa los mismos valores que en `.env.local`, y recuerda que la clave debe ser la anon/public, nunca la `service_role`.
 4. Despliega el proyecto.
 5. Dominio propio: en Vercel, ve a **Settings → Domains**, añade `patobarato.com` y configura en tu proveedor de DNS los registros que Vercel muestre.
