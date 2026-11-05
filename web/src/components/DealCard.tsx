@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { currentPlatform, linkTarget, openAmazon } from '../lib/amazonLink'
+import { useState, useSyncExternalStore } from 'react'
+import { currentPlatform, linkTarget, openAmazon, type Platform } from '../lib/amazonLink'
 import { discountPercent, formatPrice, timeAgo } from '../lib/format'
 import type { Deal } from '../lib/types'
 
@@ -7,11 +7,16 @@ const PLACEHOLDER = '/pato-placeholder.svg'
 // Few enough to keep every card one line of tags tall.
 const MAX_TAGS = 3
 
+// The platform never changes while the page is open; nothing to subscribe to.
+const noSubscribe = () => () => {}
+const serverPlatform = (): Platform => 'desktop'
+
 type Props = { deal: Deal; now: Date; onTagClick: (tag: string) => void }
 
 export function DealCard({ deal, now, onTagClick }: Props) {
   const [failed, setFailed] = useState(false)
-  const [platform] = useState(currentPlatform)
+  // Server and hydration render as desktop; the real platform is read once hydrated.
+  const platform = useSyncExternalStore(noSubscribe, currentPlatform, serverPlatform)
   const discount =
     deal.previousPrice !== null ? discountPercent(deal.price, deal.previousPrice) : null
   const isPlaceholder = failed || !deal.imageUrl

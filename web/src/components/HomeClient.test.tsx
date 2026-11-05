@@ -1,7 +1,9 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
+import { hydrateRoot, type Root } from 'react-dom/client'
+import { renderToString } from 'react-dom/server'
 import { expect, it, vi } from 'vitest'
-import App from './App'
-import type { Deal } from './lib/types'
+import { HomeClient } from './HomeClient'
+import type { Deal } from '../lib/types'
 
 const deal: Deal = {
   publicationId: 1,
@@ -19,8 +21,8 @@ const deal: Deal = {
 
 function setup() {
   return render(
-    <App
-      now={new Date('2026-11-04T12:00:00Z')}
+    <HomeClient
+      now="2026-11-04T12:00:00Z"
       fetchDeals={vi.fn().mockResolvedValue({ deals: [deal], hasMore: false })}
       fetchHashtags={vi.fn().mockResolvedValue([{ tag: 'sony', count: 1 }])}
       fetchLatestDeal={vi.fn().mockResolvedValue(deal)}
@@ -47,10 +49,10 @@ it('renders header, hero, feed, telegram block and footer', async () => {
 })
 
 it('still renders the page shell and an error state when env vars are missing', async () => {
-  vi.stubEnv('VITE_SUPABASE_URL', '')
-  vi.stubEnv('VITE_SUPABASE_ANON_KEY', '')
+  vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', '')
+  vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', '')
   try {
-    render(<App now={new Date('2026-11-04T12:00:00Z')} />)
+    render(<HomeClient now="2026-11-04T12:00:00Z" />)
     expect(await screen.findByRole('alert')).toBeInTheDocument()
     expect(screen.getByRole('banner')).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
@@ -65,5 +67,38 @@ it('contains none of the mockup invented claims', async () => {
   await waitFor(() => expect(screen.getAllByText(/Auriculares Sony/).length).toBeGreaterThan(0))
   for (const bad of ['36.2K', 'Keepa', '0% Estafas', '180 Días']) {
     expect(container.textContent).not.toContain(bad)
+  }
+})
+
+it('hydrates server HTML without mismatches and then applies the URL filters', async () => {
+  const props = {
+    now: '2026-11-04T12:00:00Z',
+    fetchDeals: vi.fn().mockResolvedValue({ deals: [deal], hasMore: false }),
+    fetchHashtags: vi.fn().mockResolvedValue([{ tag: 'sony', count: 1 }]),
+    fetchLatestDeal: vi.fn().mockResolvedValue(deal),
+  }
+  const container = document.createElement('div')
+  // A static page is rendered on the server without the visitor's query string.
+  container.innerHTML = renderToString(<HomeClient {...props} />)
+  history.replaceState(null, '', '/?q=lego&tag=sony')
+  document.body.appendChild(container)
+  const onRecoverableError = vi.fn()
+  const errors = vi.spyOn(console, 'error').mockImplementation(() => {})
+  let root: Root | undefined
+  try {
+    await act(async () => {
+      root = hydrateRoot(container, <HomeClient {...props} />, { onRecoverableError })
+    })
+    expect(screen.getByRole('searchbox', { name: 'Buscar chollos' })).toHaveValue('lego')
+    await waitFor(() =>
+      expect(props.fetchDeals).toHaveBeenLastCalledWith({ q: 'lego', tag: 'sony', page: 0 }),
+    )
+    expect(onRecoverableError).not.toHaveBeenCalled()
+    expect(errors).not.toHaveBeenCalled()
+  } finally {
+    act(() => root?.unmount())
+    container.remove()
+    errors.mockRestore()
+    history.replaceState(null, '', '/')
   }
 })

@@ -3,6 +3,19 @@
   "plugins": ["react", "typescript", "oxc"],
   "rules": {
     "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
+    "react/only-export-components": [
+      "warn",
+      {
+        "allowConstantExport": true,
+        "allowExportNames": ["metadata", "generateMetadata", "revalidate", "dynamicParams", "generateStaticParams"]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      // App Router Server Components render once per request, not on every client re-render.
+      "files": ["src/app/**"],
+      "rules": { "react/purity": "off" }
+    }
+  ]
 }

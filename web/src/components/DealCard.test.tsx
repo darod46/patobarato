@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import { renderToString } from 'react-dom/server'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import type { Deal } from '../lib/types'
@@ -86,6 +87,20 @@ describe('DealCard Amazon button on mobile', () => {
       const link = screen.getByRole('link', { name: /Ver en Amazon/ })
       expect(link).not.toHaveAttribute('target')
       expect(link).toHaveAttribute('href', full.affiliateUrl)
+    } finally {
+      ua.mockRestore()
+    }
+  })
+})
+
+describe('DealCard server render', () => {
+  it('renders the desktop link on the server whatever the browser, so hydration matches', () => {
+    const ua = vi
+      .spyOn(navigator, 'userAgent', 'get')
+      .mockReturnValue('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15')
+    try {
+      const html = renderToString(<DealCard deal={full} now={now} onTagClick={() => {}} />)
+      expect(html).toContain('target="_blank"')
     } finally {
       ua.mockRestore()
     }

@@ -1,21 +1,24 @@
-import { useState } from 'react'
-import { DealFeed } from './components/DealFeed'
-import { Footer } from './components/Footer'
-import { Header } from './components/Header'
-import { Hero } from './components/Hero'
-import { SearchBox } from './components/SearchBox'
-import { TelegramBlock } from './components/TelegramBlock'
-import { useUrlFilters } from './hooks/useUrlFilters'
-import type { DealsFetcher } from './hooks/useDeals'
-import * as api from './lib/deals'
-import { getSupabase } from './lib/supabase'
-import type { Deal, HashtagCount } from './lib/types'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useUrlFilters } from '../hooks/useUrlFilters'
+import type { DealsFetcher } from '../hooks/useDeals'
+import * as api from '../lib/deals'
+import { getSupabase } from '../lib/supabase'
+import type { Deal, HashtagCount } from '../lib/types'
+import { DealFeed } from './DealFeed'
+import { Footer } from './Footer'
+import { Header } from './Header'
+import { Hero } from './Hero'
+import { SearchBox } from './SearchBox'
+import { TelegramBlock } from './TelegramBlock'
 
 type Props = {
+  /** Server render time (ISO); the first client render uses it so hydration matches. */
+  now: string
   fetchDeals?: DealsFetcher
   fetchHashtags?: () => Promise<HashtagCount[]>
   fetchLatestDeal?: () => Promise<Deal | null>
-  now?: Date
 }
 
 // Bound lazily so the Supabase client (and its env vars) is only needed when actually fetching.
@@ -24,14 +27,19 @@ const defaultFetchDeals: DealsFetcher = async (params) => api.fetchDeals(getSupa
 const defaultFetchHashtags = async () => api.fetchHashtags(getSupabase())
 const defaultFetchLatestDeal = async () => api.fetchLatestDeal(getSupabase())
 
-export default function App({
+export function HomeClient({
+  now,
   fetchDeals = defaultFetchDeals,
   fetchHashtags = defaultFetchHashtags,
   fetchLatestDeal = defaultFetchLatestDeal,
-  now,
 }: Props) {
   const { q, tag, setQ, setTag, clear } = useUrlFilters()
-  const [clock] = useState(() => now ?? new Date())
+  const [clock, setClock] = useState(() => new Date(now))
+
+  // The page may be a cached (ISR) render; once hydrated, relative times use the visitor's
+  // clock. Reading it during render would break hydration, so it is synced after mount.
+  // oxlint-disable-next-line react/set-state-in-effect
+  useEffect(() => setClock(new Date()), [])
 
   return (
     <div className="min-h-screen bg-surface font-sans text-carbon">

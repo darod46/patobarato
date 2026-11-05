@@ -1,4 +1,5 @@
 import { act, renderHook } from '@testing-library/react'
+import { renderToString } from 'react-dom/server'
 import { afterEach, describe, expect, it } from 'vitest'
 import { useUrlFilters } from './useUrlFilters'
 
@@ -69,5 +70,17 @@ describe('useUrlFilters', () => {
       window.dispatchEvent(new PopStateEvent('popstate'))
     })
     expect(result.current.tag).toBe('lego')
+  })
+})
+
+describe('useUrlFilters server render', () => {
+  function Probe() {
+    const { q, tag } = useUrlFilters()
+    return <p>{`q=${q};tag=${tag ?? ''}`}</p>
+  }
+
+  it('starts empty on the server so the hydration render matches', () => {
+    history.replaceState(null, '', '/?q=lego&tag=juguetes')
+    expect(renderToString(<Probe />)).toContain('q=;tag=')
   })
 })
