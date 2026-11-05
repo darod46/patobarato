@@ -1,64 +1,69 @@
 # PatoBarato web
 
-Frontend de patobarato.com: un listado de chollos de Amazon España con búsqueda, filtros por hashtag y estados de carga. Está hecho con Next.js (App Router), React, TypeScript y Tailwind CSS v4.
-
-La web solo lee las vistas públicas `web_deals` y `web_hashtags` de Supabase. No accede a las tablas internas ni usa claves de servicio.
-
-## Requisitos
-
-- Node.js 22.12 o superior.
-- npm.
+Web pública de [PatoBarato](https://www.patobarato.com): Next.js 16 (App Router), React, TypeScript y Tailwind v4. Los datos vienen de Supabase con la clave pública (anon) y solo se leen las vistas `web_deals` y `web_hashtags`.
 
 ## Desarrollo local
+
+Requisitos: Node >= 22.12.
 
 ```bash
 cd web
 npm install
-cp .env.example .env.local
 ```
 
-Edita `.env.local` y rellena las dos variables:
+Crea `web/.env.local` (ver `.env.example`):
 
-- `NEXT_PUBLIC_SUPABASE_URL`: la URL del proyecto, con el formato `https://<ref>.supabase.co`.
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: la clave pública (anon/public) del proyecto. Está en Supabase → Project Settings → API Keys.
+```
+NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+```
 
-**Nunca uses la clave `service_role` en la web.** Es una clave con acceso total a la base de datos y no debe aparecer en el frontend ni en `.env.local`. La clave anon es pública por diseño; el acceso real lo limitan los permisos (grants) concedidos sobre las vistas.
-
-Después arranca el servidor de desarrollo:
+Los nombres antiguos `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` también valen: `next.config.ts` los usa como fallback.
 
 ```bash
 npm run dev
 ```
 
-## Comandos
+Notas:
 
-| Comando | Qué hace |
+- En red corporativa con proxy TLS, arranca con `NODE_OPTIONS=--use-system-ca` en tu entorno. No se commitean apaños para esto.
+- `next dev` puede generar un `AGENTS.md`; no se sube al repositorio.
+
+## Scripts
+
+| Script | Qué hace |
 | --- | --- |
-| `npm run dev` | Servidor de desarrollo de Next.js en http://localhost:3000. |
-| `npm test` | Tests con Vitest (una sola pasada). |
-| `npm run lint` | Linter con oxlint. |
-| `npm run typecheck` | Comprobación de tipos de TypeScript, sin generar archivos. |
-| `npm run build` | Build de producción de Next.js en `.next/`. |
-| `npm start` | Sirve localmente el resultado de `npm run build`. |
+| `npm run dev` | Servidor de desarrollo |
+| `npm run build` | Build de producción |
+| `npm start` | Sirve el build (`next start`) |
+| `npm test` | Tests (vitest) |
+| `npm run lint` | oxlint |
+| `npm run typecheck` | `tsc --noEmit --incremental false` |
 
-Para comprobar todo antes de subir cambios:
+## Rutas
 
-```bash
-npm run lint && npm run typecheck && npm test && npm run build
-```
+- `/`: portada con listados y chips de hashtags rastreables.
+- `/oferta/{tienda}/{slug}-{id}`: ficha de producto. Redirige con 308 a la URL canónica si el slug no coincide; 404 si la oferta no existe.
+- `/chollos/{hashtag}`: listado por hashtag. `noindex` si tiene menos de 3 ofertas.
+- `/buscar`: ruta interna a la que reescribe `/?q=` y `/?tag=`; siempre `noindex`. Cualquier URL con `?q=` lleva además `X-Robots-Tag: noindex`.
+- `/go/{ASIN}`: página de salto a Amazon (`public/go.html`, añade el tag de afiliado por script).
+- `/sitemap.xml` y `/robots.txt`: generados por `src/app/sitemap.ts` y `src/app/robots.ts`.
+- `/og.png`: imagen Open Graph (`public/og.png`).
 
-Si `npm install` falla con errores de certificado TLS en una red corporativa, usa `NODE_OPTIONS=--use-system-ca`.
+## Caché (ISR)
+
+- Listados (`/`, `/chollos/{hashtag}`): 60 s.
+- Producto (`/oferta/...`): 600 s.
+- Sitemap: 3600 s.
+
+## SEO
+
+- Metadatos (title, description, Open Graph) por página y URLs canónicas.
+- JSON-LD: `Product` (ficha), `BreadcrumbList`, `WebSite` con `SearchAction` y `Organization` (sitio).
+- Search Console: añade la propiedad `www.patobarato.com` y envía `/sitemap.xml`.
 
 ## Despliegue en Vercel
 
-El despliegue es automático desde el repositorio `darod46/patobarato`.
-
-1. En Vercel, pulsa **Add New… → Project** e importa el repositorio `darod46/patobarato`.
-2. En la configuración del proyecto:
-   - **Root Directory:** `web`.
-   - **Framework Preset:** no hace falta cambiarlo; `web/vercel.json` fija `"framework": "nextjs"`.
-3. En **Environment Variables**, añade `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` para los entornos **Production** y **Preview**. Usa los mismos valores que en `.env.local`, y recuerda que la clave debe ser la anon/public, nunca la `service_role`.
-4. Despliega el proyecto.
-5. Dominio propio: en Vercel, ve a **Settings → Domains**, añade `patobarato.com` y configura en tu proveedor de DNS los registros que Vercel muestre.
-
-Las variables `NEXT_PUBLIC_*` se incrustan en el build (si faltan, se usan `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`, los nombres antiguos). Si las cambias, hay que volver a desplegar para que surtan efecto.
+- Root Directory: `web`. `vercel.json` fija el framework a Next.js.
+- Variables de entorno: las `VITE_SUPABASE_*` existentes siguen funcionando; se recomienda crear las `NEXT_PUBLIC_SUPABASE_*` y retirar las antiguas.
+- Dominio principal: `www.patobarato.com`.
