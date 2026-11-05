@@ -27,7 +27,7 @@ npm run dev
 Notas:
 
 - En red corporativa con proxy TLS, arranca con `NODE_OPTIONS=--use-system-ca` en tu entorno. No se commitean apaños para esto.
-- `next dev` puede generar un `AGENTS.md`; no se sube al repositorio.
+- `next dev` puede generar `web/AGENTS.md` si detecta un agente de IA; está en `.gitignore`.
 
 ## Scripts
 
@@ -47,7 +47,7 @@ Notas:
 - `/chollos/{hashtag}`: listado por hashtag. `noindex` si tiene menos de 3 ofertas.
 - `/buscar`: ruta interna a la que reescribe `/?q=` y `/?tag=`; siempre `noindex`. Cualquier URL con `?q=` lleva además `X-Robots-Tag: noindex`.
 - `/go/{ASIN}`: página de salto a Amazon (`public/go.html`, añade el tag de afiliado por script).
-- `/sitemap.xml` y `/robots.txt`: generados por `src/app/sitemap.ts` y `src/app/robots.ts`.
+- `/sitemap.xml` y `/robots.txt`: generados por `src/app/sitemap.ts` y `src/app/robots.ts`. robots.txt bloquea `/go/` y `/buscar`.
 - `/og.png`: imagen Open Graph (`public/og.png`).
 
 ## Caché (ISR)
@@ -62,8 +62,14 @@ Notas:
 - JSON-LD: `Product` (ficha), `BreadcrumbList`, `WebSite` con `SearchAction` y `Organization` (sitio).
 - Search Console: añade la propiedad `www.patobarato.com` y envía `/sitemap.xml`.
 
+## Seguridad
+
+La web solo usa la clave pública (anon) de Supabase y solo lee las vistas `web_deals` y `web_hashtags`. Nunca pongas la clave `service_role` en la web ni en Vercel.
+
 ## Despliegue en Vercel
 
-- Root Directory: `web`. `vercel.json` fija el framework a Next.js.
-- Variables de entorno: las `VITE_SUPABASE_*` existentes siguen funcionando; se recomienda crear las `NEXT_PUBLIC_SUPABASE_*` y retirar las antiguas.
-- Dominio principal: `www.patobarato.com`.
+1. Importa el repositorio `darod46/patobarato`.
+2. Root Directory: `web` (el framework Next.js lo fija `vercel.json`).
+3. Variables de entorno `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` en Production y Preview. Las `VITE_SUPABASE_*` antiguas siguen valiendo por el fallback de `next.config.ts`.
+4. Las variables se incrustan en el build: tras cambiarlas hay que redesplegar.
+5. Dominio principal: `www.patobarato.com` (`patobarato.com` redirige a él).

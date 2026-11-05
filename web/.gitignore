@@ -30,3 +30,6 @@ next-env.d.ts
 *.njsproj
 *.sln
 *.sw?
+
+# Generado por next dev cuando detecta un agente de IA
+AGENTS.md
