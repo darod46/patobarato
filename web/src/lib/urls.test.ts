@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { SITE_URL, parseProductSlug, productPath, slugify, tagPath } from './urls'
+import { SITE_URL, parseProductSlug, parseTagParam, productPath, slugify, tagPath } from './urls'
 import { storeInfo } from './stores'
 
 describe('slugify', () => {
@@ -40,5 +40,25 @@ describe('storeInfo', () => {
   it('knows amazon and falls back otherwise', () => {
     expect(storeInfo('amazon')).toEqual({ name: 'Amazon España', short: 'Amazon', cta: 'Ver en Amazon' })
     expect(storeInfo('pccomp')).toEqual({ name: 'pccomp', short: 'pccomp', cta: 'Ver oferta' })
+  })
+})
+
+describe('parseTagParam', () => {
+  it('accepts plain, encoded and decoded tags, lowercased', () => {
+    expect(parseTagParam('hogar')).toBe('hogar')
+    expect(parseTagParam('Hogar')).toBe('hogar')
+    expect(parseTagParam('ni%C3%B1os')).toBe('niños')
+    expect(parseTagParam('niños')).toBe('niños')
+    expect(parseTagParam('cámara_4k')).toBe('cámara_4k')
+  })
+
+  it('round-trips with tagPath', () => {
+    expect(parseTagParam(tagPath('niños').slice('/chollos/'.length))).toBe('niños')
+  })
+
+  it('rejects anything outside the hashtag alphabet', () => {
+    for (const bad of ['zzzz-no', '', 'a b', 'a%20b', '%E0%A4%A', 'x.y', 'çà']) {
+      expect(parseTagParam(bad)).toBeNull()
+    }
   })
 })

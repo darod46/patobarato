@@ -19,4 +19,15 @@ describe('HashtagChips', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Todos' }))
     expect(onSelect).toHaveBeenLastCalledWith(null)
   })
+
+  it('link mode renders tag links and Todos to the home, marking the active one current', () => {
+    render(<HashtagChips tags={['hogar', 'niños']} active="hogar" />)
+    expect(screen.getByRole('link', { name: '#hogar' })).toHaveAttribute('href', '/chollos/hogar')
+    expect(screen.getByRole('link', { name: '#hogar' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: '#niños' })).toHaveAttribute('href', '/chollos/ni%C3%B1os')
+    expect(screen.getByRole('link', { name: '#niños' })).not.toHaveAttribute('aria-current')
+    expect(screen.getByRole('link', { name: 'Todos' })).toHaveAttribute('href', '/')
+    expect(screen.getByRole('link', { name: 'Todos' })).not.toHaveAttribute('aria-current')
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  })
 })

@@ -8,9 +8,31 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_SUPABASE_ANON_KEY:
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '',
   },
+  async headers() {
+    // Any URL with a search (`?q=`) stays out of the index, also on cached pages such as
+    // `/chollos/{tag}?q=…` whose HTML cannot depend on the query string.
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'query', key: 'q' }],
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex' }],
+      },
+    ]
+  },
   async rewrites() {
-    // /go/{ASIN} is served by the static redirect page (affiliate tag added by script).
-    return [{ source: '/go/:asin([A-Za-z0-9]{10})', destination: '/go.html' }]
+    return {
+      // v1 links `/?q=` and `/?tag=` need per-request metadata (noindex, canonical to the hashtag
+      // page). They are served by the dynamic `/buscar` route so `/` itself stays static (ISR).
+      beforeFiles: [
+        { source: '/', has: [{ type: 'query', key: 'q' }], destination: '/buscar' },
+        { source: '/', has: [{ type: 'query', key: 'tag' }], destination: '/buscar' },
+      ],
+      afterFiles: [
+        // /go/{ASIN} is served by the static redirect page (affiliate tag added by script).
+        { source: '/go/:asin([A-Za-z0-9]{10})', destination: '/go.html' },
+      ],
+      fallback: [],
+    }
   },
 }
 

@@ -4,6 +4,7 @@ import {
   fetchAllDealRefs,
   fetchDealByProduct,
   fetchDeals,
+  fetchHashtagCount,
   fetchHashtagCounts,
   fetchHashtags,
   fetchLatestDeal,
@@ -198,5 +199,25 @@ describe('fetchHashtagCounts', () => {
   it('returns all tags', async () => {
     const { client } = fakeClient({ data: [{ tag: 'lego', count: '5' }], error: null })
     expect(await fetchHashtagCounts(client)).toEqual([{ tag: 'lego', count: 5 }])
+  })
+})
+
+describe('fetchHashtagCount', () => {
+  it('reads one tag count', async () => {
+    const { client, calls } = fakeClient({ data: [{ tag: 'niños', count: '4' }], error: null })
+    expect(await fetchHashtagCount(client, 'niños')).toBe(4)
+    expect(calls).toEqual([
+      ['from', ['web_hashtags']],
+      ['select', ['count']],
+      ['eq', ['tag', 'niños']],
+      ['limit', [1]],
+    ])
+  })
+
+  it('returns null for an unknown tag and rejects on error', async () => {
+    expect(await fetchHashtagCount(fakeClient({ data: [], error: null }).client, 'x')).toBeNull()
+    await expect(
+      fetchHashtagCount(fakeClient({ data: null, error: { message: 'boom' } }).client, 'x'),
+    ).rejects.toThrow('boom')
   })
 })

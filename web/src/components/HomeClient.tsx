@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useClock } from '../hooks/useClock'
 import { useUrlFilters } from '../hooks/useUrlFilters'
-import type { DealsFetcher } from '../hooks/useDeals'
+import type { DealsFetcher, InitialDeals } from '../hooks/useDeals'
 import * as api from '../lib/deals'
 import { getSupabase } from '../lib/supabase'
 import type { Deal, HashtagCount } from '../lib/types'
@@ -16,6 +16,10 @@ import { TelegramBlock } from './TelegramBlock'
 type Props = {
   /** Server render time (ISO); the first client render uses it so hydration matches. */
   now: string
+  /** Unfiltered page 0 rendered on the server; the URL filters are only known after hydration. */
+  initialDeals?: InitialDeals
+  /** Top hashtags rendered on the server. */
+  initialTags?: string[]
   fetchDeals?: DealsFetcher
   fetchHashtags?: () => Promise<HashtagCount[]>
   fetchLatestDeal?: () => Promise<Deal | null>
@@ -29,17 +33,14 @@ const defaultFetchLatestDeal = async () => api.fetchLatestDeal(getSupabase())
 
 export function HomeClient({
   now,
+  initialDeals,
+  initialTags,
   fetchDeals = defaultFetchDeals,
   fetchHashtags = defaultFetchHashtags,
   fetchLatestDeal = defaultFetchLatestDeal,
 }: Props) {
   const { q, tag, setQ, setTag, clear } = useUrlFilters()
-  const [clock, setClock] = useState(() => new Date(now))
-
-  // The page may be a cached (ISR) render; once hydrated, relative times use the visitor's
-  // clock. Reading it during render would break hydration, so it is synced after mount.
-  // oxlint-disable-next-line react/set-state-in-effect
-  useEffect(() => setClock(new Date()), [])
+  const clock = useClock(now)
 
   return (
     <div className="min-h-screen bg-surface font-sans text-carbon">
@@ -55,6 +56,8 @@ export function HomeClient({
             onClear={clear}
             fetchDeals={fetchDeals}
             fetchHashtags={fetchHashtags}
+            initialDeals={initialDeals}
+            initialTags={initialTags}
             now={clock}
           />
         </section>

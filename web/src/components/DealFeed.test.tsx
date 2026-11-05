@@ -88,4 +88,25 @@ describe('DealFeed', () => {
     await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument())
     expect(screen.queryByRole('button', { name: 'Todos' })).not.toBeInTheDocument()
   })
+
+  it('renders initial data and chips without fetching them', async () => {
+    const props = setup({
+      initialDeals: { q: '', tag: null, deals: [deal(7)], hasMore: true },
+      initialTags: ['hogar'],
+    })
+    expect(screen.getByText('Chollo 7')).toBeInTheDocument()
+    expect(screen.queryByTestId('feed-skeletons')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '#hogar' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cargar más' })).toBeInTheDocument()
+    await waitFor(() => expect(props.fetchDeals).not.toHaveBeenCalled())
+    expect(props.fetchHashtags).not.toHaveBeenCalled()
+  })
+
+  it('renders link chips without onTag', async () => {
+    setup({ onTag: undefined, tag: 'hogar', initialTags: ['hogar', 'sony'] })
+    expect(screen.getByRole('link', { name: '#sony' })).toHaveAttribute('href', '/chollos/sony')
+    expect(screen.getByRole('link', { name: '#hogar' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: 'Todos' })).toHaveAttribute('href', '/')
+    await screen.findByText('Chollo 1')
+  })
 })

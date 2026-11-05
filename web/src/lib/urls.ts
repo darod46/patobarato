@@ -29,3 +29,17 @@ export function parseProductSlug(param: string): { slug: string; id: string } | 
 export function tagPath(tag: string): string {
   return `/chollos/${encodeURIComponent(tag)}`
 }
+
+const TAG_RE = /^[a-z0-9_áéíóúñü]+$/u
+
+/** Normalizes a raw tag (already decoded or still percent-encoded); null if it is not a valid hashtag. */
+export function parseTagParam(raw: string): string | null {
+  let decoded = raw
+  try {
+    decoded = decodeURIComponent(raw)
+  } catch {
+    // Malformed escapes keep the raw text, which then fails validation.
+  }
+  const tag = decoded.normalize('NFC').toLowerCase()
+  return TAG_RE.test(tag) ? tag : null
+}

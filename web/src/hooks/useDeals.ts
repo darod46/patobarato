@@ -9,20 +9,35 @@ export type DealsFetcher = (params: {
 
 type Status = 'loading' | 'ready' | 'error'
 
-export function useDeals(fetcher: DealsFetcher, filters: { q: string; tag: string | null }) {
+type Filters = { q: string; tag: string | null }
+
+/** Page 0 for the given filters, typically rendered on the server. */
+export type InitialDeals = Filters & { deals: Deal[]; hasMore: boolean }
+
+const filtersKey = ({ q, tag }: Filters) => JSON.stringify([q, tag])
+
+/**
+ * When the first render's filters match `initial`, its deals are shown right away and page 0
+ * is not fetched; any other filters (now or later) are fetched as usual.
+ */
+export function useDeals(fetcher: DealsFetcher, filters: Filters, initial?: InitialDeals) {
   const { q, tag } = filters
-  const [deals, setDeals] = useState<Deal[]>([])
-  const [status, setStatus] = useState<Status>('loading')
-  const [hasMore, setHasMore] = useState(false)
+  const key = filtersKey(filters)
+  // The initial page counts only if it was fetched for the first render's filters.
+  const [initialKey] = useState(() => (initial && filtersKey(initial) === key ? key : null))
+  const [deals, setDeals] = useState<Deal[]>(() => (initialKey ? initial!.deals : []))
+  const [status, setStatus] = useState<Status>(initialKey ? 'ready' : 'loading')
+  const [hasMore, setHasMore] = useState(() => (initialKey ? initial!.hasMore : false))
   const [loadingMore, setLoadingMore] = useState(false)
   const [attempt, setAttempt] = useState(0)
 
   const requestId = useRef(0)
   const page = useRef(0)
   const fetcherRef = useRef(fetcher)
+  // Until the first fetch, page 0 of the initial filters is already in state.
+  const initialPending = useRef(initialKey !== null)
 
   // Reset to a loading state during render when the filters change.
-  const key = JSON.stringify([q, tag])
   const [prevKey, setPrevKey] = useState(key)
   if (key !== prevKey) {
     setPrevKey(key)
@@ -35,6 +50,9 @@ export function useDeals(fetcher: DealsFetcher, filters: { q: string; tag: strin
   })
 
   useEffect(() => {
+    // Returning without clearing the flag keeps StrictMode's second effect run from fetching.
+    if (initialPending.current && key === initialKey) return
+    initialPending.current = false
     const id = ++requestId.current
     page.current = 0
     fetcherRef
@@ -49,7 +67,7 @@ export function useDeals(fetcher: DealsFetcher, filters: { q: string; tag: strin
         if (id !== requestId.current) return
         setStatus('error')
       })
-  }, [q, tag, attempt])
+  }, [key, initialKey, q, tag, attempt])
 
   const loadMore = useCallback(() => {
     const id = requestId.current

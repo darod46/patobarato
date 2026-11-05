@@ -105,3 +105,54 @@ it('hydrates server HTML without mismatches and then applies the URL filters', a
     history.replaceState(null, '', '/')
   }
 })
+
+it('server-renders the initial page and hydrates without refetching it', async () => {
+  const props = {
+    now: '2026-11-04T12:00:00Z',
+    initialDeals: { q: '', tag: null, deals: [deal], hasMore: false },
+    initialTags: ['sony'],
+    fetchDeals: vi.fn().mockResolvedValue({ deals: [], hasMore: false }),
+    fetchHashtags: vi.fn().mockResolvedValue([]),
+    fetchLatestDeal: vi.fn().mockResolvedValue(null),
+  }
+  const container = document.createElement('div')
+  container.innerHTML = renderToString(<HomeClient {...props} />)
+  expect(container.textContent).toContain('Auriculares Sony')
+  expect(container.textContent).toContain('#sony')
+  document.body.appendChild(container)
+  const onRecoverableError = vi.fn()
+  let root: Root | undefined
+  try {
+    await act(async () => {
+      root = hydrateRoot(container, <HomeClient {...props} />, { onRecoverableError })
+    })
+    expect(screen.getByText('Auriculares Sony')).toBeInTheDocument()
+    expect(props.fetchDeals).not.toHaveBeenCalled()
+    expect(props.fetchHashtags).not.toHaveBeenCalled()
+    expect(onRecoverableError).not.toHaveBeenCalled()
+  } finally {
+    act(() => root?.unmount())
+    container.remove()
+  }
+})
+
+it('fetches the URL filters after hydrating even with initial data', async () => {
+  history.replaceState(null, '', '/?tag=sony')
+  const fetchDeals = vi.fn().mockResolvedValue({ deals: [], hasMore: false })
+  try {
+    render(
+      <HomeClient
+        now="2026-11-04T12:00:00Z"
+        initialDeals={{ q: '', tag: null, deals: [deal], hasMore: false }}
+        initialTags={['sony']}
+        fetchDeals={fetchDeals}
+        fetchLatestDeal={vi.fn().mockResolvedValue(null)}
+      />,
+    )
+    await waitFor(() => expect(fetchDeals).toHaveBeenCalledWith({ q: undefined, tag: 'sony', page: 0 }))
+    expect(fetchDeals).toHaveBeenCalledTimes(1)
+    expect(await screen.findByText('No hay chollos que coincidan')).toBeInTheDocument()
+  } finally {
+    history.replaceState(null, '', '/')
+  }
+})

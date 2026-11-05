@@ -2,9 +2,13 @@ import type { Metadata } from 'next'
 import { discountPercent, formatPrice } from './format'
 import { storeInfo } from './stores'
 import type { Deal } from './types'
-import { SITE_URL, productPath } from './urls'
+import { SITE_URL, parseTagParam, productPath, tagPath } from './urls'
 
 const MAX_DESCRIPTION = 160
+/** Hashtag pages with fewer deals than this are kept out of the index. */
+export const MIN_INDEXABLE_DEALS = 3
+
+const NOINDEX = { index: false, follow: true }
 
 function dealDiscount(deal: Deal): number | null {
   return deal.previousPrice !== null ? discountPercent(deal.price, deal.previousPrice) : null
@@ -84,5 +88,27 @@ export function breadcrumbJsonLd(items: BreadcrumbItem[]): Record<string, unknow
       name: item.name,
       item: SITE_URL + item.path,
     })),
+  }
+}
+
+export function hashtagMetadata(tag: string, count: number): Metadata {
+  const title = `Chollos de ${tag} · PatoBarato`
+  const description = `Los últimos chollos de #${tag} en Amazon, seleccionados por PatoBarato.`
+  const path = tagPath(tag)
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: { type: 'website', siteName: 'PatoBarato', locale: 'es_ES', url: path, title, description },
+    ...(count < MIN_INDEXABLE_DEALS && { robots: NOINDEX }),
+  }
+}
+
+/** Home metadata for the v1 query links: `?tag=` is canonical on its hashtag page, `?q=` is never indexed. */
+export function homeMetadata(params: { q?: string; tag?: string }): Metadata {
+  const tag = params.tag ? parseTagParam(params.tag) : null
+  return {
+    alternates: { canonical: tag ? tagPath(tag) : '/' },
+    ...(params.q?.trim() ? { robots: NOINDEX } : {}),
   }
 }

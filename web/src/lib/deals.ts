@@ -173,3 +173,11 @@ export async function fetchHashtagCounts(client: SupabaseClient): Promise<Hashta
   )
   return rows.map((r) => ({ tag: r.tag, count: Number(r.count) }))
 }
+
+/** Number of deals for one hashtag according to `web_hashtags`; null when the tag is not listed. */
+export async function fetchHashtagCount(client: SupabaseClient, tag: string): Promise<number | null> {
+  const { data, error } = await client.from('web_hashtags').select('count').eq('tag', tag).limit(1)
+  if (error) throw new Error(error.message)
+  const rows = (data ?? []) as { count: number | string }[]
+  return rows.length ? Number(rows[0].count) : null
+}

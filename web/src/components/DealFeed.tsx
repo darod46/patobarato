@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useDeals, type DealsFetcher } from '../hooks/useDeals'
+import { useDeals, type DealsFetcher, type InitialDeals } from '../hooks/useDeals'
 import type { HashtagCount } from '../lib/types'
 import { DealCard } from './DealCard'
 import { DealCardSkeleton } from './DealCardSkeleton'
@@ -10,22 +10,43 @@ import { HashtagChips } from './HashtagChips'
 type Props = {
   q: string
   tag: string | null
-  onTag: (tag: string | null) => void
+  /** Chips filter in place through this callback; without it they are links to the hashtag pages. */
+  onTag?: (tag: string | null) => void
   onClear: () => void
   fetchDeals: DealsFetcher
-  fetchHashtags: () => Promise<HashtagCount[]>
+  /** Used only when `initialTags` is not given. */
+  fetchHashtags?: () => Promise<HashtagCount[]>
+  /** Server-rendered page 0; used only if its filters match the first render's. */
+  initialDeals?: InitialDeals
+  /** Server-rendered chips; when given, chips are not fetched. */
+  initialTags?: string[]
   now: Date
 }
 
 const GRID = 'grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5'
 
-export function DealFeed({ q, tag, onTag, onClear, fetchDeals, fetchHashtags, now }: Props) {
-  const { deals, status, hasMore, loadingMore, loadMore, retry } = useDeals(fetchDeals, { q, tag })
-  const [tags, setTags] = useState<string[]>([])
+export function DealFeed({
+  q,
+  tag,
+  onTag,
+  onClear,
+  fetchDeals,
+  fetchHashtags,
+  initialDeals,
+  initialTags,
+  now,
+}: Props) {
+  const { deals, status, hasMore, loadingMore, loadMore, retry } = useDeals(
+    fetchDeals,
+    { q, tag },
+    initialDeals,
+  )
+  const [tags, setTags] = useState<string[]>(() => initialTags ?? [])
   // Chips load once; keep the first fetcher so an unstable prop cannot refetch.
-  const [loadTags] = useState(() => fetchHashtags)
+  const [loadTags] = useState(() => (initialTags ? undefined : fetchHashtags))
 
   useEffect(() => {
+    if (!loadTags) return
     let cancelled = false
     loadTags()
       .then((list) => {

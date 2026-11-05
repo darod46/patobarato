@@ -15,6 +15,8 @@ const deal = (id: number): Deal => ({
   imageUrl: null,
   asin: `A${id}`,
   country: 'es',
+  store: 'amazon',
+  productId: id,
 })
 
 type Result = { deals: Deal[]; hasMore: boolean }
@@ -97,5 +99,60 @@ describe('useDeals', () => {
     act(() => result.current.retry())
     await waitFor(() => expect(result.current.status).toBe('ready'))
     expect(result.current.deals).toHaveLength(1)
+  })
+
+  it('starts ready with initial data, skips page 0 and loads page 1 on loadMore', async () => {
+    const fetcher = vi.fn(async (p: { page: number }) => ({ deals: [deal(p.page + 10)], hasMore: false }))
+    const { result } = renderHook(() =>
+      useDeals(fetcher, { q: '', tag: null }, { q: '', tag: null, deals: [deal(1)], hasMore: true }),
+    )
+    expect(result.current.status).toBe('ready')
+    expect(ids(result.current.deals)).toEqual([1])
+    expect(result.current.hasMore).toBe(true)
+    await act(async () => {})
+    expect(fetcher).not.toHaveBeenCalled()
+    act(() => result.current.loadMore())
+    await waitFor(() => expect(ids(result.current.deals)).toEqual([1, 11]))
+    expect(fetcher).toHaveBeenCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledWith({ q: undefined, tag: undefined, page: 1 })
+  })
+
+  it('fetches fresh when filters differ from the initial data, also when they come back', async () => {
+    const fetcher = vi.fn(async (p: { q?: string }) => ({
+      deals: [deal(p.q ? 2 : 3)],
+      hasMore: false,
+    }))
+    const { result, rerender } = renderHook(
+      ({ q }) =>
+        useDeals(fetcher, { q, tag: null }, { q: '', tag: null, deals: [deal(1)], hasMore: true }),
+      { initialProps: { q: '' } },
+    )
+    rerender({ q: 'lego' })
+    expect(result.current.status).toBe('loading')
+    await waitFor(() => expect(ids(result.current.deals)).toEqual([2]))
+    expect(fetcher).toHaveBeenLastCalledWith({ q: 'lego', tag: undefined, page: 0 })
+    rerender({ q: '' })
+    await waitFor(() => expect(ids(result.current.deals)).toEqual([3]))
+    expect(fetcher).toHaveBeenLastCalledWith({ q: undefined, tag: undefined, page: 0 })
+  })
+
+  it('applies initial data to the fixed filters it was fetched with', async () => {
+    const fetcher = vi.fn()
+    const { result } = renderHook(() =>
+      useDeals(fetcher, { q: '', tag: 'hogar' }, { q: '', tag: 'hogar', deals: [deal(5)], hasMore: false }),
+    )
+    await act(async () => {})
+    expect(ids(result.current.deals)).toEqual([5])
+    expect(fetcher).not.toHaveBeenCalled()
+  })
+
+  it('ignores initial data fetched for other filters', async () => {
+    const fetcher = vi.fn().mockResolvedValue({ deals: [deal(2)], hasMore: false })
+    const { result } = renderHook(() =>
+      useDeals(fetcher, { q: '', tag: 'sony' }, { q: '', tag: null, deals: [deal(1)], hasMore: true }),
+    )
+    expect(result.current.status).toBe('loading')
+    await waitFor(() => expect(ids(result.current.deals)).toEqual([2]))
+    expect(fetcher).toHaveBeenCalledWith({ q: undefined, tag: 'sony', page: 0 })
   })
 })

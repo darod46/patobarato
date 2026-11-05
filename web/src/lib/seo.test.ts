@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { formatPrice } from './format'
-import { breadcrumbJsonLd, productJsonLd, productMetadata } from './seo'
+import { breadcrumbJsonLd, hashtagMetadata, homeMetadata, productJsonLd, productMetadata } from './seo'
 import type { Deal } from './types'
 import { SITE_URL, productPath } from './urls'
 
@@ -81,5 +81,44 @@ describe('productMetadata', () => {
     expect(meta.title).toBe(`${long.title} por ${formatPrice(13.9)} · PatoBarato`)
     expect((meta.description as string).length).toBeLessThanOrEqual(160)
     expect(meta.openGraph?.images).toBeUndefined()
+  })
+})
+
+describe('hashtagMetadata', () => {
+  it('builds title, description and canonical, indexable from 3 deals', () => {
+    const meta = hashtagMetadata('hogar', 3)
+    expect(meta.title).toBe('Chollos de hogar · PatoBarato')
+    expect(meta.description).toContain('hogar')
+    expect(meta.alternates?.canonical).toBe('/chollos/hogar')
+    expect(meta.openGraph?.url).toBe('/chollos/hogar')
+    expect(meta.robots).toBeUndefined()
+  })
+
+  it('is noindex below 3 deals and encodes the canonical', () => {
+    const meta = hashtagMetadata('niños', 2)
+    expect(meta.title).toBe('Chollos de niños · PatoBarato')
+    expect(meta.alternates?.canonical).toBe('/chollos/ni%C3%B1os')
+    expect(meta.robots).toEqual({ index: false, follow: true })
+  })
+})
+
+describe('homeMetadata', () => {
+  it('has no extra metadata without filters', () => {
+    expect(homeMetadata({})).toEqual({ alternates: { canonical: '/' } })
+  })
+
+  it('points ?tag= to the hashtag page', () => {
+    expect(homeMetadata({ tag: 'Hogar' }).alternates?.canonical).toBe('/chollos/hogar')
+    expect(homeMetadata({ tag: 'niños' }).alternates?.canonical).toBe('/chollos/ni%C3%B1os')
+  })
+
+  it('ignores an invalid tag', () => {
+    expect(homeMetadata({ tag: 'a b<' }).alternates?.canonical).toBe('/')
+  })
+
+  it('marks searches noindex', () => {
+    expect(homeMetadata({ q: 'lego' }).robots).toEqual({ index: false, follow: true })
+    expect(homeMetadata({ q: 'lego', tag: 'hogar' }).robots).toEqual({ index: false, follow: true })
+    expect(homeMetadata({ q: '' }).robots).toBeUndefined()
   })
 })
