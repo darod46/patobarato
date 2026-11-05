@@ -139,5 +139,5 @@ export function siteJsonLd(): Record<string, unknown>[] {
 
 /** Serializes structured data for a ld+json script; "<" is escaped so text can never close the element. */
 export function jsonLdScript(data: unknown) {
-  return { __html: JSON.stringify(data).replace(/</g, '\u003c') }
+  return { __html: JSON.stringify(data).replace(/</g, '\\u003c') }
 }

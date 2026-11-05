@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { formatPrice } from './format'
-import { breadcrumbJsonLd, hashtagMetadata, homeMetadata, productJsonLd, productMetadata, siteJsonLd } from './seo'
+import { breadcrumbJsonLd, hashtagMetadata, homeMetadata, productJsonLd, productMetadata, siteJsonLd, jsonLdScript } from './seo'
 import type { Deal } from './types'
 import { SITE_URL, productPath } from './urls'
 
@@ -134,5 +134,15 @@ describe('siteJsonLd', () => {
     expect(org['@type']).toBe('Organization')
     expect(org.name).toBe('PatoBarato')
     expect(org.logo).toBe(`${SITE_URL}/logo.svg`)
+  })
+})
+
+describe('jsonLdScript', () => {
+  it('escapes < so a title cannot close the script element, and still round-trips', () => {
+    const title = '</script><script>alert(1)</script>'
+    const { __html } = jsonLdScript({ t: title })
+    expect(__html).not.toContain('<')
+    expect(__html).toContain('\\u003c')
+    expect(JSON.parse(__html)).toEqual({ t: title })
   })
 })
