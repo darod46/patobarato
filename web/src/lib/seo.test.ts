@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { formatPrice } from './format'
-import { breadcrumbJsonLd, hashtagMetadata, homeMetadata, productJsonLd, productMetadata, siteJsonLd, jsonLdScript } from './seo'
+import { OG_IMAGE, breadcrumbJsonLd, hashtagMetadata, homeMetadata, productJsonLd, productMetadata, siteJsonLd, jsonLdScript } from './seo'
 import type { Deal } from './types'
 import { SITE_URL, productPath } from './urls'
 
@@ -73,6 +73,7 @@ describe('productMetadata', () => {
     expect(meta.alternates?.canonical).toBe(productPath(deal))
     const images = meta.openGraph?.images as { url: string }[]
     expect(images[0].url).toBe(deal.imageUrl)
+    expect(meta.twitter).toMatchObject({ card: 'summary_large_image', images: [deal.imageUrl] })
   })
 
   it('omits the discount without a previous price and keeps long descriptions short', () => {
@@ -80,7 +81,12 @@ describe('productMetadata', () => {
     const meta = productMetadata(long)
     expect(meta.title).toBe(`${long.title} por ${formatPrice(13.9)} · PatoBarato`)
     expect((meta.description as string).length).toBeLessThanOrEqual(160)
-    expect(meta.openGraph?.images).toBeUndefined()
+  })
+
+  it('falls back to the default Open Graph image when the deal has no image', () => {
+    const meta = productMetadata(bare)
+    expect(meta.openGraph?.images).toEqual([OG_IMAGE])
+    expect(meta.twitter).toMatchObject({ card: 'summary_large_image', images: ['/og.png'] })
   })
 })
 
@@ -99,6 +105,13 @@ describe('hashtagMetadata', () => {
     expect(meta.title).toBe('Chollos de niños · PatoBarato')
     expect(meta.alternates?.canonical).toBe('/chollos/ni%C3%B1os')
     expect(meta.robots).toEqual({ index: false, follow: true })
+  })
+
+  it('keeps the default Open Graph image', () => {
+    const meta = hashtagMetadata('hogar', 3)
+    expect(OG_IMAGE).toEqual({ url: '/og.png', width: 1200, height: 630, alt: 'PatoBarato · chollos de Amazon' })
+    expect(meta.openGraph?.images).toEqual([OG_IMAGE])
+    expect(meta.twitter).toMatchObject({ card: 'summary_large_image', images: ['/og.png'] })
   })
 })
 

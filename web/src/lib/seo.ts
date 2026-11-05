@@ -10,6 +10,9 @@ export const MIN_INDEXABLE_DEALS = 3
 
 const NOINDEX = { index: false, follow: true }
 
+/** Default Open Graph image; child metadata replaces the layout's `openGraph`, so pages repeat it. */
+export const OG_IMAGE = { url: '/og.png', width: 1200, height: 630, alt: 'PatoBarato · chollos de Amazon' }
+
 function dealDiscount(deal: Deal): number | null {
   return deal.previousPrice !== null ? discountPercent(deal.price, deal.previousPrice) : null
 }
@@ -35,7 +38,7 @@ export function productMetadata(deal: Deal): Metadata {
   const title = `${deal.title} por ${formatPrice(deal.price)}${discount !== null ? ` (-${discount}%)` : ''} · PatoBarato`
   const description = productDescription(deal)
   const path = productPath(deal)
-  const images = deal.imageUrl ? [{ url: deal.imageUrl, alt: deal.title }] : undefined
+  const images = deal.imageUrl ? [{ url: deal.imageUrl, alt: deal.title }] : [OG_IMAGE]
   return {
     title,
     description,
@@ -47,13 +50,13 @@ export function productMetadata(deal: Deal): Metadata {
       url: path,
       title,
       description,
-      ...(images && { images }),
+      images,
     },
     twitter: {
-      card: images ? 'summary_large_image' : 'summary',
+      card: 'summary_large_image',
       title,
       description,
-      ...(images && { images: images.map((i) => i.url) }),
+      images: images.map((i) => i.url),
     },
   }
 }
@@ -99,7 +102,16 @@ export function hashtagMetadata(tag: string, count: number): Metadata {
     title,
     description,
     alternates: { canonical: path },
-    openGraph: { type: 'website', siteName: 'PatoBarato', locale: 'es_ES', url: path, title, description },
+    openGraph: {
+      type: 'website',
+      siteName: 'PatoBarato',
+      locale: 'es_ES',
+      url: path,
+      title,
+      description,
+      images: [OG_IMAGE],
+    },
+    twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
     ...(count < MIN_INDEXABLE_DEALS && { robots: NOINDEX }),
   }
 }

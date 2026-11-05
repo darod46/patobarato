@@ -43,7 +43,8 @@ export default async function ProductPage({ params }: Props) {
   const canonical = productPath(deal)
   if (`/oferta/${store}/${slug}` !== canonical) permanentRedirect(canonical)
 
-  const related = await fetchRelatedDeals(getSupabase(), deal, 10)
+  // Related deals are optional: a failed query must not turn the product page into a 500.
+  const related = await fetchRelatedDeals(getSupabase(), deal, 10).catch(() => [])
   const now = new Date().toISOString()
   const tag = deal.hashtags[0]
   const crumbs: BreadcrumbItem[] = [

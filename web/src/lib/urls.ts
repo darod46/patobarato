@@ -7,7 +7,7 @@ const MAX_WORDS = 8
 export function slugify(title: string): string {
   const words = title
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .split(/[^a-z0-9]+/)
     .filter(Boolean)
