@@ -11,7 +11,6 @@ from telethon.errors import (
 )
 from telethon.tl.types import PeerChannel
 
-from patobarato.publishing.format import BUTTON_TEXT
 from patobarato.publishing.telegram_publisher import TelegramPublisher
 
 URL = "https://www.amazon.es/dp/B0ABC12345?tag=patobarato-21"
@@ -54,7 +53,7 @@ async def test_publish_with_photo_uses_send_file_and_button(sleep):
     client = FakeClient()
     publisher = TelegramPublisher(client, "@patobarato")
 
-    result = await publisher.publish("cap", URL, b"jpegbytes")
+    result = await publisher.publish("cap", b"jpegbytes")
 
     assert result == (utils.get_peer_id(PeerChannel(123)), 77)
     [(kind, args, kwargs)] = client.calls
@@ -66,10 +65,7 @@ async def test_publish_with_photo_uses_send_file_and_button(sleep):
     assert photo.name == "photo.jpg"
     assert kwargs["caption"] == "cap"
     assert kwargs["parse_mode"] == "html"
-    [row] = kwargs["buttons"]
-    assert row.text == BUTTON_TEXT
-    assert row.type.url == URL
-    assert row.style.bg_success is True
+    assert "buttons" not in kwargs
     sleep.assert_not_called()
 
 
@@ -77,7 +73,7 @@ async def test_publish_without_photo_uses_send_message(sleep):
     client = FakeClient()
     publisher = TelegramPublisher(client, "@patobarato")
 
-    result = await publisher.publish("cap", URL, None)
+    result = await publisher.publish("cap", None)
 
     assert result == (utils.get_peer_id(PeerChannel(123)), 77)
     [(kind, args, kwargs)] = client.calls
@@ -85,15 +81,14 @@ async def test_publish_without_photo_uses_send_message(sleep):
     assert args == ("@patobarato", "cap")
     assert kwargs["parse_mode"] == "html"
     assert kwargs["link_preview"] is False
-    assert kwargs["buttons"][0].type.url == URL
-    assert kwargs["buttons"][0].style.bg_success is True
+    assert "buttons" not in kwargs
 
 
 async def test_flood_wait_retries_then_succeeds(sleep):
     client = FakeClient([FloodWaitError(None, capture=7)])
     publisher = TelegramPublisher(client, "@patobarato")
 
-    result = await publisher.publish("cap", URL, None)
+    result = await publisher.publish("cap", None)
 
     assert result[1] == 77
     assert len(client.calls) == 2
@@ -104,7 +99,7 @@ async def test_network_error_backs_off_exponentially(sleep):
     client = FakeClient([ConnectionError("x"), ServerError(None, "boom")])
     publisher = TelegramPublisher(client, "@patobarato", base_delay=2.0)
 
-    await publisher.publish("cap", URL, None)
+    await publisher.publish("cap", None)
 
     assert [c.args[0] for c in sleep.await_args_list] == [2.0, 4.0]
     assert len(client.calls) == 3
@@ -116,7 +111,7 @@ async def test_gives_up_after_max_retries(sleep):
     publisher = TelegramPublisher(client, "@patobarato", max_retries=3, base_delay=2.0)
 
     with pytest.raises(ConnectionError, match="e3"):
-        await publisher.publish("cap", URL, None)
+        await publisher.publish("cap", None)
 
     assert len(client.calls) == 4
     assert [c.args[0] for c in sleep.await_args_list] == [2.0, 4.0, 8.0]
@@ -127,7 +122,7 @@ async def test_flood_wait_also_gives_up_after_max_retries(sleep):
     publisher = TelegramPublisher(client, "@patobarato", max_retries=2)
 
     with pytest.raises(FloodWaitError):
-        await publisher.publish("cap", URL, None)
+        await publisher.publish("cap", None)
 
     assert len(client.calls) == 3
     assert sleep.await_count == 2
@@ -138,7 +133,7 @@ async def test_bad_request_errors_are_not_retried(sleep):
     publisher = TelegramPublisher(client, "@patobarato")
 
     with pytest.raises(RPCError):
-        await publisher.publish("cap", URL, None)
+        await publisher.publish("cap", None)
 
     assert len(client.calls) == 1
     sleep.assert_not_called()

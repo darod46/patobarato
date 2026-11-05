@@ -4,10 +4,9 @@ import asyncio
 import io
 import logging
 
-from telethon import Button, TelegramClient, utils
+from telethon import TelegramClient, utils
 from telethon.errors import FloodWaitError, RPCError, ServerError
 
-from patobarato.publishing.format import BUTTON_STYLE, BUTTON_TEXT
 
 logger = logging.getLogger("patobarato.telegram_publisher")
 
@@ -37,13 +36,11 @@ class TelegramPublisher:
         self._max_retries = max_retries
         self._base_delay = base_delay
 
-    async def publish(
-        self, caption: str, button_url: str, photo: bytes | None
-    ) -> tuple[int, int]:
+    async def publish(self, caption: str, photo: bytes | None) -> tuple[int, int]:
         attempt = 0
         while True:
             try:
-                msg = await self._send(caption, button_url, photo)
+                msg = await self._send(caption, photo)
                 return utils.get_peer_id(msg.peer_id), msg.id
             except FloodWaitError as e:
                 if attempt >= self._max_retries:
@@ -58,19 +55,17 @@ class TelegramPublisher:
                 await asyncio.sleep(delay)
             attempt += 1
 
-    async def _send(self, caption: str, button_url: str, photo: bytes | None):
-        buttons = [Button.url(BUTTON_TEXT, button_url, style=BUTTON_STYLE)]
+    async def _send(self, caption: str, photo: bytes | None):
         if photo is None:
             return await self._client.send_message(
                 self._target,
                 caption,
                 parse_mode="html",
-                buttons=buttons,
                 link_preview=False,
             )
         # Fresh buffer per attempt; the name makes Telethon treat it as a photo.
         buffer = io.BytesIO(photo)
         buffer.name = _PHOTO_NAME
         return await self._client.send_file(
-            self._target, buffer, caption=caption, parse_mode="html", buttons=buttons
+            self._target, buffer, caption=caption, parse_mode="html"
         )

@@ -5,9 +5,9 @@ from decimal import ROUND_HALF_UP, Decimal
 from patobarato.models import ParsedOffer
 from patobarato.parsing.text import strip_urls
 
-BUTTON_TEXT = "🛒 Ver oferta en Amazon"
-# Telegram only offers blue, green or red buttons; green reads as "buy".
-BUTTON_STYLE = "success"
+# The link goes in the text as a visible URL: Telegram opens it without a
+# confirmation and hands it to the system (Amazon app), unlike URL buttons.
+LINK_LABEL = "🛒 Ver en Amazon:"
 
 _INVALID_TAG_CHARS = re.compile(r"[^a-z0-9_áéíóúñü]")
 
@@ -27,7 +27,7 @@ def normalize_hashtag(tag: str) -> str:
     return _INVALID_TAG_CHARS.sub("", tag.lower())
 
 
-def _build(offer: ParsedOffer, title: str, coupon: str | None) -> str:
+def _build(offer: ParsedOffer, title: str, coupon: str | None, link: str) -> str:
     assert offer.price is not None, "format_caption requires a price"
     lines = [
         f"🦆 <b>{html.escape(title)}</b>",
@@ -40,6 +40,7 @@ def _build(offer: ParsedOffer, title: str, coupon: str | None) -> str:
         )
     if coupon:
         lines.append(f"🎟️ Cupón: <code>{html.escape(coupon)}</code>")
+    lines.append(f"{LINK_LABEL} {html.escape(link, quote=False)}")
     tags = [t for t in (normalize_hashtag(h) for h in offer.hashtags) if t]
     if tags:
         lines.append("")
@@ -47,24 +48,25 @@ def _build(offer: ParsedOffer, title: str, coupon: str | None) -> str:
     return "\n".join(lines)
 
 
-def format_caption(offer: ParsedOffer, max_len: int = 1024) -> str:
+def format_caption(offer: ParsedOffer, link: str, max_len: int = 1024) -> str:
     """Builds the HTML caption.
 
     This is the last step before publishing, so every link-like token is
     removed from the title and coupon here: a caption must never carry
     someone else's link or affiliate tag. A coupon that was only a link is dropped.
+    ``link`` (our affiliate URL) is the only link and is never trimmed.
     """
     title = strip_urls(offer.title)
     coupon = strip_urls(offer.coupon) if offer.coupon else None
-    caption = _build(offer, title, coupon)
+    caption = _build(offer, title, coupon, link)
     if len(caption) <= max_len:
         return caption
     # Trim only the (unescaped) title, longest prefix that fits.
     lo, hi = 0, len(title)
     while lo < hi:
         mid = (lo + hi + 1) // 2
-        if len(_build(offer, title[:mid].rstrip() + "…", coupon)) <= max_len:
+        if len(_build(offer, title[:mid].rstrip() + "…", coupon, link)) <= max_len:
             lo = mid
         else:
             hi = mid - 1
-    return _build(offer, title[:lo].rstrip() + "…", coupon)
+    return _build(offer, title[:lo].rstrip() + "…", coupon, link)

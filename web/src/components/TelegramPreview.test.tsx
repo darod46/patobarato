@@ -1,7 +1,10 @@
 import { render, screen } from '@testing-library/react'
 import { expect, it } from 'vitest'
+import { formatPrice } from '../lib/format'
 import type { Deal } from '../lib/types'
 import { TelegramPreview } from './TelegramPreview'
+
+const URL_ES = 'https://www.amazon.es/dp/A1?tag=patobarato-21'
 
 const full: Deal = {
   publicationId: 1,
@@ -10,34 +13,39 @@ const full: Deal = {
   previousPrice: 100,
   coupon: 'AHORRA5',
   hashtags: ['sony', 'audio'],
-  affiliateUrl: 'https://amzn.to/x',
+  affiliateUrl: URL_ES,
   title: 'Auriculares Sony',
   imageUrl: null,
   asin: 'A1',
   country: 'es',
 }
 
-it('shows every caption line in order plus the button', () => {
+it('shows every caption line in order, with the Amazon link as visible text', () => {
   const { container } = render(<TelegramPreview deal={full} />)
   const lines = Array.from(container.querySelectorAll('[data-line]')).map((n) => n.textContent)
   expect(lines).toEqual([
     '🦆 Auriculares Sony',
-    '✅ Precio: 80,00 €',
-    '❌ Antes: 100,00 € (-20%)',
+    `✅ Precio: ${formatPrice(80)}`,
+    `❌ Antes: ${formatPrice(100)} (-20%)`,
     '🎟️ Cupón: AHORRA5',
+    `🛒 Ver en Amazon: ${URL_ES}`,
     '#sony #audio',
   ])
-  const link = screen.getByRole('link', { name: '🛒 Ver oferta en Amazon' })
-  expect(link).toHaveAttribute('href', 'https://amzn.to/x')
+  const link = screen.getByRole('link', { name: URL_ES })
+  expect(link).toHaveAttribute('href', URL_ES)
   expect(link).toHaveAttribute('target', '_blank')
   expect(link).toHaveAttribute('rel', 'sponsored noopener noreferrer')
 })
 
-it('shows only title, price and button for a minimal deal', () => {
+it('shows only title, price and link for a minimal deal', () => {
   const { container } = render(
     <TelegramPreview deal={{ ...full, previousPrice: null, coupon: null, hashtags: [] }} />,
   )
   const lines = Array.from(container.querySelectorAll('[data-line]')).map((n) => n.textContent)
-  expect(lines).toEqual(['🦆 Auriculares Sony', '✅ Precio: 80,00 €'])
-  expect(screen.getByRole('link', { name: '🛒 Ver oferta en Amazon' })).toBeInTheDocument()
+  expect(lines).toEqual([
+    '🦆 Auriculares Sony',
+    `✅ Precio: ${formatPrice(80)}`,
+    `🛒 Ver en Amazon: ${URL_ES}`,
+  ])
+  expect(screen.queryByRole('button')).toBeNull()
 })

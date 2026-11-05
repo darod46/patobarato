@@ -23,9 +23,7 @@ MIN_PUBLISH_INTERVAL_SECONDS = 3.0
 
 
 class Publisher(Protocol):
-    async def publish(
-        self, caption: str, button_url: str, photo: bytes | None
-    ) -> tuple[int, int]:
+    async def publish(self, caption: str, photo: bytes | None) -> tuple[int, int]:
         """Publish the offer and return ``(chat_id, message_id)``; raise on failure."""
         ...
 
@@ -139,7 +137,7 @@ class Pipeline:
         await self._wait_publish_slot()
         try:
             chat_id, message_id = await self._publisher.publish(
-                format_caption(offer), affiliate_url, photo
+                format_caption(offer, affiliate_url), photo
             )
         except Exception:
             logger.exception("Failed to publish offer %s (%s)", offer_id, offer.asin)

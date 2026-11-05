@@ -5,11 +5,17 @@ import pytest
 from patobarato.models import ParsedOffer
 from patobarato.parsing.text import parse_title
 from patobarato.publishing.format import (
-    BUTTON_TEXT,
     discount_percent,
     format_caption,
     format_price,
 )
+
+LINK = "https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21"
+LINK_LINE = f"🛒 Ver en Amazon: {LINK}"
+
+
+def cap(offer, **kwargs):
+    return format_caption(offer, LINK, **kwargs)
 
 
 def make_offer(**overrides) -> ParsedOffer:
@@ -34,45 +40,48 @@ def test_full_caption():
         coupon="SONY10",
         hashtags=["auriculares", "sony"],
     )
-    assert format_caption(offer) == (
+    assert cap(offer) == (
         "🦆 <b>Sony WH-1000XM5</b>\n"
         "✅ Precio: <b>249,99 €</b>\n"
         "❌ Antes: <s>419,99 €</s> (-40%)\n"
         "🎟️ Cupón: <code>SONY10</code>\n"
+        f"{LINK_LINE}\n"
         "\n"
         "#auriculares #sony"
     )
 
 
 def test_minimal_caption():
-    caption = format_caption(make_offer())
+    caption = cap(make_offer())
     assert caption.split("\n") == [
         "🦆 <b>Sony WH-1000XM5</b>",
         "✅ Precio: <b>249,99 €</b>",
+        LINK_LINE,
     ]
 
 
 def test_html_escaped():
-    caption = format_caption(make_offer(title="Cable <USB> & más"))
+    caption = cap(make_offer(title="Cable <USB> & más"))
     assert "Cable &lt;USB&gt; &amp; más" in caption
 
 
 def test_long_title_trimmed():
-    caption = format_caption(make_offer(title="a" * 2000))
+    caption = cap(make_offer(title="a" * 2000))
     assert len(caption) <= 1024
     lines = caption.split("\n")
     assert lines[1] == "✅ Precio: <b>249,99 €</b>"
     assert lines[0].endswith("…</b>")
+    assert lines[2] == LINK_LINE
 
 
 def test_long_title_with_escapes_trimmed():
-    caption = format_caption(make_offer(title="&<" * 1000), max_len=200)
+    caption = cap(make_offer(title="&<" * 1000), max_len=200)
     assert len(caption) <= 200
     assert "&amp;&lt;" in caption
 
 
 def test_hashtags_normalized_and_empty_dropped():
-    caption = format_caption(make_offer(hashtags=["#Café", "Ñandú!", "***"]))
+    caption = cap(make_offer(hashtags=["#Café", "Ñandú!", "***"]))
     assert caption.endswith("\n\n#caf #ñandú") or caption.endswith("\n\n#café #ñandú")
     assert "#café #ñandú" in caption
 
@@ -90,8 +99,10 @@ def test_discount_percent_rounds():
     assert discount_percent(Decimal("66.5"), Decimal("100")) == 34
 
 
-def test_button_text():
-    assert BUTTON_TEXT == "🛒 Ver oferta en Amazon"
+def test_link_is_visible_plain_text_so_telegram_opens_it_without_confirmation():
+    caption = cap(make_offer())
+    assert LINK in caption
+    assert "<a " not in caption
 
 
 # --- I3: foreign links never reach the caption ------------------------------------
@@ -100,7 +111,8 @@ FORBIDDEN = ("tag=", "amzn.", "amazon.", "http", "bit.ly")
 
 
 def _assert_clean(caption: str) -> None:
-    lowered = caption.lower()
+    assert caption.count(LINK) == 1, caption
+    lowered = caption.replace(LINK_LINE, "").lower()
     for token in FORBIDDEN:
         assert token not in lowered, (token, caption)
 
@@ -114,7 +126,7 @@ def _assert_clean(caption: str) -> None:
     ],
 )
 def test_caption_from_parsed_title_has_no_links(text):
-    _assert_clean(format_caption(make_offer(title=parse_title(text))))
+    _assert_clean(cap(make_offer(title=parse_title(text))))
 
 
 @pytest.mark.parametrize(
@@ -130,13 +142,13 @@ def test_caption_from_parsed_title_has_no_links(text):
     ],
 )
 def test_caption_strips_links_from_title(title):
-    caption = format_caption(make_offer(title=title))
+    caption = cap(make_offer(title=title))
     _assert_clean(caption)
     assert caption.startswith("🦆 <b>")
 
 
 def test_title_link_stripped_keeps_words():
-    caption = format_caption(make_offer(title="amzn.to/3abcd Auriculares Sony"))
+    caption = cap(make_offer(title="amzn.to/3abcd Auriculares Sony"))
     assert caption.split("\n")[0] == "🦆 <b>Auriculares Sony</b>"
 
 
@@ -145,16 +157,16 @@ def test_title_link_stripped_keeps_words():
     ["https://amzn.to/xyz", "amzn.to/xyz", "amazon.es/dp/B0?tag=otro-21", "  "],
 )
 def test_url_coupon_line_dropped(coupon):
-    caption = format_caption(make_offer(coupon=coupon))
+    caption = cap(make_offer(coupon=coupon))
     _assert_clean(caption)
     assert "Cupón" not in caption
 
 
 def test_coupon_with_link_keeps_text():
-    caption = format_caption(make_offer(coupon="10% extra en amzn.to/xyz"))
+    caption = cap(make_offer(coupon="10% extra en amzn.to/xyz"))
     _assert_clean(caption)
     assert "🎟️ Cupón: <code>10% extra en</code>" in caption
 
 
 def test_plain_coupon_kept():
-    assert "<code>SONY10</code>" in format_caption(make_offer(coupon="SONY10"))
+    assert "<code>SONY10</code>" in cap(make_offer(coupon="SONY10"))

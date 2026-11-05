@@ -32,12 +32,10 @@ def _handler(request: httpx.Request) -> httpx.Response:
 class FakePublisher:
     def __init__(self, fail: bool = False) -> None:
         self.fail = fail
-        self.calls: list[tuple[str, str, bytes | None]] = []
+        self.calls: list[tuple[str, bytes | None]] = []
 
-    async def publish(
-        self, caption: str, button_url: str, photo: bytes | None
-    ) -> tuple[int, int]:
-        self.calls.append((caption, button_url, photo))
+    async def publish(self, caption: str, photo: bytes | None) -> tuple[int, int]:
+        self.calls.append((caption, photo))
         if self.fail:
             raise RuntimeError("telegram down")
         return (-100123, len(self.calls))
@@ -152,8 +150,8 @@ async def test_new_offer_published_with_affiliate_url(make_pipeline, repo, publi
 
     assert statuses == [OfferStatus.PUBLISHED]
     assert len(publisher.calls) == 1
-    caption, button_url, photo = publisher.calls[0]
-    assert button_url == AFFILIATE_URL
+    caption, photo = publisher.calls[0]
+    assert AFFILIATE_URL in caption
     assert "249,99" in caption
     assert photo is None
     publications = repo.publications()
@@ -256,7 +254,7 @@ async def test_photo_provider_error_publishes_without_photo(
     assert statuses == [OfferStatus.PUBLISHED]
     assert seen == [(msg, "https://www.amazon.es/dp/B09XS7JWHH")]
     assert len(publisher.calls) == 1
-    assert publisher.calls[0][2] is None
+    assert publisher.calls[0][1] is None
     assert any(
         r.name == "patobarato.pipeline" and r.exc_info for r in caplog.records
     )
@@ -270,7 +268,7 @@ async def test_photo_is_passed_to_publisher(make_pipeline, publisher):
 
     await pipeline.process(_msg())
 
-    assert publisher.calls[0][2] == b"jpeg"
+    assert publisher.calls[0][1] == b"jpeg"
 
 
 async def test_listener_error_does_not_stop_worker(
@@ -285,7 +283,7 @@ async def test_listener_error_does_not_stop_worker(
     finally:
         await _stop(worker)
 
-    assert publisher.calls[0][1] == AFFILIATE_URL
+    assert AFFILIATE_URL in publisher.calls[0][0]
     assert repo.offer_statuses() == [OfferStatus.PUBLISHED]
     assert any(
         r.name == "patobarato.pipeline" and r.exc_info for r in caplog.records
