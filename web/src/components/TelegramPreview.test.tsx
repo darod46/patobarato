@@ -18,6 +18,8 @@ const full: Deal = {
   imageUrl: null,
   asin: 'A1',
   country: 'es',
+  store: 'amazon',
+  productId: 1,
 }
 
 it('shows every caption line in order, with the Amazon link as visible text', () => {
