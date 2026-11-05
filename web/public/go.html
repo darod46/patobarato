@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Abriendo Amazon… · PatoBarato</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        font-family: system-ui, sans-serif;
+        background: #fbf8ff;
+        color: #09090b;
+      }
+      a {
+        background: #f59e0b;
+        color: #09090b;
+        font-weight: 700;
+        text-decoration: none;
+        padding: 12px 20px;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <p>Abriendo Amazon…</p>
+    <a id="go" href="https://www.amazon.es/" rel="sponsored noopener noreferrer">Ir a Amazon</a>
+    <script>
+      // Served for /go/{ASIN} (vercel.json rewrite). The redirect is done by
+      // script, not HTTP: Telegram's iOS in-app browser only offers to open
+      // the Amazon app for page-initiated navigations (like link.amazon does).
+      ;(function () {
+        var match = /^\/go\/([A-Za-z0-9]{10})\/?$/.exec(location.pathname)
+        if (!match) {
+          location.replace('/')
+          return
+        }
+        var url = 'https://www.amazon.es/dp/' + match[1].toUpperCase() + '?tag=patobarato-21'
+        document.getElementById('go').href = url
+        setTimeout(function () {
+          location.replace(url)
+        }, 200)
+      })()
+    </script>
+  </body>
+</html>
