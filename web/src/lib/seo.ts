@@ -112,3 +112,32 @@ export function homeMetadata(params: { q?: string; tag?: string }): Metadata {
     ...(params.q?.trim() ? { robots: NOINDEX } : {}),
   }
 }
+
+/** WebSite (with sitelinks search box) and Organization structured data for the home page. */
+export function siteJsonLd(): Record<string, unknown>[] {
+  return [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'PatoBarato',
+      url: SITE_URL,
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: `${SITE_URL}/?q={search_term_string}`,
+        'query-input': 'required name=search_term_string',
+      },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: 'PatoBarato',
+      url: SITE_URL,
+      logo: `${SITE_URL}/logo.svg`,
+    },
+  ]
+}
+
+/** Serializes structured data for a ld+json script; "<" is escaped so text can never close the element. */
+export function jsonLdScript(data: unknown) {
+  return { __html: JSON.stringify(data).replace(/</g, '\u003c') }
+}

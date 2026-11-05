@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { formatPrice } from './format'
-import { breadcrumbJsonLd, hashtagMetadata, homeMetadata, productJsonLd, productMetadata } from './seo'
+import { breadcrumbJsonLd, hashtagMetadata, homeMetadata, productJsonLd, productMetadata, siteJsonLd } from './seo'
 import type { Deal } from './types'
 import { SITE_URL, productPath } from './urls'
 
@@ -120,5 +120,19 @@ describe('homeMetadata', () => {
     expect(homeMetadata({ q: 'lego' }).robots).toEqual({ index: false, follow: true })
     expect(homeMetadata({ q: 'lego', tag: 'hogar' }).robots).toEqual({ index: false, follow: true })
     expect(homeMetadata({ q: '' }).robots).toBeUndefined()
+  })
+})
+
+describe('siteJsonLd', () => {
+  it('describes the WebSite with a search action and the Organization with an absolute logo', () => {
+    const [site, org] = siteJsonLd() as any[]
+    expect(site['@type']).toBe('WebSite')
+    expect(site.url).toBe(SITE_URL)
+    expect(site.potentialAction['@type']).toBe('SearchAction')
+    expect(site.potentialAction.target).toBe(`${SITE_URL}/?q={search_term_string}`)
+    expect(site.potentialAction['query-input']).toBe('required name=search_term_string')
+    expect(org['@type']).toBe('Organization')
+    expect(org.name).toBe('PatoBarato')
+    expect(org.logo).toBe(`${SITE_URL}/logo.svg`)
   })
 })

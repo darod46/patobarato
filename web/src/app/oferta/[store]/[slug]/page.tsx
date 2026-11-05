@@ -6,7 +6,7 @@ import { Header } from '../../../../components/Header'
 import { ProductView } from '../../../../components/ProductView'
 import { SearchForm } from '../../../../components/SearchForm'
 import { fetchDealByProduct, fetchRelatedDeals } from '../../../../lib/deals'
-import { breadcrumbJsonLd, productJsonLd, productMetadata, type BreadcrumbItem } from '../../../../lib/seo'
+import { breadcrumbJsonLd, jsonLdScript, productJsonLd, productMetadata, type BreadcrumbItem } from '../../../../lib/seo'
 import { getSupabase } from '../../../../lib/supabase'
 import { SITE_URL, parseProductSlug, productPath, tagPath } from '../../../../lib/urls'
 
@@ -32,11 +32,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const deal = await loadDeal(store, slug)
   if (!deal) notFound()
   return productMetadata(deal)
-}
-
-function jsonLdScript(data: unknown) {
-  // Escape "<" so a title can never close the script element.
-  return { __html: JSON.stringify(data).replace(/</g, '\\u003c') }
 }
 
 export default async function ProductPage({ params }: Props) {

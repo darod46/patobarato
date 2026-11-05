@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { HomeClient } from '../components/HomeClient'
 import { fetchDeals, fetchHashtags } from '../lib/deals'
-import { homeMetadata } from '../lib/seo'
+import { homeMetadata, jsonLdScript, siteJsonLd } from '../lib/seo'
 import { getSupabase } from '../lib/supabase'
 
 // Listings are regenerated at most every 60 s. Requests with `?q=` or `?tag=` are rewritten to
@@ -20,10 +20,13 @@ export default async function HomePage() {
     optional(() => fetchHashtags(getSupabase(), 12)),
   ])
   return (
-    <HomeClient
-      now={new Date().toISOString()}
-      initialDeals={page && { q: '', tag: null, ...page }}
-      initialTags={tags?.map((h) => h.tag)}
-    />
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(siteJsonLd())} />
+      <HomeClient
+        now={new Date().toISOString()}
+        initialDeals={page && { q: '', tag: null, ...page }}
+        initialTags={tags?.map((h) => h.tag)}
+      />
+    </>
   )
 }

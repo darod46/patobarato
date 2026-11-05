@@ -3,9 +3,9 @@ import { notFound } from 'next/navigation'
 import { cache } from 'react'
 import { HashtagClient } from '../../../components/HashtagClient'
 import { fetchDeals, fetchHashtagCount, fetchHashtags } from '../../../lib/deals'
-import { hashtagMetadata } from '../../../lib/seo'
+import { breadcrumbJsonLd, hashtagMetadata, jsonLdScript } from '../../../lib/seo'
 import { getSupabase } from '../../../lib/supabase'
-import { parseTagParam } from '../../../lib/urls'
+import { parseTagParam, tagPath } from '../../../lib/urls'
 
 // Listings are regenerated at most every 60 s.
 export const revalidate = 60
@@ -43,12 +43,19 @@ export default async function HashtagPage({ params }: Props) {
   if (!data) notFound()
   // Chips are optional: the listing still renders if they fail.
   const tags = await fetchHashtags(getSupabase(), 12).catch(() => [])
+  const crumbs = breadcrumbJsonLd([
+    { name: 'Inicio', path: '/' },
+    { name: `#${data.tag}`, path: tagPath(data.tag) },
+  ])
   return (
-    <HashtagClient
-      tag={data.tag}
-      now={new Date().toISOString()}
-      initialDeals={{ q: '', tag: data.tag, ...data.page }}
-      initialTags={tags.map((h) => h.tag)}
-    />
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(crumbs)} />
+      <HashtagClient
+        tag={data.tag}
+        now={new Date().toISOString()}
+        initialDeals={{ q: '', tag: data.tag, ...data.page }}
+        initialTags={tags.map((h) => h.tag)}
+      />
+    </>
   )
 }
