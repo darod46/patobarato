@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    {
+      "source": "/go/:asin([A-Za-z0-9]{10})",
+      "destination": "https://www.amazon.es/dp/:asin?tag=patobarato-21",
+      "permanent": false
+    }
+  ]
+}
