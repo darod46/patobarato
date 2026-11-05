@@ -18,6 +18,8 @@ const deal = (id: number): Deal => ({
   imageUrl: null,
   asin: `A${id}`,
   country: 'es',
+  store: 'amazon',
+  productId: 1,
 })
 
 function setup(over: Partial<ComponentProps<typeof DealFeed>> = {}) {

@@ -17,6 +17,8 @@ const deal: Deal = {
   imageUrl: null,
   asin: 'A1',
   country: 'es',
+  store: 'amazon',
+  productId: 1,
 }
 
 function setup() {

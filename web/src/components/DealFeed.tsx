@@ -53,7 +53,7 @@ export function DealFeed({ q, tag, onTag, onClear, fetchDeals, fetchHashtags, no
         <>
           <div className={GRID}>
             {deals.map((deal) => (
-              <DealCard key={deal.publicationId} deal={deal} now={now} onTagClick={onTag} />
+              <DealCard key={deal.publicationId} deal={deal} now={now} />
             ))}
           </div>
           {hasMore && (

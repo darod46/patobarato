@@ -1,29 +1,25 @@
-import { useState, useSyncExternalStore } from 'react'
-import { currentPlatform, linkTarget, openAmazon, type Platform } from '../lib/amazonLink'
+import Link from 'next/link'
+import { useState } from 'react'
 import { discountPercent, formatPrice, timeAgo } from '../lib/format'
+import { storeInfo } from '../lib/stores'
 import type { Deal } from '../lib/types'
+import { productPath } from '../lib/urls'
 
 const PLACEHOLDER = '/pato-placeholder.svg'
-// Few enough to keep every card one line of tags tall.
-const MAX_TAGS = 3
+type Props = { deal: Deal; now: Date }
 
-// The platform never changes while the page is open; nothing to subscribe to.
-const noSubscribe = () => () => {}
-const serverPlatform = (): Platform => 'desktop'
-
-type Props = { deal: Deal; now: Date; onTagClick: (tag: string) => void }
-
-export function DealCard({ deal, now, onTagClick }: Props) {
+export function DealCard({ deal, now }: Props) {
   const [failed, setFailed] = useState(false)
-  // Server and hydration render as desktop; the real platform is read once hydrated.
-  const platform = useSyncExternalStore(noSubscribe, currentPlatform, serverPlatform)
   const discount =
     deal.previousPrice !== null ? discountPercent(deal.price, deal.previousPrice) : null
   const isPlaceholder = failed || !deal.imageUrl
   const src = isPlaceholder ? PLACEHOLDER : deal.imageUrl!
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white transition-shadow hover:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)]">
+    <Link
+      href={productPath(deal)}
+      className="group flex h-full flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white transition-shadow hover:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.08)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-carbon"
+    >
       {/* Square box whatever the image's aspect ratio; the image never sizes it.
           White box + multiply blends the white background of Amazon photos. */}
       <div className="relative aspect-square overflow-hidden bg-white">
@@ -46,7 +42,7 @@ export function DealCard({ deal, now, onTagClick }: Props) {
         )}
       </div>
       <div className="flex flex-1 flex-col gap-1.5 border-t border-zinc-100 p-2.5 sm:gap-2 sm:p-3">
-        <h3 className="line-clamp-2 min-h-[2lh] text-[13px] leading-snug font-semibold text-carbon sm:text-sm">
+        <h3 className="line-clamp-2 group-hover:underline min-h-[2lh] text-[13px] leading-snug font-semibold text-carbon sm:text-sm">
           {deal.title}
         </h3>
         <div>
@@ -59,7 +55,7 @@ export function DealCard({ deal, now, onTagClick }: Props) {
             ) : (
               <span />
             )}
-            <span className="shrink-0">{timeAgo(deal.publishedAt, now)}</span>
+            <span className="shrink-0">{storeInfo(deal.store).short} · {timeAgo(deal.publishedAt, now)}</span>
           </div>
         </div>
         {deal.coupon && (
@@ -71,44 +67,7 @@ export function DealCard({ deal, now, onTagClick }: Props) {
             {deal.coupon}
           </div>
         )}
-        {deal.hashtags.length > 0 && (
-          <div className="flex h-5 flex-wrap gap-1 overflow-hidden">
-            {deal.hashtags.slice(0, MAX_TAGS).map((tag) => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => onTagClick(tag)}
-                className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] leading-4 text-zinc-600 hover:bg-zinc-200"
-              >
-                #{tag}
-              </button>
-            ))}
-          </div>
-        )}
-        <a
-          href={deal.affiliateUrl}
-          target={linkTarget(platform)}
-          rel="sponsored noopener noreferrer"
-          onClick={(event) => openAmazon(event, deal.affiliateUrl, platform)}
-          className="mt-auto flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-amber px-2 py-2 text-sm font-bold text-carbon shadow-sm transition-colors hover:bg-[#d97706] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-carbon"
-        >
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            className="h-4 w-4 shrink-0"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="9" cy="20" r="1.5" />
-            <circle cx="18" cy="20" r="1.5" />
-            <path d="M2 3h3l2.7 12.4a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.5L21 8H6.2" />
-          </svg>
-          Ver en Amazon
-        </a>
       </div>
-    </article>
+    </Link>
   )
 }

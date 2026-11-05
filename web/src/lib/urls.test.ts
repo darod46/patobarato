@@ -38,7 +38,7 @@ describe('productPath / parseProductSlug / tagPath', () => {
 
 describe('storeInfo', () => {
   it('knows amazon and falls back otherwise', () => {
-    expect(storeInfo('amazon')).toEqual({ name: 'Amazon España', cta: 'Ver en Amazon' })
-    expect(storeInfo('pccomp')).toEqual({ name: 'pccomp', cta: 'Ver oferta' })
+    expect(storeInfo('amazon')).toEqual({ name: 'Amazon España', short: 'Amazon', cta: 'Ver en Amazon' })
+    expect(storeInfo('pccomp')).toEqual({ name: 'pccomp', short: 'pccomp', cta: 'Ver oferta' })
   })
 })
