@@ -10,6 +10,8 @@ export type Deal = {
   imageUrl: string | null
   asin: string
   country: string
+  store: string
+  productId: number
 }
 
 export type HashtagCount = { tag: string; count: number }

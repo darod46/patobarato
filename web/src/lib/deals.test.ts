@@ -1,13 +1,21 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { fetchDeals, fetchHashtags, fetchLatestDeal } from './deals'
+import {
+  fetchAllDealRefs,
+  fetchDealByProduct,
+  fetchDeals,
+  fetchHashtagCounts,
+  fetchHashtags,
+  fetchLatestDeal,
+  fetchRelatedDeals,
+} from './deals'
 
 type Result = { data: unknown; error: { message: string } | null }
 
 function fakeClient(result: Result) {
   const calls: [string, unknown[]][] = []
   const builder: Record<string, unknown> = {}
-  for (const name of ['select', 'order', 'range', 'ilike', 'contains', 'limit']) {
+  for (const name of ['select', 'order', 'range', 'ilike', 'contains', 'limit', 'eq', 'neq']) {
     builder[name] = vi.fn((...args: unknown[]) => {
       calls.push([name, args])
       return builder
@@ -34,6 +42,8 @@ const row = (i: number) => ({
   image_url: null,
   asin: 'B000000000',
   country: 'ES',
+  store: 'amazon',
+  product_id: i,
 })
 
 describe('fetchDeals', () => {
@@ -61,6 +71,8 @@ describe('fetchDeals', () => {
       imageUrl: null,
       asin: 'B000000000',
       country: 'ES',
+      store: 'amazon',
+      productId: 0,
     })
   })
 
@@ -109,5 +121,82 @@ describe('fetchLatestDeal', () => {
     expect(calls).toContainEqual(['limit', [1]])
     const empty = fakeClient({ data: [], error: null })
     expect(await fetchLatestDeal(empty.client)).toBeNull()
+  })
+})
+
+describe('fetchDealByProduct', () => {
+  it('queries by store and uppercase asin', async () => {
+    const { client, calls } = fakeClient({ data: [row(3)], error: null })
+    expect((await fetchDealByProduct(client, 'amazon', 'b0bpzvjjqj'))?.publicationId).toBe(3)
+    expect(calls).toContainEqual(['from', ['web_deals']])
+    expect(calls).toContainEqual(['eq', ['store', 'amazon']])
+    expect(calls).toContainEqual(['eq', ['asin', 'B0BPZVJJQJ']])
+  })
+  it('returns null when missing', async () => {
+    const { client } = fakeClient({ data: [], error: null })
+    expect(await fetchDealByProduct(client, 'amazon', 'b0bpzvjjqj')).toBeNull()
+  })
+})
+
+describe('fetchRelatedDeals', () => {
+  const deal = { ...toDealLike(), hashtags: ['lego', 'otro'] }
+  function toDealLike() {
+    return {
+      publicationId: 5, publishedAt: '', price: 1, previousPrice: null, coupon: null, hashtags: [] as string[],
+      affiliateUrl: '', title: 't', imageUrl: null, asin: 'B000000000', country: 'ES', store: 'amazon', productId: 5,
+    }
+  }
+  it('filters by first hashtag and excludes itself', async () => {
+    const { client, calls } = fakeClient({ data: [row(1), row(2)], error: null })
+    const out = await fetchRelatedDeals(client, deal, 10)
+    expect(out).toHaveLength(2)
+    expect(calls).toContainEqual(['contains', ['hashtags', ['lego']]])
+    expect(calls).toContainEqual(['neq', ['publication_id', 5]])
+    expect(calls).toContainEqual(['limit', [10]])
+  })
+  it('falls back to latest deals without hashtags', async () => {
+    const { client, calls } = fakeClient({ data: [row(1)], error: null })
+    await fetchRelatedDeals(client, { ...deal, hashtags: [] })
+    expect(calls.find((c) => c[0] === 'contains')).toBeUndefined()
+    expect(calls).toContainEqual(['neq', ['publication_id', 5]])
+  })
+  it('falls back to latest when the tag has no other deals', async () => {
+    let n = 0
+    const results = [[], [row(9)]]
+    const { client } = fakeClient({ data: [], error: null })
+    const builder = (client.from as unknown as () => Record<string, unknown>)()
+    builder.then = (resolve: (r: Result) => unknown) =>
+      Promise.resolve({ data: results[n++], error: null }).then(resolve)
+    const out = await fetchRelatedDeals(client, deal)
+    expect(out.map((d) => d.publicationId)).toEqual([9])
+  })
+})
+
+describe('fetchAllDealRefs', () => {
+  it('paginates by 1000 until a short page', async () => {
+    const ranges: unknown[] = []
+    const pages = [
+      Array.from({ length: 1000 }, (_, i) => row(i)),
+      [row(1000)],
+    ]
+    let n = 0
+    const builder: Record<string, unknown> = {}
+    for (const name of ['select', 'order']) builder[name] = () => builder
+    builder.range = (...a: unknown[]) => {
+      ranges.push(a)
+      return Promise.resolve({ data: pages[n++], error: null })
+    }
+    const client = { from: () => builder } as unknown as SupabaseClient
+    const refs = await fetchAllDealRefs(client)
+    expect(ranges).toEqual([[0, 999], [1000, 1999]])
+    expect(refs).toHaveLength(1001)
+    expect(refs[0]).toEqual({ store: 'amazon', asin: 'B000000000', title: 'Item 0', publishedAt: '2026-11-04T10:00:00Z' })
+  })
+})
+
+describe('fetchHashtagCounts', () => {
+  it('returns all tags', async () => {
+    const { client } = fakeClient({ data: [{ tag: 'lego', count: '5' }], error: null })
+    expect(await fetchHashtagCounts(client)).toEqual([{ tag: 'lego', count: 5 }])
   })
 })
