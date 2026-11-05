@@ -7,7 +7,7 @@ type Props = {
   onSelect?: (tag: string | null) => void
 }
 
-const base = 'rounded-full px-3 py-1 text-sm font-medium transition-colors'
+const base = 'shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-sm font-medium transition-colors'
 const on = 'bg-carbon text-white'
 const off = 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
 
@@ -40,7 +40,7 @@ function Chip({
 export function HashtagChips({ tags, active, onSelect }: Props) {
   const shown = active && !tags.includes(active) ? [active, ...tags] : tags
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0">
       <Chip
         label="Todos"
         pressed={active === null}

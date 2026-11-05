@@ -49,7 +49,7 @@ export function HomeClient({
       <main className="pt-28 md:pt-16">
         <Hero />
         <section id="chollos" className="mx-auto max-w-[1280px] scroll-mt-32 px-4 pt-6 pb-12 md:px-8 md:pt-12">
-          <h2 className="mb-6 text-3xl font-bold">Chollos</h2>
+          <h2 className="mb-3 text-2xl font-bold md:mb-6 md:text-3xl">Chollos</h2>
           <DealFeed
             q={q}
             tag={tag}

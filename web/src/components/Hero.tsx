@@ -16,7 +16,7 @@ export function Hero() {
         />
         <div className="contents md:flex md:flex-col md:items-start md:gap-5">
           <div className="flex flex-col gap-1 md:gap-5">
-            <span className="text-xs font-bold uppercase tracking-wide text-amber-ink">
+            <span className="hidden text-xs font-bold uppercase tracking-wide text-amber-ink md:inline">
               Vigilante de precios • Ofertas que vuelan
             </span>
             <h1 className="text-2xl font-bold leading-tight text-carbon md:text-5xl">
@@ -27,14 +27,14 @@ export function Hero() {
               de Amazon antes de que vuelen!
             </h1>
           </div>
-          <p className="col-span-2 max-w-xl text-sm leading-relaxed text-zinc-600 md:text-base">
+          <p className="col-span-2 hidden max-w-xl text-sm leading-relaxed text-zinc-600 md:block md:text-base">
             Vigilo canales de chollos de Telegram y republico las ofertas de Amazon España con el
             precio, el precio anterior y el cupón.
           </p>
-          <div className="col-span-2 flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:gap-3">
+          <div className="col-span-2 grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:gap-3">
             <a
               href="#chollos"
-              className={`rounded-lg bg-carbon px-6 py-3 text-center text-sm font-semibold text-white hover:bg-carbon-soft ${FOCUS}`}
+              className={`rounded-lg bg-carbon px-3 py-2.5 text-center sm:px-6 sm:py-3 text-sm font-semibold text-white hover:bg-carbon-soft ${FOCUS}`}
             >
               Ver chollos
             </a>
@@ -42,7 +42,7 @@ export function Hero() {
               href="https://t.me/patobarato"
               target="_blank"
               rel="noopener noreferrer"
-              className={`rounded-lg border border-carbon bg-transparent px-6 py-3 text-center text-sm font-semibold text-carbon hover:bg-zinc-100 ${FOCUS}`}
+              className={`rounded-lg border border-carbon bg-transparent px-3 py-2.5 text-center sm:px-6 sm:py-3 text-sm font-semibold text-carbon hover:bg-zinc-100 ${FOCUS}`}
             >
               Unirme en Telegram
             </a>
