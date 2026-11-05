@@ -55,7 +55,7 @@ export function ProductView({ deal, related, now }: Props) {
       </nav>
 
       <article className="mt-4 grid gap-6 md:mt-6 md:grid-cols-2 md:gap-10">
-        <div className="relative mx-auto aspect-square w-full max-w-md overflow-hidden rounded-2xl border border-zinc-100 bg-white md:max-w-none">
+        <div className="relative mx-auto aspect-square w-full max-w-44 overflow-hidden rounded-2xl border border-zinc-100 bg-white sm:max-w-md md:max-w-none">
           {deal.imageUrl ? (
             <img
               src={deal.imageUrl}

@@ -48,7 +48,7 @@ export function HomeClient({
       <Header search={<SearchBox value={q} onChange={setQ} />} />
       <main className="pt-28 md:pt-16">
         <Hero />
-        <section id="chollos" className="mx-auto max-w-[1280px] scroll-mt-32 px-4 py-12 md:px-8">
+        <section id="chollos" className="mx-auto max-w-[1280px] scroll-mt-32 px-4 pt-6 pb-12 md:px-8 md:pt-12">
           <h2 className="mb-6 text-3xl font-bold">Chollos</h2>
           <DealFeed
             q={q}
