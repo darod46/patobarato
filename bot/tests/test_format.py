@@ -41,7 +41,7 @@ def test_full_caption():
         hashtags=["auriculares", "sony"],
     )
     assert cap(offer) == (
-        "🦆 <b>Sony WH-1000XM5</b>\n"
+        "<b>Sony WH-1000XM5</b>\n"
         "✅ Precio: <b>249,99 €</b>\n"
         "❌ Antes: <s>419,99 €</s> (-40%)\n"
         "🎟️ Cupón: <code>SONY10</code>\n"
@@ -54,7 +54,7 @@ def test_full_caption():
 def test_minimal_caption():
     caption = cap(make_offer())
     assert caption.split("\n") == [
-        "🦆 <b>Sony WH-1000XM5</b>",
+        "<b>Sony WH-1000XM5</b>",
         "✅ Precio: <b>249,99 €</b>",
         LINK_LINE,
     ]
@@ -144,12 +144,12 @@ def test_caption_from_parsed_title_has_no_links(text):
 def test_caption_strips_links_from_title(title):
     caption = cap(make_offer(title=title))
     _assert_clean(caption)
-    assert caption.startswith("🦆 <b>")
+    assert caption.startswith("<b>")
 
 
 def test_title_link_stripped_keeps_words():
     caption = cap(make_offer(title="amzn.to/3abcd Auriculares Sony"))
-    assert caption.split("\n")[0] == "🦆 <b>Auriculares Sony</b>"
+    assert caption.split("\n")[0] == "<b>Auriculares Sony</b>"
 
 
 @pytest.mark.parametrize(

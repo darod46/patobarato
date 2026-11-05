@@ -30,7 +30,7 @@ def normalize_hashtag(tag: str) -> str:
 def _build(offer: ParsedOffer, title: str, coupon: str | None, link: str) -> str:
     assert offer.price is not None, "format_caption requires a price"
     lines = [
-        f"🦆 <b>{html.escape(title)}</b>",
+        f"<b>{html.escape(title)}</b>",
         f"✅ Precio: <b>{format_price(offer.price)} €</b>",
     ]
     if offer.previous_price is not None:

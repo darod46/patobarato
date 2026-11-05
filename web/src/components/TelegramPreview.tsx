@@ -8,7 +8,7 @@ export function TelegramPreview({ deal }: { deal: Deal }) {
     <div className="rounded-2xl bg-carbon-soft p-5 text-sm text-zinc-100">
       <div className="flex flex-col gap-1.5 rounded-xl bg-carbon p-4 leading-relaxed">
         <p data-line className="font-bold">
-          🦆 {deal.title}
+          {deal.title}
         </p>
         <p data-line>
           ✅ Precio: <b>{formatPrice(deal.price)}</b>

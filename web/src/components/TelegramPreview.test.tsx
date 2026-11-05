@@ -24,7 +24,7 @@ it('shows every caption line in order, with the Amazon link as visible text', ()
   const { container } = render(<TelegramPreview deal={full} />)
   const lines = Array.from(container.querySelectorAll('[data-line]')).map((n) => n.textContent)
   expect(lines).toEqual([
-    '🦆 Auriculares Sony',
+    'Auriculares Sony',
     `✅ Precio: ${formatPrice(80)}`,
     `❌ Antes: ${formatPrice(100)} (-20%)`,
     '🎟️ Cupón: AHORRA5',
@@ -43,7 +43,7 @@ it('shows only title, price and link for a minimal deal', () => {
   )
   const lines = Array.from(container.querySelectorAll('[data-line]')).map((n) => n.textContent)
   expect(lines).toEqual([
-    '🦆 Auriculares Sony',
+    'Auriculares Sony',
     `✅ Precio: ${formatPrice(80)}`,
     `🛒 Ver en Amazon: ${URL_ES}`,
   ])
