@@ -11,12 +11,12 @@ from patobarato.config import Settings
 from patobarato.core.decision import decide
 from patobarato.models import OfferStatus, ParsedOffer, SourceMessage
 from patobarato.parsing.extract import extract_offers
-from patobarato.stores.amazon import AmazonStore
-from patobarato.stores.registry import StoreRegistry
 from patobarato.parsing.links import UrlResolver, build_affiliate_url
 from patobarato.publishing.format import format_caption
 from patobarato.sources.amazon_page import ImageFinder
 from patobarato.storage.repository import Repository
+from patobarato.stores.amazon import AmazonStore
+from patobarato.stores.registry import StoreRegistry
 
 logger = logging.getLogger("patobarato.pipeline")
 
@@ -69,7 +69,11 @@ class Pipeline:
         self._publish_interval = publish_interval_seconds
         self._image_finder = image_finder
         # Amazon-only until main wires the full registry.
-        self._registry = registry or StoreRegistry([AmazonStore(settings.affiliate_tag, None)])
+        self._registry = (
+            registry
+            if registry is not None
+            else StoreRegistry([AmazonStore(settings.affiliate_tag, None)])
+        )
         self._last_publish: float | None = None
         self._queue: asyncio.Queue[SourceMessage] = asyncio.Queue()
 

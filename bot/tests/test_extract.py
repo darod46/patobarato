@@ -1,6 +1,8 @@
 from datetime import UTC, datetime
 from decimal import Decimal
 
+from urllib.parse import urlparse
+
 import httpx
 import pytest
 
@@ -8,12 +10,35 @@ from patobarato.models import SourceMessage
 from patobarato.parsing.extract import extract_offers
 from patobarato.parsing.links import UrlResolver
 from patobarato.stores.amazon import AmazonStore
+from patobarato.stores.base import BaseStore
 from patobarato.stores.registry import StoreRegistry
 
 TARGETS = {
     "/a": "https://www.amazon.es/dp/B09XS7JWHH?tag=x",
     "/b": "https://www.amazon.es/dp/B0BDJH7LQ2",
+    "/t": "https://tienda.test/p/9001?utm=1",
 }
+
+
+class FakeStore(BaseStore):
+    """Second store: host tienda.test, id = last path segment, query stripped."""
+
+    id = "tienda"
+    name = "Tienda"
+
+    def matches(self, url: str) -> bool:
+        return urlparse(url).hostname == "tienda.test"
+
+    def product_id(self, url: str) -> str | None:
+        segment = urlparse(url).path.rstrip("/").rsplit("/", 1)[-1]
+        return segment or None
+
+    def canonical_url(self, product_id: str, country: str) -> str:
+        return f"https://tienda.test/{country}/p/{product_id}"
+
+    def canonical_for(self, url: str, country: str) -> str:
+        parsed = urlparse(url)
+        return f"https://tienda.test{parsed.path}"
 
 
 def _handler(request: httpx.Request) -> httpx.Response:
@@ -111,3 +136,48 @@ async def test_unregistered_store_link_is_ignored(resolver, registry):
     msg = _msg(f"Foo 10€ {amazon} {ali}", [amazon, ali])
     offers = await extract_offers(msg, resolver, registry)
     assert [(o.store, o.asin) for o in offers] == [("amazon", "B09XS7JWHH")]
+
+
+@pytest.fixture
+def multi_registry() -> StoreRegistry:
+    return StoreRegistry([AmazonStore("patobarato-21", None), FakeStore()])
+
+
+async def test_generic_store_uses_default_country_and_canonical_for(resolver, multi_registry):
+    url = "https://tienda.test/p/9001?utm=1&ref=x"
+    offers = await extract_offers(_msg(f"Lámpara 12€ {url}", [url]), resolver, multi_registry)
+    assert len(offers) == 1
+    offer = offers[0]
+    assert (offer.store, offer.asin, offer.country) == ("tienda", "9001", "ES")
+    # canonical_for override (query stripped), not canonical_url(product_id, country)
+    assert offer.canonical_url == "https://tienda.test/p/9001"
+    assert offer.product_url == "https://tienda.test/p/9001"
+
+
+async def test_generic_store_shortener_resolves_via_registry(resolver, multi_registry):
+    offers = await extract_offers(
+        _msg("Lámpara 12€ https://amzn.to/t", ["https://amzn.to/t"]), resolver, multi_registry
+    )
+    assert [(o.store, o.asin) for o in offers] == [("tienda", "9001")]
+    # An Amazon-only registry cannot follow the redirect to the other store
+    amazon_only = StoreRegistry([AmazonStore("patobarato-21", None)])
+    assert await extract_offers(
+        _msg("Lámpara 12€ https://amzn.to/t", ["https://amzn.to/t"]), resolver, amazon_only
+    ) == []
+
+
+async def test_same_product_id_in_two_stores_is_not_deduped(resolver, multi_registry):
+    amazon = "https://www.amazon.es/dp/B09XS7JWHH"
+    other = "https://tienda.test/p/B09XS7JWHH"
+    text = f"Auriculares 20€\n{amazon}\n\nAuriculares 25€\n{other}"
+    offers = await extract_offers(_msg(text, [amazon, other]), resolver, multi_registry)
+    assert [(o.store, o.asin, o.price) for o in offers] == [
+        ("amazon", "B09XS7JWHH", Decimal("20")),
+        ("tienda", "B09XS7JWHH", Decimal("25")),
+    ]
+
+
+async def test_same_store_and_product_id_collapses(resolver, multi_registry):
+    a, b = "https://tienda.test/p/9001?x=1", "https://tienda.test/p/9001?x=2"
+    offers = await extract_offers(_msg(f"Lámpara 12€ {a} {b}", [a, b]), resolver, multi_registry)
+    assert len(offers) == 1
