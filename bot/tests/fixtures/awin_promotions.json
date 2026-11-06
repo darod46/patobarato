@@ -1,0 +1,41 @@
+{
+  "data": [
+    {
+      "promotionId": 111001,
+      "advertiser": {"id": 1234, "name": "PcComponentes"},
+      "type": "voucher",
+      "title": "5% de descuento en componentes",
+      "description": "Descuento en toda la categoria de componentes",
+      "terms": "Valido para compras superiores a 100 EUR. No acumulable.",
+      "voucher": {"code": "COMP5"},
+      "urlTracking": "https://www.awin1.com/cread.php?awinmid=1234&awinaffid=999&clickref=promo111001",
+      "startDate": "2026-11-01T00:00:00Z",
+      "endDate": "2026-11-30T23:59:59Z"
+    },
+    {
+      "promotionId": 111002,
+      "advertiser": {"id": 5678, "name": "MediaMarkt"},
+      "type": "voucher",
+      "title": "10 EUR de descuento en televisores",
+      "description": "Cupon para televisores seleccionados",
+      "terms": null,
+      "voucher": {"code": "TV10"},
+      "urlTracking": "https://www.awin1.com/cread.php?awinmid=5678&awinaffid=999&clickref=promo111002",
+      "startDate": "2026-11-05T08:00:00+01:00",
+      "endDate": null
+    },
+    {
+      "promotionId": 111003,
+      "advertiser": {"id": 1234, "name": "PcComponentes"},
+      "type": "promotion",
+      "title": "Envio gratis en pedidos grandes",
+      "description": "Promocion sin codigo",
+      "terms": "Hasta fin de mes",
+      "voucher": null,
+      "urlTracking": "https://www.awin1.com/cread.php?awinmid=1234&awinaffid=999&clickref=promo111003",
+      "startDate": "2026-11-01T00:00:00Z",
+      "endDate": "2026-11-30T23:59:59Z"
+    }
+  ],
+  "pagination": {"page": 1, "pageSize": 200, "total": 3}
+}

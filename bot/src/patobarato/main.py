@@ -22,6 +22,7 @@ from patobarato.parsing.links import UrlResolver
 from patobarato.publishing.telegram_publisher import TelegramPublisher
 from patobarato.sources.aliexpress_source import AliExpressSource
 from patobarato.sources.api_scheduler import ApiScheduler, ApiSourceRunner
+from patobarato.sources.awin_source import AwinClient, AwinPromotionsSource
 from patobarato.sources.telegram_listener import TelegramListener, make_photo_provider
 from patobarato.storage.repository import Repository
 from patobarato.storage.supabase_repo import SupabaseRepository
@@ -102,12 +103,24 @@ def build_runners(
     repo: Repository,
     settings: Settings,
     clock: Callable[[], datetime],
+    http: httpx.AsyncClient | None = None,
 ) -> list[ApiSourceRunner]:
     """API source runners available with the configured credentials."""
     runners: list[ApiSourceRunner] = []
     ali_store = registry.get("aliexpress")
     if isinstance(ali_store, AliExpressStore):
         runners.append(AliExpressSource(ali_store.client, repo, settings, clock))
+    if (
+        settings.awin_publisher_id
+        and settings.awin_api_token
+        and any(mid is not None for mid in settings.awin_merchants.values())
+    ):
+        client = AwinClient(
+            http or httpx.AsyncClient(timeout=settings.http_timeout_seconds),
+            settings.awin_publisher_id,
+            settings.awin_api_token,
+        )
+        runners.append(AwinPromotionsSource(client, repo, settings))
     return runners
 
 
@@ -147,7 +160,7 @@ async def run(settings: Settings) -> int:
             settings,
             registry=registry,
         )
-        scheduler = ApiScheduler(repo, build_runners(registry, repo, settings, utcnow))
+        scheduler = ApiScheduler(repo, build_runners(registry, repo, settings, utcnow, http))
         listener = TelegramListener(
             reader,
             repo,

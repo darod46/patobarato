@@ -115,7 +115,46 @@ El bot lee **todos los canales de difusión a los que está suscrita la cuenta l
 - No se leen grupos, chats privados ni el propio canal de destino (`TARGET_CHANNEL`).
 - Para silenciar un canal sin salir de él, pon `active = false` en su fila de `sources`.
 
-## 6. Amazon Afiliados
+## 6. Tiendas y fuentes de API (AliExpress y Awin)
+
+Además de los canales de Telegram, el bot puede alimentar la web con ofertas y cupones obtenidos por API. Cada tienda se activa por separado con sus credenciales en `.env`:
+
+| Variable | Descripción |
+| --- | --- |
+| `ALIEXPRESS_APP_KEY` | App key del portal de afiliados de AliExpress (Portals) |
+| `ALIEXPRESS_APP_SECRET` | App secret (secreta) |
+| `ALIEXPRESS_TRACKING_ID` | Tracking ID de afiliado |
+| `AWIN_PUBLISHER_ID` | Tu publisher id de Awin (compartido por todas las tiendas Awin) |
+| `AWIN_API_TOKEN` | Token de la API de Awin (secreto; el bot nunca lo escribe en el log) |
+| `AWIN_MERCHANTS` | JSON `{"tienda": merchant_id}`, p. ej. `{"pccomponentes": 1234, "mediamarkt": 5678}`. Por defecto las tres tiendas sin id |
+
+Tiendas soportadas: AliExpress (`aliexpress`) y, vía Awin, PcComponentes (`pccomponentes`), MediaMarkt (`mediamarkt`) y El Corte Inglés (`elcorteingles`). El `merchant_id` de cada anunciante se ve en el panel de Awin; solo se piden cupones de los anunciantes a los que te has unido (`membership=joined`) y de España.
+
+### Dar de alta una fuente de API
+
+Las fuentes de API viven en la tabla `sources` (junto a los canales de Telegram). `identifier` es obligatorio y único por tipo: usa un nombre corto. `every_minutes` indica cada cuánto se ejecuta; `config` y `hashtags` son opcionales.
+
+```sql
+-- Ofertas calientes de AliExpress (config: category_ids, keywords, min_discount, min_price, max_price, max_results)
+insert into sources (type, identifier, country, active, config, every_minutes, hashtags)
+values ('aliexpress_api', 'aliexpress-hot', 'ES', true,
+        '{"min_discount": 30, "max_results": 20}', 60, '{aliexpress}');
+
+-- Cupones de Awin; "merchants" en config es opcional y tiene prioridad sobre AWIN_MERCHANTS
+insert into sources (type, identifier, country, active, config, every_minutes, hashtags)
+values ('awin_promotions', 'awin-es', 'ES', true,
+        '{"merchants": {"pccomponentes": 1234, "mediamarkt": 5678}}', 360, '{}');
+```
+
+No hace falta reiniciar el bot: el planificador lee la tabla en cada ciclo. Para pausar una fuente, `active = false`. El resultado de la última ejecución queda en `last_run_at` y `last_error`.
+
+Los cupones de Awin se guardan en la tabla `coupons`; cuando un cupón deja de aparecer en la API se desactiva. Si la API falla, no se desactiva nada.
+
+### Sin credenciales
+
+Si faltan las credenciales de una tienda (por ejemplo, `AWIN_PUBLISHER_ID`/`AWIN_API_TOKEN` o ningún merchant id en `AWIN_MERCHANTS`), esa tienda se omite con un aviso en el log y el bot sigue funcionando con el resto. Una fila de `sources` de un tipo sin credenciales simplemente no se ejecuta. Si una fuente `awin_promotions` no tiene ningún merchant id (ni en `config` ni en `AWIN_MERCHANTS`), registra un aviso y no hace nada.
+
+## 7. Amazon Afiliados
 
 Recuerda registrar el canal @patobarato en tu cuenta de Amazon Afiliados y comprobar que el tag `patobarato-21` está asociado a él; si no, las comisiones no se contabilizan.
 

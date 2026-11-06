@@ -283,3 +283,38 @@ def test_build_runners_is_empty_without_credentials():
     registry = build_registry(settings, http, http)
 
     assert main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None) == []
+
+
+def test_build_runners_includes_awin_with_credentials_and_a_merchant():
+    import httpx
+
+    from patobarato.storage.repository import InMemoryRepository
+    from patobarato.stores.registry import build_registry
+
+    settings = _ali_settings(
+        awin_publisher_id="999",
+        awin_api_token="tok",
+        awin_merchants={"pccomponentes": 1234, "mediamarkt": None},
+    )
+    http = httpx.AsyncClient()
+    registry = build_registry(settings, http, http)
+
+    runners = main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None, http)
+
+    assert [r.type for r in runners] == ["awin_promotions"]
+
+
+def test_build_runners_skips_awin_without_token_or_merchants():
+    import httpx
+
+    from patobarato.storage.repository import InMemoryRepository
+    from patobarato.stores.registry import build_registry
+
+    http = httpx.AsyncClient()
+    for kw in (
+        {"awin_publisher_id": "999", "awin_merchants": {"pccomponentes": 1234}},  # no token
+        {"awin_publisher_id": "999", "awin_api_token": "tok"},  # default merchants: all null
+    ):
+        settings = _ali_settings(**kw)
+        registry = build_registry(settings, http, http)
+        assert main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None, http) == []
