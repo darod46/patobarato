@@ -39,7 +39,7 @@ it('renders header, hero, feed, telegram block and footer', async () => {
   setup()
   expect(within(screen.getByRole('banner')).getByRole('img', { name: 'PatoBarato' })).toBeInTheDocument()
   expect(screen.getByRole('searchbox', { name: 'Buscar chollos' })).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: 'Telegram' })).toHaveAttribute(
+  expect(within(screen.getByRole('banner')).getByRole('link', { name: 'Unirme al canal' })).toHaveAttribute(
     'href',
     'https://t.me/patobarato',
   )
