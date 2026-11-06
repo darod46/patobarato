@@ -1,23 +1,44 @@
-@import "@fontsource/plus-jakarta-sans/400.css";
-@import "@fontsource/plus-jakarta-sans/500.css";
-@import "@fontsource/plus-jakarta-sans/600.css";
-@import "@fontsource/plus-jakarta-sans/700.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+@import "@fontsource/space-grotesk/500.css";
+@import "@fontsource/space-grotesk/600.css";
+@import "@fontsource/space-grotesk/700.css";
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
-  --color-carbon: #09090b;
-  --color-carbon-soft: #27272a;
-  --color-amber: #f59e0b;
-  --color-amber-ink: #92400e;
-  --color-mint: #10b981;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Inter", sans-serif;
+
+  /* Design tokens (spec v3 §4). */
+  --color-ink: #14161a;
+  --color-muted: #5b6470;
+  --color-line: #e6e8ec;
+  --color-surface: #f6f7f9;
+  --color-primary: #1f4fd1;
+  --color-primary-hover: #163ea8;
+  --color-primary-soft: #e8eefc;
+  --color-accent: #ffd24d;
+  --color-accent-ink: #3d2e00;
+  --color-danger: #b42318;
+  --color-success: #14633a;
+  --color-success-soft: #e3f6ea;
+  --color-warm: #fffbe8;
+  --color-warm-line: #f3e4a6;
+
+  /* Transitional aliases for v2 class names; removed once every component uses the tokens above. */
+  --color-carbon: #14161a;
+  --color-carbon-soft: #2b3039;
+  --color-amber: #ffd24d;
+  --color-amber-ink: #3d2e00;
+  --color-mint: #14633a;
   --color-zinc-50: #fafafa;
   --color-zinc-100: #f4f4f5;
   --color-zinc-200: #e4e4e7;
   --color-zinc-400: #a1a1aa;
   --color-zinc-500: #71717a;
   --color-zinc-600: #52525b;
-  --color-surface: #fbf8ff;
 }
 
 @utility price {
