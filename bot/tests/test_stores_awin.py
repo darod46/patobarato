@@ -42,6 +42,12 @@ def test_product_id():
     assert s.product_id("https://www.pccomponentes.com/") is None
 
 
+def test_product_id_is_percent_decoded():
+    s = make()
+    assert s.product_id("https://www.pccomponentes.com/camiseta-ni%C3%B1o") == "camiseta-niño"
+    assert s.canonical_url("camiseta-niño", "ES") == "https://pccomponentes.com/camiseta-ni%C3%B1o"
+
+
 def test_canonical_for_strips_tracking():
     s = make()
     url = URL + "/?a=1&utm_source=x&awc=9&b=2&gclid=g&fbclid=f&utm_medium=m#frag"

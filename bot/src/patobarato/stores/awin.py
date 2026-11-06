@@ -1,7 +1,7 @@
 """Generic Awin merchant adapter: host matching, deep links and og:image lookup."""
 
 import logging
-from urllib.parse import parse_qsl, quote, urlencode, urlparse, urlunparse
+from urllib.parse import parse_qsl, quote, unquote, urlencode, urlparse, urlunparse
 
 import httpx
 
@@ -60,10 +60,11 @@ class AwinStore(BaseStore):
         last = segments[-1]
         if last.lower().endswith(".html"):
             last = last[: -len(".html")]
+        last = unquote(last)
         return last or None
 
     def canonical_url(self, product_id: str, country: str) -> str:
-        return f"https://{self.hosts[0]}/{product_id}"
+        return f"https://{self.hosts[0]}/{quote(product_id, safe='')}"
 
     def canonical_for(self, url: str, country: str) -> str:
         parts = urlparse(url)

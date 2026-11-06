@@ -24,12 +24,18 @@ class _Link:
     canonical: str
 
 
+def _is_product_link(url: str, registry: StoreRegistry) -> bool:
+    """A registered store's URL we can read a product id from (not an intermediate page)."""
+    store = registry.store_for(url)
+    return store is not None and store.product_id(url) is not None
+
+
 async def _store_links(
     urls: list[str], resolver: UrlResolver, registry: StoreRegistry
 ) -> list[_Link]:
     links: dict[tuple[str, str], _Link] = {}
     for url in urls:
-        resolved = await resolver.resolve(url, is_final=lambda u: registry.store_for(u) is not None)
+        resolved = await resolver.resolve(url, is_final=lambda u: _is_product_link(u, registry))
         if resolved is None:
             continue
         store = registry.store_for(resolved)

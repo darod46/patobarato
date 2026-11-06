@@ -137,6 +137,11 @@ class AliExpressSource:
             timedelta(minutes=self._settings.stale_after_minutes),
         )
         if status == OfferStatus.PUBLISHED:
+            if not product.promotion_link:
+                logger.warning(
+                    "AliExpress product %s published with canonical URL affiliate=missing",
+                    product.product_id,
+                )
             try:
                 await self._repo.insert_publication(
                     offer_id,

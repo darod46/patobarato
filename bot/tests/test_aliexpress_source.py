@@ -1,3 +1,4 @@
+import dataclasses
 import logging
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
@@ -227,3 +228,14 @@ async def test_next_day_price_drop_publishes_again():
 
     assert [p["published_price"] for p in repo.publications()] == [Decimal("10.00"), Decimal("8.00")]
     assert repo.offer_statuses() == [OfferStatus.PUBLISHED_WEB] * 2
+
+
+async def test_missing_promotion_link_logs_warning_and_uses_canonical(caplog):
+    product = dataclasses.replace(_product("7", 50), promotion_link=None)
+    repo, source, _, runner = _setup([product])
+    with caplog.at_level(logging.WARNING):
+        await runner.run(source)
+    assert repo.publications()[0]["affiliate_url"] == "https://es.aliexpress.com/item/7.html"
+    warnings = [r.getMessage() for r in caplog.records if r.levelno == logging.WARNING]
+    assert any("affiliate=missing" in m and "7" in m for m in warnings)
+    assert all("http" not in m for m in warnings)

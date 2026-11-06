@@ -17,6 +17,8 @@ TARGETS = {
     "/a": "https://www.amazon.es/dp/B09XS7JWHH?tag=x",
     "/b": "https://www.amazon.es/dp/B0BDJH7LQ2",
     "/t": "https://tienda.test/p/9001?utm=1",
+    "/ali": "https://star.aliexpress.com/share/share.htm?x=1",
+    "/share/share.htm": "https://es.aliexpress.com/item/1005006123456789.html?spm=a",
 }
 
 
@@ -43,6 +45,8 @@ class FakeStore(BaseStore):
 
 def _handler(request: httpx.Request) -> httpx.Response:
     target = TARGETS.get(request.url.path)
+    if request.url.host == "star.aliexpress.com":
+        target = TARGETS["/share/share.htm"]
     if target is None:
         return httpx.Response(404)
     return httpx.Response(301, headers={"Location": target})
@@ -181,3 +185,12 @@ async def test_same_store_and_product_id_collapses(resolver, multi_registry):
     a, b = "https://tienda.test/p/9001?x=1", "https://tienda.test/p/9001?x=2"
     offers = await extract_offers(_msg(f"Lámpara 12€ {a} {b}", [a, b]), resolver, multi_registry)
     assert len(offers) == 1
+
+
+async def test_intermediate_aliexpress_page_keeps_resolving(resolver):
+    from patobarato.stores.aliexpress import AliExpressStore
+
+    registry = StoreRegistry([AliExpressStore(client=None)])  # type: ignore[arg-type]
+    url = "https://sho.rt/ali"
+    offers = await extract_offers(_msg(f"Gadget 9€ {url}", [url]), resolver, registry)
+    assert [(o.store, o.asin) for o in offers] == [("aliexpress", "1005006123456789")]
