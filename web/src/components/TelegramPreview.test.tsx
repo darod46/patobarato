@@ -20,6 +20,9 @@ const full: Deal = {
   country: 'es',
   store: 'amazon',
   productId: 1,
+  discountPct: null,
+  previousMinPrice: null,
+  isLowest: false,
 }
 
 it('shows every caption line in order, with the Amazon link as visible text', () => {

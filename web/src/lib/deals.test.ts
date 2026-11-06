@@ -9,6 +9,7 @@ import {
   fetchHashtags,
   fetchLatestDeal,
   fetchRelatedDeals,
+  parseDealSort,
 } from './deals'
 
 type Result = { data: unknown; error: { message: string } | null }
@@ -45,6 +46,9 @@ const row = (i: number) => ({
   country: 'ES',
   store: 'amazon',
   product_id: i,
+  discount_pct: 40,
+  previous_min_price: '34.99',
+  is_lowest: true,
 })
 
 describe('fetchDeals', () => {
@@ -74,6 +78,9 @@ describe('fetchDeals', () => {
       country: 'ES',
       store: 'amazon',
       productId: 0,
+      discountPct: 40,
+      previousMinPrice: 34.99,
+      isLowest: true,
     })
   })
 
@@ -99,6 +106,38 @@ describe('fetchDeals', () => {
   it('rejects on error', async () => {
     const { client } = fakeClient({ data: null, error: { message: 'boom' } })
     await expect(fetchDeals(client, { page: 0 })).rejects.toThrow('boom')
+  })
+
+  it('maps the v3 columns and defaults them when absent', async () => {
+    const { client } = fakeClient({
+      data: [{ ...row(1), discount_pct: null, previous_min_price: null, is_lowest: null }],
+      error: null,
+    })
+    const { deals } = await fetchDeals(client, { page: 0 })
+    expect(deals[0]).toMatchObject({ discountPct: null, previousMinPrice: null, isLowest: false })
+  })
+
+  it('orders by discount for sort=descuento', async () => {
+    const { client, calls } = fakeClient({ data: [], error: null })
+    await fetchDeals(client, { page: 0, sort: 'descuento' })
+    expect(calls).toContainEqual(['order', ['discount_pct', { ascending: false, nullsFirst: false }]])
+    expect(calls).toContainEqual(['order', ['published_at', { ascending: false }]])
+  })
+
+  it('filters is_lowest for sort=minimo', async () => {
+    const { client, calls } = fakeClient({ data: [], error: null })
+    await fetchDeals(client, { page: 0, sort: 'minimo' })
+    expect(calls).toContainEqual(['eq', ['is_lowest', true]])
+  })
+})
+
+describe('parseDealSort', () => {
+  it('falls back to recientes', () => {
+    expect(parseDealSort('xyz')).toBe('recientes')
+    expect(parseDealSort(undefined)).toBe('recientes')
+    expect(parseDealSort(null)).toBe('recientes')
+    expect(parseDealSort('minimo')).toBe('minimo')
+    expect(parseDealSort('descuento')).toBe('descuento')
   })
 })
 
@@ -144,7 +183,7 @@ describe('fetchRelatedDeals', () => {
   function toDealLike() {
     return {
       publicationId: 5, publishedAt: '', price: 1, previousPrice: null, coupon: null, hashtags: [] as string[],
-      affiliateUrl: '', title: 't', imageUrl: null, asin: 'B000000000', country: 'ES', store: 'amazon', productId: 5,
+      affiliateUrl: '', title: 't', imageUrl: null, asin: 'B000000000', country: 'ES', store: 'amazon', productId: 5, discountPct: null, previousMinPrice: null, isLowest: false,
     }
   }
   it('filters by first hashtag and excludes itself', async () => {

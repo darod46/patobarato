@@ -18,6 +18,9 @@ const deal: Deal = {
   country: 'es',
   store: 'amazon',
   productId: 7,
+  discountPct: null,
+  previousMinPrice: null,
+  isLowest: false,
 }
 
 const bare: Deal = { ...deal, previousPrice: null, coupon: null, hashtags: [], imageUrl: null }

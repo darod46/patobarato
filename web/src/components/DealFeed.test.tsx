@@ -20,6 +20,9 @@ const deal = (id: number): Deal => ({
   country: 'es',
   store: 'amazon',
   productId: 1,
+  discountPct: null,
+  previousMinPrice: null,
+  isLowest: false,
 })
 
 function setup(over: Partial<ComponentProps<typeof DealFeed>> = {}) {

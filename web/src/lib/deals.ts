@@ -4,6 +4,14 @@ import type { Deal, HashtagCount } from './types'
 
 export const PAGE_SIZE = 24
 
+export type DealSort = 'recientes' | 'descuento' | 'minimo'
+export const DEAL_SORTS: readonly DealSort[] = ['recientes', 'descuento', 'minimo']
+
+/** Normalizes a raw `orden` value; anything unknown is the default order. */
+export function parseDealSort(raw: string | null | undefined): DealSort {
+  return (DEAL_SORTS as readonly string[]).includes(raw ?? '') ? (raw as DealSort) : 'recientes'
+}
+
 type DealRow = {
   publication_id: number | string
   published_at: string
@@ -18,6 +26,9 @@ type DealRow = {
   country: string
   store: string
   product_id: number | string
+  discount_pct?: number | string | null
+  previous_min_price?: number | string | null
+  is_lowest?: boolean | null
 }
 
 function toDeal(row: DealRow): Deal {
@@ -35,17 +46,22 @@ function toDeal(row: DealRow): Deal {
     country: row.country,
     store: row.store,
     productId: Number(row.product_id),
+    discountPct: row.discount_pct == null ? null : Number(row.discount_pct),
+    previousMinPrice: row.previous_min_price == null ? null : Number(row.previous_min_price),
+    isLowest: row.is_lowest === true,
   }
 }
 
 export async function fetchDeals(
   client: SupabaseClient,
-  params: { q?: string; tag?: string; page: number },
+  params: { q?: string; tag?: string; sort?: DealSort; page: number },
 ): Promise<{ deals: Deal[]; hasMore: boolean }> {
   const from = params.page * PAGE_SIZE
-  let query = client
-    .from('web_deals')
-    .select('*')
+  const sort = params.sort ?? 'recientes'
+  let query = client.from('web_deals').select('*')
+  if (sort === 'minimo') query = query.eq('is_lowest', true)
+  if (sort === 'descuento') query = query.order('discount_pct', { ascending: false, nullsFirst: false })
+  query = query
     .order('published_at', { ascending: false })
     .order('publication_id', { ascending: false })
     .range(from, from + PAGE_SIZE)

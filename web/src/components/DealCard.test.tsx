@@ -21,6 +21,9 @@ const full: Deal = {
   country: 'es',
   store: 'amazon',
   productId: 7,
+  discountPct: null,
+  previousMinPrice: null,
+  isLowest: false,
 }
 
 const minimal: Deal = {

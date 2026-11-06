@@ -19,6 +19,9 @@ const deal: Deal = {
   country: 'es',
   store: 'amazon',
   productId: 1,
+  discountPct: null,
+  previousMinPrice: null,
+  isLowest: false,
 }
 
 function setup() {
