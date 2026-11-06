@@ -31,7 +31,7 @@ export function HashtagClient({ tag, now, initialDeals, initialTags, fetchDeals 
   const clock = useClock(now)
 
   return (
-    <div className="min-h-screen bg-surface font-sans text-carbon">
+    <div className="min-h-screen bg-surface font-sans text-ink">
       <Header search={<SearchBox value={q} onChange={setQ} />} />
       <main className="mx-auto max-w-[1280px] px-4 pt-32 pb-12 md:px-8 md:pt-24 md:pb-16">
         <h1 className="mb-6 text-3xl font-bold">Chollos de #{tag}</h1>

@@ -1,10 +1,14 @@
-import { LegalLayout, legalMetadata } from '../../components/LegalLayout'
+import { LegalLayout } from '../../components/LegalLayout'
+import { legalMetadata } from '../../lib/seo'
+
+/** Static page: the year is fixed at build time, which is also when the texts were last reviewed. */
+const YEAR = new Date().getUTCFullYear()
 
 export const metadata = legalMetadata('Política de afiliación', '/afiliados', 'Cómo se financia PatoBarato y cómo afecta (y cómo no) a los chollos que publica.')
 
 export default function AfiliadosPage() {
   return (
-    <LegalLayout title="Política de afiliación" updated="6 de noviembre de 2026">
+    <LegalLayout title="Política de afiliación" updated="6 de noviembre de 2026" year={YEAR}>
       <h2>Cómo nos financiamos</h2>
       <p>
         PatoBarato es gratuito y no tiene publicidad. Se financia con enlaces de afiliado: cuando compras

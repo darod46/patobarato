@@ -1,6 +1,6 @@
 # PatoBarato web
 
-Web pública de [PatoBarato](https://www.patobarato.com): Next.js 16 (App Router), React, TypeScript y Tailwind v4. Los datos vienen de Supabase con la clave pública (anon) y solo se leen las vistas `web_deals` y `web_hashtags`.
+Web pública de [PatoBarato](https://www.patobarato.com): Next.js 16 (App Router), React, TypeScript y Tailwind v4. Los datos vienen de Supabase con la clave pública (anon) y solo se leen las vistas `web_deals`, `web_hashtags` y `web_coupons`.
 
 ## Desarrollo local
 
@@ -38,21 +38,26 @@ Notas:
 | `npm start` | Sirve el build (`next start`) |
 | `npm test` | Tests (vitest) |
 | `npm run lint` | oxlint |
+| `node scripts/check-views.mjs` | Comprueba el acceso anon a las vistas públicas |
+| `node scripts/render-og.mjs` | Regenera `public/og.png` |
 | `npm run typecheck` | `tsc --noEmit --incremental false` |
 
 ## Rutas
 
-- `/`: portada con listados y chips de hashtags rastreables.
+- `/`: portada: barra de anuncio (próximo evento del calendario), hero, listado con orden (`?orden=recientes|descuento|minimo`) y chips de hashtags, cupones (si hay), cómo funciona, calendario de eventos, «Hola, soy el Pato», bloque Telegram y pie.
+- `/cupones`: cupones vigentes (vista `web_coupons`), agrupados por tienda. `noindex` si no hay ninguno.
+- `/aviso-legal`, `/privacidad`, `/cookies`, `/afiliados`, `/contacto`: páginas estáticas. Los textos llevan marcadores `[TITULAR]`, `[NIF]`, `[DIRECCIÓN]`, `[EMAIL]`, `[CIUDAD]`, `[PLAZO]` que hay que sustituir.
 - `/oferta/{tienda}/{slug}-{id}`: ficha de producto. Redirige con 308 a la URL canónica si el slug no coincide; 404 si la oferta no existe.
 - `/chollos/{hashtag}`: listado por hashtag. `noindex` si tiene menos de 3 ofertas.
-- `/buscar`: ruta interna a la que reescribe `/?q=` y `/?tag=`; siempre `noindex`. Cualquier URL con `?q=` lleva además `X-Robots-Tag: noindex`.
+- `/buscar`: ruta interna a la que reescriben `/?q=`, `/?tag=` y `/?orden=`; siempre `noindex`. Cualquier URL con `?q=` lleva además `X-Robots-Tag: noindex`.
 - `/go/{ASIN}`: página de salto a Amazon (`public/go.html`, añade el tag de afiliado por script).
 - `/sitemap.xml` y `/robots.txt`: generados por `src/app/sitemap.ts` y `src/app/robots.ts`. robots.txt bloquea `/go/` y `/buscar`.
-- `/og.png`: imagen Open Graph (`public/og.png`).
+- `/og.png`: imagen Open Graph (`public/og.png`), generada con `node scripts/render-og.mjs` a partir de `scripts/og.html` (necesita Playwright).
 
 ## Caché (ISR)
 
 - Listados (`/`, `/chollos/{hashtag}`): 60 s.
+- Cupones (`/cupones`): 600 s.
 - Producto (`/oferta/...`): 600 s.
 - Sitemap: 3600 s.
 
@@ -62,9 +67,17 @@ Notas:
 - JSON-LD: `Product` (ficha), `BreadcrumbList`, `WebSite` con `SearchAction` y `Organization` (sitio).
 - Search Console: añade la propiedad `www.patobarato.com` y envía `/sitemap.xml`.
 
+## Cupones
+
+Los cupones se insertan a mano en la tabla `coupons` desde el panel de Supabase (`store` con el id de `src/lib/stores.ts`, p. ej. `aliexpress`; `code`; `title` como «−6 € en 40 €»; `conditions`; `url` de afiliado opcional; `starts_at`, `expires_at`, `active`). La vista `web_coupons` solo devuelve los vigentes; la portada los recoge en ≤ 60 s y `/cupones` en ≤ 600 s.
+
+## Calendario de eventos
+
+`src/content/events.ts` es la lista estática de eventos (11.11, Black Friday, rebajas…). La barra de anuncio muestra el siguiente; el bloque de eventos, los cuatro siguientes.
+
 ## Seguridad
 
-La web solo usa la clave pública (anon) de Supabase y solo lee las vistas `web_deals` y `web_hashtags`. Nunca pongas la clave `service_role` en la web ni en Vercel.
+La web solo usa la clave pública (anon) de Supabase y solo lee las vistas `web_deals`, `web_hashtags` y `web_coupons`. Nunca pongas la clave `service_role` en la web ni en Vercel. `node scripts/check-views.mjs` comprueba con la clave anon que esas vistas se leen y que la tabla `coupons` no.
 
 ## Despliegue en Vercel
 

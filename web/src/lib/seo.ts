@@ -11,7 +11,7 @@ export const MIN_INDEXABLE_DEALS = 3
 const NOINDEX = { index: false, follow: true }
 
 /** Default Open Graph image; child metadata replaces the layout's `openGraph`, so pages repeat it. */
-export const OG_IMAGE = { url: '/og.png', width: 1200, height: 630, alt: 'PatoBarato · chollos de Amazon' }
+export const OG_IMAGE = { url: '/og.png', width: 1200, height: 630, alt: 'PatoBarato · El pato que caza los chollos de Amazon antes de que vuelen' }
 
 function dealDiscount(deal: Deal): number | null {
   return deal.previousPrice !== null ? discountPercent(deal.price, deal.previousPrice) : null
@@ -178,4 +178,15 @@ export function siteJsonLd(): Record<string, unknown>[] {
 /** Serializes structured data for a ld+json script; "<" is escaped so text can never close the element. */
 export function jsonLdScript(data: unknown) {
   return { __html: JSON.stringify(data).replace(/</g, '\\u003c') }
+}
+
+/** Metadata for the static text pages (legal, affiliate, contact). */
+export function legalMetadata(title: string, path: string, description: string): Metadata {
+  const full = `${title} · PatoBarato`
+  return {
+    title: full,
+    description,
+    alternates: { canonical: path },
+    openGraph: { type: 'website', siteName: 'PatoBarato', locale: 'es_ES', url: path, title: full, description, images: [OG_IMAGE] },
+  }
 }

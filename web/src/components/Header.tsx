@@ -1,17 +1,9 @@
 import type { ReactNode } from 'react'
 import { MobileNav } from './MobileNav'
 
-export const FOCUS =
-  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+import { NAV_LINKS } from '../lib/nav'
 
-export type NavLink = { label: string; href: string }
-
-export const NAV_LINKS: NavLink[] = [
-  { label: 'Chollos', href: '/#chollos' },
-  { label: 'Cupones', href: '/cupones' },
-  { label: 'Cómo funciona', href: '/#como-funciona' },
-  { label: 'Telegram', href: '/#telegram' },
-]
+const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
 const TELEGRAM = 'https://t.me/patobarato'
 

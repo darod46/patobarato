@@ -112,7 +112,7 @@ describe('hashtagMetadata', () => {
 
   it('keeps the default Open Graph image', () => {
     const meta = hashtagMetadata('hogar', 3)
-    expect(OG_IMAGE).toEqual({ url: '/og.png', width: 1200, height: 630, alt: 'PatoBarato · chollos de Amazon' })
+    expect(OG_IMAGE).toEqual({ url: '/og.png', width: 1200, height: 630, alt: 'PatoBarato · El pato que caza los chollos de Amazon antes de que vuelen' })
     expect(meta.openGraph?.images).toEqual([OG_IMAGE])
     expect(meta.twitter).toMatchObject({ card: 'summary_large_image', images: ['/og.png'] })
   })

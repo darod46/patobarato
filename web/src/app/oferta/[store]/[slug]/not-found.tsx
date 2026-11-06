@@ -27,16 +27,16 @@ export default async function ProductNotFound() {
   const now = new Date()
 
   return (
-    <div className="min-h-screen bg-surface font-sans text-carbon">
+    <div className="min-h-screen bg-surface font-sans text-ink">
       <Header search={<SearchForm />} />
       <main className="mx-auto max-w-[1280px] px-4 pt-32 pb-16 md:px-8 md:pt-24">
         <div className="flex flex-col items-center gap-4 py-8 text-center">
           <img src="/pato-placeholder.svg" alt="" width={120} height={120} className="h-28 w-28" />
           <h1 className="text-2xl font-extrabold md:text-3xl">Esta oferta ya no está disponible</h1>
-          <p className="text-zinc-600">Pero hay más chollos esperándote.</p>
+          <p className="text-muted">Pero hay más chollos esperándote.</p>
           <a
             href="/"
-            className="rounded-xl bg-amber px-6 py-3 font-extrabold text-carbon hover:bg-amber/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-carbon"
+            className="rounded-xl bg-accent px-6 py-3 font-extrabold text-ink hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             Ver los chollos de hoy
           </a>

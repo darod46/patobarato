@@ -20,7 +20,7 @@ export function AmazonButton({ url, store, className = '' }: Props) {
       target={linkTarget(platform)}
       rel="sponsored noopener noreferrer"
       onClick={(event) => openAmazon(event, url, platform)}
-      className={`flex items-center justify-center gap-2 rounded-xl bg-amber px-6 py-3.5 text-base font-extrabold text-carbon shadow-sm transition-colors hover:bg-amber/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-carbon ${className}`}
+      className={`flex items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3.5 text-base font-extrabold text-ink shadow-sm transition-colors hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${className}`}
     >
       {`🛒 ${storeInfo(store).cta}`}
     </a>

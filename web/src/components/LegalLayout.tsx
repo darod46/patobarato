@@ -1,13 +1,11 @@
-import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
-import { OG_IMAGE } from '../lib/seo'
 import { Footer } from './Footer'
 import { Header } from './Header'
 
-type Props = { title: string; updated: string; children: ReactNode }
+type Props = { title: string; updated: string; year: number; children: ReactNode }
 
 /** Static text pages: header without search, a prose column and the footer. */
-export function LegalLayout({ title, updated, children }: Props) {
+export function LegalLayout({ title, updated, year, children }: Props) {
   return (
     <div className="min-h-screen bg-white font-sans text-ink">
       <Header search={null} />
@@ -18,17 +16,7 @@ export function LegalLayout({ title, updated, children }: Props) {
           {children}
         </div>
       </main>
-      <Footer year={new Date().getUTCFullYear()} />
+      <Footer year={year} />
     </div>
   )
-}
-
-export function legalMetadata(title: string, path: string, description: string): Metadata {
-  const full = `${title} · PatoBarato`
-  return {
-    title: full,
-    description,
-    alternates: { canonical: path },
-    openGraph: { type: 'website', siteName: 'PatoBarato', locale: 'es_ES', url: path, title: full, description, images: [OG_IMAGE] },
-  }
 }

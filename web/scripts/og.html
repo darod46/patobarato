@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600&family=Space+Grotesk:wght@700&display=swap');
+  html, body { margin: 0; }
+  body { width: 1200px; height: 630px; overflow: hidden; background: linear-gradient(180deg, #fffbe8 0%, #ffffff 100%); font-family: Inter, system-ui, sans-serif; color: #14161a; }
+  .wrap { position: relative; display: flex; align-items: center; gap: 48px; padding: 72px 80px; height: 630px; box-sizing: border-box; }
+  .text { flex: 1; display: flex; flex-direction: column; gap: 24px; }
+  .logo { width: 420px; height: auto; }
+  h1 { margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 58px; line-height: 1.05; letter-spacing: -0.03em; font-weight: 700; }
+  p { margin: 0; font-size: 24px; line-height: 1.4; color: #5b6470; font-weight: 500; }
+  .pato { position: relative; width: 400px; height: 400px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .halo { position: absolute; border-radius: 50%; background: #ffd24d; }
+  .pato img { position: relative; width: 340px; height: 340px; object-fit: contain; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="text">
+    <img class="logo" src="../public/logo.svg" alt="">
+    <h1>El pato que caza los chollos de Amazon antes de que vuelen</h1>
+    <p>Precio comprobado · Cupón incluido cuando existe · Gratis, sin cuenta</p>
+  </div>
+  <div class="pato">
+    <div class="halo" style="width:400px;height:400px;opacity:.35"></div>
+    <div class="halo" style="width:300px;height:300px;opacity:.55"></div>
+    <img src="../public/pato-heroe.svg" alt="">
+  </div>
+</div>
+</body>
+</html>

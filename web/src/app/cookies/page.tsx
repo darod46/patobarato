@@ -1,10 +1,14 @@
-import { LegalLayout, legalMetadata } from '../../components/LegalLayout'
+import { LegalLayout } from '../../components/LegalLayout'
+import { legalMetadata } from '../../lib/seo'
+
+/** Static page: the year is fixed at build time, which is also when the texts were last reviewed. */
+const YEAR = new Date().getUTCFullYear()
 
 export const metadata = legalMetadata('Política de cookies', '/cookies', 'Las cookies que utiliza patobarato.com y cómo gestionarlas.')
 
 export default function CookiesPage() {
   return (
-    <LegalLayout title="Política de cookies" updated="6 de noviembre de 2026">
+    <LegalLayout title="Política de cookies" updated="6 de noviembre de 2026" year={YEAR}>
       <h2>Qué cookies usamos</h2>
       <p>
         patobarato.com solo utiliza cookies y almacenamiento técnicos, imprescindibles para que el sitio

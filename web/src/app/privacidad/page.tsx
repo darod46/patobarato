@@ -1,10 +1,14 @@
-import { LegalLayout, legalMetadata } from '../../components/LegalLayout'
+import { LegalLayout } from '../../components/LegalLayout'
+import { legalMetadata } from '../../lib/seo'
+
+/** Static page: the year is fixed at build time, which is also when the texts were last reviewed. */
+const YEAR = new Date().getUTCFullYear()
 
 export const metadata = legalMetadata('Política de privacidad', '/privacidad', 'Qué datos trata patobarato.com y con qué finalidad.')
 
 export default function PrivacidadPage() {
   return (
-    <LegalLayout title="Política de privacidad" updated="6 de noviembre de 2026">
+    <LegalLayout title="Política de privacidad" updated="6 de noviembre de 2026" year={YEAR}>
       <h2>Responsable</h2>
       <p>El responsable del tratamiento es [TITULAR], NIF [NIF], [DIRECCIÓN], correo [EMAIL].</p>
       <h2>Qué datos tratamos</h2>

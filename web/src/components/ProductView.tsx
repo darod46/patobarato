@@ -6,7 +6,7 @@ import { AmazonButton } from './AmazonButton'
 import { DealCard } from './DealCard'
 
 const PLACEHOLDER = '/pato-placeholder.svg'
-const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-carbon'
+const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
 export const AFFILIATE_DISCLAIMER =
   'En calidad de Afiliado de Amazon, PatoBarato obtiene ingresos por las compras adscritas que cumplen los requisitos aplicables.'
@@ -30,7 +30,7 @@ export function ProductView({ deal, related, now }: Props) {
 
   return (
     <>
-      <nav aria-label="Ruta de navegación" className="text-sm text-zinc-500">
+      <nav aria-label="Ruta de navegación" className="text-sm text-muted">
         <ol className="flex min-w-0 items-center gap-1.5">
           <li className="shrink-0">
             <a href="/" className={`hover:underline ${FOCUS}`}>
@@ -55,7 +55,7 @@ export function ProductView({ deal, related, now }: Props) {
       </nav>
 
       <article className="mt-4 grid gap-6 md:mt-6 md:grid-cols-2 md:gap-10">
-        <div className="relative mx-auto aspect-square w-full max-w-44 overflow-hidden rounded-2xl border border-zinc-100 bg-white sm:max-w-md md:max-w-none">
+        <div className="relative mx-auto aspect-square w-full max-w-44 overflow-hidden rounded-2xl border border-line bg-white sm:max-w-md md:max-w-none">
           {deal.imageUrl ? (
             <img
               src={deal.imageUrl}
@@ -82,8 +82,8 @@ export function ProductView({ deal, related, now }: Props) {
         </div>
 
         <div className="flex flex-col items-center gap-3 text-center md:items-start md:text-left">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 px-3 py-1 text-xs font-bold text-zinc-600">
-            <span aria-hidden="true" className="text-amber">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-xs font-bold text-muted">
+            <span aria-hidden="true" className="text-accent-ink">
               ●
             </span>
             <span>{store.name}</span>
@@ -104,17 +104,17 @@ export function ProductView({ deal, related, now }: Props) {
             <p className="price text-sm font-semibold">{`Ahorras ${formatPrice(saving)}`}</p>
           )}
           {deal.coupon && (
-            <p className="rounded-md bg-zinc-100 px-3 py-1.5 text-sm text-zinc-600">{deal.coupon}</p>
+            <p className="rounded-md bg-surface px-3 py-1.5 text-sm text-muted">{deal.coupon}</p>
           )}
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-muted">
             {`Publicado ${timeAgo(deal.publishedAt, clock)} · El precio puede cambiar`}
           </p>
 
           {/* Mobile: fixed bottom bar (above the home indicator); desktop: inline. */}
-          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-200 bg-white/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur md:static md:z-auto md:w-full md:max-w-sm md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur md:static md:z-auto md:w-full md:max-w-sm md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
             <AmazonButton url={deal.affiliateUrl} store={deal.store} className="w-full" />
           </div>
-          <p className="max-w-sm text-xs text-zinc-500">{AFFILIATE_DISCLAIMER}</p>
+          <p className="max-w-sm text-xs text-muted">{AFFILIATE_DISCLAIMER}</p>
 
           {deal.hashtags.length > 0 && (
             <ul aria-label="Hashtags" className="flex flex-wrap justify-center gap-2 md:justify-start">
@@ -122,7 +122,7 @@ export function ProductView({ deal, related, now }: Props) {
                 <li key={t}>
                   <a
                     href={tagPath(t)}
-                    className={`inline-block rounded-full bg-zinc-100 px-3 py-1 text-sm text-zinc-600 hover:bg-zinc-200 ${FOCUS}`}
+                    className={`inline-block rounded-full bg-surface px-3 py-1 text-sm text-muted hover:bg-line ${FOCUS}`}
                   >
                     #{t}
                   </a>

@@ -36,7 +36,7 @@ export function SearchBox({ value, onChange }: Props) {
         clearTimeout(timer.current)
         timer.current = setTimeout(() => onChangeRef.current(next), 300)
       }}
-      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-carbon placeholder:text-zinc-500 focus:border-carbon focus:outline-none"
+      className="w-full rounded-lg border border-line bg-white px-4 py-2.5 text-sm text-ink placeholder:text-muted focus:border-ink focus:outline-none"
     />
   )
 }

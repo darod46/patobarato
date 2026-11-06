@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { Header, NAV_LINKS } from './Header'
+import { NAV_LINKS } from '../lib/nav'
+import { Header } from './Header'
 
 describe('Header', () => {
   it('shows the logo, the main navigation and the channel button', () => {

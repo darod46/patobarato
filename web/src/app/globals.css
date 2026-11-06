@@ -26,19 +26,6 @@
   --color-success-soft: #e3f6ea;
   --color-warm: #fffbe8;
   --color-warm-line: #f3e4a6;
-
-  /* Transitional aliases for v2 class names; removed once every component uses the tokens above. */
-  --color-carbon: #14161a;
-  --color-carbon-soft: #2b3039;
-  --color-amber: #ffd24d;
-  --color-amber-ink: #3d2e00;
-  --color-mint: #14633a;
-  --color-zinc-50: #fafafa;
-  --color-zinc-100: #f4f4f5;
-  --color-zinc-200: #e4e4e7;
-  --color-zinc-400: #a1a1aa;
-  --color-zinc-500: #71717a;
-  --color-zinc-600: #52525b;
 }
 
 @utility price {

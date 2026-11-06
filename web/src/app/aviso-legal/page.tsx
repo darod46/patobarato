@@ -1,10 +1,14 @@
-import { LegalLayout, legalMetadata } from '../../components/LegalLayout'
+import { LegalLayout } from '../../components/LegalLayout'
+import { legalMetadata } from '../../lib/seo'
+
+/** Static page: the year is fixed at build time, which is also when the texts were last reviewed. */
+const YEAR = new Date().getUTCFullYear()
 
 export const metadata = legalMetadata('Aviso legal', '/aviso-legal', 'Datos del titular de patobarato.com y condiciones de uso del sitio.')
 
 export default function AvisoLegalPage() {
   return (
-    <LegalLayout title="Aviso legal" updated="6 de noviembre de 2026">
+    <LegalLayout title="Aviso legal" updated="6 de noviembre de 2026" year={YEAR}>
       <h2>Titular del sitio</h2>
       <p>
         En cumplimiento de la Ley 34/2002, de Servicios de la Sociedad de la Información y de Comercio

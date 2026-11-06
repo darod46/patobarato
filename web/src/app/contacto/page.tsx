@@ -1,10 +1,14 @@
-import { LegalLayout, legalMetadata } from '../../components/LegalLayout'
+import { LegalLayout } from '../../components/LegalLayout'
+import { legalMetadata } from '../../lib/seo'
+
+/** Static page: the year is fixed at build time, which is also when the texts were last reviewed. */
+const YEAR = new Date().getUTCFullYear()
 
 export const metadata = legalMetadata('Contacto', '/contacto', 'Cómo contactar con PatoBarato.')
 
 export default function ContactoPage() {
   return (
-    <LegalLayout title="Contacto" updated="6 de noviembre de 2026">
+    <LegalLayout title="Contacto" updated="6 de noviembre de 2026" year={YEAR}>
       <p>
         La forma más rápida de hablar con nosotros es el canal de Telegram:{' '}
         <a href="https://t.me/patobarato" target="_blank" rel="noopener noreferrer">

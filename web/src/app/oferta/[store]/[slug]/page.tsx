@@ -55,7 +55,7 @@ export default async function ProductPage({ params }: Props) {
 
   return (
     // Bottom padding on mobile keeps the footer clear of the fixed "Ver en Amazon" bar.
-    <div className="min-h-screen bg-surface pb-24 font-sans text-carbon md:pb-0">
+    <div className="min-h-screen bg-surface pb-24 font-sans text-ink md:pb-0">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={jsonLdScript(productJsonLd(deal, SITE_URL + canonical))}
