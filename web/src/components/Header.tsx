@@ -10,7 +10,7 @@ const TELEGRAM = 'https://t.me/patobarato'
 /** Fixed header: logo, main navigation (collapsed into a menu on small screens), search and the channel button. */
 export function Header({ search }: { search: ReactNode }) {
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-white">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-white/80 backdrop-blur">
       <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-2 md:flex-nowrap md:px-8 md:py-3">
         <a href="/" className={`shrink-0 rounded-md ${FOCUS}`}>
           <img src="/logo.svg" alt="PatoBarato" className="h-8 w-auto md:h-11" />

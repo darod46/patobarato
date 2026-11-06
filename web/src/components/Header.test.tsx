@@ -15,6 +15,11 @@ describe('Header', () => {
     expect(screen.getByLabelText('Buscar chollos')).toBeInTheDocument()
   })
 
+  it('is translucent with a backdrop blur so the page shows through', () => {
+    render(<Header search={null} />)
+    expect(screen.getByRole('banner')).toHaveClass('bg-white/80', 'backdrop-blur')
+  })
+
   it('renders without a search box', () => {
     render(<Header search={null} />)
     expect(screen.queryByLabelText('Buscar chollos')).toBeNull()
