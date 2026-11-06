@@ -21,3 +21,14 @@ export type Deal = {
 }
 
 export type HashtagCount = { tag: string; count: number }
+
+export type Coupon = {
+  id: number
+  store: string
+  code: string
+  title: string
+  conditions: string | null
+  url: string | null
+  startsAt: string
+  expiresAt: string | null
+}

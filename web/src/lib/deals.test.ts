@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { fakeClient } from '../test-utils/fakeClient'
 import {
   fetchAllDealRefs,
   fetchDealByProduct,
@@ -11,26 +12,6 @@ import {
   fetchRelatedDeals,
   parseDealSort,
 } from './deals'
-
-type Result = { data: unknown; error: { message: string } | null }
-
-function fakeClient(result: Result) {
-  const calls: [string, unknown[]][] = []
-  const builder: Record<string, unknown> = {}
-  for (const name of ['select', 'order', 'range', 'ilike', 'contains', 'limit', 'eq', 'neq']) {
-    builder[name] = vi.fn((...args: unknown[]) => {
-      calls.push([name, args])
-      return builder
-    })
-  }
-  builder.then = (resolve: (r: Result) => unknown, reject: (e: unknown) => unknown) =>
-    Promise.resolve(result).then(resolve, reject)
-  const from = vi.fn((table: string) => {
-    calls.push(['from', [table]])
-    return builder
-  })
-  return { client: { from } as unknown as SupabaseClient, calls }
-}
 
 const row = (i: number) => ({
   publication_id: i,
