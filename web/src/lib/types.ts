@@ -32,3 +32,5 @@ export type Coupon = {
   startsAt: string
   expiresAt: string | null
 }
+
+export type StoreStats = { store: string; deals: number; coupons: number }

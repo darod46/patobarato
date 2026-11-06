@@ -65,7 +65,7 @@ export function HomeClient({
   latestPublishedAt = null,
 }: Props) {
   // Chips are links to /chollos/{tag}; a legacy `/?tag=` still filters here and marks its chip.
-  const { q, tag, sort, setQ, setSort, clear } = useUrlFilters()
+  const { q, tag, store, sort, setQ, setSort, clear } = useUrlFilters()
   const clock = useClock(now)
   const renderTime = new Date(now)
   const barEvent = event === undefined ? nextEvent(renderTime, EVENTS, ANNOUNCE_WINDOW_DAYS) : event
@@ -88,6 +88,7 @@ export function HomeClient({
           <DealFeed
             q={q}
             tag={tag}
+            store={store}
             sort={sort}
             onSort={setSort}
             onClear={clear}

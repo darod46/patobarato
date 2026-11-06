@@ -31,6 +31,21 @@ function deferred() {
 }
 const ids = (deals: Deal[]) => deals.map((d) => d.publicationId)
 
+describe('useDeals store filter', () => {
+  it('passes the store to the fetcher and refetches when it changes', async () => {
+    const fetcher = vi.fn(async () => ({ deals: [deal(1)], hasMore: false }))
+    const { rerender } = renderHook(
+      ({ store }: { store: string | null }) => useDeals(fetcher, { q: '', tag: null, store }),
+      { initialProps: { store: 'aliexpress' as string | null } },
+    )
+    await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1))
+    expect(fetcher).toHaveBeenLastCalledWith({ q: undefined, tag: undefined, store: 'aliexpress', sort: 'recientes', page: 0 })
+    rerender({ store: null })
+    await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(2))
+    expect(fetcher).toHaveBeenLastCalledWith({ q: undefined, tag: undefined, store: undefined, sort: 'recientes', page: 0 })
+  })
+})
+
 describe('useDeals', () => {
   it('loads the first page and appends the next on loadMore', async () => {
     const fetcher = vi.fn(async (p: { page: number }) => ({

@@ -12,6 +12,8 @@ import { SortSelector } from './SortSelector'
 type Props = {
   q: string
   tag: string | null
+  /** Store id filter; optional so callers without a store filter keep working. */
+  store?: string | null
   /** Listing order; without `onSort` the order cannot be changed from this feed. */
   sort?: DealSort
   onSort?: (sort: DealSort) => void
@@ -33,6 +35,7 @@ const GRID = 'grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 lg:grid-cols-4 lg:g
 export function DealFeed({
   q,
   tag,
+  store = null,
   sort = 'recientes',
   onSort,
   onTag,
@@ -45,7 +48,7 @@ export function DealFeed({
 }: Props) {
   const { deals, status, hasMore, loadingMore, loadMore, retry } = useDeals(
     fetchDeals,
-    { q, tag, sort },
+    { q, tag, store, sort },
     initialDeals,
   )
   const [tags, setTags] = useState<string[]>(() => initialTags ?? [])

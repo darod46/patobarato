@@ -24,9 +24,38 @@ describe('productPath / parseProductSlug / tagPath', () => {
     ).toBe('/oferta/amazon/cecotec-accesorios-freidora-de-aire-b0bpzvjjqj')
   })
   it('parses slug and id', () => {
-    expect(parseProductSlug('cecotec-x-b0bpzvjjqj')).toEqual({ slug: 'cecotec-x', id: 'b0bpzvjjqj' })
-    expect(parseProductSlug('b0bpzvjjqj')).toEqual({ slug: '', id: 'b0bpzvjjqj' })
-    expect(parseProductSlug('foo')).toBeNull()
+    expect(parseProductSlug('amazon', 'cecotec-x-b0bpzvjjqj')).toEqual({ slug: 'cecotec-x', id: 'b0bpzvjjqj' })
+    expect(parseProductSlug('amazon', 'auriculares-sony-b000000001')).toEqual({
+      slug: 'auriculares-sony',
+      id: 'b000000001',
+    })
+    expect(parseProductSlug('amazon', 'b0bpzvjjqj')).toEqual({ slug: '', id: 'b0bpzvjjqj' })
+    expect(parseProductSlug('amazon', 'foo')).toBeNull()
+  })
+  it('builds AliExpress and Awin product paths', () => {
+    expect(
+      productPath({ store: 'aliexpress', asin: '1005006123456789', title: 'Smart TV Xiaomi 55"' }),
+    ).toBe('/oferta/aliexpress/smart-tv-xiaomi-55-1005006123456789')
+    expect(
+      productPath({ store: 'pccomponentes', asin: 'ninja-af300-freidora-de-aire', title: 'Ninja AF300 Freidora' }),
+    ).toBe('/oferta/pccomponentes/ninja-af300-freidora-de-aire')
+  })
+  it('parses AliExpress ids after the last dash', () => {
+    expect(parseProductSlug('aliexpress', 'smart-tv-1005006123456789')).toEqual({
+      slug: 'smart-tv',
+      id: '1005006123456789',
+    })
+    expect(parseProductSlug('aliexpress', '1005006123456789')).toEqual({ slug: '', id: '1005006123456789' })
+    expect(parseProductSlug('aliexpress', 'smart-tv-123')).toBeNull()
+    expect(parseProductSlug('aliexpress', 'smart-tv-b000000001')).toBeNull()
+  })
+  it('takes the whole param as the id for Awin stores, keeping case', () => {
+    expect(parseProductSlug('pccomponentes', 'ninja-af300-freidora-de-aire')).toEqual({
+      slug: '',
+      id: 'ninja-af300-freidora-de-aire',
+    })
+    expect(parseProductSlug('mediamarkt', 'Foo-Bar')).toEqual({ slug: '', id: 'Foo-Bar' })
+    expect(parseProductSlug('pccomponentes', '')).toBeNull()
   })
   it('encodes tags', () => {
     expect(tagPath('niños')).toBe('/chollos/ni%C3%B1os')
@@ -38,8 +67,8 @@ describe('productPath / parseProductSlug / tagPath', () => {
 
 describe('storeInfo', () => {
   it('knows amazon and falls back otherwise', () => {
-    expect(storeInfo('amazon')).toEqual({ name: 'Amazon España', short: 'Amazon', cta: 'Ver en Amazon' })
-    expect(storeInfo('pccomp')).toEqual({ name: 'pccomp', short: 'pccomp', cta: 'Ver oferta' })
+    expect(storeInfo('amazon')).toEqual({ slug: 'amazon', name: 'Amazon España', short: 'Amazon', cta: 'Ver en Amazon' })
+    expect(storeInfo('pccomp')).toEqual({ slug: 'pccomp', name: 'pccomp', short: 'pccomp', cta: 'Ver oferta' })
   })
 })
 

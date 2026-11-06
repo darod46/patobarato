@@ -1,13 +1,15 @@
 import { useCallback, useMemo, useSyncExternalStore } from 'react'
 import { parseDealSort, type DealSort } from '../lib/deals'
 
-type Filters = { q: string; tag: string | null; sort: DealSort }
+type Filters = { q: string; tag: string | null; store: string | null; sort: DealSort }
 
 function parse(search: string): Filters {
   const params = new URLSearchParams(search)
   const rawTag = (params.get('tag') ?? '').toLowerCase()
   const tag = /^[\p{L}\p{N}_]+$/u.test(rawTag) ? rawTag : null
-  return { q: params.get('q') ?? '', tag, sort: parseDealSort(params.get('orden')) }
+  const rawStore = (params.get('tienda') ?? '').toLowerCase()
+  const store = /^[a-z0-9_]+$/.test(rawStore) ? rawStore : null
+  return { q: params.get('q') ?? '', tag, store, sort: parseDealSort(params.get('orden')) }
 }
 
 // Our own history writes do not fire popstate, so subscribers are notified explicitly.
@@ -27,7 +29,7 @@ const getSearch = () => window.location.search
 // client re-renders with the real query string right after hydrating.
 const getServerSearch = () => ''
 
-type UrlChanges = { q?: string; tag?: string | null; orden?: string }
+type UrlChanges = { q?: string; tag?: string | null; tienda?: string | null; orden?: string }
 
 function write(mode: 'push' | 'replace', changes: UrlChanges) {
   const params = new URLSearchParams(window.location.search)
@@ -48,12 +50,23 @@ export function useUrlFilters() {
 
   const setQ = useCallback((q: string) => write('replace', { q: q.trim() ? q : '' }), [])
   const setTag = useCallback((tag: string | null) => write('push', { tag }), [])
+  const setStore = useCallback((store: string | null) => write('push', { tienda: store }), [])
   // The default order is the absence of the param, so `/` stays the canonical listing URL.
   const setSort = useCallback(
     (sort: DealSort) => write('push', { orden: sort === 'recientes' ? '' : sort }),
     [],
   )
-  const clear = useCallback(() => write('push', { q: '', tag: null, orden: '' }), [])
+  const clear = useCallback(() => write('push', { q: '', tag: null, tienda: null, orden: '' }), [])
 
-  return { q: filters.q, tag: filters.tag, sort: filters.sort, setQ, setTag, setSort, clear }
+  return {
+    q: filters.q,
+    tag: filters.tag,
+    store: filters.store,
+    sort: filters.sort,
+    setQ,
+    setTag,
+    setStore,
+    setSort,
+    clear,
+  }
 }

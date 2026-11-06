@@ -22,7 +22,7 @@ type Props = { params: Promise<{ store: string; slug: string }> }
 
 // Shared by generateMetadata and the page within one request.
 const loadDeal = cache(async (store: string, slug: string) => {
-  const parsed = parseProductSlug(slug)
+  const parsed = parseProductSlug(store, slug)
   if (!parsed) return null
   return fetchDealByProduct(getSupabase(), store, parsed.id)
 })

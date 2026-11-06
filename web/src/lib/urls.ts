@@ -15,15 +15,25 @@ export function slugify(title: string): string {
   return words.length ? words.join('-') : 'oferta'
 }
 
+/**
+ * Amazon `/oferta/amazon/{slug}-{asin}` and AliExpress `/oferta/aliexpress/{slug}-{id}` carry a title slug;
+ * every other store uses the deal's `asin` (already a readable id) as the whole path segment.
+ */
 export function productPath(deal: Pick<Deal, 'store' | 'asin' | 'title'>): string {
-  return `/oferta/${deal.store}/${slugify(deal.title)}-${deal.asin.toLowerCase()}`
+  if (deal.store === 'amazon') return `/oferta/amazon/${slugify(deal.title)}-${deal.asin.toLowerCase()}`
+  if (deal.store === 'aliexpress') return `/oferta/aliexpress/${slugify(deal.title)}-${deal.asin}`
+  return `/oferta/${deal.store}/${deal.asin}`
 }
 
-export function parseProductSlug(param: string): { slug: string; id: string } | null {
+export function parseProductSlug(store: string, param: string): { slug: string; id: string } | null {
+  if (store !== 'amazon' && store !== 'aliexpress') return param ? { slug: '', id: param } : null
   const i = param.lastIndexOf('-')
   const id = param.slice(i + 1)
-  if (!/^[a-z0-9]{10}$/i.test(id)) return null
-  return { slug: i < 0 ? '' : param.slice(0, i), id: id.toLowerCase() }
+  const slug = i < 0 ? '' : param.slice(0, i)
+  if (store === 'amazon') {
+    return /^[a-z0-9]{10}$/i.test(id) ? { slug, id: id.toLowerCase() } : null
+  }
+  return /^\d{8,20}$/.test(id) ? { slug, id } : null
 }
 
 export function tagPath(tag: string): string {

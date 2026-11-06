@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { escapeIlike } from './format'
-import type { Deal, HashtagCount } from './types'
+import type { Deal, HashtagCount, StoreStats } from './types'
 
 export const PAGE_SIZE = 24
 
@@ -54,7 +54,7 @@ function toDeal(row: DealRow): Deal {
 
 export async function fetchDeals(
   client: SupabaseClient,
-  params: { q?: string; tag?: string; sort?: DealSort; page: number },
+  params: { q?: string; tag?: string; store?: string; sort?: DealSort; page: number },
 ): Promise<{ deals: Deal[]; hasMore: boolean }> {
   const from = params.page * PAGE_SIZE
   const sort = params.sort ?? 'recientes'
@@ -68,6 +68,7 @@ export async function fetchDeals(
   const q = params.q?.trim()
   if (q) query = query.ilike('title', `%${escapeIlike(q)}%`)
   if (params.tag) query = query.contains('hashtags', [params.tag])
+  if (params.store) query = query.eq('store', params.store)
   const { data, error } = await query
   if (error) throw new Error(error.message)
   const rows = (data ?? []) as DealRow[]
@@ -85,6 +86,15 @@ export async function fetchHashtags(client: SupabaseClient, limit = 12): Promise
     tag: r.tag,
     count: Number(r.count),
   }))
+}
+
+/** Stores with at least one active deal or coupon, from `web_stores`. */
+export async function fetchStores(client: SupabaseClient): Promise<StoreStats[]> {
+  const { data, error } = await client.from('web_stores').select('store, deals, coupons')
+  if (error) throw new Error(error.message)
+  return ((data ?? []) as { store: string; deals: number | string; coupons: number | string }[])
+    .map((r) => ({ store: r.store, deals: Number(r.deals), coupons: Number(r.coupons) }))
+    .filter((s) => s.deals > 0 || s.coupons > 0)
 }
 
 export async function fetchLatestDeal(client: SupabaseClient): Promise<Deal | null> {

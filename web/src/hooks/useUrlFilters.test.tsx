@@ -13,6 +13,31 @@ describe('useUrlFilters', () => {
     expect(result.current.tag).toBe('juguetes')
   })
 
+  it('parses and clears the store filter', () => {
+    history.replaceState(null, '', '/?tienda=aliexpress&q=tv')
+    const { result } = renderHook(() => useUrlFilters())
+    expect(result.current.store).toBe('aliexpress')
+    act(() => result.current.clear())
+    expect(result.current.store).toBeNull()
+    expect(location.search).toBe('')
+  })
+
+  it('setStore updates the URL and null removes it', () => {
+    history.replaceState(null, '', '/?q=tv')
+    const { result } = renderHook(() => useUrlFilters())
+    act(() => result.current.setStore('pccomponentes'))
+    expect(location.search).toContain('tienda=pccomponentes')
+    expect(location.search).toContain('q=tv')
+    act(() => result.current.setStore(null))
+    expect(location.search).toBe('?q=tv')
+  })
+
+  it('ignores a malformed tienda value', () => {
+    history.replaceState(null, '', '/?tienda=a%20b')
+    const { result } = renderHook(() => useUrlFilters())
+    expect(result.current.store).toBeNull()
+  })
+
   it('setTag updates the URL and keeps other params', () => {
     history.replaceState(null, '', '/?q=lego&utm=x')
     const { result } = renderHook(() => useUrlFilters())

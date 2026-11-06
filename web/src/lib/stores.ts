@@ -1,16 +1,14 @@
-export type StoreInfo = { name: string; short: string; cta: string }
+import { STORES, type StoreInfo } from './stores-data'
 
-export const STORES: Record<string, StoreInfo> = {
-  amazon: { name: 'Amazon España', short: 'Amazon', cta: 'Ver en Amazon' },
-  aliexpress: { name: 'AliExpress', short: 'AliExpress', cta: 'Ir a AliExpress' },
-  pccomponentes: { name: 'PcComponentes', short: 'PcComponentes', cta: 'Ir a PcComponentes' },
-  mediamarkt: { name: 'MediaMarkt', short: 'MediaMarkt', cta: 'Ir a MediaMarkt' },
-  elcorteingles: { name: 'El Corte Inglés', short: 'El Corte Inglés', cta: 'Ir a El Corte Inglés' },
-  decathlon: { name: 'Decathlon', short: 'Decathlon', cta: 'Ir a Decathlon' },
-}
+export { STORES, type StoreInfo }
 
 export function storeInfo(store: string): StoreInfo {
-  return STORES[store] ?? { name: store, short: store, cta: 'Ver oferta' }
+  return STORES[store] ?? { slug: store, name: store, short: store, cta: 'Ver oferta' }
+}
+
+/** Store id for a URL slug; null when the slug is not a known store. */
+export function storeFromSlug(slug: string): string | null {
+  return Object.values(STORES).find((s) => s.slug === slug)?.slug ?? null
 }
 
 /** Short names of the given store ids, deduplicated, Amazon first, then in order of appearance. */
