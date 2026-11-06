@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { escapeIlike } from './format'
-import type { Deal, HashtagCount, StoreStats } from './types'
+import type { Deal, HashtagCount } from './types'
 
 export const PAGE_SIZE = 24
 
@@ -86,15 +86,6 @@ export async function fetchHashtags(client: SupabaseClient, limit = 12): Promise
     tag: r.tag,
     count: Number(r.count),
   }))
-}
-
-/** Stores with at least one active deal or coupon, from `web_stores`. */
-export async function fetchStores(client: SupabaseClient): Promise<StoreStats[]> {
-  const { data, error } = await client.from('web_stores').select('store, deals, coupons')
-  if (error) throw new Error(error.message)
-  return ((data ?? []) as { store: string; deals: number | string; coupons: number | string }[])
-    .map((r) => ({ store: r.store, deals: Number(r.deals), coupons: Number(r.coupons) }))
-    .filter((s) => s.deals > 0 || s.coupons > 0)
 }
 
 export async function fetchLatestDeal(client: SupabaseClient): Promise<Deal | null> {
