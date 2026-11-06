@@ -1,5 +1,6 @@
 'use client'
 
+import { Check, Copy } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { storeInfo } from '../lib/stores'
 import type { Coupon } from '../lib/types'
@@ -66,10 +67,7 @@ export function CouponCard({ coupon }: { coupon: Coupon }) {
           onClick={copy}
           className="inline-flex h-11 items-center gap-1.5 rounded-[10px] bg-primary px-3.5 text-sm font-semibold text-white hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <rect x="9" y="9" width="13" height="13" rx="2" />
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-          </svg>
+          {copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
           {copied ? 'Copiado' : 'Copiar'}
         </button>
       </div>

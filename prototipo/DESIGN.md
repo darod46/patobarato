@@ -120,6 +120,10 @@ Contenedor de 1200 px con márgenes de 16 px (móvil) y 32 px (escritorio). Reji
 
 Tarjetas con radio 16 px, borde `line` de 1 px y sin sombra en reposo; al pasar el ratón, `0 8px 24px rgba(20,22,26,.08)`. Botones y campos con radio 12 px y altura 48 px (44 px en la cabecera). Chips y badges en píldora. Bandas oscuras con radio 24 px.
 
+## Iconos
+
+Solo **Lucide** (`lucide-react`), trazo 2 px: 16 px junto a texto pequeño, 18 px en botones, 20–22 px en iconos de sección. `aria-hidden` cuando acompañan a un texto; `aria-label` en el botón cuando van solos. Nada de SVG a mano ni emojis en la interfaz (la vista previa del mensaje de Telegram reproduce el mensaje real y conserva los suyos).
+
 ## Componentes
 
 - **Botón primario:** `primary`, texto blanco, 600. **Secundario:** blanco con borde `#d7dae0`, texto `ink`. **Botón de tarjeta:** `primary-soft` con texto `primary`, 40 px.

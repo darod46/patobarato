@@ -46,7 +46,7 @@ describe('ProductView', () => {
     expect(article.getByText('Amazon España')).toBeInTheDocument()
     expect(container.textContent).toContain('Publicado hace 41 min · El precio puede cambiar')
 
-    const button = screen.getByRole('link', { name: '🛒 Ver en Amazon' })
+    const button = screen.getByRole('link', { name: 'Ver en Amazon' })
     expect(button).toHaveAttribute('href', deal.affiliateUrl)
     expect(button.getAttribute('rel')?.split(' ')).toEqual(
       expect.arrayContaining(['sponsored', 'noopener', 'noreferrer']),
@@ -98,7 +98,7 @@ describe('ProductView', () => {
     expect(article.textContent).not.toContain('Ahorras')
     expect(article.textContent).not.toContain('Cupón')
     expect(screen.queryByRole('list', { name: 'Hashtags' })).toBeNull()
-    expect(screen.getByRole('heading', { level: 2, name: 'Más chollos' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'Más chollos de hoy' })).toBeInTheDocument()
   })
 
   it('omits the related section when there are no related deals', () => {

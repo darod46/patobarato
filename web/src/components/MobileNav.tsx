@@ -1,5 +1,6 @@
 'use client'
 
+import { Menu, X } from 'lucide-react'
 import { useEffect, useId, useState } from 'react'
 
 type Props = { links: { label: string; href: string }[] }
@@ -28,9 +29,7 @@ export function MobileNav({ links }: Props) {
         onClick={() => setOpen((o) => !o)}
         className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-line bg-white text-ink hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-          {open ? <path d="M6 6l12 12M18 6 6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
-        </svg>
+        {open ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
       </button>
       {open && (
         <nav

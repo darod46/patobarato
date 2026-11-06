@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: 'PatoBarato',
     locale: 'es_ES',
-    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'PatoBarato · Chollos de Amazon' }],
+    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'PatoBarato · El pato que caza los chollos de Amazon antes de que vuelen' }],
   },
   twitter: { card: 'summary_large_image', images: ['/og.png'] },
 }

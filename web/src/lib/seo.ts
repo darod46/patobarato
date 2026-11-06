@@ -96,7 +96,7 @@ export function breadcrumbJsonLd(items: BreadcrumbItem[]): Record<string, unknow
 
 export function hashtagMetadata(tag: string, count: number): Metadata {
   const title = `Chollos de ${tag} · PatoBarato`
-  const description = `Los últimos chollos de #${tag} en Amazon, seleccionados por PatoBarato.`
+  const description = `Los últimos chollos de #${tag} en Amazon, cazados por PatoBarato con su precio, el precio anterior y el cupón si lo hay.`
   const path = tagPath(tag)
   return {
     title,

@@ -154,7 +154,7 @@ it('fetches the URL filters after hydrating even with initial data', async () =>
     )
     await waitFor(() => expect(fetchDeals).toHaveBeenCalledWith({ q: undefined, tag: 'sony', sort: 'recientes', page: 0 }))
     expect(fetchDeals).toHaveBeenCalledTimes(1)
-    expect(await screen.findByText('No hay chollos que coincidan')).toBeInTheDocument()
+    expect(await screen.findByText('No hay chollos con esos filtros')).toBeInTheDocument()
   } finally {
     history.replaceState(null, '', '/')
   }

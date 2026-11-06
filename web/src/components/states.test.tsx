@@ -8,7 +8,7 @@ describe('listing states', () => {
   it('EmptyState clears filters', async () => {
     const onClear = vi.fn()
     render(<EmptyState onClear={onClear} />)
-    expect(screen.getByText('No hay chollos que coincidan')).toBeInTheDocument()
+    expect(screen.getByText('No hay chollos con esos filtros')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Quitar filtros' }))
     expect(onClear).toHaveBeenCalled()
   })

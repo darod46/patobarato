@@ -1,3 +1,4 @@
+import { ArrowRight } from 'lucide-react'
 import { storeNames } from '../lib/stores'
 import type { Coupon } from '../lib/types'
 import { CouponCard } from './CouponCard'
@@ -22,8 +23,9 @@ export function CouponsBlock({ coupons }: { coupons: Coupon[] }) {
             <h2 className="mt-1.5 font-display text-2xl font-bold tracking-[-0.02em] text-ink md:text-[32px]">Cupones de {names}</h2>
             <p className="mt-1.5 text-muted">Copia el código y aplícalo en el carrito. Indicamos condiciones y caducidad.</p>
           </div>
-          <a href="/cupones" className="font-semibold text-primary hover:text-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
-            Todos los cupones →
+          <a href="/cupones" className="inline-flex items-center gap-1.5 font-semibold text-primary hover:text-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+            Todos los cupones
+            <ArrowRight size={16} aria-hidden="true" />
           </a>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">

@@ -1,5 +1,6 @@
 'use client'
 
+import { ArrowUpRight } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 import { formatPrice, timeAgo } from '../lib/format'
@@ -81,10 +82,7 @@ export function DealCard({ deal, now }: Props) {
         )}
         <span className="flex h-10 items-center justify-center gap-1.5 rounded-[10px] bg-primary-soft text-sm font-semibold text-primary group-hover:bg-[#e3e9fa]">
           Ver chollo
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M7 17 17 7" />
-            <path d="M8 7h9v9" />
-          </svg>
+          <ArrowUpRight size={16} aria-hidden="true" />
         </span>
       </div>
     </Link>

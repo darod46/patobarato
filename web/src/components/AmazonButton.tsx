@@ -1,5 +1,6 @@
 'use client'
 
+import { ShoppingCart } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { currentPlatform, linkTarget, openAmazon, type Platform } from '../lib/amazonLink'
 import { storeInfo } from '../lib/stores'
@@ -22,7 +23,8 @@ export function AmazonButton({ url, store, className = '' }: Props) {
       onClick={(event) => openAmazon(event, url, platform)}
       className={`flex items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3.5 text-base font-extrabold text-ink shadow-sm transition-colors hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${className}`}
     >
-      {`🛒 ${storeInfo(store).cta}`}
+      <ShoppingCart size={18} aria-hidden="true" />
+      {storeInfo(store).cta}
     </a>
   )
 }

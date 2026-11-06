@@ -67,6 +67,10 @@ Notas:
 - JSON-LD: `Product` (ficha), `BreadcrumbList`, `WebSite` con `SearchAction` y `Organization` (sitio).
 - Search Console: añade la propiedad `www.patobarato.com` y envía `/sitemap.xml`.
 
+## Iconos
+
+Solo iconos de [Lucide](https://lucide.dev) vía `lucide-react`; `src/icons.test.ts` falla si aparece un `<svg>` a mano o un emoji fuera de `TelegramPreview`.
+
 ## Cupones
 
 Los cupones se insertan a mano en la tabla `coupons` desde el panel de Supabase (`store` con el id de `src/lib/stores.ts`, p. ej. `aliexpress`; `code`; `title` como «−6 € en 40 €»; `conditions`; `url` de afiliado opcional; `starts_at`, `expires_at`, `active`). La vista `web_coupons` solo devuelve los vigentes; la portada los recoge en ≤ 60 s y `/cupones` en ≤ 600 s.

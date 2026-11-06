@@ -1,28 +1,20 @@
+import { Eye, ListChecks, Send } from 'lucide-react'
+
 const STEPS = [
   {
     title: '1 · Vigilamos',
     text: 'Seguimos los canales de chollos de Telegram y leemos cada oferta en cuanto se publica.',
-    icon: (
-      <>
-        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
-        <circle cx="12" cy="12" r="3" />
-      </>
-    ),
+    Icon: Eye,
   },
   {
     title: '2 · Filtramos',
     text: 'Extraemos precio, precio anterior y cupón, y descartamos duplicados y ofertas caducadas. «Mínimo histórico» solo aparece cuando hay publicaciones anteriores con las que comparar.',
-    icon: <path d="M20 6 9 17l-5-5" />,
+    Icon: ListChecks,
   },
   {
     title: '3 · Publicamos',
     text: 'La oferta sale aquí y en el canal con un botón directo a la tienda. Tú decides si compras.',
-    icon: (
-      <>
-        <path d="M22 3 2 11l7 3 3 7 10-18Z" />
-        <path d="m9 14 13-11" />
-      </>
-    ),
+    Icon: Send,
   },
 ]
 
@@ -38,9 +30,7 @@ export function HowItWorks() {
           {STEPS.map((step) => (
             <div key={step.title} className="flex flex-col gap-3.5 rounded-2xl border border-line bg-white p-6 md:p-7">
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-soft text-primary">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  {step.icon}
-                </svg>
+                <step.Icon size={22} aria-hidden="true" />
               </span>
               <h3 className="text-lg font-semibold text-ink">{step.title}</h3>
               <p className="text-[15px] leading-relaxed text-muted">{step.text}</p>

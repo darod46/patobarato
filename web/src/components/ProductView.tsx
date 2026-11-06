@@ -1,3 +1,4 @@
+import { ChevronRight, Store, TrendingDown } from 'lucide-react'
 import { discountPercent, formatPrice, timeAgo } from '../lib/format'
 import { storeInfo } from '../lib/stores'
 import type { Deal } from '../lib/types'
@@ -39,14 +40,14 @@ export function ProductView({ deal, related, now }: Props) {
           </li>
           {tag && (
             <li className="flex shrink-0 items-center gap-1.5">
-              <span aria-hidden="true">›</span>
+              <ChevronRight size={14} aria-hidden="true" />
               <a href={tagPath(tag)} className={`hover:underline ${FOCUS}`}>
                 #{tag}
               </a>
             </li>
           )}
           <li className="flex min-w-0 items-center gap-1.5">
-            <span aria-hidden="true">›</span>
+            <ChevronRight size={14} aria-hidden="true" />
             <span aria-current="page" className="truncate">
               {deal.title}
             </span>
@@ -82,26 +83,25 @@ export function ProductView({ deal, related, now }: Props) {
         </div>
 
         <div className="flex flex-col items-center gap-3 text-center md:items-start md:text-left">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-xs font-bold text-muted">
-            <span aria-hidden="true" className="text-accent-ink">
-              ●
-            </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 text-xs font-semibold text-ink">
+            <Store size={14} aria-hidden="true" className="text-muted" />
             <span>{store.name}</span>
           </span>
-          <h1 className="text-2xl leading-tight font-extrabold md:text-3xl">{deal.title}</h1>
+          <h1 className="font-display text-2xl leading-tight font-bold tracking-[-0.02em] md:text-3xl">{deal.title}</h1>
           <div className="flex flex-wrap items-baseline justify-center gap-3 md:justify-start">
             <span className="price font-display text-4xl font-bold tracking-[-0.02em]">{formatPrice(deal.price)}</span>
             {discount !== null && (
               <s className="price text-lg text-muted">{formatPrice(deal.previousPrice!)}</s>
             )}
             {deal.isLowest && (
-              <span className="rounded-lg bg-success-soft px-2.5 py-1 text-xs font-semibold text-success">
+              <span className="inline-flex items-center gap-1 rounded-lg bg-success-soft px-2.5 py-1 text-xs font-semibold text-success">
+                <TrendingDown size={14} aria-hidden="true" />
                 Mínimo histórico
               </span>
             )}
           </div>
           {saving !== null && (
-            <p className="price text-sm font-semibold">{`Ahorras ${formatPrice(saving)}`}</p>
+            <p className="price text-sm font-semibold text-success">{`Ahorras ${formatPrice(saving)}`}</p>
           )}
           {deal.coupon && (
             <p className="rounded-md bg-surface px-3 py-1.5 text-sm text-muted">{deal.coupon}</p>
@@ -135,10 +135,10 @@ export function ProductView({ deal, related, now }: Props) {
 
       {related.length > 0 && (
         <section className="mt-12">
-          <h2 className="mb-4 text-xl font-bold">
-            {relatedByTag ? `Más chollos de #${tag}` : 'Más chollos'}
+          <h2 className="mb-5 font-display text-2xl font-bold tracking-[-0.02em]">
+            {relatedByTag ? `Más chollos de #${tag}` : 'Más chollos de hoy'}
           </h2>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-6">
             {related.map((d) => (
               <DealCard key={d.publicationId} deal={d} now={clock} />
             ))}

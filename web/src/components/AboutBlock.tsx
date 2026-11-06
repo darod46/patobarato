@@ -1,3 +1,4 @@
+import { ArrowRight } from 'lucide-react'
 /** "Hola, soy el Pato": who is behind the site and how it is funded. */
 export function AboutBlock() {
   return (
@@ -16,8 +17,9 @@ export function AboutBlock() {
               Nos financiamos con enlaces de afiliado: si compras, la tienda nos da una pequeña comisión y a ti no
               te cuesta nada más.
             </p>
-            <a href="/afiliados" className="self-start font-semibold text-primary hover:text-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
-              Cómo funciona la afiliación →
+            <a href="/afiliados" className="inline-flex items-center gap-1.5 self-start font-semibold text-primary hover:text-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+              Cómo funciona la afiliación
+              <ArrowRight size={16} aria-hidden="true" />
             </a>
           </div>
         </div>

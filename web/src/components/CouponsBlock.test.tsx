@@ -17,6 +17,6 @@ describe('CouponsBlock', () => {
     render(<CouponsBlock coupons={[c(1, 'aliexpress'), c(2, 'pccomponentes'), c(3, 'aliexpress'), c(4, 'aliexpress'), c(5, 'aliexpress')]} />)
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Cupones de AliExpress y PcComponentes')
     expect(screen.getAllByRole('button', { name: 'Copiar' })).toHaveLength(4)
-    expect(screen.getByRole('link', { name: 'Todos los cupones →' })).toHaveAttribute('href', '/cupones')
+    expect(screen.getByRole('link', { name: 'Todos los cupones' })).toHaveAttribute('href', '/cupones')
   })
 })
