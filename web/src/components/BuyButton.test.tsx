@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { BuyButton } from './BuyButton'
 
@@ -27,5 +27,17 @@ describe('BuyButton', () => {
     const link = screen.getByRole('link', { name: 'Ver en Amazon' })
     expect(link).toHaveAttribute('rel', 'sponsored noopener noreferrer')
     expect(link).toHaveAttribute('href', 'https://www.amazon.es/dp/B0ABCDEF12?tag=x-21')
+  })
+
+  it('keeps the Android intent behaviour for Amazon', async () => {
+    vi.stubGlobal('navigator', { userAgent: 'Mozilla/5.0 (Linux; Android 14)', maxTouchPoints: 5 })
+    const url = 'https://www.amazon.es/dp/B0ABCDEF12?tag=x-21'
+    const assign = vi.fn()
+    vi.stubGlobal('location', { ...window.location, assign })
+    render(<BuyButton url={url} store="amazon" />)
+    const link = await screen.findByRole('link', { name: 'Ver en Amazon' })
+    await waitFor(() => expect(link).not.toHaveAttribute('target'))
+    expect(link).toHaveAttribute('href', url)
+    expect(fireEvent.click(link)).toBe(false) // default prevented, intent opened instead
   })
 })

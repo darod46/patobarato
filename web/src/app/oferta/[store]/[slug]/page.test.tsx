@@ -42,13 +42,12 @@ describe('ProductPage', () => {
   })
 
   it('resolves a store without slug on its id and never redirects', async () => {
-    const pc: Deal = { ...deal, store: 'pccomponentes', asin: 'ninja-af300-freidora-de-aire', affiliateUrl: 'https://www.pccomponentes.com/x' }
+    const pc: Deal = { ...deal, store: 'pccomponentes', asin: 'ninja-af300', affiliateUrl: 'https://www.pccomponentes.com/x' }
     vi.mocked(fetchDealByProduct).mockResolvedValueOnce(pc)
-    const page = await ProductPage({
-      params: Promise.resolve({ store: 'pccomponentes', slug: 'ninja-af300-freidora-de-aire' }),
-    })
+    // The param differs from productPath(deal) (case), so a missing hasSlug guard would redirect.
+    const page = await ProductPage({ params: Promise.resolve({ store: 'pccomponentes', slug: 'Ninja-AF300' }) })
     render(page)
-    expect(fetchDealByProduct).toHaveBeenLastCalledWith({}, 'pccomponentes', 'ninja-af300-freidora-de-aire')
+    expect(fetchDealByProduct).toHaveBeenLastCalledWith({}, 'pccomponentes', 'Ninja-AF300')
     expect(screen.getByRole('link', { name: 'Ir a PcComponentes' })).toHaveAttribute('href', pc.affiliateUrl)
   })
 
@@ -59,5 +58,20 @@ describe('ProductPage', () => {
       params: Promise.resolve({ store: 'aliexpress', slug: 'x-1005006123456789' }),
     }).catch((e: unknown) => e)
     expect((error as { digest?: string }).digest).toBe(`NEXT_REDIRECT;replace;${productPath(ali)};308;`)
+  })
+
+  it('throws notFound for an Amazon param whose id is not 10 characters', async () => {
+    const error = await ProductPage({ params: Promise.resolve({ store: 'amazon', slug: 'algo-b0abc' }) }).catch(
+      (e: unknown) => e,
+    )
+    expect((error as { digest?: string }).digest).toMatch(/NEXT_HTTP_ERROR_FALLBACK;404/)
+  })
+
+  it('throws notFound when the deal does not exist', async () => {
+    vi.mocked(fetchDealByProduct).mockResolvedValueOnce(null)
+    const error = await ProductPage({
+      params: Promise.resolve({ store: 'amazon', slug: 'algo-b0abcdef12' }),
+    }).catch((e: unknown) => e)
+    expect((error as { digest?: string }).digest).toMatch(/NEXT_HTTP_ERROR_FALLBACK;404/)
   })
 })
