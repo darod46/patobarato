@@ -1,0 +1,146 @@
+import logging
+from datetime import UTC, datetime
+from decimal import Decimal
+
+from patobarato.config import Settings
+from patobarato.models import OfferStatus
+from patobarato.sources.aliexpress_source import AliExpressSource
+from patobarato.storage.repository import InMemoryRepository
+from patobarato.stores.aliexpress_client import AliProduct
+
+NOW = datetime(2026, 11, 6, 12, 0, tzinfo=UTC)
+
+
+def _settings() -> Settings:
+    return Settings(
+        _env_file=None,
+        telegram_api_id=1,
+        telegram_api_hash="hash",
+        telegram_bot_token="token",
+        supabase_url="https://example.supabase.co",
+        supabase_service_key="key",
+    )
+
+
+def _product(pid, discount, price="10.00", original=None, image="http://img/x.jpg"):
+    return AliProduct(
+        product_id=pid,
+        title=f"Producto {pid}",
+        price=Decimal(price),
+        original_price=Decimal(original) if original else None,
+        discount=discount,
+        image_url=image,
+        url=f"https://es.aliexpress.com/item/{pid}.html?x=1",
+        promotion_link=f"https://s.click.aliexpress.com/e/{pid}",
+    )
+
+
+class _Client:
+    def __init__(self, products):
+        self.products = products
+        self.calls: list[dict] = []
+
+    async def hot_products(self, category_ids, keywords, page_size, page_no):
+        self.calls.append(
+            dict(category_ids=category_ids, keywords=keywords, page_size=page_size, page_no=page_no)
+        )
+        return self.products
+
+
+def _setup(products, config=None, hashtags=None, country="ES"):
+    repo = InMemoryRepository()
+    source = repo.add_api_source(
+        "aliexpress_api", "hot", country=country, config=config or {}, hashtags=hashtags or []
+    )
+    client = _Client(products)
+    return repo, source, client, AliExpressSource(client, repo, _settings(), lambda: NOW)
+
+
+PRODUCTS = [_product("1", 50), _product("2", 25), _product("3", 40)]
+
+
+async def test_filters_by_min_discount_and_publishes_web_only():
+    repo, source, _, runner = _setup(PRODUCTS, hashtags=["chollo"])
+
+    await runner.run(source)
+
+    pubs = repo.publications()
+    assert [p["channel"] for p in pubs] == ["web", "web"]
+    assert all(p["chat_id"] is None and p["message_id"] is None for p in pubs)
+    assert pubs[0]["affiliate_url"] == "https://s.click.aliexpress.com/e/1"
+    assert repo.offer_statuses() == [OfferStatus.PUBLISHED_WEB] * 2
+    assert len(repo.product_images) == 2
+    assert repo.offer_hashtags(1) == ["chollo", "aliexpress"]
+
+
+async def test_second_run_is_skipped_quietly(caplog):
+    repo, source, _, runner = _setup(PRODUCTS)
+    await runner.run(source)
+
+    with caplog.at_level(logging.DEBUG):
+        await runner.run(source)
+
+    # insert_offer returns None for an already seen (source, product): nothing new.
+    assert len(repo.publications()) == 2
+    assert len(repo.offer_statuses()) == 2
+
+
+async def test_max_results_limits_to_first():
+    repo, source, client, runner = _setup(PRODUCTS, config={"max_results": 1})
+
+    await runner.run(source)
+
+    assert len(repo.publications()) == 1
+    assert repo.publications()[0]["published_price"] == Decimal("10.00")
+    assert client.calls[0]["page_size"] >= 1
+
+
+async def test_config_is_passed_to_client_and_search_uses_keywords():
+    _, source, client, runner = _setup(
+        [], config={"query": "search", "keywords": "auriculares", "category_ids": ["15", 7]}
+    )
+
+    await runner.run(source)
+
+    assert client.calls[0]["keywords"] == "auriculares"
+    assert client.calls[0]["category_ids"] == ["15", "7"]
+
+
+async def test_discount_computed_from_original_price_and_missing_is_filtered():
+    products = [
+        _product("1", None, price="6.00", original="10.00"),  # 40% computed
+        _product("2", None, price="9.00"),  # unknown -> 0
+    ]
+    repo, source, _, runner = _setup(products)
+
+    await runner.run(source)
+
+    assert len(repo.publications()) == 1
+
+
+async def test_min_discount_zero_keeps_everything_and_price_range_filters():
+    products = [_product("1", None, price="5"), _product("2", None, price="50"), _product("3", None, price="500")]
+    repo, source, _, runner = _setup(
+        products, config={"min_discount": 0, "min_price": 10, "max_price": 100}
+    )
+
+    await runner.run(source)
+
+    assert len(repo.publications()) == 1
+    assert repo.publications()[0]["published_price"] == Decimal("50")
+
+
+async def test_offer_uses_source_country_and_no_image_means_no_set_image():
+    repo, source, _, runner = _setup([_product("1", 50, image=None)], country="PT")
+
+    await runner.run(source)
+
+    assert repo.publications()[0]["country"] == "PT"
+    assert repo.product_images == {}
+
+
+async def test_does_not_log_promotion_links(caplog):
+    _, source, _, runner = _setup(PRODUCTS)
+    with caplog.at_level(logging.DEBUG):
+        await runner.run(source)
+    assert "s.click.aliexpress.com" not in caplog.text

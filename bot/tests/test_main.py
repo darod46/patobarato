@@ -189,7 +189,7 @@ async def test_run_supervises_bot_connection(fake_clients, monkeypatch):
 
     assert await run(_run_settings()) == 1
 
-    assert sorted(supervised) == ["bot", "pipeline", "reader", "refresh"]
+    assert sorted(supervised) == ["bot", "pipeline", "reader", "refresh", "scheduler"]
     assert fake_clients["reader"].disconnected
     assert fake_clients["bot"].disconnected
 

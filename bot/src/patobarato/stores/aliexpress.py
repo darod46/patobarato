@@ -28,6 +28,10 @@ class AliExpressStore(BaseStore):
     def __init__(self, client: AliExpressClient) -> None:
         self._client = client
 
+    @property
+    def client(self) -> AliExpressClient:
+        return self._client
+
     def matches(self, url: str) -> bool:
         host = _host(url)
         if host in SHORTENER_HOSTS:

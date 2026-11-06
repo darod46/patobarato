@@ -16,11 +16,14 @@ from telethon import TelegramClient
 
 from patobarato.config import Settings, get_settings
 from patobarato.core.backfill import backfill_images
-from patobarato.core.pipeline import Pipeline
+from patobarato.core.pipeline import Pipeline, utcnow
 from patobarato.parsing.links import UrlResolver
 from patobarato.publishing.telegram_publisher import TelegramPublisher
+from patobarato.sources.aliexpress_source import AliExpressSource
+from patobarato.sources.api_scheduler import ApiScheduler, ApiSourceRunner
 from patobarato.sources.telegram_listener import TelegramListener, make_photo_provider
 from patobarato.storage.supabase_repo import SupabaseRepository
+from patobarato.stores.aliexpress import AliExpressStore
 from patobarato.stores.registry import StoreRegistry, build_registry
 
 logger = logging.getLogger("patobarato.main")
@@ -128,6 +131,11 @@ async def run(settings: Settings) -> int:
             settings,
             registry=registry,
         )
+        runners: list[ApiSourceRunner] = []
+        ali_store = registry.get("aliexpress")
+        if isinstance(ali_store, AliExpressStore):
+            runners.append(AliExpressSource(ali_store.client, repo, settings, utcnow))
+        scheduler = ApiScheduler(repo, runners)
         listener = TelegramListener(
             reader,
             repo,
@@ -141,6 +149,7 @@ async def run(settings: Settings) -> int:
         try:
             return await _supervise(
                 pipeline=pipeline.run(),
+                scheduler=scheduler.run(),
                 refresh=listener.run_refresh_loop(),
                 reader=reader.run_until_disconnected(),
                 bot=bot.run_until_disconnected(),
