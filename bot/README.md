@@ -1,6 +1,6 @@
 # PatoBarato
 
-Bot que lee canales de chollos de Telegram con una cuenta de usuario, guarda las ofertas de Amazon España en Supabase y las publica en [@patobarato](https://t.me/patobarato) a través de un bot. Todos los enlaces publicados llevan el tag de afiliado (`https://www.amazon.es/dp/{ASIN}?tag=patobarato-21`).
+Bot que lee canales de chollos de Telegram con una cuenta de usuario, guarda las ofertas de Amazon España en Supabase (y, con las fuentes correspondientes, de otras tiendas como AliExpress o las de Awin) y las publica en [@patobarato](https://t.me/patobarato) a través de un bot. Los enlaces de Amazon llevan el tag de afiliado (`https://www.amazon.es/dp/{ASIN}?tag=patobarato-21`); en las demás tiendas se usa su enlace de afiliado cuando está configurado.
 
 ## Requisitos
 
@@ -135,10 +135,10 @@ Tiendas soportadas: AliExpress (`aliexpress`) y, vía Awin, PcComponentes (`pcco
 Las fuentes de API viven en la tabla `sources` (junto a los canales de Telegram). `identifier` es obligatorio y único por tipo: usa un nombre corto. `every_minutes` indica cada cuánto se ejecuta; `config` y `hashtags` son opcionales.
 
 ```sql
--- Ofertas calientes de AliExpress (config: query, category_ids, keywords, min_discount, min_price, max_price, max_results)
+-- Ofertas calientes de AliExpress; la fuente añade el hashtag aliexpress sola (config: query, category_ids, keywords, min_discount, min_price, max_price, max_results)
 insert into sources (type, identifier, country, active, config, every_minutes, hashtags)
 values ('aliexpress_api', 'aliexpress-hot', 'ES', true,
-        '{"min_discount": 30, "max_results": 20}', 60, '{aliexpress}');
+        '{"min_discount": 30, "max_results": 20}', 60, '{}');
 
 -- Cupones de Awin; "merchants" en config es opcional y tiene prioridad sobre AWIN_MERCHANTS
 insert into sources (type, identifier, country, active, config, every_minutes, hashtags)

@@ -20,7 +20,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const params = await searchParams
   const stores = await loadStores()
-  return homeMetadata({ q: first(params.q), tag: first(params.tag), stores: stores.map((s) => s.store) })
+  return homeMetadata({ q: first(params.q), tag: first(params.tag), stores })
 }
 
 /** Resolves to [] on any failure, including missing env vars. */

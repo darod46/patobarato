@@ -1,4 +1,5 @@
 import { storeNames } from '../lib/stores'
+import { joinNames } from '../lib/text'
 
 const FOCUS = 'rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
@@ -51,7 +52,7 @@ export function Footer({ year, stores = [] }: Props) {
             <p className="text-sm leading-relaxed text-muted">
               En calidad de Afiliado de Amazon, PatoBarato obtiene ingresos por las compras adscritas
               que cumplen los requisitos aplicables.
-              {others.length > 0 && ` También participamos en los programas de afiliados de ${others.join(', ')}.`}
+              {others.length > 0 && ` Algunos enlaces a ${joinNames(others)} pueden ser de afiliado.`}
             </p>
             <p className="text-sm text-muted">Los precios y la disponibilidad pueden cambiar.</p>
           </div>

@@ -18,6 +18,10 @@ describe('slugify', () => {
 })
 
 describe('productPath / parseProductSlug / tagPath', () => {
+  it('percent-encodes ids of non-slug stores', () => {
+    expect(productPath({ store: 'mediamarkt', asin: 'camiseta-ñ 1', title: 'x' })).toBe('/oferta/mediamarkt/camiseta-%C3%B1%201')
+  })
+
   it('builds the canonical product path', () => {
     expect(
       productPath({ store: 'amazon', asin: 'B0BPZVJJQJ', title: 'Cecotec Accesorios Freidora de aire' }),

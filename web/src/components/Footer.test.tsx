@@ -17,11 +17,11 @@ describe('Footer', () => {
     expect(screen.queryByText(/AliExpress/)).toBeNull()
     unmount()
     render(<Footer year={2026} stores={['aliexpress', 'amazon']} />)
-    expect(screen.getByText(/programas de afiliados de AliExpress\./)).toBeInTheDocument()
+    expect(screen.getByText(/Algunos enlaces a AliExpress pueden ser de afiliado\./)).toBeInTheDocument()
   })
 
   it('does not add the extra notice when the only store is Amazon', () => {
     render(<Footer year={2026} stores={['amazon']} />)
-    expect(screen.queryByText(/programas de afiliados de/)).toBeNull()
+    expect(screen.queryByText(/pueden ser de afiliado/)).toBeNull()
   })
 })

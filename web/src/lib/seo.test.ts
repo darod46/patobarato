@@ -163,11 +163,15 @@ describe('jsonLdScript', () => {
   })
 })
 
-describe('homeMetadata with coupons', () => {
-  it('mentions coupons and other stores only when present', () => {
+describe('homeMetadata with stores', () => {
+  const st = (store: string, deals: number, coupons: number) => ({ store, deals, coupons })
+  it('mentions coupons and other stores only when the data shows them', () => {
     expect(homeMetadata({}).title).toBeUndefined()
-    expect(homeMetadata({ stores: ['amazon'] }).title).toBe('PatoBarato · Chollos y cupones de Amazon')
-    expect(homeMetadata({ stores: ['aliexpress'] }).title).toBe('PatoBarato · Chollos y cupones de Amazon y otras tiendas')
+    expect(homeMetadata({ stores: [st('amazon', 5, 0)] }).title).toBe('PatoBarato · Chollos de Amazon')
+    expect(homeMetadata({ stores: [st('amazon', 5, 2)] }).title).toBe('PatoBarato · Chollos y cupones de Amazon')
+    expect(homeMetadata({ stores: [st('amazon', 5, 0), st('aliexpress', 2, 0)] }).title).toBe('PatoBarato · Chollos de Amazon y otras tiendas')
+    expect(homeMetadata({ stores: [st('aliexpress', 0, 3)] }).title).toBe('PatoBarato · Chollos y cupones de Amazon y otras tiendas')
+    expect(homeMetadata({ stores: [st('amazon', 5, 0)] }).description).not.toContain('cupones')
   })
 })
 

@@ -50,7 +50,7 @@ Notas:
 - `/tiendas/{tienda}`: chollos y cupones de una tienda (el slug es el id de `src/lib/stores.ts`; 404 si no existe). Cabecera con los recuentos reales, cupones vigentes de la tienda y listado con orden, hashtags y «cargar más». `noindex` si tiene menos de 3 chollos.
 - `?tienda={id}`: filtra por tienda el listado de la portada (y de `/buscar`) y lo marca con chips; en `/tiendas/{tienda}` se ignora porque la tienda viene de la ruta.
 - `/aviso-legal`, `/privacidad`, `/cookies`, `/afiliados`, `/contacto`: páginas estáticas. Los textos llevan marcadores `[TITULAR]`, `[NIF]`, `[DIRECCIÓN]`, `[EMAIL]`, `[CIUDAD]`, `[PLAZO]` que hay que sustituir.
-- `/oferta/{tienda}/{slug}-{id}`: ficha de producto. Redirige con 308 a la URL canónica si el slug no coincide; 404 si la oferta no existe.
+- `/oferta/{tienda}/{slug}-{id}`: ficha de producto (Amazon y AliExpress). Las tiendas de Awin usan `/oferta/{tienda}/{id}`, con el id codificado como porcentaje. Redirige con 308 a la URL canónica si el slug no coincide; 404 si la oferta no existe.
 - `/chollos/{hashtag}`: listado por hashtag. `noindex` si tiene menos de 3 ofertas.
 - `/buscar`: ruta interna a la que reescriben `/?q=`, `/?tag=` y `/?orden=`; siempre `noindex`. Cualquier URL con `?q=` lleva además `X-Robots-Tag: noindex`.
 - `/go/{ASIN}`: página de salto a Amazon (`public/go.html`, añade el tag de afiliado por script).
@@ -76,7 +76,7 @@ Solo iconos de [Lucide](https://lucide.dev) vía `lucide-react`; `src/icons.test
 
 ## Cupones
 
-Los cupones se insertan a mano en la tabla `coupons` desde el panel de Supabase (`store` con el id de `src/lib/stores.ts`, p. ej. `aliexpress`; `code`; `title` como «−6 € en 40 €»; `conditions`; `url` de afiliado opcional; `starts_at`, `expires_at`, `active`). La vista `web_coupons` solo devuelve los vigentes; la portada los recoge en ≤ 60 s y `/cupones` en ≤ 600 s.
+Los cupones también se sincronizan desde Awin (ver el README del bot); además se pueden insertar a mano en la tabla `coupons` desde el panel de Supabase (`store` con el id de `src/lib/stores.ts`, p. ej. `aliexpress`; `code`; `title` como «−6 € en 40 €»; `conditions`; `url` de afiliado opcional; `starts_at`, `expires_at`, `active`). La vista `web_coupons` solo devuelve los vigentes; la portada los recoge en ≤ 60 s y `/cupones` en ≤ 600 s.
 
 ## Calendario de eventos
 

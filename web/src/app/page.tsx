@@ -20,7 +20,7 @@ const loadStores = () => optional(() => fetchStores(getSupabase()))
 
 export async function generateMetadata(): Promise<Metadata> {
   const stores = await loadStores()
-  return homeMetadata({ stores: (stores ?? []).map((s) => s.store) })
+  return homeMetadata({ stores: stores ?? [] })
 }
 
 export default async function HomePage() {

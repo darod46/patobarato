@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { discountPercent, formatPrice } from './format'
 import { storeInfo } from './stores'
+import type { StoreStats } from './stores-data'
 import type { Deal } from './types'
 import { SITE_URL, parseTagParam, productPath, tagPath } from './urls'
 
@@ -118,18 +119,20 @@ export function hashtagMetadata(tag: string, count: number): Metadata {
 
 /**
  * Home metadata. For the v1 query links, `?tag=` is canonical on its hashtag page and `?q=` is never
- * indexed. With `stores` (ids of stores with deals or coupons) the title mentions coupons, and
- * "otras tiendas" only when one of them is not Amazon — never claim what the data does not show.
+ * indexed. With `stores` (those with deals or coupons) the title mentions coupons only if some store
+ * has them, and "otras tiendas" only when a non-Amazon store has data — never claim what the data
+ * does not show. Without stores the layout's default title stays.
  */
-export function homeMetadata(params: { q?: string; tag?: string; stores?: string[] }): Metadata {
+export function homeMetadata(params: { q?: string; tag?: string; stores?: StoreStats[] }): Metadata {
   const tag = params.tag ? parseTagParam(params.tag) : null
   const stores = params.stores ?? []
-  const others = stores.some((s) => s !== 'amazon')
+  const coupons = stores.some((s) => s.coupons > 0)
+  const others = stores.some((s) => s.store !== 'amazon' && (s.deals > 0 || s.coupons > 0))
   const title = stores.length
-    ? `PatoBarato · Chollos y cupones de Amazon${others ? ' y otras tiendas' : ''}`
+    ? `PatoBarato · Chollos${coupons ? ' y cupones' : ''} de Amazon${others ? ' y otras tiendas' : ''}`
     : undefined
   const description = stores.length
-    ? `Los mejores chollos de Amazon y cupones${others ? ' de otras tiendas' : ''}, seleccionados cada día por PatoBarato.`
+    ? `Los mejores chollos de Amazon${coupons ? ' y cupones' : ''}${others ? ' de otras tiendas' : ''}, seleccionados cada día por PatoBarato.`
     : undefined
   return {
     ...(title && { title, description, openGraph: { title, description, images: [OG_IMAGE] } }),

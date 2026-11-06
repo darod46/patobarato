@@ -212,7 +212,7 @@ it('mounts the v3 sections in order and omits coupons when there are none', () =
     />,
   )
   expect(document.querySelector('section#cupones')).not.toBeNull()
-  expect(screen.getByText(/programas de afiliados de AliExpress/)).toBeInTheDocument()
+  expect(screen.getByText(/Algunos enlaces a AliExpress pueden ser de afiliado/)).toBeInTheDocument()
 })
 
 it('shows the stores block and store chips only with two or more stores', async () => {

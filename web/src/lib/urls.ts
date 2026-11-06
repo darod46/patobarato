@@ -22,7 +22,7 @@ export function slugify(title: string): string {
 export function productPath(deal: Pick<Deal, 'store' | 'asin' | 'title'>): string {
   if (deal.store === 'amazon') return `/oferta/amazon/${slugify(deal.title)}-${deal.asin.toLowerCase()}`
   if (deal.store === 'aliexpress') return `/oferta/aliexpress/${slugify(deal.title)}-${deal.asin}`
-  return `/oferta/${deal.store}/${deal.asin}`
+  return `/oferta/${deal.store}/${encodeURIComponent(deal.asin)}`
 }
 
 export function parseProductSlug(store: string, param: string): { slug: string; id: string } | null {
