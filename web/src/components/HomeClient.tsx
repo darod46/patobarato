@@ -9,7 +9,7 @@ import type { Deal, HashtagCount } from '../lib/types'
 import { DealFeed } from './DealFeed'
 import { Footer } from './Footer'
 import { Header } from './Header'
-import { Hero } from './Hero'
+import { Hero, type HeroHighlights } from './Hero'
 import { SearchBox } from './SearchBox'
 import { TelegramBlock } from './TelegramBlock'
 
@@ -23,6 +23,8 @@ type Props = {
   fetchDeals?: DealsFetcher
   fetchHashtags?: () => Promise<HashtagCount[]>
   fetchLatestDeal?: () => Promise<Deal | null>
+  /** Facts for the hero badges; computed on the server from the first page. */
+  highlights?: HeroHighlights
 }
 
 // Bound lazily so the Supabase client (and its env vars) is only needed when actually fetching.
@@ -30,6 +32,7 @@ type Props = {
 const defaultFetchDeals: DealsFetcher = async (params) => api.fetchDeals(getSupabase(), params)
 const defaultFetchHashtags = async () => api.fetchHashtags(getSupabase())
 const defaultFetchLatestDeal = async () => api.fetchLatestDeal(getSupabase())
+const NO_HIGHLIGHTS: HeroHighlights = { topDiscountPct: null, topDiscountTitle: null, latestCouponTitle: null, hasLowest: false }
 
 export function HomeClient({
   now,
@@ -38,6 +41,7 @@ export function HomeClient({
   fetchDeals = defaultFetchDeals,
   fetchHashtags = defaultFetchHashtags,
   fetchLatestDeal = defaultFetchLatestDeal,
+  highlights = NO_HIGHLIGHTS,
 }: Props) {
   // Chips are links to /chollos/{tag}; a legacy `/?tag=` still filters here and marks its chip.
   const { q, tag, sort, setQ, setSort, clear } = useUrlFilters()
@@ -47,7 +51,7 @@ export function HomeClient({
     <div className="min-h-screen bg-surface font-sans text-carbon">
       <Header search={<SearchBox value={q} onChange={setQ} />} />
       <main className="pt-28 md:pt-16">
-        <Hero />
+        <Hero highlights={highlights} />
         <section id="chollos" className="mx-auto max-w-[1280px] scroll-mt-32 px-4 pt-6 pb-12 md:px-8 md:pt-12">
           <h2 className="mb-3 text-2xl font-bold md:mb-6 md:text-3xl">Chollos</h2>
           <DealFeed
