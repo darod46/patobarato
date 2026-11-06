@@ -181,12 +181,14 @@ class Pipeline:
             return offer.affiliate_url
         try:
             return await store.affiliate_url(offer.canonical_url, offer.asin)
-        except Exception:
+        except Exception as exc:
+            # No traceback: HTTP errors may carry a signed request URL.
             logger.warning(
-                "affiliate=missing store=%s product=%s; publishing the canonical link",
+                "affiliate=missing store=%s product=%s (%s: %s); publishing the canonical link",
                 offer.store,
                 offer.asin,
-                exc_info=True,
+                type(exc).__name__,
+                exc,
             )
             return offer.canonical_url
 

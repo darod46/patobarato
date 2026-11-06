@@ -35,7 +35,7 @@ def build_registry(
     from patobarato.stores.aliexpress import AliExpressStore
     from patobarato.stores.aliexpress_client import AliExpressClient
     from patobarato.stores.amazon import AmazonStore
-    from patobarato.stores.awin import awin_store
+    from patobarato.stores.awin import AWIN_HOSTS, AWIN_NAMES, awin_store
 
     stores: list[Store] = [AmazonStore(settings.affiliate_tag, amazon_http)]
     if (
@@ -60,6 +60,9 @@ def build_registry(
             "Awin links will not be tracked: missing AWIN_PUBLISHER_ID"
         )
     for store_id, merchant_id in settings.awin_merchants.items():
+        if store_id not in AWIN_NAMES or store_id not in AWIN_HOSTS:
+            logger.warning("Store %s skipped: unknown Awin merchant", store_id)
+            continue
         stores.append(awin_store(store_id, merchant_id, settings.awin_publisher_id, http))
     registry = StoreRegistry(stores)
     logger.info("Active stores: %s", ", ".join(registry.ids))

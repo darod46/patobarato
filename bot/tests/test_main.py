@@ -206,3 +206,17 @@ async def test_run_bot_login_failure_is_reported_in_spanish(fake_clients, capsys
     assert "Traceback" not in err
     assert fake_clients["reader"].disconnected
     assert fake_clients["bot"].disconnected
+
+
+@pytest.mark.parametrize("value", ["", "{bad"])
+def test_invalid_awin_merchants_gives_friendly_error(monkeypatch, capsys, value):
+    for name in REQUIRED:
+        monkeypatch.setenv(name, "1")
+    monkeypatch.setenv("AWIN_MERCHANTS", value)
+
+    assert main(["run"]) == EXIT_CONFIG_ERROR
+
+    err = capsys.readouterr().err
+    assert "Error de configuración" in err
+    assert "awin_merchants" in err.lower()
+    assert "Traceback" not in err

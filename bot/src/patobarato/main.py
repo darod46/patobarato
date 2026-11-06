@@ -10,6 +10,7 @@ from typing import Any
 
 import httpx
 from pydantic import ValidationError
+from pydantic_settings import SettingsError
 from supabase import create_client
 from telethon import TelegramClient
 
@@ -192,6 +193,13 @@ def main(argv: list[str] | None = None) -> int:
         settings = get_settings()
     except ValidationError as e:
         print(_config_error_message(e), file=sys.stderr)
+        return EXIT_CONFIG_ERROR
+    except SettingsError as e:
+        print(
+            "Error de configuración (revisa el fichero .env o las variables de entorno).\n"
+            f"No válidos: {e}",
+            file=sys.stderr,
+        )
         return EXIT_CONFIG_ERROR
 
     if args.command == "login":

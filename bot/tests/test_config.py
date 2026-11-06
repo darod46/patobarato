@@ -72,3 +72,13 @@ def test_awin_merchants_parsed_from_json_env(monkeypatch):
         monkeypatch.setenv(key, value)
     monkeypatch.setenv("AWIN_MERCHANTS", '{"pccomponentes": 1234}')
     assert Settings(_env_file=None).awin_merchants == {"pccomponentes": 1234}
+
+
+def test_invalid_awin_merchants_json_raises_settings_error(monkeypatch):
+    from pydantic_settings import SettingsError
+
+    for key, value in REQUIRED_ENV.items():
+        monkeypatch.setenv(key, value)
+    monkeypatch.setenv("AWIN_MERCHANTS", "{bad")
+    with pytest.raises(SettingsError, match="awin_merchants"):
+        Settings(_env_file=None)

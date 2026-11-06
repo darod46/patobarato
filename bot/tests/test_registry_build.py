@@ -2,8 +2,15 @@ import logging
 from types import SimpleNamespace
 
 import httpx
+import pytest
 
 from patobarato.stores.registry import build_registry
+
+
+@pytest.fixture
+async def http():
+    async with httpx.AsyncClient() as client:
+        yield client
 
 
 def _settings(**kw):
@@ -19,9 +26,9 @@ def _settings(**kw):
     return SimpleNamespace(**base)
 
 
-def test_without_aliexpress_credentials_it_is_not_registered(caplog):
+def test_without_aliexpress_credentials_it_is_not_registered(caplog, http):
     with caplog.at_level(logging.INFO, logger="patobarato.stores"):
-        registry = build_registry(_settings(), httpx.AsyncClient(), httpx.AsyncClient())
+        registry = build_registry(_settings(), http, http)
     assert "aliexpress" not in registry.ids
     assert registry.ids == ["amazon", "pccomponentes", "mediamarkt"]
     assert any(
@@ -29,16 +36,16 @@ def test_without_aliexpress_credentials_it_is_not_registered(caplog):
     )
 
 
-def test_partial_aliexpress_credentials_not_enough():
+def test_partial_aliexpress_credentials_not_enough(http):
     registry = build_registry(
         _settings(aliexpress_app_key="k", aliexpress_app_secret="s"),
-        httpx.AsyncClient(),
-        httpx.AsyncClient(),
+        http,
+        http,
     )
     assert "aliexpress" not in registry.ids
 
 
-def test_full_aliexpress_credentials_register_it_after_amazon(caplog):
+def test_full_aliexpress_credentials_register_it_after_amazon(caplog, http):
     with caplog.at_level(logging.INFO):
         registry = build_registry(
             _settings(
@@ -46,8 +53,20 @@ def test_full_aliexpress_credentials_register_it_after_amazon(caplog):
                 aliexpress_app_secret="SECRETVALUE",
                 aliexpress_tracking_id="trk",
             ),
-            httpx.AsyncClient(),
-            httpx.AsyncClient(),
+            http,
+            http,
         )
     assert registry.ids[:2] == ["amazon", "aliexpress"]
     assert "SECRETVALUE" not in caplog.text
+
+
+def test_unknown_awin_merchant_is_skipped_with_warning(caplog, http):
+    with caplog.at_level(logging.WARNING, logger="patobarato.stores"):
+        registry = build_registry(
+            _settings(awin_merchants={"pccomponents": 1, "mediamarkt": 77}), http, http
+        )
+    assert registry.ids == ["amazon", "mediamarkt"]
+    assert any(
+        "Store pccomponents skipped: unknown Awin merchant" in r.getMessage()
+        for r in caplog.records
+    )
