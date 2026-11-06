@@ -44,7 +44,7 @@ it('renders header, hero, feed, telegram block and footer', async () => {
     'https://t.me/patobarato',
   )
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/chollos/)
-  expect(screen.getByRole('heading', { name: 'Chollos' })).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Chollos de hoy' })).toBeInTheDocument()
   expect(screen.getByText('© 2026 PatoBarato')).toBeInTheDocument()
   await waitFor(() => expect(screen.getAllByText(/Auriculares Sony/).length).toBeGreaterThan(1))
   expect(
@@ -180,4 +180,37 @@ it('renders crawlable link chips and marks a legacy ?tag= as current', async () 
   } finally {
     history.replaceState(null, '', '/')
   }
+})
+
+it('mounts the v3 sections in order and omits coupons when there are none', () => {
+  const { container, unmount } = render(
+    <HomeClient
+      now="2026-11-06T10:00:00Z"
+      fetchDeals={vi.fn().mockResolvedValue({ deals: [], hasMore: false })}
+      fetchHashtags={vi.fn().mockResolvedValue([])}
+      fetchLatestDeal={vi.fn().mockResolvedValue(null)}
+      coupons={[]}
+      event={{ id: 'a', name: '11.11 AliExpress', date: '2026-11-11', stores: ['aliexpress'] }}
+      upcoming={[{ id: 'a', name: '11.11 AliExpress', date: '2026-11-11', stores: ['aliexpress'] }]}
+      latestPublishedAt="2026-11-06T09:48:00Z"
+    />,
+  )
+  const ids = [...container.querySelectorAll('section[id]')].map((s) => s.id)
+  expect(ids).toEqual(['chollos', 'como-funciona', 'eventos', 'sobre', 'telegram'])
+  expect(screen.getByText(/11\.11 AliExpress en 5 días/)).toBeInTheDocument()
+  unmount()
+  render(
+    <HomeClient
+      now="2026-11-06T10:00:00Z"
+      fetchDeals={vi.fn().mockResolvedValue({ deals: [], hasMore: false })}
+      fetchHashtags={vi.fn().mockResolvedValue([])}
+      fetchLatestDeal={vi.fn().mockResolvedValue(null)}
+      coupons={[{ id: 1, store: 'aliexpress', code: 'PATO6', title: '−6 € en 40 €', conditions: null, url: null, startsAt: '2026-11-01T00:00:00Z', expiresAt: null }]}
+      couponStores={['aliexpress']}
+      event={null}
+      upcoming={[]}
+    />,
+  )
+  expect(document.querySelector('section#cupones')).not.toBeNull()
+  expect(screen.getByText(/programas de afiliados de AliExpress/)).toBeInTheDocument()
 })
