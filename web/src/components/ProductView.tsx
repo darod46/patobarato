@@ -3,7 +3,7 @@ import { discountPercent, formatPrice, timeAgo } from '../lib/format'
 import { storeInfo } from '../lib/stores'
 import type { Deal } from '../lib/types'
 import { tagPath } from '../lib/urls'
-import { AmazonButton } from './AmazonButton'
+import { BuyButton } from './BuyButton'
 import { DealCard } from './DealCard'
 
 const PLACEHOLDER = '/pato-placeholder.svg'
@@ -11,6 +11,8 @@ const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visi
 
 export const AFFILIATE_DISCLAIMER =
   'En calidad de Afiliado de Amazon, PatoBarato obtiene ingresos por las compras adscritas que cumplen los requisitos aplicables.'
+
+const GENERIC_DISCLAIMER = 'PatoBarato puede obtener una comisión por las compras realizadas a través de este enlace.'
 
 type Props = {
   deal: Deal
@@ -112,9 +114,9 @@ export function ProductView({ deal, related, now }: Props) {
 
           {/* Mobile: fixed bottom bar (above the home indicator); desktop: inline. */}
           <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur md:static md:z-auto md:w-full md:max-w-sm md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
-            <AmazonButton url={deal.affiliateUrl} store={deal.store} className="w-full" />
+            <BuyButton url={deal.affiliateUrl} store={deal.store} className="w-full" />
           </div>
-          <p className="max-w-sm text-xs text-muted">{AFFILIATE_DISCLAIMER}</p>
+          <p className="max-w-sm text-xs text-muted">{deal.store === 'amazon' ? AFFILIATE_DISCLAIMER : GENERIC_DISCLAIMER}</p>
 
           {deal.hashtags.length > 0 && (
             <ul aria-label="Hashtags" className="flex flex-wrap justify-center gap-2 md:justify-start">

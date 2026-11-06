@@ -39,9 +39,11 @@ export default async function ProductPage({ params }: Props) {
   const deal = await loadDeal(store, slug)
   if (!deal) notFound()
 
-  // Exact slug and lowercase id; anything else (old title, uppercase ASIN) goes to the canonical URL.
+  // Amazon/AliExpress carry a title slug: anything else (old title, uppercase ASIN) goes to the canonical URL.
+  // Other stores use the id as the whole param, so there is nothing to redirect.
   const canonical = productPath(deal)
-  if (`/oferta/${store}/${slug}` !== canonical) permanentRedirect(canonical)
+  const hasSlug = store === 'amazon' || store === 'aliexpress'
+  if (hasSlug && `/oferta/${store}/${slug}` !== canonical) permanentRedirect(canonical)
 
   // Related deals are optional: a failed query must not turn the product page into a 500.
   const related = await fetchRelatedDeals(getSupabase(), deal, 10).catch(() => [])
@@ -54,7 +56,7 @@ export default async function ProductPage({ params }: Props) {
   ]
 
   return (
-    // Bottom padding on mobile keeps the footer clear of the fixed "Ver en Amazon" bar.
+    // Bottom padding on mobile keeps the footer clear of the fixed buy bar.
     <div className="min-h-screen bg-surface pb-24 font-sans text-ink md:pb-0">
       <script
         type="application/ld+json"

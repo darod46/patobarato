@@ -67,6 +67,13 @@ describe('ProductView', () => {
     )
   })
 
+  it('uses the store CTA, direct link and no Amazon disclaimer for other stores', () => {
+    const pc: Deal = { ...deal, store: 'pccomponentes', affiliateUrl: 'https://www.pccomponentes.com/x' }
+    const { container } = render(<ProductView deal={pc} related={[]} now={now} />)
+    expect(screen.getByRole('link', { name: 'Ir a PcComponentes' })).toHaveAttribute('href', pc.affiliateUrl)
+    expect(container.textContent).not.toContain('Afiliado de Amazon')
+  })
+
   it('renders a breadcrumb to home and the first hashtag', () => {
     render(<ProductView deal={deal} related={related} now={now} />)
     const nav = screen.getByRole('navigation', { name: 'Ruta de navegación' })

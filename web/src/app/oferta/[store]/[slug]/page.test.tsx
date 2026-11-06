@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
+import { fetchDealByProduct } from '../../../../lib/deals'
 import type { Deal } from '../../../../lib/types'
 import { productPath } from '../../../../lib/urls'
 import ProductPage from './page'
@@ -38,5 +39,25 @@ describe('ProductPage', () => {
     render(page)
     expect(screen.getByRole('heading', { level: 1, name: deal.title })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: /Más chollos/ })).not.toBeInTheDocument()
+  })
+
+  it('resolves a store without slug on its id and never redirects', async () => {
+    const pc: Deal = { ...deal, store: 'pccomponentes', asin: 'ninja-af300-freidora-de-aire', affiliateUrl: 'https://www.pccomponentes.com/x' }
+    vi.mocked(fetchDealByProduct).mockResolvedValueOnce(pc)
+    const page = await ProductPage({
+      params: Promise.resolve({ store: 'pccomponentes', slug: 'ninja-af300-freidora-de-aire' }),
+    })
+    render(page)
+    expect(fetchDealByProduct).toHaveBeenLastCalledWith({}, 'pccomponentes', 'ninja-af300-freidora-de-aire')
+    expect(screen.getByRole('link', { name: 'Ir a PcComponentes' })).toHaveAttribute('href', pc.affiliateUrl)
+  })
+
+  it('redirects 308 to the canonical URL when the AliExpress slug differs', async () => {
+    const ali: Deal = { ...deal, store: 'aliexpress', asin: '1005006123456789', title: 'Auriculares Bluetooth' }
+    vi.mocked(fetchDealByProduct).mockResolvedValueOnce(ali)
+    const error = await ProductPage({
+      params: Promise.resolve({ store: 'aliexpress', slug: 'x-1005006123456789' }),
+    }).catch((e: unknown) => e)
+    expect((error as { digest?: string }).digest).toBe(`NEXT_REDIRECT;replace;${productPath(ali)};308;`)
   })
 })
