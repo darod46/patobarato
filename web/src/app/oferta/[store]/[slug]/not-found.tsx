@@ -29,7 +29,7 @@ export default async function ProductNotFound() {
   return (
     <div className="min-h-screen bg-surface font-sans text-ink">
       <Header search={<SearchForm />} />
-      <main className="mx-auto max-w-[1280px] px-4 pt-32 pb-16 md:px-8 md:pt-24">
+      <main className="mx-auto max-w-[1200px] px-4 pt-32 pb-16 md:px-8 md:pt-24">
         <div className="flex flex-col items-center gap-4 py-8 text-center">
           <img src="/pato-placeholder.svg" alt="" width={120} height={120} className="h-28 w-28" />
           <h1 className="text-2xl font-extrabold md:text-3xl">Esta oferta ya no está disponible</h1>

@@ -25,7 +25,7 @@ export function TelegramBlock({
 
   return (
     <section id="telegram" className="scroll-mt-32 bg-ink py-16 text-white">
-      <div className="mx-auto grid max-w-[1280px] items-center gap-10 px-4 md:px-8 lg:grid-cols-2">
+      <div className="mx-auto grid max-w-[1200px] items-center gap-10 px-4 md:px-8 lg:grid-cols-2">
         <div className="flex flex-col items-start gap-6">
           <h2 className="font-display text-3xl font-bold leading-tight tracking-[-0.02em] md:text-[34px]">
             Recibe los chollos al momento en Telegram

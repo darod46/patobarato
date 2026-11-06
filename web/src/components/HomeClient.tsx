@@ -71,7 +71,7 @@ export function HomeClient({
   return (
     <div className="min-h-screen bg-white font-sans text-ink">
       <Header search={<SearchBox value={q} onChange={setQ} />} />
-      <main className="pt-28 md:pt-[72px]">
+      <main className="pt-[118px] md:pt-[72px]">
         <AnnouncementBar event={event} latestPublishedAt={latestPublishedAt} now={renderTime} />
         <Hero highlights={highlights} />
         <section id="chollos" className="mx-auto max-w-[1200px] scroll-mt-32 px-4 pt-8 pb-12 md:px-8 md:pt-12">
