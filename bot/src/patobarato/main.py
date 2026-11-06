@@ -110,11 +110,9 @@ def build_runners(
     ali_store = registry.get("aliexpress")
     if isinstance(ali_store, AliExpressStore):
         runners.append(AliExpressSource(ali_store.client, repo, settings, clock))
-    if (
-        settings.awin_publisher_id
-        and settings.awin_api_token
-        and any(mid is not None for mid in settings.awin_merchants.values())
-    ):
+    # Merchant ids may come from settings or from each source row's config.merchants;
+    # the source itself warns and does nothing when it ends up with none.
+    if settings.awin_publisher_id and settings.awin_api_token:
         client = AwinClient(
             http or httpx.AsyncClient(timeout=settings.http_timeout_seconds),
             settings.awin_publisher_id,

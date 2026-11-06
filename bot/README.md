@@ -126,7 +126,7 @@ Además de los canales de Telegram, el bot puede alimentar la web con ofertas y 
 | `ALIEXPRESS_TRACKING_ID` | Tracking ID de afiliado |
 | `AWIN_PUBLISHER_ID` | Tu publisher id de Awin (compartido por todas las tiendas Awin) |
 | `AWIN_API_TOKEN` | Token de la API de Awin (secreto; el bot nunca lo escribe en el log) |
-| `AWIN_MERCHANTS` | JSON `{"tienda": merchant_id}`, p. ej. `{"pccomponentes": 1234, "mediamarkt": 5678}`. Por defecto las tres tiendas sin id |
+| `AWIN_MERCHANTS` | JSON `{"tienda": merchant_id}`, p. ej. `{"pccomponentes": 1234, "mediamarkt": 5678}`. Por defecto las tres tiendas sin id. Opcional si cada fuente lleva sus `merchants` en `config` |
 
 Tiendas soportadas: AliExpress (`aliexpress`) y, vía Awin, PcComponentes (`pccomponentes`), MediaMarkt (`mediamarkt`) y El Corte Inglés (`elcorteingles`). El `merchant_id` de cada anunciante se ve en el panel de Awin; solo se piden cupones de los anunciantes a los que te has unido (`membership=joined`) y de España.
 
@@ -135,7 +135,7 @@ Tiendas soportadas: AliExpress (`aliexpress`) y, vía Awin, PcComponentes (`pcco
 Las fuentes de API viven en la tabla `sources` (junto a los canales de Telegram). `identifier` es obligatorio y único por tipo: usa un nombre corto. `every_minutes` indica cada cuánto se ejecuta; `config` y `hashtags` son opcionales.
 
 ```sql
--- Ofertas calientes de AliExpress (config: category_ids, keywords, min_discount, min_price, max_price, max_results)
+-- Ofertas calientes de AliExpress (config: query, category_ids, keywords, min_discount, min_price, max_price, max_results)
 insert into sources (type, identifier, country, active, config, every_minutes, hashtags)
 values ('aliexpress_api', 'aliexpress-hot', 'ES', true,
         '{"min_discount": 30, "max_results": 20}', 60, '{aliexpress}');
@@ -152,7 +152,7 @@ Los cupones de Awin se guardan en la tabla `coupons`; cuando un cupón deja de a
 
 ### Sin credenciales
 
-Si faltan las credenciales de una tienda (por ejemplo, `AWIN_PUBLISHER_ID`/`AWIN_API_TOKEN` o ningún merchant id en `AWIN_MERCHANTS`), esa tienda se omite con un aviso en el log y el bot sigue funcionando con el resto. Una fila de `sources` de un tipo sin credenciales simplemente no se ejecuta. Si una fuente `awin_promotions` no tiene ningún merchant id (ni en `config` ni en `AWIN_MERCHANTS`), registra un aviso y no hace nada.
+El ejecutor de cupones de Awin solo existe si están `AWIN_PUBLISHER_ID` y `AWIN_API_TOKEN`; los merchant ids salen de `AWIN_MERCHANTS` o, por fuente, de `config.merchants` (que tiene prioridad). Si faltan las credenciales de una tienda, esa tienda se omite con un aviso en el log y el bot sigue funcionando con el resto. Una fila de `sources` de un tipo sin credenciales simplemente no se ejecuta. Si una fuente `awin_promotions` acaba sin ningún merchant id (ni en `config` ni en `AWIN_MERCHANTS`), registra un aviso y no hace nada.
 
 ## 7. Amazon Afiliados
 

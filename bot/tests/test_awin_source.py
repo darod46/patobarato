@@ -8,7 +8,7 @@ import pytest
 
 from patobarato.config import Settings
 from patobarato.models import ApiSource, CouponUpsert
-from patobarato.sources.awin_source import AwinClient, AwinPromotion, AwinPromotionsSource
+from patobarato.sources.awin_source import MAX_PAGES, AwinClient, AwinPromotion, AwinPromotionsSource
 from patobarato.storage.repository import InMemoryRepository
 
 FIXTURE = json.loads((Path(__file__).parent / "fixtures" / "awin_promotions.json").read_text())
@@ -233,3 +233,26 @@ async def test_logs_never_contain_token_or_tracking_url(caplog):
             _FakeClient(await _promotions_from_fixture()), repo, _settings(awin_merchants=MERCHANTS)
         ).run(_source())
     assert "awin1.com" not in caplog.text and "secret-token" not in caplog.text
+
+
+async def test_client_aborts_when_pages_never_end():
+    calls = []
+
+    def handler(request):
+        calls.append(1)
+        data = [{"promotionId": len(calls) * 1000 + i, "advertiser": {"id": 1}} for i in range(200)]
+        return httpx.Response(200, json={"data": data})
+
+    with pytest.raises(RuntimeError):
+        await _client(handler).promotions([1])
+    assert len(calls) == MAX_PAGES
+
+
+async def test_client_date_only_is_utc_aware():
+    def handler(request):
+        raw = {"promotionId": 1, "advertiser": {"id": 1}, "startDate": "2026-11-01", "endDate": "2026-11-30"}
+        return httpx.Response(200, json={"data": [raw]})
+
+    [promo] = await _client(handler).promotions([1])
+    assert promo.start == datetime(2026, 11, 1, tzinfo=UTC)
+    assert promo.end == datetime(2026, 11, 30, tzinfo=UTC)

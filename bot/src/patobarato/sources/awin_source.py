@@ -2,7 +2,7 @@
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -15,6 +15,7 @@ logger = logging.getLogger("patobarato.awin_source")
 
 API_BASE = "https://api.awin.com"
 PAGE_SIZE = 200
+MAX_PAGES = 50  # safety bound against an API that never returns a short page
 REGION = "ES"
 
 
@@ -35,9 +36,11 @@ def _date(value: Any) -> datetime | None:
     if not value:
         return None
     try:
-        return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
     except ValueError:
         return None
+    # Naive values (e.g. date-only strings) are taken as UTC.
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
 
 
 def _promotion(raw: dict[str, Any]) -> AwinPromotion:
@@ -67,7 +70,7 @@ class AwinClient:
         url = f"{API_BASE}/publishers/{self._publisher_id}/promotions/"
         result: list[AwinPromotion] = []
         page = 1
-        while True:
+        while page <= MAX_PAGES:
             response = await self._http.post(
                 url,
                 headers={"Authorization": f"Bearer {self._token}"},
@@ -87,6 +90,7 @@ class AwinClient:
             if len(items) < PAGE_SIZE:
                 return result
             page += 1
+        raise RuntimeError(f"Awin promotions: more than {MAX_PAGES} pages; aborting")
 
 
 class AwinPromotionsSource:
