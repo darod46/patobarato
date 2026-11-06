@@ -1,6 +1,7 @@
 'use client'
 
-import type { SiteEvent } from '../content/events'
+import { EVENTS, type SiteEvent } from '../content/events'
+import { ANNOUNCE_WINDOW_DAYS, nextEvent, upcomingEvents } from '../lib/events'
 import { useClock } from '../hooks/useClock'
 import { useUrlFilters } from '../hooks/useUrlFilters'
 import type { DealsFetcher, InitialDeals } from '../hooks/useDeals'
@@ -35,7 +36,7 @@ type Props = {
   coupons?: Coupon[]
   /** Store ids with valid coupons (for the title and the affiliate notice). */
   couponStores?: string[]
-  /** Next shopping event and the following ones, from the static calendar. */
+  /** Event for the announcement bar (within the window) and the calendar list; derived from the static calendar when omitted. */
   event?: SiteEvent | null
   upcoming?: SiteEvent[]
   /** Newest publication date for the announcement bar; null when unknown. */
@@ -59,20 +60,22 @@ export function HomeClient({
   highlights = NO_HIGHLIGHTS,
   coupons = [],
   couponStores = [],
-  event = null,
-  upcoming = [],
+  event,
+  upcoming,
   latestPublishedAt = null,
 }: Props) {
   // Chips are links to /chollos/{tag}; a legacy `/?tag=` still filters here and marks its chip.
   const { q, tag, sort, setQ, setSort, clear } = useUrlFilters()
   const clock = useClock(now)
   const renderTime = new Date(now)
+  const barEvent = event === undefined ? nextEvent(renderTime, EVENTS, ANNOUNCE_WINDOW_DAYS) : event
+  const calendar = upcoming ?? upcomingEvents(renderTime, 4)
 
   return (
     <div className="min-h-screen bg-white font-sans text-ink">
       <Header search={<SearchBox value={q} onChange={setQ} />} />
       <main className="pt-[118px] md:pt-[72px]">
-        <AnnouncementBar event={event} latestPublishedAt={latestPublishedAt} now={renderTime} />
+        <AnnouncementBar event={barEvent} latestPublishedAt={latestPublishedAt} now={renderTime} />
         <Hero highlights={highlights} />
         <section id="chollos" className="mx-auto max-w-[1200px] scroll-mt-32 px-4 pt-8 pb-12 md:px-8 md:pt-12">
           <h2 className="font-display text-2xl font-bold tracking-[-0.02em] md:text-[32px]">Chollos de hoy</h2>
@@ -92,7 +95,7 @@ export function HomeClient({
         </section>
         <CouponsBlock coupons={coupons} />
         <HowItWorks />
-        <EventsBlock next={event} upcoming={upcoming} now={renderTime} />
+        <EventsBlock next={calendar[0] ?? null} upcoming={calendar} now={renderTime} />
         <AboutBlock />
         <TelegramBlock fetchLatestDeal={fetchLatestDeal} />
       </main>

@@ -8,7 +8,7 @@ type Props = {
 }
 
 const base =
-  'inline-flex min-h-10 shrink-0 items-center whitespace-nowrap rounded-full px-4 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+  'inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full px-4 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 const on = 'bg-ink font-semibold text-white'
 const off = 'bg-surface font-medium text-ink hover:bg-line'
 

@@ -37,7 +37,7 @@ export function TelegramPreview({ deal }: { deal: Deal }) {
           </a>
         </p>
         {deal.hashtags.length > 0 && (
-          <p data-line className="mt-2 text-accent-ink">
+          <p data-line className="mt-2 text-accent">
             {deal.hashtags.map((t) => `#${t}`).join(' ')}
           </p>
         )}

@@ -22,3 +22,10 @@ describe('AnnouncementBar', () => {
     expect(container).toBeEmptyDOMElement()
   })
 })
+
+describe('AnnouncementBar approximate dates', () => {
+  it('names the month instead of counting days', () => {
+    render(<AnnouncementBar event={{ ...event, date: '2027-07-01', approximate: true }} latestPublishedAt={null} now={now} />)
+    expect(screen.getByText('11.11 AliExpress en julio')).toBeInTheDocument()
+  })
+})

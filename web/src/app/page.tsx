@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { HomeClient } from '../components/HomeClient'
 import { fetchCoupons } from '../lib/coupons'
 import { fetchDeals, fetchHashtags, fetchLatestDeal } from '../lib/deals'
-import { nextEvent, upcomingEvents } from '../lib/events'
+import { ANNOUNCE_WINDOW_DAYS, nextEvent, upcomingEvents } from '../lib/events'
 import { heroHighlights } from '../lib/highlights'
 import { homeMetadata, jsonLdScript, siteJsonLd } from '../lib/seo'
 import { getSupabase } from '../lib/supabase'
@@ -41,7 +41,7 @@ export default async function HomePage() {
         highlights={heroHighlights(page?.deals ?? [], couponList)}
         coupons={couponList}
         couponStores={couponList.map((c) => c.store)}
-        event={nextEvent(now)}
+        event={nextEvent(now, undefined, ANNOUNCE_WINDOW_DAYS)}
         upcoming={upcomingEvents(now, 4)}
         latestPublishedAt={latest?.publishedAt ?? null}
       />

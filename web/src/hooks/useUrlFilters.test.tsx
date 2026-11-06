@@ -107,3 +107,13 @@ describe('useUrlFilters sort', () => {
     expect(result.current.sort).toBe('recientes')
   })
 })
+
+describe('useUrlFilters clear', () => {
+  it('also removes the order', () => {
+    history.replaceState(null, '', '/?q=lego&orden=minimo')
+    const { result } = renderHook(() => useUrlFilters())
+    act(() => result.current.clear())
+    expect(location.search).toBe('')
+    expect(result.current.sort).toBe('recientes')
+  })
+})

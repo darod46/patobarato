@@ -1,7 +1,7 @@
 const STEPS = [
   {
     title: '1 · Vigilamos',
-    text: 'Seguimos en tiempo real los canales de chollos de Telegram y las bajadas de precio de las tiendas.',
+    text: 'Seguimos los canales de chollos de Telegram y leemos cada oferta en cuanto se publica.',
     icon: (
       <>
         <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
@@ -10,8 +10,8 @@ const STEPS = [
     ),
   },
   {
-    title: '2 · Comprobamos',
-    text: 'Verificamos el precio actual, el anterior, el historial y si hay cupón aplicable antes de publicar.',
+    title: '2 · Filtramos',
+    text: 'Extraemos precio, precio anterior y cupón, y descartamos duplicados y ofertas caducadas. «Mínimo histórico» solo aparece cuando hay publicaciones anteriores con las que comparar.',
     icon: <path d="M20 6 9 17l-5-5" />,
   },
   {

@@ -42,3 +42,14 @@ describe('events', () => {
     expect(upcomingEvents(new Date('2030-01-01T00:00:00Z'), 4, EVENTS)).toEqual([])
   })
 })
+
+describe('events: window and approximate dates', () => {
+  const jan = new Date('2027-01-08T10:00:00Z')
+  it('nextEvent ignores events beyond the window', () => {
+    expect(nextEvent(jan, EVENTS, 45)).toBeNull()
+    expect(nextEvent(now, EVENTS, 45)?.id).toBe('aliexpress-1111')
+  })
+  it('upcomingEvents still lists approximate events', () => {
+    expect(upcomingEvents(jan, 4).map((e) => e.id)).toEqual(['prime-day'])
+  })
+})

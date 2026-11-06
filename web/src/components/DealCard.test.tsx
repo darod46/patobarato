@@ -48,6 +48,7 @@ describe('DealCard', () => {
     expect(screen.getByText(formatPrice(29.99), { normalizer: (t) => t })).toBeInTheDocument()
     const prev = screen.getByText(formatPrice(49.99), { normalizer: (t) => t })
     expect(prev.tagName).toBe('S')
+    expect(prev).toHaveClass('text-muted')
     expect(screen.getByText('-35%')).toBeInTheDocument()
     expect(screen.getByText('Cupón 5 €')).toBeInTheDocument()
     expect(screen.getByTestId('coupon-chip')).toHaveTextContent('Cupón')

@@ -20,7 +20,7 @@ export function SortSelector({ value, onChange }: Props) {
             type="button"
             aria-pressed={active}
             onClick={() => onChange(sort)}
-            className={`min-h-10 whitespace-nowrap rounded-[9px] px-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+            className={`min-h-11 whitespace-nowrap rounded-[9px] px-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
               active ? 'bg-white font-semibold text-ink shadow-[0_1px_2px_rgba(20,22,26,.08)] max-md:border max-md:border-line' : 'font-medium text-muted hover:text-ink max-md:bg-surface'
             }`}
           >

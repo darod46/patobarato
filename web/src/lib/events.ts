@@ -26,8 +26,23 @@ export function upcomingEvents(now: Date, n: number, events: SiteEvent[] = EVENT
     .slice(0, n)
 }
 
-export function nextEvent(now: Date, events: SiteEvent[] = EVENTS): SiteEvent | null {
-  return upcomingEvents(now, 1, events)[0] ?? null
+/** Default window for announcing the next event (spec §5.1). */
+export const ANNOUNCE_WINDOW_DAYS = 45
+
+/** The next event, or null when none falls within `withinDays` (unbounded when omitted). */
+export function nextEvent(now: Date, events: SiteEvent[] = EVENTS, withinDays?: number): SiteEvent | null {
+  const next = upcomingEvents(now, 1, events)[0] ?? null
+  if (!next) return null
+  return withinDays !== undefined && daysUntil(next, now) > withinDays ? null : next
+}
+
+/** "en 5 días" / "es hoy" / "es mañana", or "en julio" for an approximate date — never a count to a guessed date. */
+export function whenLabel(event: SiteEvent, now: Date): string {
+  if (event.approximate) return `en ${eventDateLabel(event)}`
+  const days = daysUntil(event, now)
+  if (days === 0) return 'es hoy'
+  if (days === 1) return 'es mañana'
+  return `en ${days} días`
 }
 
 /** "11 nov", or the month name alone ("julio") when the date is approximate. */

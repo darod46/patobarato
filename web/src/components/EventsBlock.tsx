@@ -4,7 +4,9 @@ import { storeNames } from '../lib/stores'
 
 type Props = { next: SiteEvent | null; upcoming: SiteEvent[]; now: Date }
 
-function countdown(days: number): string {
+function countdown(event: SiteEvent, now: Date): string {
+  if (event.approximate) return `En ${eventDateLabel(event)}`
+  const days = daysUntil(event, now)
   if (days === 0) return 'Es hoy'
   if (days === 1) return 'Es mañana'
   return `Faltan ${days} días`
@@ -19,7 +21,7 @@ export function EventsBlock({ next, upcoming, now }: Props) {
           <div className="flex flex-col justify-center gap-4">
             <span className="text-[13px] font-semibold uppercase tracking-[0.06em] text-accent">Próximo gran evento</span>
             <h2 className="font-display text-3xl font-bold tracking-[-0.02em] md:text-[40px]">{next.name}</h2>
-            <p className="font-display text-2xl font-bold text-white/90">{countdown(daysUntil(next, now))}</p>
+            <p className="font-display text-2xl font-bold text-white/90">{countdown(next, now)}</p>
             {next.stores.length > 0 && (
               <p className="text-[#b7bcc6]">Tiendas: {storeNames(next.stores).join(', ')}.</p>
             )}

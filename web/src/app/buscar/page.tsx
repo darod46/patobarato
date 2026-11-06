@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { HomeClient } from '../../components/HomeClient'
+import { fetchCoupons } from '../../lib/coupons'
 import { homeMetadata } from '../../lib/seo'
+import { getSupabase } from '../../lib/supabase'
 
 // Serves `/?q=…` and `/?tag=…` (rewritten here by next.config; the browser URL stays `/?…`).
 // Rendered per request for its metadata; the listing itself is fetched on the client as in v1,
@@ -19,6 +21,17 @@ export async function generateMetadata({
   return homeMetadata({ q: first(params.q), tag: first(params.tag) })
 }
 
-export default function FilteredHomePage() {
-  return <HomeClient now={new Date().toISOString()} />
+/** Resolves to [] on any failure, including missing env vars. */
+const loadCoupons = () => Promise.resolve().then(() => fetchCoupons(getSupabase(), 4)).catch(() => [])
+
+export default async function FilteredHomePage() {
+  const coupons = await loadCoupons()
+  // Events and the calendar come from the static calendar inside HomeClient, as on the home.
+  return (
+    <HomeClient
+      now={new Date().toISOString()}
+      coupons={coupons}
+      couponStores={coupons.map((c) => c.store)}
+    />
+  )
 }

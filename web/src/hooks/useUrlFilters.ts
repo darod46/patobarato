@@ -53,7 +53,7 @@ export function useUrlFilters() {
     (sort: DealSort) => write('push', { orden: sort === 'recientes' ? '' : sort }),
     [],
   )
-  const clear = useCallback(() => write('push', { q: '', tag: null }), [])
+  const clear = useCallback(() => write('push', { q: '', tag: null, orden: '' }), [])
 
   return { q: filters.q, tag: filters.tag, sort: filters.sort, setQ, setTag, setSort, clear }
 }

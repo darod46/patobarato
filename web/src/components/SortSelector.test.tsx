@@ -13,6 +13,7 @@ describe('SortSelector', () => {
     expect(buttons[1]).toHaveAttribute('aria-pressed', 'true')
     expect(buttons[0]).toHaveAttribute('aria-pressed', 'false')
     expect(group).toContainElement(buttons[0])
+    expect(buttons[0]).toHaveClass('min-h-11')
     await userEvent.click(buttons[2])
     expect(onChange).toHaveBeenCalledWith('minimo')
   })

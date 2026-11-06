@@ -67,7 +67,7 @@ export function DealCard({ deal, now }: Props) {
             {formatPrice(deal.price)}
           </span>
           {deal.previousPrice !== null && (
-            <s className="price text-xs text-[#8a919c] sm:text-sm">{formatPrice(deal.previousPrice)}</s>
+            <s className="price text-xs text-muted sm:text-sm">{formatPrice(deal.previousPrice)}</s>
           )}
         </div>
         {deal.coupon && (

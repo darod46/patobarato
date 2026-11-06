@@ -124,7 +124,7 @@ Tarjetas con radio 16 px, borde `line` de 1 px y sin sombra en reposo; al pasar 
 
 - **Botón primario:** `primary`, texto blanco, 600. **Secundario:** blanco con borde `#d7dae0`, texto `ink`. **Botón de tarjeta:** `primary-soft` con texto `primary`, 40 px.
 - **Tarjeta de chollo:** imagen cuadrada sobre blanco; badge `danger` arriba a la izquierda; chip `accent` «Cupón» arriba a la derecha; etiqueta `success` «Mínimo histórico» abajo a la izquierda; «Amazon · hace X» en `muted` 12 px; precio `price-card`; anterior tachado en `#8a919c`.
-- **Chips de hashtag:** activo `ink`/blanco; resto `surface`/`ink`. Altura ≥ 40 px.
+- **Chips de hashtag:** activo `ink`/blanco; resto `surface`/`ink`. Altura ≥ 44 px.
 - **Selector de orden:** grupo segmentado sobre `surface`; opción activa blanca con sombra suave.
 - **Tarjeta de cupón:** tienda y caducidad en 12 px; valor en Space Grotesk 30 px `primary`; código en monoespaciada con borde discontinuo y botón «Copiar» `primary`.
 - **Buscador:** 44 px, fondo `surface`, borde `#d7dae0`, icono de lupa `muted`.

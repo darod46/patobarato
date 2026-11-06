@@ -27,3 +27,11 @@ describe('EventsBlock', () => {
     expect(screen.getByText('Black Friday')).toBeInTheDocument()
   })
 })
+
+describe('EventsBlock approximate dates', () => {
+  it('never counts days to an approximate date', () => {
+    render(<EventsBlock next={e3} upcoming={[e3]} now={now} />)
+    expect(screen.queryByText(/Faltan/)).toBeNull()
+    expect(screen.getByText('En julio')).toBeInTheDocument()
+  })
+})
