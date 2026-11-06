@@ -176,8 +176,12 @@ async def test_upsert_coupon_and_deactivate(repo, client, api_source):
     await repo.upsert_coupon(_coupon(sid, "b"))
     rows = client.table("coupons").select("title").eq("source_id", sid).execute().data
     assert len(rows) == 2
+    assert client.table("coupons").select("title").eq("id", first).execute().data[0]["title"] == "New"
     assert await repo.deactivate_coupons_not_in(sid, {"a"}) == 1
     assert await repo.deactivate_coupons_not_in(sid, set()) == 1
+    assert await repo.upsert_coupon(_coupon(sid, "a")) == first
+    row = client.table("coupons").select("active").eq("id", first).execute().data[0]
+    assert row["active"] is True
 
 
 async def test_list_api_sources_and_mark_run(repo, client, api_source):

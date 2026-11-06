@@ -13,7 +13,7 @@ BACKFILL_DELAY_SECONDS = 3.0
 
 
 class StoreImageFinder(Protocol):
-    async def find(self, product_id: str, country: str, store: str) -> str | None: ...
+    async def find(self, store_product_id: str, country: str, store: str) -> str | None: ...
 
 
 async def backfill_images(

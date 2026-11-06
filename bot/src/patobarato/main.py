@@ -82,13 +82,13 @@ class _RegistryBackfillFinder:
     def __init__(self, registry: StoreRegistry) -> None:
         self._registry = registry
 
-    async def find(self, product_id: str, country: str, store: str) -> str | None:
+    async def find(self, store_product_id: str, country: str, store: str) -> str | None:
         adapter = self._registry.get(store)
         if adapter is None:
-            logger.warning("Backfill skipped %s: store %s is not registered", product_id, store)
+            logger.warning("Backfill skipped %s: store %s is not registered", store_product_id, store)
             return None
         return await adapter.find_image(
-            product_id, adapter.canonical_url(product_id, country)
+            store_product_id, adapter.canonical_url(store_product_id, country)
         )
 
 

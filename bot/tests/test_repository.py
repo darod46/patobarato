@@ -166,6 +166,15 @@ async def test_upsert_coupon_twice_keeps_one_updated_row():
     assert repo.coupons[first]["title"] == "New"
 
 
+async def test_upsert_coupon_reactivates_deactivated_coupon():
+    repo = InMemoryRepository()
+    coupon_id = await repo.upsert_coupon(make_coupon("a"))
+    assert await repo.deactivate_coupons_not_in(1, set()) == 1
+    assert repo.coupons[coupon_id]["active"] is False
+    assert await repo.upsert_coupon(make_coupon("a")) == coupon_id
+    assert repo.coupons[coupon_id]["active"] is True
+
+
 async def test_deactivate_coupons_not_in_returns_count():
     repo = InMemoryRepository()
     await repo.upsert_coupon(make_coupon("a"))

@@ -1,3 +1,4 @@
+import dataclasses
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -24,10 +25,10 @@ def _offer(asin: str) -> ParsedOffer:
 class Finder:
     def __init__(self, urls: dict[str, str | None]) -> None:
         self.urls = urls
-        self.calls: list[str] = []
+        self.calls: list[tuple[str, str, str]] = []
 
     async def find(self, asin: str, country: str, store: str) -> str | None:
-        self.calls.append(asin)
+        self.calls.append((asin, country, store))
         if self.urls.get(asin) == "boom":
             raise RuntimeError("down")
         return self.urls.get(asin)
@@ -48,6 +49,23 @@ async def test_backfill_sets_found_images_and_spaces_requests():
 
     assert (found, missing) == (1, 2)
     assert repo.product_images == {a: "https://img/1.jpg"}
-    assert finder.calls == ["B000000001", "B000000002", "B000000003"]
+    assert [c[0] for c in finder.calls] == ["B000000001", "B000000002", "B000000003"]
     assert sleeps == [3.0, 3.0]
     assert b not in repo.product_images and c not in repo.product_images
+
+
+async def test_backfill_forwards_each_products_store():
+    repo = InMemoryRepository()
+    await repo.upsert_product(_offer("B000000001"))
+    await repo.upsert_product(dataclasses.replace(_offer("X1"), store="aliexpress"))
+    finder = Finder({})
+
+    async def sleep(seconds: float) -> None:
+        pass
+
+    await backfill_images(repo, finder, sleep=sleep)
+
+    assert sorted(finder.calls) == [
+        ("B000000001", "ES", "amazon"),
+        ("X1", "ES", "aliexpress"),
+    ]

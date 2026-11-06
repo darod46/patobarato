@@ -301,6 +301,12 @@ class SupabaseRepository:
     async def deactivate_coupons_not_in(
         self, source_id: int, external_ids: set[str]
     ) -> int:
+        """Deactivates the source's coupons missing from ``external_ids``; returns how many.
+
+        An EMPTY ``external_ids`` deactivates every active coupon of the source, so do
+        not call it after a failed or empty fetch.
+        """
+
         def run():
             query = (
                 self._client.table("coupons")
