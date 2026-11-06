@@ -1,16 +1,16 @@
-"""Turns a source message into the Amazon offers it advertises."""
+"""Turns a source message into the offers it advertises, for the stores in the registry."""
 
 import re
 from dataclasses import dataclass
 
 from patobarato.models import ParsedOffer, SourceMessage
-from patobarato.parsing.links import (
-    UrlResolver,
-    asin_from_url,
-    canonical_url,
-    country_from_url,
-)
+from patobarato.parsing.links import UrlResolver, country_from_url
 from patobarato.parsing.text import parse_hashtags, parse_prices, parse_title
+from patobarato.stores.base import Store
+from patobarato.stores.registry import StoreRegistry
+
+# Country for stores whose links carry none (Amazon is told apart by its domain).
+_DEFAULT_COUNTRY = "ES"
 
 _BLOCK_SEPARATOR = re.compile(r"\n\s*\n")
 
@@ -18,21 +18,29 @@ _BLOCK_SEPARATOR = re.compile(r"\n\s*\n")
 @dataclass(frozen=True)
 class _Link:
     original: str
-    asin: str
+    store: Store
+    product_id: str
     country: str
+    canonical: str
 
 
-async def _amazon_links(urls: list[str], resolver: UrlResolver) -> list[_Link]:
-    links: dict[str, _Link] = {}
+async def _store_links(
+    urls: list[str], resolver: UrlResolver, registry: StoreRegistry
+) -> list[_Link]:
+    links: dict[tuple[str, str], _Link] = {}
     for url in urls:
-        resolved = await resolver.resolve(url)
+        resolved = await resolver.resolve(url, is_final=lambda u: registry.store_for(u) is not None)
         if resolved is None:
             continue
-        asin = asin_from_url(resolved)
-        country = country_from_url(resolved)
-        if asin is None or country is None:
+        store = registry.store_for(resolved)
+        if store is None:
             continue
-        links.setdefault(asin, _Link(url, asin, country))
+        product_id = store.product_id(resolved)
+        country = country_from_url(resolved) or (None if store.id == "amazon" else _DEFAULT_COUNTRY)
+        if product_id is None or country is None:
+            continue
+        canonical = store.canonical_for(resolved, country)
+        links.setdefault((store.id, product_id), _Link(url, store, product_id, country, canonical))
     return list(links.values())
 
 
@@ -40,15 +48,16 @@ def _build_offer(link: _Link, text: str, source_hashtags: list[str]) -> ParsedOf
     prices = parse_prices(text)
     hashtags = list(dict.fromkeys([*source_hashtags, *parse_hashtags(text)]))
     return ParsedOffer(
-        asin=link.asin,
+        asin=link.product_id,
         country=link.country,
-        store="amazon",
+        store=link.store.id,
         title=parse_title(text),
         price=prices.price,
         previous_price=prices.previous_price,
         coupon=prices.coupon,
         hashtags=hashtags,
-        canonical_url=canonical_url(link.asin, link.country),
+        canonical_url=link.canonical,
+        product_url=link.canonical,
     )
 
 
@@ -73,8 +82,10 @@ def _split_blocks(text: str, links: list[_Link]) -> list[str] | None:
     return ordered
 
 
-async def extract_offers(msg: SourceMessage, resolver: UrlResolver) -> list[ParsedOffer]:
-    links = await _amazon_links(msg.urls, resolver)
+async def extract_offers(
+    msg: SourceMessage, resolver: UrlResolver, registry: StoreRegistry
+) -> list[ParsedOffer]:
+    links = await _store_links(msg.urls, resolver, registry)
     if not links:
         return []
     if len(links) > 1:

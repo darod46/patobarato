@@ -1,6 +1,7 @@
 """Amazon link helpers: ASIN extraction, country, affiliate URLs and shortener resolving."""
 
 import re
+from collections.abc import Callable
 from urllib.parse import urljoin, urlparse
 
 import httpx
@@ -71,20 +72,22 @@ def build_affiliate_url(asin: str, country: str, tag: str) -> str:
 
 
 class UrlResolver:
-    """Resolves shortened links to an Amazon URL without ever requesting Amazon."""
+    """Resolves shortened links to a store URL without ever requesting the store."""
 
     def __init__(self, client: httpx.AsyncClient) -> None:
         self._client = client
 
-    async def resolve(self, url: str) -> str | None:
-        """Returns the Amazon URL the link leads to, or None.
+    async def resolve(
+        self, url: str, is_final: Callable[[str], bool] = is_amazon_url
+    ) -> str | None:
+        """Returns the first URL on the way that ``is_final`` accepts, or None.
 
         Network errors and malformed URLs give None; other errors propagate.
         """
         current = with_scheme(url)
         try:
             for _ in range(_MAX_REDIRECTS + 1):
-                if is_amazon_url(current):
+                if is_final(current):
                     return current
                 async with self._client.stream(
                     "GET", current, follow_redirects=False

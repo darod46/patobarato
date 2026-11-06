@@ -33,7 +33,7 @@ class SourceMessage:
 
 @dataclass(frozen=True)
 class ParsedOffer:
-    asin: str
+    asin: str  # product id within its store
     country: str
     store: str
     title: str
@@ -42,6 +42,9 @@ class ParsedOffer:
     coupon: str | None
     hashtags: list[str]
     canonical_url: str
+    product_url: str
+    image_url: str | None = None
+    affiliate_url: str | None = None
 
 
 @dataclass(frozen=True)

@@ -29,6 +29,7 @@ def make_offer(**overrides) -> ParsedOffer:
         coupon=None,
         hashtags=[],
         canonical_url="https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21",
+        product_url="https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21",
     )
     data.update(overrides)
     return ParsedOffer(**data)

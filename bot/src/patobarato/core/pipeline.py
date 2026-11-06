@@ -11,6 +11,8 @@ from patobarato.config import Settings
 from patobarato.core.decision import decide
 from patobarato.models import OfferStatus, ParsedOffer, SourceMessage
 from patobarato.parsing.extract import extract_offers
+from patobarato.stores.amazon import AmazonStore
+from patobarato.stores.registry import StoreRegistry
 from patobarato.parsing.links import UrlResolver, build_affiliate_url
 from patobarato.publishing.format import format_caption
 from patobarato.sources.amazon_page import ImageFinder
@@ -54,6 +56,7 @@ class Pipeline:
         monotonic: Callable[[], float] = time.monotonic,
         publish_interval_seconds: float = MIN_PUBLISH_INTERVAL_SECONDS,
         image_finder: ImageFinder | None = None,
+        registry: StoreRegistry | None = None,
     ) -> None:
         self._repo = repo
         self._resolver = resolver
@@ -65,6 +68,8 @@ class Pipeline:
         self._monotonic = monotonic
         self._publish_interval = publish_interval_seconds
         self._image_finder = image_finder
+        # Amazon-only until main wires the full registry.
+        self._registry = registry or StoreRegistry([AmazonStore(settings.affiliate_tag, None)])
         self._last_publish: float | None = None
         self._queue: asyncio.Queue[SourceMessage] = asyncio.Queue()
 
@@ -86,7 +91,7 @@ class Pipeline:
                 self._queue.task_done()
 
     async def process(self, msg: SourceMessage) -> list[OfferStatus]:
-        offers = await extract_offers(msg, self._resolver)
+        offers = await extract_offers(msg, self._resolver, self._registry)
         statuses: list[OfferStatus] = []
         for offer in offers:
             status = await self._process_offer(msg, offer)

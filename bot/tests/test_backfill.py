@@ -17,6 +17,7 @@ def _offer(asin: str) -> ParsedOffer:
         coupon=None,
         hashtags=[],
         canonical_url=f"https://www.amazon.es/dp/{asin}",
+        product_url=f"https://www.amazon.es/dp/{asin}",
     )
 
 
