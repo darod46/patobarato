@@ -13,7 +13,9 @@ BACKFILL_DELAY_SECONDS = 3.0
 
 
 class StoreImageFinder(Protocol):
-    async def find(self, store_product_id: str, country: str, store: str) -> str | None: ...
+    async def find(
+        self, store_product_id: str, country: str, store: str, url: str = ""
+    ) -> str | None: ...
 
 
 async def backfill_images(
@@ -25,11 +27,11 @@ async def backfill_images(
     """Returns ``(found, missing)``; requests are spaced ``delay`` seconds apart."""
     found = missing = 0
     products = await repo.get_products_without_image()
-    for index, (product_id, asin, country, store) in enumerate(products):
+    for index, (product_id, asin, country, store, page_url) in enumerate(products):
         if index:
             await sleep(delay)
         try:
-            url = await finder.find(asin, country, store)
+            url = await finder.find(asin, country, store, page_url)
             if url:
                 await repo.set_product_image(product_id, url)
                 found += 1

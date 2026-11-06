@@ -88,14 +88,16 @@ class _RegistryBackfillFinder:
     def __init__(self, registry: StoreRegistry) -> None:
         self._registry = registry
 
-    async def find(self, store_product_id: str, country: str, store: str) -> str | None:
+    async def find(
+        self, store_product_id: str, country: str, store: str, url: str = ""
+    ) -> str | None:
         adapter = self._registry.get(store)
         if adapter is None:
             logger.warning("Backfill skipped %s: store %s is not registered", store_product_id, store)
             return None
-        return await adapter.find_image(
-            store_product_id, adapter.canonical_url(store_product_id, country)
-        )
+        # The stored URL is the real product page; the rebuilt one is only a fallback.
+        page_url = url or adapter.canonical_url(store_product_id, country)
+        return await adapter.find_image(store_product_id, page_url)
 
 
 def build_runners(

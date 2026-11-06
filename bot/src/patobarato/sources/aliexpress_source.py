@@ -125,7 +125,9 @@ class AliExpressSource:
         if offer_id is None:  # already processed today
             logger.debug("AliExpress product %s already processed", product.product_id)
             return
-        last = await self._repo.get_last_publication(product_id, offer.country)
+        last = await self._repo.get_last_publication(
+            product_id, offer.country, channel=None  # any channel: web and Telegram share dedup here
+        )
         status = decide(
             product.price,
             now,

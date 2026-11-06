@@ -1,3 +1,4 @@
+import asyncio
 import dataclasses
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -26,9 +27,11 @@ class Finder:
     def __init__(self, urls: dict[str, str | None]) -> None:
         self.urls = urls
         self.calls: list[tuple[str, str, str]] = []
+        self.page_urls: list[str] = []
 
-    async def find(self, asin: str, country: str, store: str) -> str | None:
+    async def find(self, asin: str, country: str, store: str, url: str = "") -> str | None:
         self.calls.append((asin, country, store))
+        self.page_urls.append(url)
         if self.urls.get(asin) == "boom":
             raise RuntimeError("down")
         return self.urls.get(asin)
@@ -69,3 +72,13 @@ async def test_backfill_forwards_each_products_store():
         ("B000000001", "ES", "amazon"),
         ("X1", "ES", "aliexpress"),
     ]
+
+
+async def test_backfill_passes_the_stored_product_url():
+    repo = InMemoryRepository()
+    await repo.upsert_product(
+        dataclasses.replace(_offer("X1"), store="aliexpress", product_url="https://es.aliexpress.com/item/X1.html")
+    )
+    finder = Finder({})
+    await backfill_images(repo, finder, sleep=lambda s: asyncio.sleep(0))
+    assert finder.page_urls == ["https://es.aliexpress.com/item/X1.html"]

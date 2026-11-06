@@ -238,6 +238,9 @@ async def test_backfill_finder_routes_by_store_and_skips_unknown(caplog):
 
     finder = main_module._RegistryBackfillFinder(FakeRegistry())
     assert await finder.find("p1", "ES", "awin") == "img:https://shop/p1"
+    assert await finder.find("p1", "ES", "awin", "") == "img:https://shop/p1"
+    # The stored product url wins over the rebuilt one.
+    assert await finder.find("p1", "ES", "awin", "https://shop/real/p1") == "img:https://shop/real/p1"
     with caplog.at_level(logging.WARNING):
         assert await finder.find("p1", "ES", "nope") is None
     assert "nope" in caplog.text

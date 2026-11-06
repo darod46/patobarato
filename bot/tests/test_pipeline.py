@@ -11,6 +11,7 @@ import pytest
 from patobarato.config import Settings
 from patobarato.core.pipeline import MIN_PUBLISH_INTERVAL_SECONDS, Pipeline
 from patobarato.models import OfferStatus, SourceMessage
+from patobarato.parsing.extract import extract_offers
 from patobarato.parsing.links import UrlResolver
 from patobarato.storage.repository import InMemoryRepository
 from patobarato.stores.amazon import AmazonStore
@@ -569,3 +570,19 @@ async def test_offer_image_url_skips_find_image(make_pipeline, repo):
     await make_pipeline(registry=StoreRegistry([store])).process(_fake_msg())
     assert store.image_calls == [("P1", "https://fake.example/p/P1")]
     assert list(repo.product_images.values()) == ["https://img/found.jpg"]
+
+
+async def test_telegram_post_goes_out_after_web_only_publication(
+    make_pipeline, repo, publisher, resolver
+):
+    pipeline = make_pipeline()
+    [offer] = await extract_offers(_msg(), resolver, StoreRegistry([FakeAmazon(None)]))
+    product_id = await repo.upsert_product(offer)
+    await repo.insert_publication(
+        99, product_id, "ES", None, None, Decimal("249.99"), "https://x", NOW, channel="web"
+    )
+
+    statuses = await pipeline.process(_msg())
+
+    assert statuses == [OfferStatus.PUBLISHED]
+    assert len(publisher.calls) == 1

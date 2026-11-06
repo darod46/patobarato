@@ -122,7 +122,9 @@ async def test_products_without_image_lists_only_missing_ones():
     with_image = await repo.upsert_product(make_offer(asin="B000000001"))
     without = await repo.upsert_product(make_offer(asin="B000000002"))
     await repo.set_product_image(with_image, "https://img/x.jpg")
-    assert await repo.get_products_without_image() == [(without, "B000000002", "ES", "amazon")]
+    assert await repo.get_products_without_image() == [
+        (without, "B000000002", "ES", "amazon", "https://www.amazon.es/dp/B000000002")
+    ]
 
 
 async def test_insert_web_publication_without_telegram_ids():
@@ -206,3 +208,34 @@ async def test_mark_source_run_stores_date_and_error():
     assert (await repo.list_api_sources())[0].last_run_at == NOW
     await repo.mark_source_run(src.id, NOW, None)
     assert repo.source_runs[src.id] == (NOW, None)
+
+
+async def test_last_publication_filters_by_channel():
+    repo = InMemoryRepository()
+    product_id = await repo.upsert_product(make_offer())
+    await repo.insert_publication(
+        1, product_id, "ES", None, None, Decimal("9.99"), "https://x", NOW, channel="web"
+    )
+    assert await repo.get_last_publication(product_id, "ES", channel="telegram") is None
+    web = await repo.get_last_publication(product_id, "ES", channel="web")
+    assert web is not None and web.published_price == Decimal("9.99")
+    await repo.insert_publication(
+        2, product_id, "ES", -100, 1, Decimal("8.00"), "https://x", NOW + timedelta(days=1)
+    )
+    any_channel = await repo.get_last_publication(product_id, "ES")
+    assert any_channel is not None and any_channel.published_price == Decimal("8.00")
+    telegram = await repo.get_last_publication(product_id, "ES", channel="telegram")
+    assert telegram is not None and telegram.published_price == Decimal("8.00")
+    web = await repo.get_last_publication(product_id, "ES", channel="web")
+    assert web is not None and web.published_price == Decimal("9.99")
+
+
+async def test_upsert_product_stores_url():
+    repo = InMemoryRepository()
+    product_id = await repo.upsert_product(
+        dataclasses.replace(make_offer(), product_url="https://shop.example/p/1")
+    )
+    assert repo.product_urls[product_id] == "https://shop.example/p/1"
+    assert await repo.get_products_without_image() == [
+        (product_id, "B000000001", "ES", "amazon", "https://shop.example/p/1")
+    ]

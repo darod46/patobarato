@@ -42,13 +42,15 @@ class Repository(Protocol):
 
     async def set_product_image(self, product_id: int, image_url: str) -> None: ...
 
-    async def get_products_without_image(self) -> list[tuple[int, str, str, str]]:
-        """``(product_id, asin, country, store)`` of products with no image yet."""
+    async def get_products_without_image(self) -> list[tuple[int, str, str, str, str]]:
+        """``(product_id, asin, country, store, url)`` of products with no image yet (``url`` may be empty)."""
         ...
 
     async def get_last_publication(
-        self, product_id: int, country: str
-    ) -> LastPublication | None: ...
+        self, product_id: int, country: str, channel: PublicationChannel | None = None
+    ) -> LastPublication | None:
+        """Latest publication of the product; only of ``channel`` when given, else of any channel."""
+        ...
 
     async def insert_publication(
         self,
@@ -94,6 +96,7 @@ class InMemoryRepository(Repository):
         self._products: dict[tuple[str, str, str], int] = {}
         self.product_titles: dict[int, str] = {}
         self.product_images: dict[int, str] = {}
+        self.product_urls: dict[int, str] = {}
         self._offers: dict[int, dict] = {}
         self._offer_keys: dict[tuple[int, int, int], int] = {}
         self._publications: list[dict] = []
@@ -167,6 +170,7 @@ class InMemoryRepository(Repository):
             product_id = self._new_id("product")
             self._products[key] = product_id
         self.product_titles[product_id] = offer.title
+        self.product_urls[product_id] = offer.product_url
         return product_id
 
     async def insert_offer(
@@ -210,9 +214,9 @@ class InMemoryRepository(Repository):
     async def set_product_image(self, product_id: int, image_url: str) -> None:
         self.product_images[product_id] = image_url
 
-    async def get_products_without_image(self) -> list[tuple[int, str, str, str]]:
+    async def get_products_without_image(self) -> list[tuple[int, str, str, str, str]]:
         return sorted(
-            (product_id, asin, country, store)
+            (product_id, asin, country, store, self.product_urls.get(product_id, ""))
             for (store, country, asin), product_id in self._products.items()
             if product_id not in self.product_images
         )
@@ -226,12 +230,14 @@ class InMemoryRepository(Repository):
         return [dict(p) for p in self._publications]
 
     async def get_last_publication(
-        self, product_id: int, country: str
+        self, product_id: int, country: str, channel: PublicationChannel | None = None
     ) -> LastPublication | None:
         matches = [
             p
             for p in self._publications
-            if p["product_id"] == product_id and p["country"] == country
+            if p["product_id"] == product_id
+            and p["country"] == country
+            and (channel is None or p["channel"] == channel)
         ]
         if not matches:
             return None

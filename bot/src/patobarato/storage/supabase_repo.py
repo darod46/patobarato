@@ -68,6 +68,7 @@ class SupabaseRepository:
             "country": offer.country,
             "asin": offer.asin,
             "title": offer.title,
+            "url": offer.product_url,
             "category": None,
             "brand": None,
             "updated_at": datetime.now(UTC).isoformat(),
@@ -145,11 +146,11 @@ class SupabaseRepository:
 
         await asyncio.to_thread(run)
 
-    async def get_products_without_image(self) -> list[tuple[int, str, str, str]]:
+    async def get_products_without_image(self) -> list[tuple[int, str, str, str, str]]:
         def run():
             return (
                 self._client.table("products")
-                .select("id, asin, country, store")
+                .select("id, asin, country, store, url")
                 .is_("image_url", "null")
                 .order("id")
                 .execute()
@@ -157,23 +158,23 @@ class SupabaseRepository:
 
         response = await asyncio.to_thread(run)
         return [
-            (row["id"], row["asin"], row["country"], row["store"])
+            (row["id"], row["asin"], row["country"], row["store"], row.get("url") or "")
             for row in response.data
         ]
 
     async def get_last_publication(
-        self, product_id: int, country: str
+        self, product_id: int, country: str, channel: PublicationChannel | None = None
     ) -> LastPublication | None:
         def run():
-            return (
+            query = (
                 self._client.table("publications")
                 .select("published_price::text, published_at, status")
                 .eq("product_id", product_id)
                 .eq("country", country)
-                .order("published_at", desc=True)
-                .limit(1)
-                .execute()
             )
+            if channel is not None:
+                query = query.eq("channel", channel)
+            return query.order("published_at", desc=True).limit(1).execute()
 
         response = await asyncio.to_thread(run)
         if not response.data:

@@ -111,7 +111,9 @@ class Pipeline:
         if offer_id is None:
             return None
 
-        last = await self._repo.get_last_publication(product_id, offer.country)
+        last = await self._repo.get_last_publication(
+            product_id, offer.country, channel="telegram"
+        )
         status = decide(
             offer.price,
             msg.received_at,
