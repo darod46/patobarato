@@ -20,6 +20,15 @@ class Settings(BaseSettings):
     stale_after_minutes: int = 30
     sources_refresh_seconds: int = 300
     http_timeout_seconds: float = 10.0
+    aliexpress_app_key: str | None = None
+    aliexpress_app_secret: str | None = None
+    aliexpress_tracking_id: str | None = None
+    awin_publisher_id: str | None = None
+    awin_api_token: str | None = None
+    # JSON in env: {"pccomponentes": 1234}. A null/missing mid still publishes plain links.
+    awin_merchants: dict[str, int | None] = Field(
+        default_factory=lambda: {"pccomponentes": None, "mediamarkt": None, "elcorteingles": None}
+    )
 
 
 @lru_cache

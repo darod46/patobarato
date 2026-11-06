@@ -11,11 +11,10 @@ from patobarato.config import Settings
 from patobarato.core.decision import decide
 from patobarato.models import OfferStatus, ParsedOffer, SourceMessage
 from patobarato.parsing.extract import extract_offers
-from patobarato.parsing.links import UrlResolver, build_affiliate_url
+from patobarato.parsing.links import UrlResolver
 from patobarato.publishing.format import format_caption
-from patobarato.sources.amazon_page import ImageFinder
 from patobarato.storage.repository import Repository
-from patobarato.stores.amazon import AmazonStore
+from patobarato.stores.base import Store
 from patobarato.stores.registry import StoreRegistry
 
 logger = logging.getLogger("patobarato.pipeline")
@@ -55,8 +54,8 @@ class Pipeline:
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         monotonic: Callable[[], float] = time.monotonic,
         publish_interval_seconds: float = MIN_PUBLISH_INTERVAL_SECONDS,
-        image_finder: ImageFinder | None = None,
-        registry: StoreRegistry | None = None,
+        *,
+        registry: StoreRegistry,
     ) -> None:
         self._repo = repo
         self._resolver = resolver
@@ -67,13 +66,7 @@ class Pipeline:
         self._sleep = sleep
         self._monotonic = monotonic
         self._publish_interval = publish_interval_seconds
-        self._image_finder = image_finder
-        # Amazon-only until main wires the full registry.
-        self._registry = (
-            registry
-            if registry is not None
-            else StoreRegistry([AmazonStore(settings.affiliate_tag, None)])
-        )
+        self._registry = registry
         self._last_publish: float | None = None
         self._queue: asyncio.Queue[SourceMessage] = asyncio.Queue()
 
@@ -140,13 +133,15 @@ class Pipeline:
         if offer.price is None:  # decide() never publishes without a price
             return OfferStatus.SKIPPED_NO_PRICE
         photo = await self._get_photo(msg, offer)
-        affiliate_url = build_affiliate_url(
-            offer.asin, offer.country, self._settings.affiliate_tag
-        )
+        store = self._registry.get(offer.store)
+        if store is None:  # extract_offers only yields registered stores
+            logger.error("No store %s for offer %s", offer.store, offer_id)
+            return OfferStatus.PUBLISH_FAILED
+        affiliate_url = await self._affiliate_url(offer, store)
         await self._wait_publish_slot()
         try:
             chat_id, message_id = await self._publisher.publish(
-                format_caption(offer, affiliate_url), photo
+                format_caption(offer, affiliate_url, store.name), photo
             )
         except Exception:
             logger.exception("Failed to publish offer %s (%s)", offer_id, offer.asin)
@@ -173,14 +168,27 @@ class Pipeline:
             lambda: self._repo.set_offer_status(offer_id, OfferStatus.PUBLISHED),
             f"Mensaje publicado pero no registrado (estado de la oferta): {what}",
         )
-        if self._image_finder is not None:
-            try:
-                url = await self._image_finder.find(offer.asin, offer.country)
-                if url:
-                    await self._repo.set_product_image(product_id, url)
-            except Exception:
-                logger.error("Image lookup failed for %s", offer.asin, exc_info=True)
+        try:
+            url = offer.image_url or await store.find_image(offer.asin, offer.canonical_url)
+            if url:
+                await self._repo.set_product_image(product_id, url)
+        except Exception:
+            logger.error("Image lookup failed for %s", offer.asin, exc_info=True)
         return OfferStatus.PUBLISHED
+
+    async def _affiliate_url(self, offer: ParsedOffer, store: Store) -> str:
+        if offer.affiliate_url:
+            return offer.affiliate_url
+        try:
+            return await store.affiliate_url(offer.canonical_url, offer.asin)
+        except Exception:
+            logger.warning(
+                "affiliate=missing store=%s product=%s; publishing the canonical link",
+                offer.store,
+                offer.asin,
+                exc_info=True,
+            )
+            return offer.canonical_url
 
     async def _wait_publish_slot(self) -> None:
         """Keeps at least ``publish_interval_seconds`` between publications."""

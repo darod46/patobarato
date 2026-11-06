@@ -171,3 +171,13 @@ def test_coupon_with_link_keeps_text():
 
 def test_plain_coupon_kept():
     assert "<code>SONY10</code>" in cap(make_offer(coupon="SONY10"))
+
+
+def test_caption_uses_store_name_in_link_label():
+    caption = format_caption(make_offer(store="aliexpress"), LINK, "AliExpress")
+    assert f"🛒 Ver en AliExpress: {LINK}" in caption
+    assert "Amazon" not in caption.split("\n")[-1]
+
+
+def test_caption_defaults_to_amazon_label():
+    assert LINK_LINE in cap(make_offer())

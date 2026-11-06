@@ -18,13 +18,9 @@ from patobarato.core.backfill import backfill_images
 from patobarato.core.pipeline import Pipeline
 from patobarato.parsing.links import UrlResolver
 from patobarato.publishing.telegram_publisher import TelegramPublisher
-from patobarato.sources.amazon_page import (
-    AmazonImageFinder,
-    ChainImageFinder,
-    PrecioRealImageFinder,
-)
 from patobarato.sources.telegram_listener import TelegramListener, make_photo_provider
 from patobarato.storage.supabase_repo import SupabaseRepository
+from patobarato.stores.registry import StoreRegistry, build_registry
 
 logger = logging.getLogger("patobarato.main")
 
@@ -79,9 +75,17 @@ async def _supervise(**named_coros: Coroutine[Any, Any, Any]) -> int:
     return 1
 
 
-def _image_finder(http: httpx.AsyncClient) -> ChainImageFinder:
-    """Amazon's own page first; PrecioReal when Amazon gives no image."""
-    return ChainImageFinder([AmazonImageFinder(http), PrecioRealImageFinder(http)])
+class _AmazonBackfillFinder:
+    """Backfill rows carry ``(id, asin, country)``: only Amazon ids can be resolved."""
+
+    def __init__(self, registry: StoreRegistry) -> None:
+        self._registry = registry
+
+    async def find(self, asin: str, country: str) -> str | None:
+        store = self._registry.get("amazon")
+        if store is None:
+            return None
+        return await store.find_image(asin, store.canonical_url(asin, country))
 
 
 async def run(settings: Settings) -> int:
@@ -111,13 +115,14 @@ async def run(settings: Settings) -> int:
             create_client(settings.supabase_url, settings.supabase_service_key)
         )
         publisher = TelegramPublisher(bot, settings.target_channel)
+        registry = build_registry(settings, http, amazon_http)
         pipeline = Pipeline(
             repo,
             resolver,
             publisher,
             make_photo_provider(reader, resolver),
             settings,
-            image_finder=_image_finder(amazon_http),
+            registry=registry,
         )
         listener = TelegramListener(
             reader,
@@ -146,7 +151,9 @@ async def backfill(settings: Settings) -> int:
         create_client(settings.supabase_url, settings.supabase_service_key)
     )
     async with httpx.AsyncClient(timeout=settings.http_timeout_seconds) as http:
-        found, missing = await backfill_images(repo, _image_finder(http))
+        found, missing = await backfill_images(
+            repo, _AmazonBackfillFinder(build_registry(settings, http, http))
+        )
     print(f"Imágenes encontradas: {found}. Sin imagen: {missing}.")
     return 0
 

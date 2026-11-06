@@ -1,4 +1,5 @@
 import asyncio
+import dataclasses
 import logging
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
@@ -12,11 +13,27 @@ from patobarato.core.pipeline import MIN_PUBLISH_INTERVAL_SECONDS, Pipeline
 from patobarato.models import OfferStatus, SourceMessage
 from patobarato.parsing.links import UrlResolver
 from patobarato.storage.repository import InMemoryRepository
+from patobarato.stores.amazon import AmazonStore
+from patobarato.stores.base import BaseStore
+from patobarato.stores.registry import StoreRegistry
 
 NOW = datetime(2026, 11, 4, 12, 0, tzinfo=UTC)
 SHORT_URL = "https://amzn.to/a"
 BOOM_URL = "https://amzn.to/boom"
 AFFILIATE_URL = "https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21"
+
+
+class FakeAmazon(AmazonStore):
+    """Real Amazon links, image lookup through a fake finder."""
+
+    def __init__(self, finder) -> None:
+        super().__init__("patobarato-21", None)
+        self._finder = finder
+
+    async def find_image(self, product_id: str, canonical_url: str) -> str | None:
+        if self._finder is None:
+            return None
+        return await self._finder.find(product_id, "ES")
 
 
 def _handler(request: httpx.Request) -> httpx.Response:
@@ -112,8 +129,10 @@ def fake_time():
 @pytest.fixture
 def make_pipeline(repo, resolver, publisher, fake_time):
     def factory(
-        photo_provider=_no_photo, pub=None, repository=None, image_finder=None
+        photo_provider=_no_photo, pub=None, repository=None, image_finder=None, registry=None
     ) -> Pipeline:
+        if registry is None:
+            registry = StoreRegistry([FakeAmazon(image_finder)])
         return Pipeline(
             repository or repo,
             resolver,
@@ -123,7 +142,7 @@ def make_pipeline(repo, resolver, publisher, fake_time):
             clock=lambda: NOW,
             sleep=fake_time.sleep,
             monotonic=fake_time.monotonic,
-            image_finder=image_finder,
+            registry=registry,
         )
 
     return factory
@@ -454,3 +473,99 @@ async def test_no_image_lookup_when_publish_fails(make_pipeline):
     finder = FakeImageFinder()
     await make_pipeline(pub=FakePublisher(fail=True), image_finder=finder).process(_msg())
     assert finder.calls == []
+
+
+class FakeStore(BaseStore):
+    id = "fake"
+    name = "Tienda Fake"
+
+    def __init__(self, fail_affiliate: bool = False, image: str | None = None) -> None:
+        self.fail_affiliate = fail_affiliate
+        self.image = image
+        self.affiliate_calls: list[tuple[str, str]] = []
+        self.image_calls: list[tuple[str, str]] = []
+
+    def matches(self, url: str) -> bool:
+        return "fake.example" in url
+
+    def product_id(self, url: str) -> str | None:
+        return "P1"
+
+    def canonical_url(self, product_id: str, country: str) -> str:
+        return f"https://fake.example/p/{product_id}"
+
+    async def affiliate_url(self, canonical_url: str, product_id: str) -> str:
+        self.affiliate_calls.append((canonical_url, product_id))
+        if self.fail_affiliate:
+            raise RuntimeError("affiliate api down")
+        return canonical_url + "?aff=1"
+
+    async def find_image(self, product_id: str, canonical_url: str) -> str | None:
+        self.image_calls.append((product_id, canonical_url))
+        return self.image
+
+
+def _fake_msg() -> SourceMessage:
+    url = "https://fake.example/p/P1"
+    return SourceMessage(
+        source_id=1,
+        message_id=1,
+        text=f"Cacharro a 10,00€ {url}",
+        urls=[url],
+        hashtags=[],
+        received_at=NOW,
+    )
+
+
+async def test_failed_affiliate_url_publishes_canonical_and_logs(
+    make_pipeline, repo, publisher, caplog
+):
+    store = FakeStore(fail_affiliate=True)
+    with caplog.at_level(logging.WARNING, logger="patobarato.pipeline"):
+        statuses = await make_pipeline(registry=StoreRegistry([store])).process(_fake_msg())
+    assert statuses == [OfferStatus.PUBLISHED]
+    assert "https://fake.example/p/P1" in publisher.calls[0][0]
+    assert "?aff=1" not in publisher.calls[0][0]
+    assert repo.publications()[0]["affiliate_url"] == "https://fake.example/p/P1"
+    assert any("affiliate=missing" in r.getMessage() for r in caplog.records)
+
+
+async def test_store_affiliate_url_and_name_used_in_caption(make_pipeline, publisher):
+    store = FakeStore()
+    await make_pipeline(registry=StoreRegistry([store])).process(_fake_msg())
+    caption = publisher.calls[0][0]
+    assert "🛒 Ver en Tienda Fake:" in caption
+    assert "https://fake.example/p/P1?aff=1" in caption
+
+
+async def test_prefilled_affiliate_url_is_used_as_is(make_pipeline, publisher):
+    class Prefilled(FakeStore):
+        pass
+
+    store = Prefilled()
+    registry = StoreRegistry([store])
+    from patobarato.parsing import extract as extract_module
+
+    real = extract_module.extract_offers
+
+    async def with_affiliate(msg, resolver, reg):
+        offers = await real(msg, resolver, reg)
+        return [dataclasses.replace(o, affiliate_url="https://aff.example/x") for o in offers]
+
+    import patobarato.core.pipeline as pipeline_module
+
+    original = pipeline_module.extract_offers
+    pipeline_module.extract_offers = with_affiliate
+    try:
+        await make_pipeline(registry=registry).process(_fake_msg())
+    finally:
+        pipeline_module.extract_offers = original
+    assert store.affiliate_calls == []
+    assert "https://aff.example/x" in publisher.calls[0][0]
+
+
+async def test_offer_image_url_skips_find_image(make_pipeline, repo):
+    store = FakeStore(image="https://img/found.jpg")
+    await make_pipeline(registry=StoreRegistry([store])).process(_fake_msg())
+    assert store.image_calls == [("P1", "https://fake.example/p/P1")]
+    assert list(repo.product_images.values()) == ["https://img/found.jpg"]

@@ -49,3 +49,26 @@ def test_empty_values_rejected(monkeypatch, name):
         Settings(_env_file=None)
 
     assert [err["loc"] for err in info.value.errors()] == [(name.lower(),)]
+
+
+def test_awin_merchants_default_and_new_credentials_unset(monkeypatch):
+    for key, value in REQUIRED_ENV.items():
+        monkeypatch.setenv(key, value)
+    settings = Settings(_env_file=None)
+    assert settings.awin_merchants == {
+        "pccomponentes": None,
+        "mediamarkt": None,
+        "elcorteingles": None,
+    }
+    assert settings.aliexpress_app_key is None
+    assert settings.aliexpress_app_secret is None
+    assert settings.aliexpress_tracking_id is None
+    assert settings.awin_publisher_id is None
+    assert settings.awin_api_token is None
+
+
+def test_awin_merchants_parsed_from_json_env(monkeypatch):
+    for key, value in REQUIRED_ENV.items():
+        monkeypatch.setenv(key, value)
+    monkeypatch.setenv("AWIN_MERCHANTS", '{"pccomponentes": 1234}')
+    assert Settings(_env_file=None).awin_merchants == {"pccomponentes": 1234}
