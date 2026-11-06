@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { fakeClient } from '../test-utils/fakeClient'
+import { fakeClient, type FakeResult as Result } from '../test-utils/fakeClient'
 import {
   fetchAllDealRefs,
   fetchDealByProduct,
