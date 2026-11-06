@@ -17,13 +17,17 @@ const full: HeroHighlights = {
 }
 
 describe('Hero', () => {
-  it('mentions Amazon only and has no invented figures', () => {
+  it('uses the redesign copy and has no invented figures', () => {
     const { container } = render(<Hero highlights={none} />)
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-      'El pato que caza los chollos de Amazon antes de que vuelen',
+      'El pato que caza los chollos antes de que vuelen',
     )
+    expect(
+      screen.getByText(
+        'Amazon, AliExpress, PcComponentes y más. Cada oferta con su precio, el precio anterior y el cupón si lo hay. Sin registros ni spam.',
+      ),
+    ).toBeInTheDocument()
     expect(container.textContent).not.toMatch(/\d+(\.\d+)?K\b/)
-    expect(container.textContent).not.toContain('AliExpress')
     expect(screen.queryAllByTestId('hero-badge')).toHaveLength(0)
   })
 

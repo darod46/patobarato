@@ -33,11 +33,11 @@ export function Hero({ highlights }: { highlights: HeroHighlights }) {
             Vigilante de precios · Ofertas que vuelan
           </span>
           <h1 className="font-display text-4xl font-bold leading-[1.05] tracking-[-0.03em] text-ink md:text-6xl">
-            El pato que caza los chollos de Amazon antes de que vuelen
+            El pato que caza los chollos antes de que vuelen
           </h1>
           <p className="max-w-xl text-base leading-relaxed text-muted md:text-lg">
-            Vigilo canales de chollos de Telegram y publico cada oferta de Amazon España con su precio,
-            el precio anterior y el cupón si lo hay. Sin registros ni spam.
+            Amazon, AliExpress, PcComponentes y más. Cada oferta con su precio, el precio anterior y el
+            cupón si lo hay. Sin registros ni spam.
           </p>
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
             <a
