@@ -49,6 +49,25 @@ describe('buildSitemap', () => {
   })
 })
 
+describe('buildSitemap stores', () => {
+  const stores = [
+    { store: 'amazon', deals: 10, coupons: 0 },
+    { store: 'aliexpress', deals: 2, coupons: 1 },
+  ]
+  const urls = (s: typeof stores) => buildSitemap([], [], SITE_URL, { coupons: false, stores: s }).map((e) => e.url)
+
+  it('adds /tiendas with two stores and a page only for stores with at least 3 deals', () => {
+    expect(urls(stores)).toContain('https://www.patobarato.com/tiendas')
+    expect(urls(stores)).toContain('https://www.patobarato.com/tiendas/amazon')
+    expect(urls(stores)).not.toContain('https://www.patobarato.com/tiendas/aliexpress')
+  })
+
+  it('omits /tiendas with a single store but keeps its page when indexable', () => {
+    expect(urls([stores[0]])).not.toContain('https://www.patobarato.com/tiendas')
+    expect(urls([stores[0]])).toContain('https://www.patobarato.com/tiendas/amazon')
+  })
+})
+
 describe('buildRobots', () => {
   it('allows everything except /go/ and /buscar and lists the sitemap', () => {
     const robots = buildRobots(SITE_URL)

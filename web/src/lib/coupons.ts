@@ -25,13 +25,14 @@ function toCoupon(row: CouponRow): Coupon {
   }
 }
 
-/** Currently valid coupons from `web_coupons` (the view already filters by dates and `active`). */
-export async function fetchCoupons(client: SupabaseClient, limit?: number): Promise<Coupon[]> {
+/** Currently valid coupons from `web_coupons` (the view already filters by dates and `active`), optionally of one store. */
+export async function fetchCoupons(client: SupabaseClient, limit?: number, store?: string): Promise<Coupon[]> {
   let query = client
     .from('web_coupons')
     .select('*')
     .order('store', { ascending: true })
     .order('expires_at', { ascending: true, nullsFirst: false })
+  if (store !== undefined) query = query.eq('store', store)
   if (limit !== undefined) query = query.limit(limit)
   const { data, error } = await query
   if (error) throw new Error(error.message)

@@ -1,8 +1,7 @@
 import { Store } from 'lucide-react'
 import type { StoreStats } from '../lib/stores-data'
 import { storeInfo } from '../lib/stores'
-
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
+import { countLabel } from '../lib/text'
 
 /** Home block listing the stores with data; renders nothing below two stores (nothing to choose). */
 export function StoresBlock({ stores }: { stores: StoreStats[] }) {
@@ -29,7 +28,7 @@ export function StoresBlock({ stores }: { stores: StoreStats[] }) {
                   <span className="flex flex-col">
                     <span className="font-display text-lg font-bold text-ink">{info.name}</span>
                     <span className="text-sm text-muted">
-                      {plural(s.deals, 'chollo', 'chollos')} · {plural(s.coupons, 'cupón', 'cupones')}
+                      {countLabel(s.deals, 'chollo', 'chollos')} · {countLabel(s.coupons, 'cupón', 'cupones')}
                     </span>
                   </span>
                 </a>

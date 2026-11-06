@@ -1,0 +1,70 @@
+'use client'
+
+import { useClock } from '../hooks/useClock'
+import type { DealsFetcher, InitialDeals } from '../hooks/useDeals'
+import { useUrlFilters } from '../hooks/useUrlFilters'
+import * as api from '../lib/deals'
+import { storeInfo } from '../lib/stores'
+import type { StoreStats } from '../lib/stores-data'
+import { countLabel } from '../lib/text'
+import type { Coupon } from '../lib/types'
+import { getSupabase } from '../lib/supabase'
+import { CouponsBlock } from './CouponsBlock'
+import { DealFeed } from './DealFeed'
+import { Footer } from './Footer'
+import { Header } from './Header'
+import { SearchBox } from './SearchBox'
+
+type Props = {
+  /** Store id, fixed for the whole page. */
+  store: string
+  /** Server render time (ISO); the first client render uses it so hydration matches. */
+  now: string
+  /** Page 0 of this store without search, rendered on the server; the client fetches it when absent. */
+  initialDeals?: InitialDeals
+  initialTags: string[]
+  /** Stores with data: the header counts come from this store's row, the footer names them. */
+  stores: StoreStats[]
+  /** Valid coupons of this store. */
+  coupons: Coupon[]
+  fetchDeals?: DealsFetcher
+}
+
+// Bound lazily so the Supabase client is only created when the visitor searches or loads more.
+const defaultFetchDeals: DealsFetcher = async (params) => api.fetchDeals(getSupabase(), params)
+
+/** `/tiendas/{tienda}`: the home listing with the store fixed (`?tienda=` is ignored); search works within it. */
+export function StoreClient({ store, now, initialDeals, initialTags, stores, coupons, fetchDeals = defaultFetchDeals }: Props) {
+  // Only `q` and the sort are used from the URL; the store comes from the path.
+  const { q, setQ, sort, setSort } = useUrlFilters()
+  const clock = useClock(now)
+  const stats = stores.find((s) => s.store === store)
+
+  return (
+    <div className="min-h-screen bg-surface font-sans text-ink">
+      <Header search={<SearchBox value={q} onChange={setQ} />} />
+      <main className="mx-auto max-w-[1200px] px-4 pt-32 pb-12 md:px-8 md:pt-24 md:pb-16">
+        <h1 className="font-display text-2xl font-bold tracking-[-0.02em] md:text-[32px]">Chollos de {storeInfo(store).name}</h1>
+        <p className="mt-1.5 mb-5 text-muted">
+          {storeInfo(store).short} · {countLabel(stats?.deals ?? 0, 'chollo', 'chollos')} · {countLabel(stats?.coupons ?? 0, 'cupón', 'cupones')}
+        </p>
+      </main>
+      <CouponsBlock coupons={coupons} />
+      <div className="mx-auto max-w-[1200px] px-4 pb-12 md:px-8 md:pb-16">
+        <DealFeed
+          q={q}
+          tag={null}
+          store={store}
+          sort={sort}
+          onSort={setSort}
+          onClear={() => setQ('')}
+          fetchDeals={fetchDeals}
+          initialDeals={initialDeals}
+          initialTags={initialTags}
+          now={clock}
+        />
+      </div>
+      <Footer year={new Date(now).getUTCFullYear()} stores={stores.map((s) => s.store)} />
+    </div>
+  )
+}

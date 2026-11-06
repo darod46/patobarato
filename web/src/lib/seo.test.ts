@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { formatPrice } from './format'
-import { OG_IMAGE, breadcrumbJsonLd, couponsMetadata, hashtagMetadata, homeMetadata, productJsonLd, productMetadata, siteJsonLd, jsonLdScript } from './seo'
+import { OG_IMAGE, breadcrumbJsonLd, couponsMetadata, hashtagMetadata, homeMetadata, productJsonLd, productMetadata, siteJsonLd, storeMetadata, storesMetadata, jsonLdScript } from './seo'
 import type { Deal } from './types'
 import { SITE_URL, productPath } from './urls'
 
@@ -176,5 +176,28 @@ describe('couponsMetadata', () => {
     expect(couponsMetadata(3)).toMatchObject({ title: 'Cupones vigentes · PatoBarato', alternates: { canonical: '/cupones' } })
     expect(couponsMetadata(3).robots).toBeUndefined()
     expect(couponsMetadata(0).robots).toEqual({ index: false, follow: true })
+  })
+})
+
+describe('storeMetadata', () => {
+  it('titles, canonicalizes and indexes a store with 3 deals', () => {
+    const meta = storeMetadata('aliexpress', 3)
+    expect(meta.title).toBe('Chollos de AliExpress · PatoBarato')
+    expect(meta.alternates?.canonical).toBe('/tiendas/aliexpress')
+    expect(meta.openGraph?.images).toEqual([OG_IMAGE])
+    expect(meta.robots).toBeUndefined()
+  })
+
+  it('is noindex below 3 deals', () => {
+    expect(storeMetadata('aliexpress', 2).robots).toEqual({ index: false, follow: true })
+  })
+})
+
+describe('storesMetadata', () => {
+  it('is noindex below two stores', () => {
+    expect(storesMetadata(1).robots).toEqual({ index: false, follow: true })
+    expect(storesMetadata(2).robots).toBeUndefined()
+    expect(storesMetadata(2).title).toBe('Tiendas · PatoBarato')
+    expect(storesMetadata(2).alternates?.canonical).toBe('/tiendas')
   })
 })

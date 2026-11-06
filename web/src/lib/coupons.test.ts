@@ -43,6 +43,13 @@ describe('fetchCoupons', () => {
     expect(calls.map((c) => c[0])).not.toContain('limit')
   })
 
+  it('filters by store when given', async () => {
+    const { client, calls } = fakeClient({ data: [], error: null })
+    await fetchCoupons(client, 50, 'aliexpress')
+    expect(calls).toContainEqual(['eq', ['store', 'aliexpress']])
+    expect(calls).toContainEqual(['limit', [50]])
+  })
+
   it('rejects on error', async () => {
     const { client } = fakeClient({ data: null, error: { message: 'boom' } })
     await expect(fetchCoupons(client)).rejects.toThrow('boom')

@@ -1,6 +1,6 @@
 # PatoBarato web
 
-Web pública de [PatoBarato](https://www.patobarato.com): Next.js 16 (App Router), React, TypeScript y Tailwind v4. Los datos vienen de Supabase con la clave pública (anon) y solo se leen las vistas `web_deals`, `web_hashtags` y `web_coupons`.
+Web pública de [PatoBarato](https://www.patobarato.com): Next.js 16 (App Router), React, TypeScript y Tailwind v4. Los datos vienen de Supabase con la clave pública (anon) y solo se leen las vistas `web_deals`, `web_hashtags`, `web_coupons` y `web_stores`.
 
 ## Desarrollo local
 
@@ -46,6 +46,9 @@ Notas:
 
 - `/`: portada: barra de anuncio (próximo evento del calendario), hero, listado con orden (`?orden=recientes|descuento|minimo`) y chips de hashtags, cupones (si hay), cómo funciona, calendario de eventos, «Hola, soy el Pato», bloque Telegram y pie.
 - `/cupones`: cupones vigentes (vista `web_coupons`), agrupados por tienda. `noindex` si no hay ninguno.
+- `/tiendas`: índice de tiendas con chollos o cupones activos (vista `web_stores`), con sus recuentos. `noindex` salvo que haya más de una tienda con datos; si la vista no carga, muestra un aviso en lugar de datos inventados.
+- `/tiendas/{tienda}`: chollos y cupones de una tienda (el slug es el id de `src/lib/stores.ts`; 404 si no existe). Cabecera con los recuentos reales, cupones vigentes de la tienda y listado con orden, hashtags y «cargar más». `noindex` si tiene menos de 3 chollos.
+- `?tienda={id}`: filtra por tienda el listado de la portada (y de `/buscar`) y lo marca con chips; en `/tiendas/{tienda}` se ignora porque la tienda viene de la ruta.
 - `/aviso-legal`, `/privacidad`, `/cookies`, `/afiliados`, `/contacto`: páginas estáticas. Los textos llevan marcadores `[TITULAR]`, `[NIF]`, `[DIRECCIÓN]`, `[EMAIL]`, `[CIUDAD]`, `[PLAZO]` que hay que sustituir.
 - `/oferta/{tienda}/{slug}-{id}`: ficha de producto. Redirige con 308 a la URL canónica si el slug no coincide; 404 si la oferta no existe.
 - `/chollos/{hashtag}`: listado por hashtag. `noindex` si tiene menos de 3 ofertas.
@@ -56,7 +59,7 @@ Notas:
 
 ## Caché (ISR)
 
-- Listados (`/`, `/chollos/{hashtag}`): 60 s.
+- Listados (`/`, `/chollos/{hashtag}`, `/tiendas`, `/tiendas/{tienda}`): 60 s.
 - Cupones (`/cupones`): 600 s.
 - Producto (`/oferta/...`): 600 s.
 - Sitemap: 3600 s.
@@ -81,7 +84,7 @@ Los cupones se insertan a mano en la tabla `coupons` desde el panel de Supabase 
 
 ## Seguridad
 
-La web solo usa la clave pública (anon) de Supabase y solo lee las vistas `web_deals`, `web_hashtags` y `web_coupons`. Nunca pongas la clave `service_role` en la web ni en Vercel. `node scripts/check-views.mjs` comprueba con la clave anon que esas vistas se leen y que la tabla `coupons` no.
+La web solo usa la clave pública (anon) de Supabase y solo lee las vistas `web_deals`, `web_hashtags`, `web_coupons` y `web_stores`. Nunca pongas la clave `service_role` en la web ni en Vercel. `node scripts/check-views.mjs` comprueba con la clave anon que esas vistas se leen y que la tabla `coupons` no.
 
 ## Despliegue en Vercel
 

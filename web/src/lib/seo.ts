@@ -138,6 +138,35 @@ export function homeMetadata(params: { q?: string; tag?: string; stores?: string
   }
 }
 
+export function storeMetadata(store: string, deals: number): Metadata {
+  const { name, slug } = storeInfo(store)
+  const title = `Chollos de ${name} · PatoBarato`
+  const description = `Los últimos chollos y cupones de ${name} cazados por PatoBarato, con su precio, el precio anterior y el cupón si lo hay.`
+  const path = `/tiendas/${slug}`
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: { type: 'website', siteName: 'PatoBarato', locale: 'es_ES', url: path, title, description, images: [OG_IMAGE] },
+    twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
+    ...(deals < MIN_INDEXABLE_DEALS && { robots: NOINDEX }),
+  }
+}
+
+/** `/tiendas` index; with a single store with data there is nothing to choose, so it stays out of the index. */
+export function storesMetadata(count: number): Metadata {
+  const title = 'Tiendas · PatoBarato'
+  const description = 'Las tiendas de las que PatoBarato publica chollos y cupones, con lo que hay ahora en cada una.'
+  return {
+    title,
+    description,
+    alternates: { canonical: '/tiendas' },
+    openGraph: { type: 'website', siteName: 'PatoBarato', locale: 'es_ES', url: '/tiendas', title, description, images: [OG_IMAGE] },
+    twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
+    ...(count < 2 && { robots: NOINDEX }),
+  }
+}
+
 export function couponsMetadata(count: number): Metadata {
   const title = 'Cupones vigentes · PatoBarato'
   const description = 'Códigos de descuento vigentes, con sus condiciones y caducidad, comprobados por PatoBarato.'
