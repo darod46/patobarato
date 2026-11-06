@@ -157,6 +157,18 @@ describe('fetchLatestDeal', () => {
   })
 })
 
+describe('fetchDealByProduct ids', () => {
+  it.each([
+    ['amazon', 'b000000001', 'B000000001'],
+    ['pccomponentes', 'ninja-af300-freidora-de-aire', 'ninja-af300-freidora-de-aire'],
+    ['aliexpress', '1005006123456789', '1005006123456789'],
+  ])('%s: %s -> %s', async (store, id, expected) => {
+    const { client, calls } = fakeClient({ data: [], error: null })
+    await fetchDealByProduct(client, store, id)
+    expect(calls).toContainEqual(['eq', ['asin', expected]])
+  })
+})
+
 describe('fetchDealByProduct', () => {
   it('queries by store and uppercase asin', async () => {
     const { client, calls } = fakeClient({ data: [row(3)], error: null })

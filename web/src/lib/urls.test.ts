@@ -31,6 +31,8 @@ describe('productPath / parseProductSlug / tagPath', () => {
     })
     expect(parseProductSlug('amazon', 'b0bpzvjjqj')).toEqual({ slug: '', id: 'b0bpzvjjqj' })
     expect(parseProductSlug('amazon', 'foo')).toBeNull()
+    expect(parseProductSlug('amazon', 'x')).toBeNull()
+    expect(parseProductSlug('amazon', 'b000000001')).toEqual({ slug: '', id: 'b000000001' })
   })
   it('builds AliExpress and Awin product paths', () => {
     expect(

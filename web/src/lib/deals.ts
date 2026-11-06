@@ -109,7 +109,7 @@ export async function fetchDealByProduct(
     .from('web_deals')
     .select('*')
     .eq('store', store)
-    .eq('asin', id.toUpperCase())
+    .eq('asin', store === 'amazon' ? id.toUpperCase() : id)
     .order('published_at', { ascending: false })
     .order('publication_id', { ascending: false })
     .limit(1)
