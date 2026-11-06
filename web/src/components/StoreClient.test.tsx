@@ -83,7 +83,7 @@ it('searches within the store', async () => {
   )
 })
 
-const noStats = (initialDeals?: { deals: Deal[]; hasMore: boolean }, coupons: Coupon[] = []) =>
+const noStats = (initialDeals?: { deals: Deal[]; hasMore: boolean }, ...rest: [coupons?: Coupon[] | undefined]) =>
   render(
     <StoreClient
       store="decathlon"
@@ -91,7 +91,7 @@ const noStats = (initialDeals?: { deals: Deal[]; hasMore: boolean }, coupons: Co
       initialDeals={initialDeals && { q: '', tag: null, store: 'decathlon', sort: 'recientes', ...initialDeals }}
       initialTags={[]}
       stores={[{ store: 'amazon', deals: 1, coupons: 1 }]}
-      coupons={coupons}
+      coupons={rest.length ? rest[0] : []}
       fetchDeals={vi.fn().mockResolvedValue({ deals: [], hasMore: false })}
     />,
   )
@@ -121,8 +121,20 @@ it('without stats and with more pages, never claims a deal count', () => {
   expect(document.body.textContent).not.toMatch(/0 chollos/)
 })
 
-it('without stats and without deals loaded shows no deal count', () => {
+it('without stats and with loaded coupons but no deals shows only the coupon count', () => {
   noStats(undefined, [])
   expect(document.body.textContent).not.toMatch(/0 chollos/)
   expect(screen.getByText(/^Decathlon · 0 cupones$/)).toBeInTheDocument()
+})
+
+it('without stats and with coupons that failed to load shows no counts at all', () => {
+  noStats(undefined, undefined)
+  expect(screen.getByText(/^Decathlon$/)).toBeInTheDocument()
+  expect(document.body.textContent).not.toMatch(/0 cupones|0 chollos/)
+})
+
+it('without stats omits the coupon count when the list may be truncated', () => {
+  const many = Array.from({ length: 50 }, (_, i) => ({ ...coupon, id: i + 1 }))
+  noStats({ deals: [deal(1)], hasMore: false }, many)
+  expect(screen.getByText(/^Decathlon · 1 chollo$/)).toBeInTheDocument()
 })

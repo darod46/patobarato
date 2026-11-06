@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fetchDeals } from '../../../lib/deals'
+import { fetchCoupons } from '../../../lib/coupons'
 import { fetchStores } from '../../../lib/stores-data'
 import type { Deal } from '../../../lib/types'
 import StorePage, { generateMetadata } from './page'
@@ -30,7 +31,7 @@ vi.mock('../../../lib/deals', async (importOriginal) => ({
   fetchDeals: vi.fn(),
   fetchHashtags: vi.fn(async () => []),
 }))
-vi.mock('../../../lib/coupons', () => ({ fetchCoupons: vi.fn(async () => []) }))
+vi.mock('../../../lib/coupons', () => ({ MAX_STORE_COUPONS: 50, fetchCoupons: vi.fn(async () => []) }))
 vi.mock('../../../lib/stores-data', () => ({ fetchStores: vi.fn() }))
 
 const params = (store: string) => ({ params: Promise.resolve({ store }) })
@@ -76,5 +77,17 @@ describe('StorePage', () => {
     expect((await generateMetadata(params('aliexpress'))).robots).toBeUndefined()
     render(await StorePage(params('aliexpress')))
     expect(screen.getByText('AliExpress · 3 chollos · 0 cupones')).toBeInTheDocument()
+  })
+
+  it('omits the coupon count when stats and coupons both fail', async () => {
+    vi.mocked(fetchStores).mockImplementation(async () => {
+      throw new Error('down')
+    })
+    vi.mocked(fetchCoupons).mockImplementationOnce(async () => {
+      throw new Error('down')
+    })
+    render(await StorePage(params('aliexpress')))
+    expect(screen.getByText('AliExpress · 1 chollo')).toBeInTheDocument()
+    expect(document.body.textContent).not.toMatch(/0 cupones/)
   })
 })

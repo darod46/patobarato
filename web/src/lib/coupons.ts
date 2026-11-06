@@ -25,6 +25,9 @@ function toCoupon(row: CouponRow): Coupon {
   }
 }
 
+/** Upper bound of coupons fetched for one store page; a full result means the real count is unknown. */
+export const MAX_STORE_COUPONS = 50
+
 /** Currently valid coupons from `web_coupons` (the view already filters by dates and `active`), optionally of one store. */
 export async function fetchCoupons(client: SupabaseClient, limit?: number, store?: string): Promise<Coupon[]> {
   let query = client

@@ -3,6 +3,7 @@
 import { useClock } from '../hooks/useClock'
 import type { DealsFetcher, InitialDeals } from '../hooks/useDeals'
 import { useUrlFilters } from '../hooks/useUrlFilters'
+import { MAX_STORE_COUPONS } from '../lib/coupons'
 import * as api from '../lib/deals'
 import { storeInfo } from '../lib/stores'
 import type { StoreStats } from '../lib/stores-data'
@@ -25,8 +26,8 @@ type Props = {
   initialTags: string[]
   /** Stores with data: the header counts come from this store's row, the footer names them. */
   stores: StoreStats[]
-  /** Valid coupons of this store. */
-  coupons: Coupon[]
+  /** Valid coupons of this store; undefined when they could not be loaded. */
+  coupons: Coupon[] | undefined
   fetchDeals?: DealsFetcher
 }
 
@@ -40,12 +41,13 @@ export function StoreClient({ store, now, initialDeals, initialTags, stores, cou
   const clock = useClock(now)
   const stats = stores.find((s) => s.store === store)
   // Without the stats row never claim 0: use what the page itself knows, or show the name alone.
-  const couponCount = stats?.coupons ?? coupons.length
+  // A full list may be truncated, so its length is only a count when below the fetch limit.
+  const couponCount = stats?.coupons ?? (coupons && coupons.length < MAX_STORE_COUPONS ? coupons.length : null)
   const dealCount = stats?.deals ?? (initialDeals && !initialDeals.hasMore ? initialDeals.deals.length : null)
   const summary = [
     storeInfo(store).short,
     ...(dealCount !== null ? [countLabel(dealCount, 'chollo', 'chollos')] : []),
-    countLabel(couponCount, 'cupón', 'cupones'),
+    ...(couponCount !== null ? [countLabel(couponCount, 'cupón', 'cupones')] : []),
   ].join(' · ')
 
   return (
@@ -56,7 +58,7 @@ export function StoreClient({ store, now, initialDeals, initialTags, stores, cou
         <h1 className="font-display text-2xl font-bold tracking-[-0.02em] md:text-[32px]">Chollos de {storeInfo(store).name}</h1>
         <p className="mt-1.5 mb-5 text-muted">{summary}</p>
         </div>
-        <CouponsBlock coupons={coupons} />
+        <CouponsBlock coupons={coupons ?? []} />
         <div className="mx-auto max-w-[1200px] px-4 pb-12 md:px-8 md:pb-16">
         <DealFeed
           q={q}

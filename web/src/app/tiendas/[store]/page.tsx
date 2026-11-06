@@ -2,15 +2,12 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { cache } from 'react'
 import { StoreClient } from '../../../components/StoreClient'
-import { fetchCoupons } from '../../../lib/coupons'
+import { MAX_STORE_COUPONS, fetchCoupons } from '../../../lib/coupons'
 import { fetchDeals, fetchHashtags } from '../../../lib/deals'
 import { breadcrumbJsonLd, jsonLdScript, storeMetadata } from '../../../lib/seo'
 import { storeFromSlug, storeInfo } from '../../../lib/stores'
 import { fetchStores } from '../../../lib/stores-data'
 import { getSupabase } from '../../../lib/supabase'
-
-// Upper bound of coupons fetched for one store (more than any store will have valid at once).
-const MAX_COUPONS = 50
 
 // Listings are regenerated at most every 60 s.
 export const revalidate = 60
@@ -33,11 +30,11 @@ const loadStore = cache(async (slug: string) => {
   const [page, stores, coupons, tags] = await Promise.all([
     optional(() => fetchDeals(getSupabase(), { page: 0, store })),
     optional(() => fetchStores(getSupabase())),
-    optional(() => fetchCoupons(getSupabase(), MAX_COUPONS, store)),
+    optional(() => fetchCoupons(getSupabase(), MAX_STORE_COUPONS, store)),
     optional(() => fetchHashtags(getSupabase(), 12)),
   ])
   const deals = stores?.find((s) => s.store === store)?.deals ?? page?.deals.length ?? 0
-  return { store, page, stores: stores ?? [], coupons: coupons ?? [], tags: tags ?? [], deals }
+  return { store, page, stores: stores ?? [], coupons, tags: tags ?? [], deals }
 })
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
