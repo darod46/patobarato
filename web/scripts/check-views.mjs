@@ -32,6 +32,13 @@ const coupons = await rest('web_coupons?select=*&limit=1')
 if (coupons.status !== 200 || !Array.isArray(coupons.body)) problems.push(`web_coupons: HTTP ${coupons.status}`)
 const table = await rest('coupons?select=*&limit=1')
 if (table.status === 200) problems.push('coupons table is readable by anon (expected permission denied)')
+const stores = await rest('web_stores?select=*&limit=1')
+if (stores.status !== 200) problems.push(`web_stores: HTTP ${stores.status}`)
+for (const col of ['store', 'deals', 'coupons']) {
+  if (stores.body?.[0] && !(col in stores.body[0])) problems.push(`web_stores: missing column ${col}`)
+}
+const sources = await rest('sources?select=*&limit=1')
+if (sources.status === 200) problems.push('sources table is readable by anon (expected permission denied)')
 
 if (problems.length) {
   console.error(problems.join('\n'))
