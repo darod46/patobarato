@@ -116,12 +116,38 @@ export function hashtagMetadata(tag: string, count: number): Metadata {
   }
 }
 
-/** Home metadata for the v1 query links: `?tag=` is canonical on its hashtag page, `?q=` is never indexed. */
-export function homeMetadata(params: { q?: string; tag?: string }): Metadata {
+/**
+ * Home metadata. For the v1 query links, `?tag=` is canonical on its hashtag page and `?q=` is never
+ * indexed. With `couponStores` (ids of stores with valid coupons) the title mentions coupons, and
+ * "otras tiendas" only when one of them is not Amazon — never claim what the data does not show.
+ */
+export function homeMetadata(params: { q?: string; tag?: string; couponStores?: string[] }): Metadata {
   const tag = params.tag ? parseTagParam(params.tag) : null
+  const stores = params.couponStores ?? []
+  const others = stores.some((s) => s !== 'amazon')
+  const title = stores.length
+    ? `PatoBarato · Chollos y cupones de Amazon${others ? ' y otras tiendas' : ''}`
+    : undefined
+  const description = stores.length
+    ? `Los mejores chollos de Amazon y cupones${others ? ' de otras tiendas' : ''}, seleccionados cada día por PatoBarato.`
+    : undefined
   return {
+    ...(title && { title, description, openGraph: { title, description, images: [OG_IMAGE] } }),
     alternates: { canonical: tag ? tagPath(tag) : '/' },
     ...(params.q?.trim() ? { robots: NOINDEX } : {}),
+  }
+}
+
+export function couponsMetadata(count: number): Metadata {
+  const title = 'Cupones vigentes · PatoBarato'
+  const description = 'Códigos de descuento vigentes, con sus condiciones y caducidad, comprobados por PatoBarato.'
+  return {
+    title,
+    description,
+    alternates: { canonical: '/cupones' },
+    openGraph: { type: 'website', siteName: 'PatoBarato', locale: 'es_ES', url: '/cupones', title, description, images: [OG_IMAGE] },
+    twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
+    ...(count === 0 && { robots: NOINDEX }),
   }
 }
 

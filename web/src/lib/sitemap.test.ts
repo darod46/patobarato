@@ -18,7 +18,7 @@ describe('buildSitemap', () => {
       ],
       SITE_URL,
     )
-    expect(entries.map((e) => e.url)).toEqual([
+    expect(entries.map((e) => e.url).filter((u) => u.includes('/oferta/') || u.includes('/chollos/') || u.endsWith('.com/'))).toEqual([
       'https://www.patobarato.com/',
       'https://www.patobarato.com/oferta/amazon/freidora-de-aire-b0abcdef12',
       'https://www.patobarato.com/oferta/amazon/cafe-molido-b0zzzzzz99',
@@ -32,8 +32,20 @@ describe('buildSitemap', () => {
     expect(entries[1].lastModified).toEqual(new Date('2026-11-04T11:19:00Z'))
   })
 
-  it('returns at least the home when there is no data', () => {
-    expect(buildSitemap([], [], SITE_URL).map((e) => e.url)).toEqual(['https://www.patobarato.com/'])
+  it('returns the home and the static pages when there is no data', () => {
+    expect(buildSitemap([], [], SITE_URL).map((e) => e.url)).toEqual([
+      'https://www.patobarato.com/',
+      'https://www.patobarato.com/aviso-legal',
+      'https://www.patobarato.com/privacidad',
+      'https://www.patobarato.com/cookies',
+      'https://www.patobarato.com/afiliados',
+      'https://www.patobarato.com/contacto',
+    ])
+  })
+
+  it('adds /cupones only when there are coupons', () => {
+    expect(buildSitemap([], [], SITE_URL, { coupons: true }).map((e) => e.url)).toContain('https://www.patobarato.com/cupones')
+    expect(buildSitemap([], [], SITE_URL, { coupons: false }).map((e) => e.url)).not.toContain('https://www.patobarato.com/cupones')
   })
 })
 

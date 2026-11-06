@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { formatPrice } from './format'
-import { OG_IMAGE, breadcrumbJsonLd, hashtagMetadata, homeMetadata, productJsonLd, productMetadata, siteJsonLd, jsonLdScript } from './seo'
+import { OG_IMAGE, breadcrumbJsonLd, couponsMetadata, hashtagMetadata, homeMetadata, productJsonLd, productMetadata, siteJsonLd, jsonLdScript } from './seo'
 import type { Deal } from './types'
 import { SITE_URL, productPath } from './urls'
 
@@ -160,5 +160,21 @@ describe('jsonLdScript', () => {
     expect(__html).not.toContain('<')
     expect(__html).toContain('\\u003c')
     expect(JSON.parse(__html)).toEqual({ t: title })
+  })
+})
+
+describe('homeMetadata with coupons', () => {
+  it('mentions coupons and other stores only when present', () => {
+    expect(homeMetadata({}).title).toBeUndefined()
+    expect(homeMetadata({ couponStores: ['amazon'] }).title).toBe('PatoBarato · Chollos y cupones de Amazon')
+    expect(homeMetadata({ couponStores: ['aliexpress'] }).title).toBe('PatoBarato · Chollos y cupones de Amazon y otras tiendas')
+  })
+})
+
+describe('couponsMetadata', () => {
+  it('is indexable only with coupons', () => {
+    expect(couponsMetadata(3)).toMatchObject({ title: 'Cupones vigentes · PatoBarato', alternates: { canonical: '/cupones' } })
+    expect(couponsMetadata(3).robots).toBeUndefined()
+    expect(couponsMetadata(0).robots).toEqual({ index: false, follow: true })
   })
 })
