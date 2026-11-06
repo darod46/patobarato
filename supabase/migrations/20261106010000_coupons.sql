@@ -23,3 +23,7 @@ order by store, expires_at nulls last, id;
 
 revoke all on web_coupons from anon, authenticated;
 grant select on web_coupons to anon, authenticated;
+
+-- Supabase grants anon/authenticated on new public tables by default; the table itself is
+-- never read by the web, only the view.
+revoke all on coupons from anon, authenticated;
