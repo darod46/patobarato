@@ -1,10 +1,11 @@
 """AliExpress hot products as a web-only deal source."""
 
 import dataclasses
+import hashlib
 import json
 import logging
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Protocol
 
@@ -30,6 +31,12 @@ class _HotProductsClient(Protocol):
         page_size: int,
         page_no: int,
     ) -> list[AliProduct]: ...
+
+
+def offer_message_id(product_id: str, day: date) -> int:
+    """Stable 63-bit offer key per (product, day): one offer a day, reconsidered daily."""
+    digest = hashlib.blake2b(f"{product_id}:{day.isoformat()}".encode(), digest_size=8).digest()
+    return int.from_bytes(digest, "big") >> 1
 
 
 def _discount(product: AliProduct) -> int:
@@ -101,12 +108,12 @@ class AliExpressSource:
         offer_id = await self._repo.insert_offer(
             product_id,
             source.id,
-            int(product.product_id),
+            offer_message_id(product.product_id, now.date()),
             offer,
             json.dumps(dataclasses.asdict(product), default=str),
             now,
         )
-        if offer_id is None:  # this source already saw the product
+        if offer_id is None:  # already processed today
             logger.debug("AliExpress product %s already processed", product.product_id)
             return
         last = await self._repo.get_last_publication(product_id, offer.country)

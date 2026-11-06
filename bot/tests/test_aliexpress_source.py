@@ -1,10 +1,10 @@
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 from patobarato.config import Settings
 from patobarato.models import OfferStatus
-from patobarato.sources.aliexpress_source import AliExpressSource
+from patobarato.sources.aliexpress_source import AliExpressSource, offer_message_id
 from patobarato.storage.repository import InMemoryRepository
 from patobarato.stores.aliexpress_client import AliProduct
 
@@ -47,13 +47,13 @@ class _Client:
         return self.products
 
 
-def _setup(products, config=None, hashtags=None, country="ES"):
+def _setup(products, config=None, hashtags=None, country="ES", clock=None):
     repo = InMemoryRepository()
     source = repo.add_api_source(
         "aliexpress_api", "hot", country=country, config=config or {}, hashtags=hashtags or []
     )
     client = _Client(products)
-    return repo, source, client, AliExpressSource(client, repo, _settings(), lambda: NOW)
+    return repo, source, client, AliExpressSource(client, repo, _settings(), clock or (lambda: NOW))
 
 
 PRODUCTS = [_product("1", 50), _product("2", 25), _product("3", 40)]
@@ -73,14 +73,14 @@ async def test_filters_by_min_discount_and_publishes_web_only():
     assert repo.offer_hashtags(1) == ["chollo", "aliexpress"]
 
 
-async def test_second_run_is_skipped_quietly(caplog):
+async def test_same_day_second_run_is_skipped_quietly(caplog):
     repo, source, _, runner = _setup(PRODUCTS)
     await runner.run(source)
 
     with caplog.at_level(logging.DEBUG):
         await runner.run(source)
 
-    # insert_offer returns None for an already seen (source, product): nothing new.
+    # insert_offer returns None for an already seen (source, product, day): nothing new.
     assert len(repo.publications()) == 2
     assert len(repo.offer_statuses()) == 2
 
@@ -144,3 +144,39 @@ async def test_does_not_log_promotion_links(caplog):
     with caplog.at_level(logging.DEBUG):
         await runner.run(source)
     assert "s.click.aliexpress.com" not in caplog.text
+
+
+def test_offer_message_id_is_deterministic_distinct_per_day_and_fits_int64():
+    day = date(2026, 11, 6)
+    a = offer_message_id("123", day)
+    assert a == offer_message_id("123", day)
+    assert a != offer_message_id("123", day + timedelta(days=1))
+    assert a != offer_message_id("124", day)
+    assert 0 <= a < 2**63
+
+
+async def test_next_day_same_price_is_skipped_duplicate_and_recorded():
+    now = [NOW]
+    repo, source, _, runner = _setup(PRODUCTS, clock=lambda: now[0])
+    await runner.run(source)
+
+    now[0] = NOW + timedelta(days=1)
+    await runner.run(source)
+
+    assert len(repo.publications()) == 2
+    assert repo.offer_statuses() == [OfferStatus.PUBLISHED_WEB] * 2 + [
+        OfferStatus.SKIPPED_DUPLICATE
+    ] * 2
+
+
+async def test_next_day_price_drop_publishes_again():
+    now = [NOW]
+    repo, source, client, runner = _setup([_product("1", 50, price="10.00")], clock=lambda: now[0])
+    await runner.run(source)
+
+    now[0] = NOW + timedelta(days=1)
+    client.products = [_product("1", 60, price="8.00")]
+    await runner.run(source)
+
+    assert [p["published_price"] for p in repo.publications()] == [Decimal("10.00"), Decimal("8.00")]
+    assert repo.offer_statuses() == [OfferStatus.PUBLISHED_WEB] * 2
