@@ -241,3 +241,45 @@ async def test_backfill_finder_routes_by_store_and_skips_unknown(caplog):
     with caplog.at_level(logging.WARNING):
         assert await finder.find("p1", "ES", "nope") is None
     assert "nope" in caplog.text
+
+
+def _ali_settings(**kw) -> Settings:
+    return Settings(
+        _env_file=None,
+        telegram_api_id=1,
+        telegram_api_hash="hash",
+        telegram_bot_token="token",
+        supabase_url="https://example.supabase.co",
+        supabase_service_key="key",
+        **kw,
+    )
+
+
+def test_build_runners_includes_aliexpress_with_credentials():
+    import httpx
+
+    from patobarato.storage.repository import InMemoryRepository
+    from patobarato.stores.registry import build_registry
+
+    settings = _ali_settings(
+        aliexpress_app_key="k", aliexpress_app_secret="s", aliexpress_tracking_id="t"
+    )
+    http = httpx.AsyncClient()
+    registry = build_registry(settings, http, http)
+
+    runners = main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None)
+
+    assert [r.type for r in runners] == ["aliexpress_api"]
+
+
+def test_build_runners_is_empty_without_credentials():
+    import httpx
+
+    from patobarato.storage.repository import InMemoryRepository
+    from patobarato.stores.registry import build_registry
+
+    settings = _ali_settings()
+    http = httpx.AsyncClient()
+    registry = build_registry(settings, http, http)
+
+    assert main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None) == []

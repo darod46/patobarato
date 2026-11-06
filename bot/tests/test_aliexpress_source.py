@@ -80,6 +80,7 @@ async def test_same_day_second_run_is_skipped_quietly(caplog):
     with caplog.at_level(logging.DEBUG):
         await runner.run(source)
 
+    assert "s.click.aliexpress.com" not in caplog.text
     # insert_offer returns None for an already seen (source, product, day): nothing new.
     assert len(repo.publications()) == 2
     assert len(repo.offer_statuses()) == 2
@@ -139,11 +140,57 @@ async def test_offer_uses_source_country_and_no_image_means_no_set_image():
     assert repo.product_images == {}
 
 
-async def test_does_not_log_promotion_links(caplog):
-    _, source, _, runner = _setup(PRODUCTS)
+async def test_does_not_log_promotion_links_on_publish_or_failure(caplog):
+    repo, source, _, runner = _setup(PRODUCTS)
+
+    async def boom(*args, **kwargs):
+        raise RuntimeError("fail")
+
     with caplog.at_level(logging.DEBUG):
         await runner.run(source)
-    assert "s.click.aliexpress.com" not in caplog.text
+        await runner.run(source)
+        repo.insert_publication = boom
+        runner._client.products = [_product("9", 50)]
+        await runner.run(source)
+    assert len(repo.publications()) == 2
+    assert caplog.records
+    assert all("s.click.aliexpress.com" not in r.getMessage() for r in caplog.records)
+
+
+async def test_publication_failure_marks_failed_and_next_product_still_publishes():
+    repo, source, _, runner = _setup([_product("1", 50), _product("2", 50)])
+    original = repo.insert_publication
+
+    async def flaky(offer_id, *args, **kwargs):
+        if offer_id == 1:
+            raise RuntimeError("db down")
+        return await original(offer_id, *args, **kwargs)
+
+    repo.insert_publication = flaky
+
+    await runner.run(source)
+
+    assert repo.offer_statuses() == [OfferStatus.PUBLISH_FAILED, OfferStatus.PUBLISHED_WEB]
+    assert len(repo.publications()) == 1
+
+
+async def test_image_failure_does_not_block_status():
+    repo, source, _, runner = _setup([_product("1", 50)])
+
+    async def boom(product_id, url):
+        raise RuntimeError("img")
+
+    repo.set_product_image = boom
+
+    await runner.run(source)
+
+    assert repo.offer_statuses() == [OfferStatus.PUBLISHED_WEB]
+
+
+async def test_category_ids_as_string_is_wrapped():
+    _, source, client, runner = _setup([], config={"category_ids": "15"})
+    await runner.run(source)
+    assert client.calls[0]["category_ids"] == ["15"]
 
 
 def test_offer_message_id_is_deterministic_distinct_per_day_and_fits_int64():

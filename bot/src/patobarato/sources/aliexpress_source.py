@@ -73,7 +73,7 @@ class AliExpressSource:
         # with the configured keywords.
         keywords = cfg.get("keywords") if cfg.get("query", "hot") in ("hot", "search") else None
         products = await self._client.hot_products(
-            [str(c) for c in cfg.get("category_ids") or []],
+            _category_ids(cfg.get("category_ids")),
             keywords or None,
             min(max(max_results * 3, 20), MAX_PAGE_SIZE),
             1,
@@ -86,7 +86,16 @@ class AliExpressSource:
             and (max_price is None or p.price <= max_price)
         ][:max_results]
         for product in wanted:
-            await self._process(source, product)
+            try:
+                await self._process(source, product)
+            except Exception as e:
+                # No traceback: HTTP errors may carry a signed request URL.
+                logger.error(
+                    "AliExpress product %s failed: %s: %s",
+                    product.product_id,
+                    type(e).__name__,
+                    e,
+                )
 
     async def _process(self, source: ApiSource, product: AliProduct) -> None:
         now = self._clock()
@@ -126,22 +135,42 @@ class AliExpressSource:
             timedelta(minutes=self._settings.stale_after_minutes),
         )
         if status == OfferStatus.PUBLISHED:
-            await self._repo.insert_publication(
-                offer_id,
-                product_id,
-                offer.country,
-                None,
-                None,
-                product.price,
-                product.promotion_link or offer.canonical_url,
-                now,
-                channel="web",
-            )
+            try:
+                await self._repo.insert_publication(
+                    offer_id,
+                    product_id,
+                    offer.country,
+                    None,
+                    None,
+                    product.price,
+                    product.promotion_link or offer.canonical_url,
+                    now,
+                    channel="web",
+                )
+            except Exception:
+                await self._repo.set_offer_status(offer_id, OfferStatus.PUBLISH_FAILED)
+                raise
             if product.image_url:
-                await self._repo.set_product_image(product_id, product.image_url)
+                try:
+                    await self._repo.set_product_image(product_id, product.image_url)
+                except Exception as e:
+                    logger.error(
+                        "Image update failed for %s: %s: %s",
+                        product.product_id,
+                        type(e).__name__,
+                        e,
+                    )
             status = OfferStatus.PUBLISHED_WEB
         await self._repo.set_offer_status(offer_id, status)
 
 
 def _decimal(value: object) -> Decimal | None:
     return None if value in (None, "") else Decimal(str(value))
+
+
+def _category_ids(value: object) -> list[str]:
+    if not value:
+        return []
+    if isinstance(value, (str, int)):
+        return [str(value)]
+    return [str(c) for c in value]  # type: ignore[attr-defined]
