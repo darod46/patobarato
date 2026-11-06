@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { HomeClient } from '../../components/HomeClient'
 import { fetchCoupons } from '../../lib/coupons'
+import { fetchStores } from '../../lib/stores-data'
 import { homeMetadata } from '../../lib/seo'
 import { getSupabase } from '../../lib/supabase'
 
@@ -18,20 +19,23 @@ export async function generateMetadata({
   searchParams: Promise<SearchParams>
 }): Promise<Metadata> {
   const params = await searchParams
-  return homeMetadata({ q: first(params.q), tag: first(params.tag) })
+  const stores = await loadStores()
+  return homeMetadata({ q: first(params.q), tag: first(params.tag), stores: stores.map((s) => s.store) })
 }
 
 /** Resolves to [] on any failure, including missing env vars. */
 const loadCoupons = () => Promise.resolve().then(() => fetchCoupons(getSupabase(), 4)).catch(() => [])
 
+const loadStores = () => Promise.resolve().then(() => fetchStores(getSupabase())).catch(() => [])
+
 export default async function FilteredHomePage() {
-  const coupons = await loadCoupons()
+  const [coupons, stores] = await Promise.all([loadCoupons(), loadStores()])
   // Events and the calendar come from the static calendar inside HomeClient, as on the home.
   return (
     <HomeClient
       now={new Date().toISOString()}
       coupons={coupons}
-      couponStores={coupons.map((c) => c.store)}
+      stores={stores}
     />
   )
 }

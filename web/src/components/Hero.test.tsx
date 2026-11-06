@@ -18,13 +18,13 @@ const full: HeroHighlights = {
 
 describe('Hero', () => {
   it('uses the redesign copy and has no invented figures', () => {
-    const { container } = render(<Hero highlights={none} />)
+    const { container } = render(<Hero highlights={none} storeNames={['Amazon']} />)
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
       'El pato que caza los chollos antes de que vuelen',
     )
     expect(
       screen.getByText(
-        'Amazon, AliExpress, PcComponentes y más. Cada oferta con su precio, el precio anterior y el cupón si lo hay. Sin registros ni spam.',
+        'Amazon. Cada oferta con su precio, el precio anterior y el cupón si lo hay. Sin registros ni spam.',
       ),
     ).toBeInTheDocument()
     expect(container.textContent).not.toMatch(/\d+(\.\d+)?K\b/)
@@ -32,7 +32,7 @@ describe('Hero', () => {
   })
 
   it('shows one floating badge per real highlight', () => {
-    render(<Hero highlights={full} />)
+    render(<Hero highlights={full} storeNames={['Amazon']} />)
     const badges = screen.getAllByTestId('hero-badge')
     expect(badges.map((b) => b.textContent)).toEqual([
       '-42%Smart TV Xiaomi 55"',
@@ -42,7 +42,7 @@ describe('Hero', () => {
   })
 
   it('shows the mascot and the guarantees', () => {
-    render(<Hero highlights={none} />)
+    render(<Hero highlights={none} storeNames={['Amazon']} />)
     expect(screen.getByRole('img', { name: 'Mascota de PatoBarato, un pato superhéroe' })).toHaveAttribute(
       'src',
       '/pato-heroe.svg',
@@ -53,11 +53,22 @@ describe('Hero', () => {
   })
 
   it('links to the deals section and Telegram', () => {
-    render(<Hero highlights={none} />)
+    render(<Hero highlights={none} storeNames={['Amazon']} />)
     expect(screen.getByRole('link', { name: 'Ver chollos de hoy' })).toHaveAttribute('href', '/#chollos')
     expect(screen.getByRole('link', { name: 'Recibirlos en Telegram' })).toHaveAttribute(
       'href',
       'https://t.me/patobarato',
     )
+  })
+
+  it('names the stores from data, joined in Spanish, with an Amazon fallback', () => {
+    const { unmount } = render(<Hero highlights={none} storeNames={['Amazon']} />)
+    expect(screen.getByText(/^Amazon\. Cada oferta con su precio/)).toBeInTheDocument()
+    unmount()
+    const two = render(<Hero highlights={none} storeNames={['Amazon', 'AliExpress', 'PcComponentes']} />)
+    expect(screen.getByText(/^Amazon, AliExpress y PcComponentes\. Cada oferta con su precio/)).toBeInTheDocument()
+    two.unmount()
+    render(<Hero highlights={none} storeNames={[]} />)
+    expect(screen.getByText(/^Amazon\. Cada oferta/)).toBeInTheDocument()
   })
 })

@@ -166,8 +166,8 @@ describe('jsonLdScript', () => {
 describe('homeMetadata with coupons', () => {
   it('mentions coupons and other stores only when present', () => {
     expect(homeMetadata({}).title).toBeUndefined()
-    expect(homeMetadata({ couponStores: ['amazon'] }).title).toBe('PatoBarato · Chollos y cupones de Amazon')
-    expect(homeMetadata({ couponStores: ['aliexpress'] }).title).toBe('PatoBarato · Chollos y cupones de Amazon y otras tiendas')
+    expect(homeMetadata({ stores: ['amazon'] }).title).toBe('PatoBarato · Chollos y cupones de Amazon')
+    expect(homeMetadata({ stores: ['aliexpress'] }).title).toBe('PatoBarato · Chollos y cupones de Amazon y otras tiendas')
   })
 })
 

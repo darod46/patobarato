@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useDeals, type DealsFetcher, type InitialDeals } from '../hooks/useDeals'
 import type { DealSort } from '../lib/deals'
+import type { StoreStats } from '../lib/stores-data'
 import type { HashtagCount } from '../lib/types'
 import { DealCard } from './DealCard'
 import { DealCardSkeleton } from './DealCardSkeleton'
 import { EmptyState } from './EmptyState'
 import { ErrorState } from './ErrorState'
 import { HashtagChips } from './HashtagChips'
+import { StoreChips } from './StoreChips'
 import { SortSelector } from './SortSelector'
 
 type Props = {
@@ -14,6 +16,9 @@ type Props = {
   tag: string | null
   /** Store id filter; optional so callers without a store filter keep working. */
   store?: string | null
+  /** Stores with data; the store chips show only with two or more. */
+  stores?: StoreStats[]
+  onStore?: (store: string | null) => void
   /** Listing order; without `onSort` the order cannot be changed from this feed. */
   sort?: DealSort
   onSort?: (sort: DealSort) => void
@@ -36,6 +41,8 @@ export function DealFeed({
   q,
   tag,
   store = null,
+  stores = [],
+  onStore,
   sort = 'recientes',
   onSort,
   onTag,
@@ -71,6 +78,7 @@ export function DealFeed({
   return (
     <div className="flex flex-col gap-6">
       {onSort && <SortSelector value={sort} onChange={onSort} />}
+      {onStore && stores.length >= 2 && <StoreChips stores={stores} active={store} onSelect={onStore} />}
       {(tags.length > 0 || tag) && <HashtagChips tags={tags} active={tag} onSelect={onTag} />}
       {status === 'loading' && (
         <div data-testid="feed-skeletons" className={GRID}>

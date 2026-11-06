@@ -36,12 +36,12 @@ const COLUMNS: Column[] = [
 type Props = {
   /** Server render year, so server and client HTML always match. */
   year: number
-  /** Store ids with valid coupons; stores other than Amazon are named in the affiliate notice. */
-  couponStores?: string[]
+  /** Store ids with deals or coupons; stores other than Amazon are named in the affiliate notice. */
+  stores?: string[]
 }
 
-export function Footer({ year, couponStores = [] }: Props) {
-  const others = storeNames(couponStores.filter((s) => s !== 'amazon'))
+export function Footer({ year, stores = [] }: Props) {
+  const others = storeNames(stores.filter((s) => s !== 'amazon'))
   return (
     <footer className="border-t border-line bg-white py-12">
       <div className="mx-auto flex max-w-[1200px] flex-col gap-8 px-4 md:px-8">

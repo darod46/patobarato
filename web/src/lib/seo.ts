@@ -118,12 +118,12 @@ export function hashtagMetadata(tag: string, count: number): Metadata {
 
 /**
  * Home metadata. For the v1 query links, `?tag=` is canonical on its hashtag page and `?q=` is never
- * indexed. With `couponStores` (ids of stores with valid coupons) the title mentions coupons, and
+ * indexed. With `stores` (ids of stores with deals or coupons) the title mentions coupons, and
  * "otras tiendas" only when one of them is not Amazon — never claim what the data does not show.
  */
-export function homeMetadata(params: { q?: string; tag?: string; couponStores?: string[] }): Metadata {
+export function homeMetadata(params: { q?: string; tag?: string; stores?: string[] }): Metadata {
   const tag = params.tag ? parseTagParam(params.tag) : null
-  const stores = params.couponStores ?? []
+  const stores = params.stores ?? []
   const others = stores.some((s) => s !== 'amazon')
   const title = stores.length
     ? `PatoBarato · Chollos y cupones de Amazon${others ? ' y otras tiendas' : ''}`

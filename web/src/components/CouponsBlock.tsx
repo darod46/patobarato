@@ -1,14 +1,10 @@
 import { ArrowRight } from 'lucide-react'
 import { storeNames } from '../lib/stores'
+import { joinNames } from '../lib/text'
 import type { Coupon } from '../lib/types'
 import { CouponCard } from './CouponCard'
 
 const MAX = 4
-
-function joinNames(names: string[]): string {
-  if (names.length <= 1) return names.join('')
-  return `${names.slice(0, -1).join(', ')} y ${names[names.length - 1]}`
-}
 
 /** Home block with the first valid coupons; renders nothing when there are none. */
 export function CouponsBlock({ coupons }: { coupons: Coupon[] }) {

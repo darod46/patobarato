@@ -6,6 +6,8 @@ import { useClock } from '../hooks/useClock'
 import { useUrlFilters } from '../hooks/useUrlFilters'
 import type { DealsFetcher, InitialDeals } from '../hooks/useDeals'
 import * as api from '../lib/deals'
+import { storeNames } from '../lib/stores'
+import type { StoreStats } from '../lib/stores-data'
 import { getSupabase } from '../lib/supabase'
 import type { Coupon, Deal, HashtagCount } from '../lib/types'
 import { AboutBlock } from './AboutBlock'
@@ -15,6 +17,7 @@ import { DealFeed } from './DealFeed'
 import { EventsBlock } from './EventsBlock'
 import { Footer } from './Footer'
 import { Header } from './Header'
+import { StoresBlock } from './StoresBlock'
 import { Hero, type HeroHighlights } from './Hero'
 import { HowItWorks } from './HowItWorks'
 import { SearchBox } from './SearchBox'
@@ -34,8 +37,8 @@ type Props = {
   highlights?: HeroHighlights
   /** Valid coupons for the home block (at most the first few). */
   coupons?: Coupon[]
-  /** Store ids with valid coupons (for the title and the affiliate notice). */
-  couponStores?: string[]
+  /** Stores with active deals or coupons (hero copy, stores block, chips, affiliate notice). */
+  stores?: StoreStats[]
   /** Event for the announcement bar (within the window) and the calendar list; derived from the static calendar when omitted. */
   event?: SiteEvent | null
   upcoming?: SiteEvent[]
@@ -59,13 +62,13 @@ export function HomeClient({
   fetchLatestDeal = defaultFetchLatestDeal,
   highlights = NO_HIGHLIGHTS,
   coupons = [],
-  couponStores = [],
+  stores = [],
   event,
   upcoming,
   latestPublishedAt = null,
 }: Props) {
   // Chips are links to /chollos/{tag}; a legacy `/?tag=` still filters here and marks its chip.
-  const { q, tag, store, sort, setQ, setSort, clear } = useUrlFilters()
+  const { q, tag, store, sort, setQ, setSort, setStore, clear } = useUrlFilters()
   const clock = useClock(now)
   const renderTime = new Date(now)
   const barEvent = event === undefined ? nextEvent(renderTime, EVENTS, ANNOUNCE_WINDOW_DAYS) : event
@@ -81,7 +84,8 @@ export function HomeClient({
           latestPublishedAt={latestPublishedAt}
           now={renderTime}
         />
-        <Hero highlights={highlights} />
+        <Hero highlights={highlights} storeNames={storeNames(stores.map((s) => s.store))} />
+        <StoresBlock stores={stores} />
         <section id="chollos" className="mx-auto max-w-[1200px] scroll-mt-32 px-4 pt-8 pb-12 md:px-8 md:pt-12">
           <h2 className="font-display text-2xl font-bold tracking-[-0.02em] md:text-[32px]">Chollos de hoy</h2>
           <p className="mt-1.5 mb-5 text-muted">Se actualiza automáticamente</p>
@@ -89,6 +93,8 @@ export function HomeClient({
             q={q}
             tag={tag}
             store={store}
+            stores={stores}
+            onStore={setStore}
             sort={sort}
             onSort={setSort}
             onClear={clear}
@@ -105,7 +111,7 @@ export function HomeClient({
         <AboutBlock />
         <TelegramBlock fetchLatestDeal={fetchLatestDeal} />
       </main>
-      <Footer year={renderTime.getUTCFullYear()} couponStores={couponStores} />
+      <Footer year={renderTime.getUTCFullYear()} stores={stores.map((s) => s.store)} />
     </div>
   )
 }

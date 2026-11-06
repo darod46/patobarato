@@ -11,17 +11,17 @@ describe('Footer', () => {
     expect(screen.getByText('© 2026 PatoBarato')).toBeInTheDocument()
   })
 
-  it('names other stores in the affiliate notice only when they have coupons', () => {
+  it('names other stores in the affiliate notice only when they have data', () => {
     const { unmount } = render(<Footer year={2026} />)
     expect(screen.getByText(/Afiliado de Amazon/)).toBeInTheDocument()
     expect(screen.queryByText(/AliExpress/)).toBeNull()
     unmount()
-    render(<Footer year={2026} couponStores={['aliexpress', 'amazon']} />)
+    render(<Footer year={2026} stores={['aliexpress', 'amazon']} />)
     expect(screen.getByText(/programas de afiliados de AliExpress\./)).toBeInTheDocument()
   })
 
-  it('does not add the extra notice when the only coupon store is Amazon', () => {
-    render(<Footer year={2026} couponStores={['amazon']} />)
+  it('does not add the extra notice when the only store is Amazon', () => {
+    render(<Footer year={2026} stores={['amazon']} />)
     expect(screen.queryByText(/programas de afiliados de/)).toBeNull()
   })
 })

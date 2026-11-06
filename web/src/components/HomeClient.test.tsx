@@ -206,11 +206,33 @@ it('mounts the v3 sections in order and omits coupons when there are none', () =
       fetchHashtags={vi.fn().mockResolvedValue([])}
       fetchLatestDeal={vi.fn().mockResolvedValue(null)}
       coupons={[{ id: 1, store: 'aliexpress', code: 'PATO6', title: '−6 € en 40 €', conditions: null, url: null, startsAt: '2026-11-01T00:00:00Z', expiresAt: null }]}
-      couponStores={['aliexpress']}
+      stores={[{ store: 'aliexpress', deals: 2, coupons: 1 }]}
       event={null}
       upcoming={[]}
     />,
   )
   expect(document.querySelector('section#cupones')).not.toBeNull()
   expect(screen.getByText(/programas de afiliados de AliExpress/)).toBeInTheDocument()
+})
+
+it('shows the stores block and store chips only with two or more stores', async () => {
+  const props = {
+    now: '2026-11-06T10:00:00Z',
+    fetchDeals: vi.fn().mockResolvedValue({ deals: [deal], hasMore: false }),
+    fetchHashtags: vi.fn().mockResolvedValue([]),
+    fetchLatestDeal: vi.fn().mockResolvedValue(null),
+    event: null,
+    upcoming: [],
+  }
+  const one = render(<HomeClient {...props} stores={[{ store: 'amazon', deals: 3, coupons: 0 }]} />)
+  expect(document.querySelector('section#tiendas')).toBeNull()
+  expect(screen.queryByRole('button', { name: 'Todas' })).toBeNull()
+  one.unmount()
+  render(
+    <HomeClient {...props} stores={[{ store: 'amazon', deals: 3, coupons: 0 }, { store: 'aliexpress', deals: 2, coupons: 1 }]} />,
+  )
+  expect(document.querySelector('section#tiendas')).not.toBeNull()
+  expect(screen.getByRole('button', { name: 'AliExpress' })).toHaveAttribute('aria-pressed', 'false')
+  expect(screen.getByText(/^Amazon y AliExpress\. Cada oferta/)).toBeInTheDocument()
+  await screen.findAllByText(/Auriculares Sony/)
 })

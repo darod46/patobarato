@@ -57,7 +57,7 @@ export default async function CouponsPage() {
           ))
         )}
       </main>
-      <Footer year={year} couponStores={coupons.map((c) => c.store)} />
+      <Footer year={year} stores={coupons.map((c) => c.store)} />
     </div>
   )
 }

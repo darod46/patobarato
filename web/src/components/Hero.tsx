@@ -1,4 +1,5 @@
 import { Check, Send, TrendingDown } from 'lucide-react'
+import { joinNames } from '../lib/text'
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
 /** Facts taken from the current listing; a null/false value hides its badge. */
@@ -22,7 +23,7 @@ function Badge({ className, children }: { className: string; children: React.Rea
   )
 }
 
-export function Hero({ highlights }: { highlights: HeroHighlights }) {
+export function Hero({ highlights, storeNames }: { highlights: HeroHighlights; storeNames: string[] }) {
   const { topDiscountPct, topDiscountTitle, latestCouponTitle, hasLowest } = highlights
   return (
     <section className="bg-gradient-to-b from-warm to-white">
@@ -36,7 +37,7 @@ export function Hero({ highlights }: { highlights: HeroHighlights }) {
             El pato que caza los chollos antes de que vuelen
           </h1>
           <p className="max-w-xl text-base leading-relaxed text-muted md:text-lg">
-            Amazon, AliExpress, PcComponentes y más. Cada oferta con su precio, el precio anterior y el
+            {joinNames(storeNames.length > 0 ? storeNames : ['Amazon'])}. Cada oferta con su precio, el precio anterior y el
             cupón si lo hay. Sin registros ni spam.
           </p>
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
