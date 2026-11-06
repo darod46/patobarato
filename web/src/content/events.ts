@@ -11,7 +11,7 @@ export type SiteEvent = {
 }
 
 export const EVENTS: SiteEvent[] = [
-  { id: 'aliexpress-1111', name: '11.11 AliExpress', date: '2026-11-11', stores: ['aliexpress'] },
+  { id: 'aliexpress-1111', name: '11.11 de AliExpress', date: '2026-11-11', stores: ['aliexpress'] },
   { id: 'black-friday', name: 'Black Friday', date: '2026-11-27', stores: ['amazon', 'pccomponentes', 'mediamarkt'] },
   { id: 'cyber-monday', name: 'Cyber Monday', date: '2026-11-30', stores: ['amazon', 'pccomponentes'] },
   { id: 'rebajas-enero', name: 'Rebajas de enero', date: '2027-01-07', stores: [] },

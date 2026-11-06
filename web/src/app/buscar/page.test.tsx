@@ -8,7 +8,7 @@ describe('/buscar', () => {
 
   it('renders the events calendar like the home', async () => {
     render(await FilteredHomePage())
-    expect(screen.getAllByText('11.11 AliExpress').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('11.11 de AliExpress').length).toBeGreaterThan(0)
     expect(screen.queryByText('No hay eventos próximos en el calendario.')).toBeNull()
   })
 })

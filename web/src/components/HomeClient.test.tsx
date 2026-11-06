@@ -190,14 +190,14 @@ it('mounts the v3 sections in order and omits coupons when there are none', () =
       fetchHashtags={vi.fn().mockResolvedValue([])}
       fetchLatestDeal={vi.fn().mockResolvedValue(null)}
       coupons={[]}
-      event={{ id: 'a', name: '11.11 AliExpress', date: '2026-11-11', stores: ['aliexpress'] }}
-      upcoming={[{ id: 'a', name: '11.11 AliExpress', date: '2026-11-11', stores: ['aliexpress'] }]}
+      event={{ id: 'a', name: '11.11 de AliExpress', date: '2026-11-11', stores: ['aliexpress'] }}
+      upcoming={[{ id: 'a', name: '11.11 de AliExpress', date: '2026-11-11', stores: ['aliexpress'] }]}
       latestPublishedAt="2026-11-06T09:48:00Z"
     />,
   )
   const ids = [...container.querySelectorAll('section[id]')].map((s) => s.id)
   expect(ids).toEqual(['chollos', 'como-funciona', 'eventos', 'sobre', 'telegram'])
-  expect(screen.getByText(/11\.11 AliExpress en 5 días/)).toBeInTheDocument()
+  expect(screen.getByText(/11\.11 de AliExpress en 5 días/)).toBeInTheDocument()
   unmount()
   render(
     <HomeClient

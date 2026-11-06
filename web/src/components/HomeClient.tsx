@@ -75,7 +75,12 @@ export function HomeClient({
     <div className="min-h-screen bg-white font-sans text-ink">
       <Header search={<SearchBox value={q} onChange={setQ} />} />
       <main className="pt-[118px] md:pt-[72px]">
-        <AnnouncementBar event={barEvent} latestPublishedAt={latestPublishedAt} now={renderTime} />
+        <AnnouncementBar
+          event={barEvent}
+          second={barEvent && calendar[0]?.id === barEvent.id ? (calendar[1] ?? null) : null}
+          latestPublishedAt={latestPublishedAt}
+          now={renderTime}
+        />
         <Hero highlights={highlights} />
         <section id="chollos" className="mx-auto max-w-[1200px] scroll-mt-32 px-4 pt-8 pb-12 md:px-8 md:pt-12">
           <h2 className="font-display text-2xl font-bold tracking-[-0.02em] md:text-[32px]">Chollos de hoy</h2>

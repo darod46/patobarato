@@ -4,14 +4,14 @@ import type { SiteEvent } from '../content/events'
 import { EventsBlock } from './EventsBlock'
 
 const now = new Date('2026-11-06T10:00:00Z')
-const e1: SiteEvent = { id: 'a', name: '11.11 AliExpress', date: '2026-11-11', stores: ['aliexpress'] }
+const e1: SiteEvent = { id: 'a', name: '11.11 de AliExpress', date: '2026-11-11', stores: ['aliexpress'] }
 const e2: SiteEvent = { id: 'b', name: 'Black Friday', date: '2026-11-27', stores: ['amazon', 'pccomponentes'] }
 const e3: SiteEvent = { id: 'c', name: 'Prime Day', date: '2027-07-01', stores: ['amazon'], approximate: true }
 
 describe('EventsBlock', () => {
   it('shows the next event with the days left and the upcoming list with stores', () => {
     render(<EventsBlock next={e1} upcoming={[e1, e2, e3]} now={now} />)
-    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('11.11 AliExpress')
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('11.11 de AliExpress')
     expect(screen.getByText('Faltan 5 días')).toBeInTheDocument()
     expect(screen.getByText('27 nov')).toBeInTheDocument()
     expect(screen.getByText('julio')).toBeInTheDocument()

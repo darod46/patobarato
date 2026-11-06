@@ -45,6 +45,12 @@ export function whenLabel(event: SiteEvent, now: Date): string {
   return `en ${days} días`
 }
 
+/** "27 de noviembre" for the announcement bar; the month alone when the date is approximate. */
+export function eventLongDateLabel(event: SiteEvent): string {
+  const [, month, day] = event.date.split('-').map(Number)
+  return event.approximate ? MONTH_NAMES[month - 1] : `${day} de ${MONTH_NAMES[month - 1]}`
+}
+
 /** "11 nov", or the month name alone ("julio") when the date is approximate. */
 export function eventDateLabel(event: SiteEvent): string {
   const [, month, day] = event.date.split('-').map(Number)

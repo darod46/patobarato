@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { EVENTS, type SiteEvent } from '../content/events'
-import { daysUntil, eventDateLabel, nextEvent, upcomingEvents } from './events'
+import { daysUntil, eventDateLabel, eventLongDateLabel, nextEvent, upcomingEvents } from './events'
 
 const now = new Date('2026-11-06T10:00:00Z')
 
@@ -30,6 +30,11 @@ describe('events', () => {
 
   it('upcomingEvents limits and skips past', () => {
     expect(upcomingEvents(now, 2).map((e) => e.id)).toEqual(['aliexpress-1111', 'black-friday'])
+  })
+
+  it('writes the long date for the announcement bar', () => {
+    expect(eventLongDateLabel(EVENTS[1])).toBe('27 de noviembre')
+    expect(eventLongDateLabel(EVENTS[3])).toBe('7 de enero')
   })
 
   it('labels dates in Spanish and approximate dates by month', () => {
