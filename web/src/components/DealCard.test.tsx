@@ -21,9 +21,9 @@ const full: Deal = {
   country: 'es',
   store: 'amazon',
   productId: 7,
-  discountPct: null,
-  previousMinPrice: null,
-  isLowest: false,
+  discountPct: 35,
+  previousMinPrice: 31.5,
+  isLowest: true,
 }
 
 const minimal: Deal = {
@@ -32,6 +32,9 @@ const minimal: Deal = {
   coupon: null,
   hashtags: [],
   imageUrl: null,
+  discountPct: null,
+  previousMinPrice: null,
+  isLowest: false,
 }
 
 describe('DealCard', () => {
@@ -45,13 +48,22 @@ describe('DealCard', () => {
     expect(screen.getByText(formatPrice(29.99), { normalizer: (t) => t })).toBeInTheDocument()
     const prev = screen.getByText(formatPrice(49.99), { normalizer: (t) => t })
     expect(prev.tagName).toBe('S')
-    expect(screen.getByText('-40%')).toBeInTheDocument()
+    expect(screen.getByText('-35%')).toBeInTheDocument()
     expect(screen.getByText('Cupón 5 €')).toBeInTheDocument()
-    expect(screen.getByText('Amazon · hace 5 min')).toBeInTheDocument()
+    expect(screen.getByTestId('coupon-chip')).toHaveTextContent('Cupón')
+    expect(screen.getByText('Mínimo histórico')).toBeInTheDocument()
+    expect(screen.getByText('Ver chollo')).toBeInTheDocument()
+    expect(screen.getByText('Amazon')).toBeInTheDocument()
+    expect(screen.getByText('hace 5 min')).toBeInTheDocument()
     const img = screen.getByRole('img')
     expect(img).toHaveAttribute('src', full.imageUrl)
     expect(img).toHaveAttribute('alt', full.title)
     expect(img).not.toHaveAttribute('data-placeholder')
+  })
+
+  it('shows the discount from the view, not recomputed from prices', () => {
+    render(<DealCard deal={{ ...full, discountPct: null }} now={now} />)
+    expect(screen.queryByText(/%/)).toBeNull()
   })
 
   it('has no Amazon button and no hashtag buttons', () => {
@@ -68,6 +80,8 @@ describe('DealCard', () => {
     expect(container.textContent).not.toContain('%')
     expect(container.querySelector('s')).toBeNull()
     expect(screen.queryByTestId('coupon')).toBeNull()
+    expect(screen.queryByTestId('coupon-chip')).toBeNull()
+    expect(screen.queryByText('Mínimo histórico')).toBeNull()
   })
 
   it('falls back to the placeholder when the image fails', () => {

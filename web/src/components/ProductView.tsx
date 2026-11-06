@@ -75,7 +75,7 @@ export function ProductView({ deal, related, now }: Props) {
             />
           )}
           {discount !== null && (
-            <span className="absolute top-3 left-3 rounded-full bg-amber px-3 py-1 text-sm font-extrabold text-carbon shadow-sm">
+            <span className="absolute top-3 left-3 rounded-lg bg-danger px-3 py-1 text-sm font-bold text-white">
               -{discount}%
             </span>
           )}
@@ -90,9 +90,14 @@ export function ProductView({ deal, related, now }: Props) {
           </span>
           <h1 className="text-2xl leading-tight font-extrabold md:text-3xl">{deal.title}</h1>
           <div className="flex flex-wrap items-baseline justify-center gap-3 md:justify-start">
-            <span className="price text-4xl font-extrabold">{formatPrice(deal.price)}</span>
+            <span className="price font-display text-4xl font-bold tracking-[-0.02em]">{formatPrice(deal.price)}</span>
             {discount !== null && (
-              <s className="price text-lg text-zinc-500">{formatPrice(deal.previousPrice!)}</s>
+              <s className="price text-lg text-muted">{formatPrice(deal.previousPrice!)}</s>
+            )}
+            {deal.isLowest && (
+              <span className="rounded-lg bg-success-soft px-2.5 py-1 text-xs font-semibold text-success">
+                Mínimo histórico
+              </span>
             )}
           </div>
           {saving !== null && (

@@ -47,7 +47,7 @@ describe('DealFeed', () => {
     expect(await screen.findByText('Chollo 1')).toBeInTheDocument()
     expect(screen.queryByTestId('feed-skeletons')).not.toBeInTheDocument()
     expect(await screen.findByRole('button', { name: '#sony' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Cargar más' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Cargar más chollos' })).not.toBeInTheDocument()
   })
 
   it('loads more when hasMore', async () => {
@@ -56,9 +56,9 @@ describe('DealFeed', () => {
       .mockResolvedValueOnce({ deals: [deal(1)], hasMore: true })
       .mockResolvedValueOnce({ deals: [deal(2)], hasMore: false })
     setup({ fetchDeals })
-    await userEvent.click(await screen.findByRole('button', { name: 'Cargar más' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Cargar más chollos' }))
     expect(await screen.findByText('Chollo 2')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Cargar más' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Cargar más chollos' })).not.toBeInTheDocument()
   })
 
   it('shows EmptyState and clears', async () => {
@@ -100,7 +100,7 @@ describe('DealFeed', () => {
     expect(screen.getByText('Chollo 7')).toBeInTheDocument()
     expect(screen.queryByTestId('feed-skeletons')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '#hogar' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Cargar más' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cargar más chollos' })).toBeInTheDocument()
     await waitFor(() => expect(props.fetchDeals).not.toHaveBeenCalled())
     expect(props.fetchHashtags).not.toHaveBeenCalled()
   })
@@ -111,5 +111,20 @@ describe('DealFeed', () => {
     expect(screen.getByRole('link', { name: '#hogar' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('link', { name: 'Todos' })).toHaveAttribute('href', '/')
     await screen.findByText('Chollo 1')
+  })
+})
+
+describe('DealFeed sort', () => {
+  it('renders the sort selector only with onSort and propagates the choice', async () => {
+    const onSort = vi.fn()
+    const fetchDeals = vi.fn(async () => ({ deals: [], hasMore: false }))
+    const { unmount } = render(
+      <DealFeed q="" tag={null} sort="recientes" onSort={onSort} onClear={() => {}} fetchDeals={fetchDeals} initialTags={[]} now={new Date()} />,
+    )
+    await userEvent.click(await screen.findByRole('button', { name: 'Mayor descuento' }))
+    expect(onSort).toHaveBeenCalledWith('descuento')
+    unmount()
+    render(<DealFeed q="" tag={null} onClear={() => {}} fetchDeals={fetchDeals} initialTags={[]} now={new Date()} />)
+    expect(screen.queryByRole('group', { name: 'Ordenar' })).toBeNull()
   })
 })

@@ -52,7 +52,7 @@ it('renders the heading, initial cards and link chips without fetching', async (
 
 it('loads more within the tag', async () => {
   const fetchDeals = setup()
-  await userEvent.click(screen.getByRole('button', { name: 'Cargar más' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Cargar más chollos' }))
   expect(await screen.findByText('Chollo 2')).toBeInTheDocument()
   expect(fetchDeals).toHaveBeenCalledWith({ q: undefined, tag: 'niños', sort: 'recientes', page: 1 })
 })

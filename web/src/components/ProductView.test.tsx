@@ -106,3 +106,13 @@ describe('ProductView', () => {
     expect(screen.queryByRole('heading', { level: 2 })).toBeNull()
   })
 })
+
+describe('ProductView lowest price', () => {
+  it('marks the lowest price only when the view says so', () => {
+    const { unmount } = render(<ProductView deal={{ ...deal, isLowest: true }} related={[]} now={now} />)
+    expect(screen.getByText('Mínimo histórico')).toBeInTheDocument()
+    unmount()
+    render(<ProductView deal={deal} related={[]} now={now} />)
+    expect(screen.queryByText('Mínimo histórico')).toBeNull()
+  })
+})

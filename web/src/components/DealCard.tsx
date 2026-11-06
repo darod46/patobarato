@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { discountPercent, formatPrice, timeAgo } from '../lib/format'
+import { formatPrice, timeAgo } from '../lib/format'
 import { storeInfo } from '../lib/stores'
 import type { Deal } from '../lib/types'
 import { productPath } from '../lib/urls'
@@ -12,15 +12,13 @@ type Props = { deal: Deal; now: Date }
 
 export function DealCard({ deal, now }: Props) {
   const [failed, setFailed] = useState(false)
-  const discount =
-    deal.previousPrice !== null ? discountPercent(deal.price, deal.previousPrice) : null
   const isPlaceholder = failed || !deal.imageUrl
   const src = isPlaceholder ? PLACEHOLDER : deal.imageUrl!
 
   return (
     <Link
       href={productPath(deal)}
-      className="group flex h-full flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white transition-shadow hover:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.08)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-carbon"
+      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-white transition-shadow hover:shadow-[0_8px_24px_rgba(20,22,26,.08)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
     >
       {/* Square box whatever the image's aspect ratio; the image never sizes it.
           White box + multiply blends the white background of Amazon photos. */}
@@ -37,38 +35,57 @@ export function DealCard({ deal, now }: Props) {
               : 'absolute inset-0 h-full w-full object-contain p-2 mix-blend-multiply sm:p-3'
           }
         />
-        {discount !== null && (
-          <span className="absolute top-2 left-2 rounded-full bg-amber px-2 py-0.5 text-xs font-bold text-carbon shadow-sm">
-            -{discount}%
+        {deal.discountPct !== null && (
+          <span className="absolute top-3 left-3 rounded-lg bg-danger px-2.5 py-1 text-[13px] font-bold text-white">
+            -{deal.discountPct}%
+          </span>
+        )}
+        {deal.coupon && (
+          <span
+            data-testid="coupon-chip"
+            className="absolute top-3 right-3 rounded-lg bg-accent px-2.5 py-1 text-xs font-semibold text-accent-ink"
+          >
+            Cupón
+          </span>
+        )}
+        {deal.isLowest && (
+          <span className="absolute bottom-3 left-3 rounded-lg bg-success-soft px-2.5 py-1 text-xs font-semibold text-success">
+            Mínimo histórico
           </span>
         )}
       </div>
-      <div className="flex flex-1 flex-col gap-1.5 border-t border-zinc-100 p-2.5 sm:gap-2 sm:p-3">
-        <h3 className="line-clamp-2 group-hover:underline min-h-[2lh] text-[13px] leading-snug font-semibold text-carbon sm:text-sm">
+      <div className="flex flex-1 flex-col gap-2 border-t border-line p-3 sm:gap-2.5 sm:p-4">
+        <span className="flex justify-between text-xs text-muted">
+          <span className="font-semibold text-ink">{storeInfo(deal.store).short}</span>
+          <span>{timeAgo(deal.publishedAt, now)}</span>
+        </span>
+        <h3 className="line-clamp-2 min-h-[2lh] text-[13px] leading-snug font-medium text-ink group-hover:underline sm:text-[15px]">
           {deal.title}
         </h3>
-        <div>
-          <span className="price block text-lg leading-tight font-bold text-carbon sm:text-xl">
+        <div className="mt-auto flex items-baseline gap-2">
+          <span className="price font-display text-xl leading-tight font-bold tracking-[-0.02em] text-ink sm:text-2xl">
             {formatPrice(deal.price)}
           </span>
-          <div className="mt-0.5 flex items-baseline justify-between gap-2 text-[11px] text-zinc-500 sm:text-xs">
-            {deal.previousPrice !== null ? (
-              <s className="price">{formatPrice(deal.previousPrice)}</s>
-            ) : (
-              <span />
-            )}
-            <span className="shrink-0">{storeInfo(deal.store).short} · {timeAgo(deal.publishedAt, now)}</span>
-          </div>
+          {deal.previousPrice !== null && (
+            <s className="price text-xs text-[#8a919c] sm:text-sm">{formatPrice(deal.previousPrice)}</s>
+          )}
         </div>
         {deal.coupon && (
           <div
             data-testid="coupon"
-            className="truncate rounded-md bg-zinc-100 px-2 py-1 text-[11px] text-zinc-600 sm:text-xs"
+            className="truncate rounded-md bg-surface px-2 py-1 text-[11px] text-muted sm:text-xs"
             title={deal.coupon}
           >
             {deal.coupon}
           </div>
         )}
+        <span className="flex h-10 items-center justify-center gap-1.5 rounded-[10px] bg-primary-soft text-sm font-semibold text-primary group-hover:bg-[#e3e9fa]">
+          Ver chollo
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M7 17 17 7" />
+            <path d="M8 7h9v9" />
+          </svg>
+        </span>
       </div>
     </Link>
   )

@@ -7,9 +7,10 @@ type Props = {
   onSelect?: (tag: string | null) => void
 }
 
-const base = 'shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-sm font-medium transition-colors'
-const on = 'bg-carbon text-white'
-const off = 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+const base =
+  'inline-flex min-h-10 shrink-0 items-center whitespace-nowrap rounded-full px-4 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+const on = 'bg-ink font-semibold text-white'
+const off = 'bg-surface font-medium text-ink hover:bg-line'
 
 function Chip({
   label,

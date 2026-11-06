@@ -7,6 +7,7 @@ import { DealCardSkeleton } from './DealCardSkeleton'
 import { EmptyState } from './EmptyState'
 import { ErrorState } from './ErrorState'
 import { HashtagChips } from './HashtagChips'
+import { SortSelector } from './SortSelector'
 
 type Props = {
   q: string
@@ -27,12 +28,13 @@ type Props = {
   now: Date
 }
 
-const GRID = 'grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5'
+const GRID = 'grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 lg:grid-cols-4 lg:gap-6'
 
 export function DealFeed({
   q,
   tag,
   sort = 'recientes',
+  onSort,
   onTag,
   onClear,
   fetchDeals,
@@ -65,6 +67,7 @@ export function DealFeed({
 
   return (
     <div className="flex flex-col gap-6">
+      {onSort && <SortSelector value={sort} onChange={onSort} />}
       {(tags.length > 0 || tag) && <HashtagChips tags={tags} active={tag} onSelect={onTag} />}
       {status === 'loading' && (
         <div data-testid="feed-skeletons" className={GRID}>
@@ -87,9 +90,9 @@ export function DealFeed({
               type="button"
               onClick={loadMore}
               disabled={loadingMore}
-              className="mx-auto rounded-lg bg-carbon px-6 py-2.5 text-sm font-semibold text-white hover:bg-carbon-soft disabled:opacity-60"
+              className="mx-auto h-12 rounded-xl border border-[#d7dae0] bg-white px-8 text-[15px] font-semibold text-ink hover:bg-surface disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
-              {loadingMore ? 'Cargando…' : 'Cargar más'}
+              {loadingMore ? 'Cargando…' : 'Cargar más chollos'}
             </button>
           )}
         </>
