@@ -27,11 +27,12 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return {
-      // v1 links `/?q=` and `/?tag=` need per-request metadata (noindex, canonical to the hashtag
+      // v1 links `/?q=`, `/?tag=` (and v3's `/?orden=`) need per-request metadata (noindex, canonical to the hashtag
       // page). They are served by the dynamic `/buscar` route so `/` itself stays static (ISR).
       beforeFiles: [
         { source: '/', has: [{ type: 'query', key: 'q' }], destination: '/buscar' },
         { source: '/', has: [{ type: 'query', key: 'tag' }], destination: '/buscar' },
+        { source: '/', has: [{ type: 'query', key: 'orden' }], destination: '/buscar' },
       ],
       afterFiles: [
         // /go/{ASIN} is served by the static redirect page (affiliate tag added by script).

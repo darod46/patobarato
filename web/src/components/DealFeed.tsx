@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useDeals, type DealsFetcher, type InitialDeals } from '../hooks/useDeals'
+import type { DealSort } from '../lib/deals'
 import type { HashtagCount } from '../lib/types'
 import { DealCard } from './DealCard'
 import { DealCardSkeleton } from './DealCardSkeleton'
@@ -10,6 +11,9 @@ import { HashtagChips } from './HashtagChips'
 type Props = {
   q: string
   tag: string | null
+  /** Listing order; without `onSort` the order cannot be changed from this feed. */
+  sort?: DealSort
+  onSort?: (sort: DealSort) => void
   /** Chips filter in place through this callback; without it they are links to the hashtag pages. */
   onTag?: (tag: string | null) => void
   onClear: () => void
@@ -28,6 +32,7 @@ const GRID = 'grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4 lg:g
 export function DealFeed({
   q,
   tag,
+  sort = 'recientes',
   onTag,
   onClear,
   fetchDeals,
@@ -38,7 +43,7 @@ export function DealFeed({
 }: Props) {
   const { deals, status, hasMore, loadingMore, loadMore, retry } = useDeals(
     fetchDeals,
-    { q, tag },
+    { q, tag, sort },
     initialDeals,
   )
   const [tags, setTags] = useState<string[]>(() => initialTags ?? [])

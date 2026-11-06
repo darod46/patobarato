@@ -24,7 +24,7 @@ export default async function HomePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(siteJsonLd())} />
       <HomeClient
         now={new Date().toISOString()}
-        initialDeals={page && { q: '', tag: null, ...page }}
+        initialDeals={page && { q: '', tag: null, sort: 'recientes', ...page }}
         initialTags={tags?.map((h) => h.tag)}
       />
     </>

@@ -1,5 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
+import type { DealSort } from '../lib/deals'
 import type { Deal } from '../lib/types'
 import { useDeals } from './useDeals'
 
@@ -41,7 +42,7 @@ describe('useDeals', () => {
     await waitFor(() => expect(result.current.status).toBe('ready'))
     expect(ids(result.current.deals)).toEqual([1])
     expect(result.current.hasMore).toBe(true)
-    expect(fetcher).toHaveBeenCalledWith({ q: undefined, tag: undefined, page: 0 })
+    expect(fetcher).toHaveBeenCalledWith({ q: undefined, tag: undefined, sort: 'recientes', page: 0 })
     act(() => result.current.loadMore())
     await waitFor(() => expect(ids(result.current.deals)).toEqual([1, 2]))
     expect(result.current.hasMore).toBe(false)
@@ -117,7 +118,7 @@ describe('useDeals', () => {
     act(() => result.current.loadMore())
     await waitFor(() => expect(ids(result.current.deals)).toEqual([1, 11]))
     expect(fetcher).toHaveBeenCalledTimes(1)
-    expect(fetcher).toHaveBeenCalledWith({ q: undefined, tag: undefined, page: 1 })
+    expect(fetcher).toHaveBeenCalledWith({ q: undefined, tag: undefined, sort: 'recientes', page: 1 })
   })
 
   it('fetches fresh when filters differ from the initial data, also when they come back', async () => {
@@ -133,10 +134,10 @@ describe('useDeals', () => {
     rerender({ q: 'lego' })
     expect(result.current.status).toBe('loading')
     await waitFor(() => expect(ids(result.current.deals)).toEqual([2]))
-    expect(fetcher).toHaveBeenLastCalledWith({ q: 'lego', tag: undefined, page: 0 })
+    expect(fetcher).toHaveBeenLastCalledWith({ q: 'lego', tag: undefined, sort: 'recientes', page: 0 })
     rerender({ q: '' })
     await waitFor(() => expect(ids(result.current.deals)).toEqual([3]))
-    expect(fetcher).toHaveBeenLastCalledWith({ q: undefined, tag: undefined, page: 0 })
+    expect(fetcher).toHaveBeenLastCalledWith({ q: undefined, tag: undefined, sort: 'recientes', page: 0 })
   })
 
   it('applies initial data to the fixed filters it was fetched with', async () => {
@@ -156,6 +157,20 @@ describe('useDeals', () => {
     )
     expect(result.current.status).toBe('loading')
     await waitFor(() => expect(ids(result.current.deals)).toEqual([2]))
-    expect(fetcher).toHaveBeenCalledWith({ q: undefined, tag: 'sony', page: 0 })
+    expect(fetcher).toHaveBeenCalledWith({ q: undefined, tag: 'sony', sort: 'recientes', page: 0 })
+  })
+})
+
+describe('useDeals sort', () => {
+  it('passes sort to the fetcher and refetches page 0 when it changes', async () => {
+    const fetcher = vi.fn(async () => ({ deals: [deal(1)], hasMore: false }))
+    const { result, rerender } = renderHook(
+      ({ sort }) => useDeals(fetcher, { q: '', tag: null, sort }),
+      { initialProps: { sort: 'recientes' as DealSort } },
+    )
+    await waitFor(() => expect(result.current.status).toBe('ready'))
+    expect(fetcher).toHaveBeenLastCalledWith({ q: undefined, tag: undefined, sort: 'recientes', page: 0 })
+    rerender({ sort: 'descuento' })
+    await waitFor(() => expect(fetcher).toHaveBeenLastCalledWith({ q: undefined, tag: undefined, sort: 'descuento', page: 0 }))
   })
 })

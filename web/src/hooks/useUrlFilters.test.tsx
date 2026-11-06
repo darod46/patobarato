@@ -84,3 +84,26 @@ describe('useUrlFilters server render', () => {
     expect(renderToString(<Probe />)).toContain('q=;tag=')
   })
 })
+
+describe('useUrlFilters sort', () => {
+  it('reads ?orden= and falls back to recientes for unknown values', () => {
+    history.replaceState(null, '', '/?orden=descuento')
+    expect(renderHook(() => useUrlFilters()).result.current.sort).toBe('descuento')
+    history.replaceState(null, '', '/?orden=xyz')
+    expect(renderHook(() => useUrlFilters()).result.current.sort).toBe('recientes')
+    history.replaceState(null, '', '/')
+    expect(renderHook(() => useUrlFilters()).result.current.sort).toBe('recientes')
+  })
+
+  it('setSort writes orden and recientes removes it', () => {
+    history.replaceState(null, '', '/?q=lego')
+    const { result } = renderHook(() => useUrlFilters())
+    act(() => result.current.setSort('minimo'))
+    expect(location.search).toContain('orden=minimo')
+    expect(location.search).toContain('q=lego')
+    expect(result.current.sort).toBe('minimo')
+    act(() => result.current.setSort('recientes'))
+    expect(location.search).not.toContain('orden=')
+    expect(result.current.sort).toBe('recientes')
+  })
+})

@@ -97,7 +97,7 @@ it('hydrates server HTML without mismatches and then applies the URL filters', a
     })
     expect(screen.getByRole('searchbox', { name: 'Buscar chollos' })).toHaveValue('lego')
     await waitFor(() =>
-      expect(props.fetchDeals).toHaveBeenLastCalledWith({ q: 'lego', tag: 'sony', page: 0 }),
+      expect(props.fetchDeals).toHaveBeenLastCalledWith({ q: 'lego', tag: 'sony', sort: 'recientes', page: 0 }),
     )
     expect(onRecoverableError).not.toHaveBeenCalled()
     expect(errors).not.toHaveBeenCalled()
@@ -152,7 +152,7 @@ it('fetches the URL filters after hydrating even with initial data', async () =>
         fetchLatestDeal={vi.fn().mockResolvedValue(null)}
       />,
     )
-    await waitFor(() => expect(fetchDeals).toHaveBeenCalledWith({ q: undefined, tag: 'sony', page: 0 }))
+    await waitFor(() => expect(fetchDeals).toHaveBeenCalledWith({ q: undefined, tag: 'sony', sort: 'recientes', page: 0 }))
     expect(fetchDeals).toHaveBeenCalledTimes(1)
     expect(await screen.findByText('No hay chollos que coincidan')).toBeInTheDocument()
   } finally {

@@ -1,20 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import type { DealSort } from '../lib/deals'
 import type { Deal } from '../lib/types'
 
 export type DealsFetcher = (params: {
   q?: string
   tag?: string
+  sort?: DealSort
   page: number
 }) => Promise<{ deals: Deal[]; hasMore: boolean }>
 
 type Status = 'loading' | 'ready' | 'error'
 
-type Filters = { q: string; tag: string | null }
+type Filters = { q: string; tag: string | null; sort?: DealSort }
 
 /** Page 0 for the given filters, typically rendered on the server. */
 export type InitialDeals = Filters & { deals: Deal[]; hasMore: boolean }
 
-const filtersKey = ({ q, tag }: Filters) => JSON.stringify([q, tag])
+const filtersKey = ({ q, tag, sort }: Filters) => JSON.stringify([q, tag, sort ?? 'recientes'])
 
 /**
  * When the first render's filters match `initial`, its deals are shown right away and page 0
@@ -22,6 +24,7 @@ const filtersKey = ({ q, tag }: Filters) => JSON.stringify([q, tag])
  */
 export function useDeals(fetcher: DealsFetcher, filters: Filters, initial?: InitialDeals) {
   const { q, tag } = filters
+  const sort = filters.sort ?? 'recientes'
   const key = filtersKey(filters)
   // The initial page counts only if it was fetched for the first render's filters.
   const [initialKey] = useState(() => (initial && filtersKey(initial) === key ? key : null))
@@ -56,7 +59,7 @@ export function useDeals(fetcher: DealsFetcher, filters: Filters, initial?: Init
     const id = ++requestId.current
     page.current = 0
     fetcherRef
-      .current({ q: q || undefined, tag: tag ?? undefined, page: 0 })
+      .current({ q: q || undefined, tag: tag ?? undefined, sort, page: 0 })
       .then((res) => {
         if (id !== requestId.current) return
         setDeals(res.deals)
@@ -67,14 +70,14 @@ export function useDeals(fetcher: DealsFetcher, filters: Filters, initial?: Init
         if (id !== requestId.current) return
         setStatus('error')
       })
-  }, [key, initialKey, q, tag, attempt])
+  }, [key, initialKey, q, tag, sort, attempt])
 
   const loadMore = useCallback(() => {
     const id = requestId.current
     const next = page.current + 1
     setLoadingMore(true)
     fetcherRef
-      .current({ q: q || undefined, tag: tag ?? undefined, page: next })
+      .current({ q: q || undefined, tag: tag ?? undefined, sort, page: next })
       .then((res) => {
         if (id !== requestId.current) return
         page.current = next
@@ -89,7 +92,7 @@ export function useDeals(fetcher: DealsFetcher, filters: Filters, initial?: Init
         if (id !== requestId.current) return
         setLoadingMore(false)
       })
-  }, [q, tag])
+  }, [q, tag, sort])
 
   const retry = useCallback(() => {
     setStatus('loading')

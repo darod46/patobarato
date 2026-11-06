@@ -40,7 +40,7 @@ export function HomeClient({
   fetchLatestDeal = defaultFetchLatestDeal,
 }: Props) {
   // Chips are links to /chollos/{tag}; a legacy `/?tag=` still filters here and marks its chip.
-  const { q, tag, setQ, clear } = useUrlFilters()
+  const { q, tag, sort, setQ, setSort, clear } = useUrlFilters()
   const clock = useClock(now)
 
   return (
@@ -53,6 +53,8 @@ export function HomeClient({
           <DealFeed
             q={q}
             tag={tag}
+            sort={sort}
+            onSort={setSort}
             onClear={clear}
             fetchDeals={fetchDeals}
             fetchHashtags={fetchHashtags}
