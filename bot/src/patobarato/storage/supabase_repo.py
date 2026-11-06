@@ -303,7 +303,7 @@ class SupabaseRepository:
     ) -> int:
         """Deactivates the source's coupons missing from ``external_ids``; returns how many.
 
-        An EMPTY ``external_ids`` deactivates every active coupon of the source, so do
+        An EMPTY ``external_ids`` deactivates every active coupon of the source, so
         never call it after a FAILED fetch (an empty but successful fetch is fine:
         it means everything expired).
         """
