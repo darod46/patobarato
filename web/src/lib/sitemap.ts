@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 import { MIN_INDEXABLE_DEALS } from './seo'
 import type { StoreStats } from './stores-data'
 import type { Deal, HashtagCount } from './types'
-import { storeInfo } from './stores'
+import { storeFromSlug, storeInfo } from './stores'
 import { productPath, tagPath } from './urls'
 
 type DealRef = Pick<Deal, 'store' | 'asin' | 'title' | 'publishedAt'>
@@ -15,7 +15,8 @@ export function buildSitemap(
   siteUrl: string,
   extra: { coupons: boolean; stores?: StoreStats[] } = { coupons: false },
 ): MetadataRoute.Sitemap {
-  const stores = extra.stores ?? []
+  // Same filter as fetchStores, kept here so the sitemap never lists an unknown store.
+  const stores = (extra.stores ?? []).filter((s) => storeFromSlug(s.store) !== null)
   return [
     { url: `${siteUrl}/` },
     ...(extra.coupons ? [{ url: `${siteUrl}/cupones` }] : []),

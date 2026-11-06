@@ -83,16 +83,46 @@ it('searches within the store', async () => {
   )
 })
 
-it('uses singular forms and 0 when the store has no stats row', () => {
+const noStats = (initialDeals?: { deals: Deal[]; hasMore: boolean }, coupons: Coupon[] = []) =>
+  render(
+    <StoreClient
+      store="decathlon"
+      now="2026-11-04T12:00:00Z"
+      initialDeals={initialDeals && { q: '', tag: null, store: 'decathlon', sort: 'recientes', ...initialDeals }}
+      initialTags={[]}
+      stores={[{ store: 'amazon', deals: 1, coupons: 1 }]}
+      coupons={coupons}
+      fetchDeals={vi.fn().mockResolvedValue({ deals: [], hasMore: false })}
+    />,
+  )
+
+it('uses singular forms with the stats row', () => {
   render(
     <StoreClient
       store="decathlon"
       now="2026-11-04T12:00:00Z"
       initialTags={[]}
-      stores={[{ store: 'amazon', deals: 1, coupons: 1 }, { store: 'decathlon', deals: 1, coupons: 1 }]}
+      stores={[{ store: 'decathlon', deals: 1, coupons: 1 }]}
       coupons={[]}
       fetchDeals={vi.fn().mockResolvedValue({ deals: [], hasMore: false })}
     />,
   )
   expect(screen.getByText('Decathlon · 1 chollo · 1 cupón')).toBeInTheDocument()
+})
+
+it('without stats counts the loaded coupons and the deals only when the first page is complete', () => {
+  noStats({ deals: [deal(1), deal(2)], hasMore: false }, [coupon])
+  expect(screen.getByText('Decathlon · 2 chollos · 1 cupón')).toBeInTheDocument()
+})
+
+it('without stats and with more pages, never claims a deal count', () => {
+  noStats({ deals: [deal(1)], hasMore: true }, [coupon])
+  expect(screen.getByText('Decathlon · 1 cupón')).toBeInTheDocument()
+  expect(document.body.textContent).not.toMatch(/0 chollos/)
+})
+
+it('without stats and without deals loaded shows no deal count', () => {
+  noStats(undefined, [])
+  expect(document.body.textContent).not.toMatch(/0 chollos/)
+  expect(screen.getByText(/^Decathlon · 0 cupones$/)).toBeInTheDocument()
 })

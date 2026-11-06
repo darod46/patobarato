@@ -19,6 +19,17 @@ describe('fetchStores', () => {
     expect(calls).toContainEqual(['from', ['web_stores']])
   })
 
+  it('drops store ids that are not in STORES', async () => {
+    const { client } = fakeClient({
+      data: [
+        { store: 'fnac', deals: 9, coupons: 1 },
+        { store: 'amazon', deals: 1, coupons: 0 },
+      ],
+      error: null,
+    })
+    expect(await fetchStores(client)).toEqual([{ store: 'amazon', deals: 1, coupons: 0 }])
+  })
+
   it('throws on error', async () => {
     const { client } = fakeClient({ data: null, error: { message: 'boom' } })
     await expect(fetchStores(client)).rejects.toThrow('boom')

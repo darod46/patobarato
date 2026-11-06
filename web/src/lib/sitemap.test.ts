@@ -62,6 +62,12 @@ describe('buildSitemap stores', () => {
     expect(urls(stores)).not.toContain('https://www.patobarato.com/tiendas/aliexpress')
   })
 
+  it('ignores unknown store ids', () => {
+    const u = urls([...stores, { store: 'fnac', deals: 9, coupons: 0 }])
+    expect(u.some((x) => x.includes('fnac'))).toBe(false)
+    expect(urls([stores[0], { store: 'fnac', deals: 9, coupons: 0 }])).not.toContain('https://www.patobarato.com/tiendas')
+  })
+
   it('omits /tiendas with a single store but keeps its page when indexable', () => {
     expect(urls([stores[0]])).not.toContain('https://www.patobarato.com/tiendas')
     expect(urls([stores[0]])).toContain('https://www.patobarato.com/tiendas/amazon')

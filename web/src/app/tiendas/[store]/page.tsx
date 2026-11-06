@@ -9,6 +9,9 @@ import { storeFromSlug, storeInfo } from '../../../lib/stores'
 import { fetchStores } from '../../../lib/stores-data'
 import { getSupabase } from '../../../lib/supabase'
 
+// Upper bound of coupons fetched for one store (more than any store will have valid at once).
+const MAX_COUPONS = 50
+
 // Listings are regenerated at most every 60 s.
 export const revalidate = 60
 
@@ -30,7 +33,7 @@ const loadStore = cache(async (slug: string) => {
   const [page, stores, coupons, tags] = await Promise.all([
     optional(() => fetchDeals(getSupabase(), { page: 0, store })),
     optional(() => fetchStores(getSupabase())),
-    optional(() => fetchCoupons(getSupabase(), 50, store)),
+    optional(() => fetchCoupons(getSupabase(), MAX_COUPONS, store)),
     optional(() => fetchHashtags(getSupabase(), 12)),
   ])
   const deals = stores?.find((s) => s.store === store)?.deals ?? page?.deals.length ?? 0
@@ -50,7 +53,7 @@ export default async function StorePage({ params }: Props) {
   const crumbs = breadcrumbJsonLd([
     { name: 'Inicio', path: '/' },
     { name: 'Tiendas', path: '/tiendas' },
-    { name: name, path: `/tiendas/${slug}` },
+    { name, path: `/tiendas/${slug}` },
   ])
   return (
     <>

@@ -39,18 +39,25 @@ export function StoreClient({ store, now, initialDeals, initialTags, stores, cou
   const { q, setQ, sort, setSort } = useUrlFilters()
   const clock = useClock(now)
   const stats = stores.find((s) => s.store === store)
+  // Without the stats row never claim 0: use what the page itself knows, or show the name alone.
+  const couponCount = stats?.coupons ?? coupons.length
+  const dealCount = stats?.deals ?? (initialDeals && !initialDeals.hasMore ? initialDeals.deals.length : null)
+  const summary = [
+    storeInfo(store).short,
+    ...(dealCount !== null ? [countLabel(dealCount, 'chollo', 'chollos')] : []),
+    countLabel(couponCount, 'cupón', 'cupones'),
+  ].join(' · ')
 
   return (
     <div className="min-h-screen bg-surface font-sans text-ink">
       <Header search={<SearchBox value={q} onChange={setQ} />} />
-      <main className="mx-auto max-w-[1200px] px-4 pt-32 pb-12 md:px-8 md:pt-24 md:pb-16">
+      <main>
+        <div className="mx-auto max-w-[1200px] px-4 pt-32 md:px-8 md:pt-24">
         <h1 className="font-display text-2xl font-bold tracking-[-0.02em] md:text-[32px]">Chollos de {storeInfo(store).name}</h1>
-        <p className="mt-1.5 mb-5 text-muted">
-          {storeInfo(store).short} · {countLabel(stats?.deals ?? 0, 'chollo', 'chollos')} · {countLabel(stats?.coupons ?? 0, 'cupón', 'cupones')}
-        </p>
-      </main>
-      <CouponsBlock coupons={coupons} />
-      <div className="mx-auto max-w-[1200px] px-4 pb-12 md:px-8 md:pb-16">
+        <p className="mt-1.5 mb-5 text-muted">{summary}</p>
+        </div>
+        <CouponsBlock coupons={coupons} />
+        <div className="mx-auto max-w-[1200px] px-4 pb-12 md:px-8 md:pb-16">
         <DealFeed
           q={q}
           tag={null}
@@ -63,7 +70,8 @@ export function StoreClient({ store, now, initialDeals, initialTags, stores, cou
           initialTags={initialTags}
           now={clock}
         />
-      </div>
+        </div>
+      </main>
       <Footer year={new Date(now).getUTCFullYear()} stores={stores.map((s) => s.store)} />
     </div>
   )
