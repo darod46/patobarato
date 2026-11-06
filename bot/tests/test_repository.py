@@ -2,7 +2,7 @@ import dataclasses
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
-from patobarato.models import OfferStatus, ParsedOffer
+from patobarato.models import CouponUpsert, OfferStatus, ParsedOffer
 from patobarato.storage.repository import InMemoryRepository
 
 NOW = datetime(2026, 11, 4, 12, 0, tzinfo=UTC)
@@ -122,4 +122,78 @@ async def test_products_without_image_lists_only_missing_ones():
     with_image = await repo.upsert_product(make_offer(asin="B000000001"))
     without = await repo.upsert_product(make_offer(asin="B000000002"))
     await repo.set_product_image(with_image, "https://img/x.jpg")
-    assert await repo.get_products_without_image() == [(without, "B000000002", "ES")]
+    assert await repo.get_products_without_image() == [(without, "B000000002", "ES", "amazon")]
+
+
+async def test_insert_web_publication_without_telegram_ids():
+    repo = InMemoryRepository()
+    product_id = await repo.upsert_product(make_offer())
+    await repo.insert_publication(
+        1, product_id, "ES", None, None, Decimal("9.99"), "https://x", NOW, channel="web"
+    )
+    last = await repo.get_last_publication(product_id, "ES")
+    assert last is not None and last.published_price == Decimal("9.99")
+    (pub,) = repo.publications()
+    assert pub["channel"] == "web" and pub["chat_id"] is None
+
+
+async def test_insert_publication_defaults_to_telegram_channel():
+    repo = InMemoryRepository()
+    await repo.insert_publication(1, 1, "ES", -1, 5, Decimal("1"), "https://x", NOW)
+    assert repo.publications()[0]["channel"] == "telegram"
+
+
+def make_coupon(external_id: str = "a", title: str = "Cupón", source_id: int = 1) -> CouponUpsert:
+    return CouponUpsert(
+        source_id=source_id,
+        external_id=external_id,
+        store="awin",
+        code="PATO10",
+        title=title,
+        conditions=None,
+        url="https://x",
+        starts_at=None,
+        expires_at=None,
+    )
+
+
+async def test_upsert_coupon_twice_keeps_one_updated_row():
+    repo = InMemoryRepository()
+    first = await repo.upsert_coupon(make_coupon(title="Old"))
+    second = await repo.upsert_coupon(make_coupon(title="New"))
+    assert first == second
+    assert len(repo.coupons) == 1
+    assert repo.coupons[first]["title"] == "New"
+
+
+async def test_deactivate_coupons_not_in_returns_count():
+    repo = InMemoryRepository()
+    await repo.upsert_coupon(make_coupon("a"))
+    b = await repo.upsert_coupon(make_coupon("b"))
+    other = await repo.upsert_coupon(make_coupon("z", source_id=2))
+    assert await repo.deactivate_coupons_not_in(1, {"a"}) == 1
+    assert repo.coupons[b]["active"] is False
+    assert repo.coupons[other]["active"] is True
+    assert await repo.deactivate_coupons_not_in(1, set()) == 1  # only "a" was left
+    assert await repo.deactivate_coupons_not_in(1, set()) == 0
+
+
+async def test_list_api_sources_excludes_telegram_and_inactive():
+    repo = InMemoryRepository()
+    repo.add_source("@canal")
+    keep = repo.add_api_source("aliexpress_api", "ali", config={"k": 1}, every_minutes=30, hashtags=["x"])
+    repo.add_api_source("awin_promotions", "off", active=False)
+    sources = await repo.list_api_sources()
+    assert [s.id for s in sources] == [keep.id]
+    assert sources[0].type == "aliexpress_api" and sources[0].config == {"k": 1}
+    assert sources[0].every_minutes == 30 and sources[0].last_run_at is None
+
+
+async def test_mark_source_run_stores_date_and_error():
+    repo = InMemoryRepository()
+    src = repo.add_api_source("aliexpress_api", "ali")
+    await repo.mark_source_run(src.id, NOW, "boom")
+    assert repo.source_runs[src.id] == (NOW, "boom")
+    assert (await repo.list_api_sources())[0].last_run_at == NOW
+    await repo.mark_source_run(src.id, NOW, None)
+    assert repo.source_runs[src.id] == (NOW, None)

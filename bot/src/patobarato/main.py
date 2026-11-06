@@ -76,17 +76,20 @@ async def _supervise(**named_coros: Coroutine[Any, Any, Any]) -> int:
     return 1
 
 
-class _AmazonBackfillFinder:
-    """Backfill rows carry ``(id, asin, country)``: only Amazon ids can be resolved."""
+class _RegistryBackfillFinder:
+    """Routes each backfill row to the store it belongs to; unregistered stores are skipped."""
 
     def __init__(self, registry: StoreRegistry) -> None:
         self._registry = registry
 
-    async def find(self, asin: str, country: str) -> str | None:
-        store = self._registry.get("amazon")
-        if store is None:
+    async def find(self, product_id: str, country: str, store: str) -> str | None:
+        adapter = self._registry.get(store)
+        if adapter is None:
+            logger.warning("Backfill skipped %s: store %s is not registered", product_id, store)
             return None
-        return await store.find_image(asin, store.canonical_url(asin, country))
+        return await adapter.find_image(
+            product_id, adapter.canonical_url(product_id, country)
+        )
 
 
 async def run(settings: Settings) -> int:
@@ -153,7 +156,7 @@ async def backfill(settings: Settings) -> int:
     )
     async with httpx.AsyncClient(timeout=settings.http_timeout_seconds) as http:
         found, missing = await backfill_images(
-            repo, _AmazonBackfillFinder(build_registry(settings, http, http))
+            repo, _RegistryBackfillFinder(build_registry(settings, http, http))
         )
     print(f"Imágenes encontradas: {found}. Sin imagen: {missing}.")
     return 0

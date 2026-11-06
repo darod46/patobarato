@@ -220,3 +220,24 @@ def test_invalid_awin_merchants_gives_friendly_error(monkeypatch, capsys, value)
     assert "Error de configuración" in err
     assert "awin_merchants" in err.lower()
     assert "Traceback" not in err
+
+
+async def test_backfill_finder_routes_by_store_and_skips_unknown(caplog):
+    class FakeStore:
+        id = "awin"
+
+        def canonical_url(self, product_id, country):
+            return f"https://shop/{product_id}"
+
+        async def find_image(self, product_id, canonical_url):
+            return f"img:{canonical_url}"
+
+    class FakeRegistry:
+        def get(self, store_id):
+            return FakeStore() if store_id == "awin" else None
+
+    finder = main_module._RegistryBackfillFinder(FakeRegistry())
+    assert await finder.find("p1", "ES", "awin") == "img:https://shop/p1"
+    with caplog.at_level(logging.WARNING):
+        assert await finder.find("p1", "ES", "nope") is None
+    assert "nope" in caplog.text

@@ -6,9 +6,12 @@ from postgrest.exceptions import APIError
 from supabase import Client
 
 from patobarato.models import (
+    ApiSource,
+    CouponUpsert,
     LastPublication,
     OfferStatus,
     ParsedOffer,
+    PublicationChannel,
     PublicationStatus,
     Source,
 )
@@ -142,18 +145,21 @@ class SupabaseRepository:
 
         await asyncio.to_thread(run)
 
-    async def get_products_without_image(self) -> list[tuple[int, str, str]]:
+    async def get_products_without_image(self) -> list[tuple[int, str, str, str]]:
         def run():
             return (
                 self._client.table("products")
-                .select("id, asin, country")
+                .select("id, asin, country, store")
                 .is_("image_url", "null")
                 .order("id")
                 .execute()
             )
 
         response = await asyncio.to_thread(run)
-        return [(row["id"], row["asin"], row["country"]) for row in response.data]
+        return [
+            (row["id"], row["asin"], row["country"], row["store"])
+            for row in response.data
+        ]
 
     async def get_last_publication(
         self, product_id: int, country: str
@@ -184,26 +190,127 @@ class SupabaseRepository:
         offer_id: int,
         product_id: int,
         country: str,
-        chat_id: int,
-        message_id: int,
+        chat_id: int | None,
+        message_id: int | None,
         published_price: Decimal,
         affiliate_url: str,
         published_at: datetime,
+        channel: PublicationChannel = "telegram",
     ) -> int:
         row = {
             "offer_id": offer_id,
             "product_id": product_id,
             "country": country,
-            "chat_id": chat_id,
-            "message_id": message_id,
+            "channel": channel,
             "published_price": str(published_price),
             "affiliate_url": affiliate_url,
             "status": PublicationStatus.ACTIVE.value,
             "published_at": published_at.isoformat(),
         }
+        if chat_id is not None:
+            row["chat_id"] = chat_id
+        if message_id is not None:
+            row["message_id"] = message_id
 
         def run():
             return self._client.table("publications").insert(row).execute()
 
         response = await asyncio.to_thread(run)
         return response.data[0]["id"]
+
+    async def list_api_sources(self) -> list[ApiSource]:
+        def run():
+            return (
+                self._client.table("sources")
+                .select(
+                    "id, type, identifier, country, config, every_minutes, "
+                    "hashtags, last_run_at"
+                )
+                .eq("active", True)
+                .neq("type", "telegram_channel")
+                .order("id")
+                .execute()
+            )
+
+        response = await asyncio.to_thread(run)
+        return [
+            ApiSource(
+                id=row["id"],
+                type=row["type"],
+                identifier=row["identifier"],
+                country=row["country"],
+                config=row["config"] or {},
+                every_minutes=row["every_minutes"],
+                hashtags=row["hashtags"] or [],
+                last_run_at=(
+                    _parse_timestamp(row["last_run_at"]) if row["last_run_at"] else None
+                ),
+            )
+            for row in response.data
+        ]
+
+    async def mark_source_run(
+        self, source_id: int, ran_at: datetime, error: str | None
+    ) -> None:
+        def run():
+            return (
+                self._client.table("sources")
+                .update({"last_run_at": ran_at.isoformat(), "last_error": error})
+                .eq("id", source_id)
+                .execute()
+            )
+
+        await asyncio.to_thread(run)
+
+    async def upsert_coupon(self, c: CouponUpsert) -> int:
+        row = {
+            "store": c.store,
+            "code": c.code,
+            "title": c.title,
+            "conditions": c.conditions,
+            "url": c.url,
+            "expires_at": c.expires_at.isoformat() if c.expires_at else None,
+            "active": True,
+        }
+        if c.starts_at is not None:  # otherwise the column default (now()) applies
+            row["starts_at"] = c.starts_at.isoformat()
+
+        def run() -> int:
+            # Select-then-write: PostgREST on_conflict cannot target the partial unique index.
+            existing = (
+                self._client.table("coupons")
+                .select("id")
+                .eq("source_id", c.source_id)
+                .eq("external_id", c.external_id)
+                .limit(1)
+                .execute()
+            )
+            if existing.data:
+                coupon_id = existing.data[0]["id"]
+                self._client.table("coupons").update(row).eq("id", coupon_id).execute()
+                return coupon_id
+            inserted = (
+                self._client.table("coupons")
+                .insert({**row, "source_id": c.source_id, "external_id": c.external_id})
+                .execute()
+            )
+            return inserted.data[0]["id"]
+
+        return await asyncio.to_thread(run)
+
+    async def deactivate_coupons_not_in(
+        self, source_id: int, external_ids: set[str]
+    ) -> int:
+        def run():
+            query = (
+                self._client.table("coupons")
+                .update({"active": False})
+                .eq("source_id", source_id)
+                .eq("active", True)
+            )
+            if external_ids:
+                query = query.not_.in_("external_id", sorted(external_ids))
+            return query.execute()
+
+        response = await asyncio.to_thread(run)
+        return len(response.data)

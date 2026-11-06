@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from patobarato.models import OfferStatus, ParsedOffer, PublicationStatus
+from patobarato.models import CouponUpsert, OfferStatus, ParsedOffer, PublicationStatus
 from patobarato.storage.supabase_repo import SupabaseRepository
 
 pytestmark = pytest.mark.skipif(
@@ -137,3 +137,67 @@ async def test_sync_sources_registers_once_and_skips_inactive(repo, client):
         assert [r["name"] for r in rows.data] == ["Nuevo"]
     finally:
         client.table("sources").delete().in_("identifier", [new_id, off_id]).execute()
+
+
+@pytest.fixture
+def api_source(client):
+    row = (
+        client.table("sources")
+        .insert(
+            {
+                "type": "aliexpress_api",
+                "identifier": "test_" + uuid.uuid4().hex[:8],
+                "country": "ES",
+                "active": True,
+                "config": {"k": 1},
+                "every_minutes": 30,
+                "hashtags": ["x"],
+            }
+        )
+        .execute()
+        .data[0]
+    )
+    yield row
+    client.table("coupons").delete().eq("source_id", row["id"]).execute()
+    client.table("sources").delete().eq("id", row["id"]).execute()
+
+
+def _coupon(source_id: int, external_id: str, title: str = "Cupón") -> CouponUpsert:
+    return CouponUpsert(
+        source_id=source_id, external_id=external_id, store="awin", code="PATO10",
+        title=title, conditions=None, url="https://x", starts_at=None, expires_at=None,
+    )
+
+
+async def test_upsert_coupon_and_deactivate(repo, client, api_source):
+    sid = api_source["id"]
+    first = await repo.upsert_coupon(_coupon(sid, "a", "Old"))
+    assert await repo.upsert_coupon(_coupon(sid, "a", "New")) == first
+    await repo.upsert_coupon(_coupon(sid, "b"))
+    rows = client.table("coupons").select("title").eq("source_id", sid).execute().data
+    assert len(rows) == 2
+    assert await repo.deactivate_coupons_not_in(sid, {"a"}) == 1
+    assert await repo.deactivate_coupons_not_in(sid, set()) == 1
+
+
+async def test_list_api_sources_and_mark_run(repo, client, api_source):
+    sources = await repo.list_api_sources()
+    mine = next(s for s in sources if s.id == api_source["id"])
+    assert mine.type == "aliexpress_api" and mine.config == {"k": 1}
+    assert all(s.type != "telegram_channel" for s in sources)
+    await repo.mark_source_run(mine.id, NOW, "boom")
+    row = client.table("sources").select("last_error").eq("id", mine.id).execute().data[0]
+    assert row["last_error"] == "boom"
+
+
+async def test_web_publication_without_telegram_ids(repo, source, asin):
+    offer = make_offer(asin)
+    product_id = await repo.upsert_product(offer)
+    offer_id = await repo.insert_offer(product_id, source["id"], 3, offer, "raw", NOW)
+    assert offer_id is not None
+    await repo.insert_publication(
+        offer_id, product_id, "ES", None, None, Decimal("5.00"), "https://x", NOW,
+        channel="web",
+    )
+    last = await repo.get_last_publication(product_id, "ES")
+    assert last is not None and last.published_price == Decimal("5.00")

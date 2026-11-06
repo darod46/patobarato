@@ -1,11 +1,15 @@
+import dataclasses
 from datetime import datetime
 from decimal import Decimal
 from typing import Protocol
 
 from patobarato.models import (
+    ApiSource,
+    CouponUpsert,
     LastPublication,
     OfferStatus,
     ParsedOffer,
+    PublicationChannel,
     PublicationStatus,
     Source,
 )
@@ -38,8 +42,8 @@ class Repository(Protocol):
 
     async def set_product_image(self, product_id: int, image_url: str) -> None: ...
 
-    async def get_products_without_image(self) -> list[tuple[int, str, str]]:
-        """``(product_id, asin, country)`` of products with no image yet."""
+    async def get_products_without_image(self) -> list[tuple[int, str, str, str]]:
+        """``(product_id, asin, country, store)`` of products with no image yet."""
         ...
 
     async def get_last_publication(
@@ -51,12 +55,29 @@ class Repository(Protocol):
         offer_id: int,
         product_id: int,
         country: str,
-        chat_id: int,
-        message_id: int,
+        chat_id: int | None,
+        message_id: int | None,
         published_price: Decimal,
         affiliate_url: str,
         published_at: datetime,
+        channel: PublicationChannel = "telegram",
     ) -> int: ...
+
+    async def list_api_sources(self) -> list[ApiSource]:
+        """Active sources that are not Telegram channels."""
+        ...
+
+    async def mark_source_run(
+        self, source_id: int, ran_at: datetime, error: str | None
+    ) -> None: ...
+
+    async def upsert_coupon(self, c: CouponUpsert) -> int: ...
+
+    async def deactivate_coupons_not_in(
+        self, source_id: int, external_ids: set[str]
+    ) -> int:
+        """Deactivates the source's coupons missing from ``external_ids``; returns how many."""
+        ...
 
 
 class InMemoryRepository(Repository):
@@ -71,7 +92,16 @@ class InMemoryRepository(Repository):
         self._offers: dict[int, dict] = {}
         self._offer_keys: dict[tuple[int, int, int], int] = {}
         self._publications: list[dict] = []
-        self._next_id = {"source": 1, "product": 1, "offer": 1, "publication": 1}
+        self._api_sources: list[tuple[ApiSource, bool]] = []
+        self.source_runs: dict[int, tuple[datetime, str | None]] = {}
+        self.coupons: dict[int, dict] = {}
+        self._next_id = {
+            "source": 1,
+            "product": 1,
+            "offer": 1,
+            "publication": 1,
+            "coupon": 1,
+        }
 
     def _new_id(self, kind: str) -> int:
         value = self._next_id[kind]
@@ -85,6 +115,29 @@ class InMemoryRepository(Repository):
             id=self._new_id("source"), identifier=identifier, country=country
         )
         self._sources.append((source, active))
+        return source
+
+    def add_api_source(
+        self,
+        type: str,
+        identifier: str,
+        country: str = "ES",
+        active: bool = True,
+        config: dict | None = None,
+        every_minutes: int = 60,
+        hashtags: list[str] | None = None,
+    ) -> ApiSource:
+        source = ApiSource(
+            id=self._new_id("source"),
+            type=type,
+            identifier=identifier,
+            country=country,
+            config=config or {},
+            every_minutes=every_minutes,
+            hashtags=hashtags or [],
+            last_run_at=None,
+        )
+        self._api_sources.append((source, active))
         return source
 
     def source_names(self) -> dict[str, str]:
@@ -152,10 +205,10 @@ class InMemoryRepository(Repository):
     async def set_product_image(self, product_id: int, image_url: str) -> None:
         self.product_images[product_id] = image_url
 
-    async def get_products_without_image(self) -> list[tuple[int, str, str]]:
+    async def get_products_without_image(self) -> list[tuple[int, str, str, str]]:
         return sorted(
-            (product_id, asin, country)
-            for (_store, country, asin), product_id in self._products.items()
+            (product_id, asin, country, store)
+            for (store, country, asin), product_id in self._products.items()
             if product_id not in self.product_images
         )
 
@@ -189,11 +242,12 @@ class InMemoryRepository(Repository):
         offer_id: int,
         product_id: int,
         country: str,
-        chat_id: int,
-        message_id: int,
+        chat_id: int | None,
+        message_id: int | None,
         published_price: Decimal,
         affiliate_url: str,
         published_at: datetime,
+        channel: PublicationChannel = "telegram",
     ) -> int:
         publication_id = self._new_id("publication")
         self._publications.append(
@@ -202,6 +256,7 @@ class InMemoryRepository(Repository):
                 "offer_id": offer_id,
                 "product_id": product_id,
                 "country": country,
+                "channel": channel,
                 "chat_id": chat_id,
                 "message_id": message_id,
                 "published_price": published_price,
@@ -211,3 +266,42 @@ class InMemoryRepository(Repository):
             }
         )
         return publication_id
+
+    async def list_api_sources(self) -> list[ApiSource]:
+        result = []
+        for source, active in self._api_sources:
+            if not active:
+                continue
+            run = self.source_runs.get(source.id)
+            result.append(
+                dataclasses.replace(source, last_run_at=run[0]) if run else source
+            )
+        return result
+
+    async def mark_source_run(
+        self, source_id: int, ran_at: datetime, error: str | None
+    ) -> None:
+        self.source_runs[source_id] = (ran_at, error)
+
+    async def upsert_coupon(self, c: CouponUpsert) -> int:
+        for coupon_id, row in self.coupons.items():
+            if row["source_id"] == c.source_id and row["external_id"] == c.external_id:
+                row.update(dataclasses.asdict(c), active=True)
+                return coupon_id
+        coupon_id = self._new_id("coupon")
+        self.coupons[coupon_id] = {**dataclasses.asdict(c), "active": True}
+        return coupon_id
+
+    async def deactivate_coupons_not_in(
+        self, source_id: int, external_ids: set[str]
+    ) -> int:
+        count = 0
+        for row in self.coupons.values():
+            if (
+                row["source_id"] == source_id
+                and row["active"]
+                and row["external_id"] not in external_ids
+            ):
+                row["active"] = False
+                count += 1
+        return count

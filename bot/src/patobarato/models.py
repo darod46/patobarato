@@ -3,15 +3,20 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
+from typing import Literal
 
 
 class OfferStatus(StrEnum):
     PENDING = "pending"
     PUBLISHED = "published"
+    PUBLISHED_WEB = "published_web"
     SKIPPED_DUPLICATE = "skipped_duplicate"
     SKIPPED_NO_PRICE = "skipped_no_price"
     SKIPPED_STALE = "skipped_stale"
     PUBLISH_FAILED = "publish_failed"
+
+
+PublicationChannel = Literal["telegram", "web"]
 
 
 class PublicationStatus(StrEnum):
@@ -59,3 +64,28 @@ class LastPublication:
     published_price: Decimal
     published_at: datetime
     status: PublicationStatus
+
+
+@dataclass(frozen=True)
+class ApiSource:
+    id: int
+    type: str
+    identifier: str
+    country: str
+    config: dict
+    every_minutes: int
+    hashtags: list[str]
+    last_run_at: datetime | None
+
+
+@dataclass(frozen=True)
+class CouponUpsert:
+    source_id: int
+    external_id: str
+    store: str
+    code: str
+    title: str
+    conditions: str | None
+    url: str
+    starts_at: datetime | None
+    expires_at: datetime | None

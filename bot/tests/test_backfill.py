@@ -26,7 +26,7 @@ class Finder:
         self.urls = urls
         self.calls: list[str] = []
 
-    async def find(self, asin: str, country: str) -> str | None:
+    async def find(self, asin: str, country: str, store: str) -> str | None:
         self.calls.append(asin)
         if self.urls.get(asin) == "boom":
             raise RuntimeError("down")
