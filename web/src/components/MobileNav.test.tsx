@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { MobileNav } from './MobileNav'
 
 const links = [
-  { label: 'Chollos', href: '/chollos' },
+  { label: 'Chollos', href: '/#chollos' },
   { label: 'Cupones', href: '/cupones' },
 ]
 

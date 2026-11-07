@@ -1,4 +1,6 @@
-import { render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { hydrateRoot, type Root } from 'react-dom/client'
+import { renderToString } from 'react-dom/server'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import type { Deal } from '../lib/types'
@@ -50,18 +52,60 @@ describe('DealCarousel', () => {
     expect(screen.getByRole('link', { name: 'Ver todos los chollos' })).toHaveAttribute('href', '/chollos')
   })
 
-  it('scrolls the row by one card with the previous and next buttons', async () => {
+  it('scrolls by one measured card, honours reduced motion and disables the buttons at the ends', async () => {
     const user = userEvent.setup()
     render(<DealCarousel deals={list(5)} now={now} />)
     const region = screen.getByRole('region', { name: 'Últimos chollos' })
+    expect(region).toHaveAttribute('tabindex', '0')
     const scrollBy = vi.fn()
     region.scrollBy = scrollBy as unknown as typeof region.scrollBy
+    region.style.columnGap = '12px' // Tailwind CSS is not loaded in jsdom
+    Object.defineProperty(region.firstElementChild!, 'offsetWidth', { value: 300 })
+    Object.defineProperty(region, 'clientWidth', { value: 600, configurable: true })
+    Object.defineProperty(region, 'scrollWidth', { value: 1500, configurable: true })
     const next = screen.getByRole('button', { name: 'Siguiente' })
     const prev = screen.getByRole('button', { name: 'Anterior' })
     expect(next).toHaveClass('size-11')
+    expect(prev).toBeDisabled()
+    expect(next).toBeEnabled()
     await user.click(next)
-    expect(scrollBy).toHaveBeenLastCalledWith(expect.objectContaining({ left: 292 }))
+    expect(scrollBy).toHaveBeenLastCalledWith({ left: 312, behavior: 'smooth' })
+    region.scrollLeft = 300
+    fireEvent.scroll(region)
+    expect(prev).toBeEnabled()
+    region.scrollLeft = 900
+    fireEvent.scroll(region)
+    expect(next).toBeDisabled()
     await user.click(prev)
-    expect(scrollBy).toHaveBeenLastCalledWith(expect.objectContaining({ left: -292 }))
+    expect(scrollBy).toHaveBeenLastCalledWith({ left: -312, behavior: 'smooth' })
+    window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as unknown as typeof window.matchMedia
+    try {
+      await user.click(prev)
+      expect(scrollBy).toHaveBeenLastCalledWith({ left: -312, behavior: 'auto' })
+    } finally {
+      // @ts-expect-error restoring the jsdom default (no matchMedia)
+      delete window.matchMedia
+    }
+  })
+
+  it('hydrates server HTML without mismatches', async () => {
+    const container = document.createElement('div')
+    container.innerHTML = renderToString(<DealCarousel deals={list(3)} now={now} />)
+    document.body.appendChild(container)
+    const onRecoverableError = vi.fn()
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {})
+    let root: Root | undefined
+    try {
+      await act(async () => {
+        root = hydrateRoot(container, <DealCarousel deals={list(3)} now={now} />, { onRecoverableError })
+      })
+      expect(onRecoverableError).not.toHaveBeenCalled()
+      expect(errors).not.toHaveBeenCalled()
+      expect(screen.getByRole('button', { name: 'Anterior' })).toBeDisabled()
+    } finally {
+      act(() => root?.unmount())
+      container.remove()
+      errors.mockRestore()
+    }
   })
 })

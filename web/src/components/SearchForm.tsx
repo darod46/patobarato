@@ -7,7 +7,7 @@ export function SearchForm() {
         name="q"
         placeholder="Buscar chollos…"
         aria-label="Buscar chollos"
-        className="w-full rounded-lg border border-line bg-white px-4 py-2.5 text-sm text-ink placeholder:text-muted focus:border-ink focus:outline-none"
+        className="min-h-11 w-full rounded-lg border border-line bg-white px-4 py-2.5 text-sm text-ink placeholder:text-muted focus:border-ink focus:outline-none"
       />
     </form>
   )

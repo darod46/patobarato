@@ -1,4 +1,6 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
+import { hydrateRoot, type Root } from 'react-dom/client'
+import { renderToString } from 'react-dom/server'
 import { afterEach, expect, it, vi } from 'vitest'
 import type { Deal } from '../lib/types'
 import { DealsClient } from './DealsClient'
@@ -86,5 +88,65 @@ it('renders the shell and an error state when env vars are missing', async () =>
     expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
   } finally {
     vi.unstubAllEnvs()
+  }
+})
+
+it('hydrates server HTML without mismatches and then applies the URL filters', async () => {
+  const props = {
+    now: '2026-11-04T12:00:00Z',
+    fetchDeals: vi.fn().mockResolvedValue({ deals: [deal], hasMore: false }),
+    fetchHashtags: vi.fn().mockResolvedValue([{ tag: 'sony', count: 1 }]),
+  }
+  const container = document.createElement('div')
+  // A static page is rendered on the server without the visitor's query string.
+  container.innerHTML = renderToString(<DealsClient {...props} />)
+  history.replaceState(null, '', '/chollos?q=lego&tag=sony')
+  document.body.appendChild(container)
+  const onRecoverableError = vi.fn()
+  const errors = vi.spyOn(console, 'error').mockImplementation(() => {})
+  let root: Root | undefined
+  try {
+    await act(async () => {
+      root = hydrateRoot(container, <DealsClient {...props} />, { onRecoverableError })
+    })
+    expect(screen.getByRole('searchbox', { name: 'Buscar chollos' })).toHaveValue('lego')
+    await waitFor(() =>
+      expect(props.fetchDeals).toHaveBeenLastCalledWith({ q: 'lego', tag: 'sony', sort: 'recientes', page: 0 }),
+    )
+    expect(onRecoverableError).not.toHaveBeenCalled()
+    expect(errors).not.toHaveBeenCalled()
+  } finally {
+    act(() => root?.unmount())
+    container.remove()
+    errors.mockRestore()
+  }
+})
+
+it('server-renders the initial page and hydrates without refetching it', async () => {
+  const props = {
+    now: '2026-11-04T12:00:00Z',
+    initialDeals: { q: '', tag: null, deals: [deal], hasMore: false },
+    initialTags: ['sony'],
+    fetchDeals: vi.fn().mockResolvedValue({ deals: [], hasMore: false }),
+    fetchHashtags: vi.fn().mockResolvedValue([]),
+  }
+  const container = document.createElement('div')
+  container.innerHTML = renderToString(<DealsClient {...props} />)
+  expect(container.textContent).toContain('Auriculares Sony')
+  expect(container.textContent).toContain('#sony')
+  document.body.appendChild(container)
+  const onRecoverableError = vi.fn()
+  let root: Root | undefined
+  try {
+    await act(async () => {
+      root = hydrateRoot(container, <DealsClient {...props} />, { onRecoverableError })
+    })
+    expect(screen.getByText('Auriculares Sony')).toBeInTheDocument()
+    expect(props.fetchDeals).not.toHaveBeenCalled()
+    expect(props.fetchHashtags).not.toHaveBeenCalled()
+    expect(onRecoverableError).not.toHaveBeenCalled()
+  } finally {
+    act(() => root?.unmount())
+    container.remove()
   }
 })
