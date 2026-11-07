@@ -15,7 +15,7 @@ export function CatalogCard({ product }: { product: CatalogProduct }) {
   const chip = product.origin === 'aliexpress' ? 'AliExpress' : storeInfo(product.store).short
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-white transition-shadow hover:shadow-[0_8px_24px_rgba(20,22,26,.08)]">
+    <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-white transition-shadow hover:shadow-[0_8px_24px_rgba(20,22,26,.08)]">
       <div className="relative aspect-square overflow-hidden bg-white">
         <img
           src={src}
@@ -49,7 +49,7 @@ export function CatalogCard({ product }: { product: CatalogProduct }) {
             <s className="price text-xs text-muted sm:text-sm">{formatPrice(product.originalPrice)}</s>
           )}
         </div>
-        <BuyButton url={product.affiliateUrl} store={product.store} className="!px-4 !py-2.5 !text-sm" />
+        <BuyButton url={product.affiliateUrl} store={product.store} className="min-h-11 !px-4 !py-2.5 !text-sm" />
       </div>
     </article>
   )

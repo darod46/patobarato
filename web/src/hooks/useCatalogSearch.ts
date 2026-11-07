@@ -33,7 +33,7 @@ export function useCatalogSearch(q: string, fetcher: CatalogFetcher, minLength =
     }
     const controller = new AbortController()
     const timer = setTimeout(() => {
-      setState((prev) => ({ status: 'loading', products: prev.products }))
+      setState({ status: 'loading', products: [] })
       fetcherRef
         .current(term, controller.signal)
         .then((products) => {

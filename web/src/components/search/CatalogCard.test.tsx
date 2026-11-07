@@ -35,6 +35,7 @@ describe('CatalogCard', () => {
     expect(link).toHaveAttribute('href', 'https://track.example/go?x=1')
     expect(link).toHaveAttribute('target', '_blank')
     expect(link).toHaveAttribute('rel', 'sponsored noopener noreferrer')
+    expect(link).toHaveClass('min-h-11')
   })
 
   it('falls back to the placeholder without image', () => {
