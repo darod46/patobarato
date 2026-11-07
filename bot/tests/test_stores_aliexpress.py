@@ -128,5 +128,37 @@ async def test_fetch_price_api_error_is_none_and_logged(caplog):
     assert URL not in caplog.text
 
 
+async def test_fetch_price_original_equal_or_lower_has_no_previous():
+    for original in ("89.99", "50.00"):
+        store = AliExpressStore(FakeClient(product=product("89.99", original)))
+        quote = await store.fetch_price("1005006123456789", URL)
+        assert quote is not None and quote.previous_price is None
+
+
+async def test_fetch_price_missing_product_is_none():
+    assert await AliExpressStore(FakeClient(product=None)).fetch_price("1", URL) is None
+
+
+async def test_fetch_price_transport_error_is_none(caplog):
+    def boom(request):
+        raise httpx.ConnectError("refused")
+
+    store = store_with(boom)
+    assert await store.fetch_price("1005006123456789", URL) is None
+    assert "ConnectError" in caplog.text
+    assert URL not in caplog.text
+
+
+async def test_fetch_price_unexpected_error_is_none_and_logged(caplog):
+    store = AliExpressStore(FakeClient(error=KeyError("target_sale_price")))
+    assert await store.fetch_price("1005006123456789", URL) is None
+    assert "KeyError" in caplog.text
+
+
+async def test_fetch_price_malformed_payload_is_none():
+    store = store_with(lambda r: httpx.Response(200, json={"x": 1}))
+    assert await store.fetch_price("1005006123456789", URL) is None
+
+
 def test_registry(ali):
     assert StoreRegistry([ali]).store_for(URL) is ali
