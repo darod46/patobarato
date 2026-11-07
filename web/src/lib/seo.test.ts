@@ -294,9 +294,9 @@ describe('dealsMetadata', () => {
     expect(dealsMetadata({ tag: 'a b<' }).alternates?.canonical).toBe('/chollos')
   })
 
-  it('is noindex when there is a search', () => {
-    expect(dealsMetadata({ q: 'lego' }).robots).toEqual({ index: false, follow: true })
-    expect(dealsMetadata({ q: ' ' }).robots).toBeUndefined()
+  it('takes no search term: the page is a pure listing and stays indexable', () => {
+    // @ts-expect-error `q` is not a parameter any more
+    expect(dealsMetadata({ q: 'lego' }).robots).toBeUndefined()
   })
 
   it('only claims coupons and other stores when the data shows them', () => {

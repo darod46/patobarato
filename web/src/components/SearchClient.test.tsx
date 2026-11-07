@@ -20,8 +20,9 @@ it('without a query shows the shortcuts and no blocks', () => {
   expect(screen.queryByRole('heading', { name: 'Chollos' })).toBeNull()
 })
 
-it('with one character asks for two letters', () => {
+it('with one character asks for two letters and keeps the plain H1', () => {
   render(<SearchClient now={NOW} initialQ="x" fetchDeals={fetchDeals()} />)
+  expect(screen.getByRole('heading', { level: 1, name: 'Buscar' })).toBeInTheDocument()
   expect(screen.getByText('Escribe al menos dos letras')).toBeInTheDocument()
   expect(screen.queryByRole('heading', { name: 'Chollos' })).toBeNull()
 })
@@ -90,4 +91,30 @@ it('reads ?q= from the URL on mount', async () => {
   history.replaceState(null, '', '/buscar?q=lego')
   render(<SearchClient now={NOW} fetchDeals={fetchDeals()} fetchAli={vi.fn().mockResolvedValue([])} fetchCatalog={vi.fn().mockResolvedValue([])} />)
   await waitFor(() => expect(screen.getByRole('searchbox', { name: 'Buscar' })).toHaveValue('lego'))
+})
+
+it('hides the header search link (the page is the search) and has no hashtag chips with a query', async () => {
+  history.replaceState(null, '', '/buscar?q=lego')
+  render(
+    <SearchClient
+      now={NOW}
+      initialQ="lego"
+      tags={['sony']}
+      fetchDeals={fetchDeals()}
+      fetchAli={vi.fn().mockResolvedValue([])}
+      fetchCatalog={vi.fn().mockResolvedValue([])}
+    />,
+  )
+  expect(screen.queryByRole('link', { name: 'Buscar' })).toBeNull()
+  await screen.findByRole('button', { name: 'Quitar filtros' })
+  expect(screen.queryByRole('link', { name: '#sony' })).toBeNull()
+  expect(screen.queryByRole('button', { name: '#sony' })).toBeNull()
+})
+
+it('the empty deals state clears the field and the URL', async () => {
+  history.replaceState(null, '', '/buscar?q=lego')
+  render(<SearchClient now={NOW} initialQ="lego" fetchDeals={fetchDeals()} fetchAli={vi.fn().mockResolvedValue([])} fetchCatalog={vi.fn().mockResolvedValue([])} />)
+  await userEvent.click(await screen.findByRole('button', { name: 'Quitar filtros' }))
+  await waitFor(() => expect(screen.getByRole('searchbox', { name: 'Buscar' })).toHaveValue(''))
+  await waitFor(() => expect(window.location.pathname + window.location.search).toBe('/buscar'))
 })

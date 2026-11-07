@@ -4,7 +4,6 @@ import { renderToString } from 'react-dom/server'
 import { afterEach, expect, it, vi } from 'vitest'
 import type { Deal } from '../lib/types'
 import { DealsClient } from './DealsClient'
-import { openSearch } from '../test-utils/openSearch'
 
 const deal: Deal = {
   publicationId: 1,
@@ -27,7 +26,7 @@ const deal: Deal = {
 
 afterEach(() => history.replaceState(null, '', '/'))
 
-it('renders the H1, the subtitle, search, feed with sort and footer', async () => {
+it('renders the H1, the subtitle, the header search link, feed with sort and footer', async () => {
   render(
     <DealsClient
       now="2026-11-04T12:00:00Z"
@@ -37,7 +36,8 @@ it('renders the H1, the subtitle, search, feed with sort and footer', async () =
   )
   expect(screen.getByRole('heading', { level: 1, name: 'Chollos de hoy' })).toBeInTheDocument()
   expect(screen.getByText('Se actualiza automáticamente')).toBeInTheDocument()
-  expect(within(screen.getByRole('banner')).getByRole('button', { name: 'Buscar' })).toBeInTheDocument()
+  expect(within(screen.getByRole('banner')).getByRole('link', { name: 'Buscar' })).toHaveAttribute('href', '/buscar')
+  expect(screen.queryByRole('searchbox')).toBeNull()
   expect(await screen.findByText('Auriculares Sony')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Cargar más chollos' })).toBeInTheDocument()
   expect(await screen.findByRole('link', { name: '#sony' })).toHaveAttribute('href', '/chollos/sony')
@@ -45,8 +45,8 @@ it('renders the H1, the subtitle, search, feed with sort and footer', async () =
   expect(screen.getByText('© 2026 PatoBarato')).toBeInTheDocument()
 })
 
-it('reads the URL filters and shows store chips with two or more stores', async () => {
-  history.replaceState(null, '', '/chollos?q=lego&tienda=aliexpress')
+it('reads the URL filters (no search field) and shows store chips with two or more stores', async () => {
+  history.replaceState(null, '', '/chollos?tienda=aliexpress')
   const fetchDeals = vi.fn().mockResolvedValue({ deals: [], hasMore: false })
   render(
     <DealsClient
@@ -56,9 +56,8 @@ it('reads the URL filters and shows store chips with two or more stores', async 
       stores={[{ store: 'amazon', deals: 3, coupons: 0 }, { store: 'aliexpress', deals: 2, coupons: 1 }]}
     />,
   )
-  expect(openSearch()).toHaveValue('lego')
   await waitFor(() =>
-    expect(fetchDeals).toHaveBeenLastCalledWith({ q: 'lego', tag: undefined, store: 'aliexpress', sort: 'recientes', page: 0 }),
+    expect(fetchDeals).toHaveBeenLastCalledWith({ q: undefined, tag: undefined, store: 'aliexpress', sort: 'recientes', page: 0 }),
   )
   expect(screen.getByRole('button', { name: 'AliExpress' })).toHaveAttribute('aria-pressed', 'true')
 })
@@ -101,7 +100,7 @@ it('hydrates server HTML without mismatches and then applies the URL filters', a
   const container = document.createElement('div')
   // A static page is rendered on the server without the visitor's query string.
   container.innerHTML = renderToString(<DealsClient {...props} />)
-  history.replaceState(null, '', '/chollos?q=lego&tag=sony')
+  history.replaceState(null, '', '/chollos?tag=sony')
   document.body.appendChild(container)
   const onRecoverableError = vi.fn()
   const errors = vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -110,9 +109,8 @@ it('hydrates server HTML without mismatches and then applies the URL filters', a
     await act(async () => {
       root = hydrateRoot(container, <DealsClient {...props} />, { onRecoverableError })
     })
-    expect(openSearch()).toHaveValue('lego')
     await waitFor(() =>
-      expect(props.fetchDeals).toHaveBeenLastCalledWith({ q: 'lego', tag: 'sony', sort: 'recientes', page: 0 }),
+      expect(props.fetchDeals).toHaveBeenLastCalledWith({ q: undefined, tag: 'sony', sort: 'recientes', page: 0 }),
     )
     expect(onRecoverableError).not.toHaveBeenCalled()
     expect(errors).not.toHaveBeenCalled()

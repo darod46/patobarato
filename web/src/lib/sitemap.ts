@@ -23,6 +23,7 @@ export function buildSitemap(
   return [
     { url: `${siteUrl}/` },
     { url: `${siteUrl}/chollos` },
+    { url: `${siteUrl}/buscar` },
     ...(extra.coupons ? [{ url: `${siteUrl}/cupones` }] : []),
     ...(stores.length >= 2 ? [{ url: `${siteUrl}/tiendas` }] : []),
     ...stores.filter((s) => s.deals >= MIN_INDEXABLE_DEALS).map((s) => ({ url: `${siteUrl}/tiendas/${storeInfo(s.store).slug}` })),
@@ -36,7 +37,7 @@ export function buildSitemap(
 
 export function buildRobots(siteUrl: string): MetadataRoute.Robots {
   return {
-    rules: { userAgent: '*', allow: '/', disallow: ['/go/', '/buscar'] },
+    rules: { userAgent: '*', allow: '/', disallow: ['/go/'] },
     sitemap: `${siteUrl}/sitemap.xml`,
   }
 }

@@ -10,6 +10,7 @@ it('is a GET search form to /buscar with a tall input', () => {
   expect(form).toHaveAttribute('method', 'get')
   const input = screen.getByRole('searchbox')
   expect(input).toHaveAttribute('name', 'q')
+  expect(input).toHaveAttribute('enterkeyhint', 'search')
   expect(input.className).toContain('h-14')
   expect(screen.queryByRole('button', { name: 'Borrar búsqueda' })).toBeNull()
 })

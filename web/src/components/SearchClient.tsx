@@ -23,7 +23,7 @@ type Props = {
   tags?: string[]
   stores?: StoreStats[]
   fetchDeals?: DealsFetcher
-  /** Receives `onUnavailable`, to call when the AliExpress search is switched off (HTTP 204). */
+  /** Replaces the AliExpress search (tests); the default calls `/api/buscar/aliexpress` and hides the block on HTTP 204. */
   fetchAli?: CatalogFetcher
   fetchCatalog?: CatalogFetcher
 }
@@ -68,10 +68,10 @@ export function SearchClient({
 
   return (
     <div className="min-h-screen bg-white font-sans text-ink">
-      <Header />
+      <Header searchTrigger={false} />
       <main className="mx-auto max-w-[1200px] px-4 pt-24 pb-12 md:px-8 md:pt-24 md:pb-16">
         <h1 className="mb-5 font-display text-2xl font-bold tracking-[-0.02em] md:text-[32px]">
-          {term ? `Resultados para “${term}”` : 'Buscar'}
+          {term.length > 1 ? `Resultados para “${term}”` : 'Buscar'}
         </h1>
         <div className="mb-8">
           <SearchField value={q} onChange={setQ} onSubmit={flush} autoFocus={initialQ === ''} />

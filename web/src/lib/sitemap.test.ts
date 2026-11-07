@@ -19,9 +19,10 @@ describe('buildSitemap', () => {
       ],
       SITE_URL,
     )
-    expect(entries.map((e) => e.url).filter((u) => u.includes('/oferta/') || u.includes('/chollos') || u.endsWith('.com/'))).toEqual([
+    expect(entries.map((e) => e.url).filter((u) => u.includes('/oferta/') || u.includes('/chollos') || u.endsWith('/buscar') || u.endsWith('.com/'))).toEqual([
       'https://www.patobarato.com/',
       'https://www.patobarato.com/chollos',
+      'https://www.patobarato.com/buscar',
       'https://www.patobarato.com/oferta/amazon/freidora-de-aire-b0abcdef12',
       'https://www.patobarato.com/oferta/amazon/cafe-molido-b0zzzzzz99',
       'https://www.patobarato.com/chollos/hogar',
@@ -31,13 +32,14 @@ describe('buildSitemap', () => {
 
   it('uses publishedAt as lastModified for deals', () => {
     const entries = buildSitemap(deals, [], SITE_URL)
-    expect(entries[2].lastModified).toEqual(new Date('2026-11-04T11:19:00Z'))
+    expect(entries[3].lastModified).toEqual(new Date('2026-11-04T11:19:00Z'))
   })
 
   it('returns the home and the static pages when there is no data', () => {
     expect(buildSitemap([], [], SITE_URL).map((e) => e.url)).toEqual([
       'https://www.patobarato.com/',
       'https://www.patobarato.com/chollos',
+      'https://www.patobarato.com/buscar',
       'https://www.patobarato.com/aviso-legal',
       'https://www.patobarato.com/privacidad',
       'https://www.patobarato.com/cookies',
@@ -117,6 +119,7 @@ describe('buildSitemap guides', () => {
     expect(buildSitemap(deals, [], SITE_URL, { coupons: false }).map((e) => e.url)).toEqual([
       'https://www.patobarato.com/',
       'https://www.patobarato.com/chollos',
+      'https://www.patobarato.com/buscar',
       'https://www.patobarato.com/oferta/amazon/freidora-de-aire-b0abcdef12',
       'https://www.patobarato.com/oferta/amazon/cafe-molido-b0zzzzzz99',
       'https://www.patobarato.com/aviso-legal',
@@ -129,9 +132,9 @@ describe('buildSitemap guides', () => {
 })
 
 describe('buildRobots', () => {
-  it('allows everything except /go/ and /buscar and lists the sitemap', () => {
+  it('allows everything except /go/ (search URLs carry noindex) and lists the sitemap', () => {
     const robots = buildRobots(SITE_URL)
-    expect(robots.rules).toEqual({ userAgent: '*', allow: '/', disallow: ['/go/', '/buscar'] })
+    expect(robots.rules).toEqual({ userAgent: '*', allow: '/', disallow: ['/go/'] })
     expect(robots.sitemap).toBe('https://www.patobarato.com/sitemap.xml')
   })
 })

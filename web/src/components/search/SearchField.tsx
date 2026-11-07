@@ -36,6 +36,7 @@ export function SearchField({ value, onChange, onSubmit, autoFocus = false }: Pr
         onChange={(e) => onChange(e.target.value)}
         autoFocus={autoFocus}
         autoComplete="off"
+        enterKeyHint="search"
         placeholder="Busca un producto"
         aria-label="Buscar"
         className="h-14 w-full rounded-2xl border border-[#d7dae0] bg-white pr-14 pl-12 text-base text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&::-webkit-search-cancel-button]:hidden"

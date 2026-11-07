@@ -1,9 +1,8 @@
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, expect, it, vi } from 'vitest'
 import type { Coupon, Deal } from '../lib/types'
 import { StoreClient } from './StoreClient'
-import { openSearch } from '../test-utils/openSearch'
 
 const deal = (id: number): Deal => ({
   publicationId: id,
@@ -76,13 +75,10 @@ it('loads more with the store fixed and ignores ?tienda=', async () => {
   expect(fetchDeals).toHaveBeenCalledWith({ q: undefined, tag: undefined, store: 'aliexpress', sort: 'recientes', page: 1 })
 })
 
-it('searches within the store', async () => {
-  history.replaceState(null, '', '/tiendas/aliexpress')
-  const fetchDeals = setup(vi.fn().mockResolvedValue({ deals: [], hasMore: false }))
-  await userEvent.type(openSearch(), 'lego')
-  await waitFor(() =>
-    expect(fetchDeals).toHaveBeenCalledWith({ q: 'lego', tag: undefined, store: 'aliexpress', sort: 'recientes', page: 0 }),
-  )
+it('has no search field; the header links to /buscar', () => {
+  setup()
+  expect(screen.queryByRole('searchbox')).toBeNull()
+  expect(screen.getByRole('link', { name: 'Buscar' })).toHaveAttribute('href', '/buscar')
 })
 
 const noStats = (initialDeals?: { deals: Deal[]; hasMore: boolean }, ...rest: [coupons?: Coupon[] | undefined]) =>

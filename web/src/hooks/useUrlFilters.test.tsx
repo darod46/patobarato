@@ -6,15 +6,16 @@ import { useUrlFilters } from './useUrlFilters'
 afterEach(() => history.replaceState(null, '', '/'))
 
 describe('useUrlFilters', () => {
-  it('parses the initial query string', () => {
+  it('parses the initial query string and exposes no search term', () => {
     history.replaceState(null, '', '/?q=lego&tag=juguetes')
     const { result } = renderHook(() => useUrlFilters())
-    expect(result.current.q).toBe('lego')
+    expect(result.current).not.toHaveProperty('q')
+    expect(result.current).not.toHaveProperty('setQ')
     expect(result.current.tag).toBe('juguetes')
   })
 
   it('parses and clears the store filter', () => {
-    history.replaceState(null, '', '/?tienda=aliexpress&q=tv')
+    history.replaceState(null, '', '/?tienda=aliexpress')
     const { result } = renderHook(() => useUrlFilters())
     expect(result.current.store).toBe('aliexpress')
     act(() => result.current.clear())
@@ -23,13 +24,13 @@ describe('useUrlFilters', () => {
   })
 
   it('setStore updates the URL and null removes it', () => {
-    history.replaceState(null, '', '/?q=tv')
+    history.replaceState(null, '', '/?utm=tv')
     const { result } = renderHook(() => useUrlFilters())
     act(() => result.current.setStore('pccomponentes'))
     expect(location.search).toContain('tienda=pccomponentes')
-    expect(location.search).toContain('q=tv')
+    expect(location.search).toContain('utm=tv')
     act(() => result.current.setStore(null))
-    expect(location.search).toBe('?q=tv')
+    expect(location.search).toBe('?utm=tv')
   })
 
   it('ignores a malformed tienda value', () => {
@@ -45,40 +46,6 @@ describe('useUrlFilters', () => {
     expect(location.search).toContain('tag=sony')
     expect(location.search).toContain('utm=x')
     expect(result.current.tag).toBe('sony')
-  })
-
-  it('setQ uses replaceState and empty removes the param', () => {
-    const before = history.length
-    const { result } = renderHook(() => useUrlFilters())
-    act(() => result.current.setQ('abc'))
-    expect(location.search).toContain('q=abc')
-    expect(history.length).toBe(before)
-    act(() => result.current.setQ(''))
-    expect(location.search).not.toContain('q=')
-  })
-
-  it('setQ with whitespace only removes the param', () => {
-    history.replaceState(null, '', '/?q=lego')
-    const { result } = renderHook(() => useUrlFilters())
-    act(() => result.current.setQ('   '))
-    expect(location.search).toBe('')
-    expect(result.current.q).toBe('')
-  })
-
-  it('setQ keeps a trailing space in q and the URL', () => {
-    const { result } = renderHook(() => useUrlFilters())
-    act(() => result.current.setQ('lego '))
-    expect(result.current.q).toBe('lego ')
-    expect(location.search).toBe('?q=lego+')
-  })
-
-  it('clear removes both params', () => {
-    history.replaceState(null, '', '/?q=lego&tag=juguetes')
-    const { result } = renderHook(() => useUrlFilters())
-    act(() => result.current.clear())
-    expect(location.search).toBe('')
-    expect(result.current.q).toBe('')
-    expect(result.current.tag).toBeNull()
   })
 
   it('lowercases the tag and rejects invalid ones', () => {
@@ -100,13 +67,13 @@ describe('useUrlFilters', () => {
 
 describe('useUrlFilters server render', () => {
   function Probe() {
-    const { q, tag } = useUrlFilters()
-    return <p>{`q=${q};tag=${tag ?? ''}`}</p>
+    const { tag } = useUrlFilters()
+    return <p>{`tag=${tag ?? ''}`}</p>
   }
 
   it('starts empty on the server so the hydration render matches', () => {
     history.replaceState(null, '', '/?q=lego&tag=juguetes')
-    expect(renderToString(<Probe />)).toContain('q=;tag=')
+    expect(renderToString(<Probe />)).toContain('<p>tag=</p>')
   })
 })
 
@@ -135,7 +102,7 @@ describe('useUrlFilters sort', () => {
 
 describe('useUrlFilters clear', () => {
   it('also removes the order', () => {
-    history.replaceState(null, '', '/?q=lego&orden=minimo')
+    history.replaceState(null, '', '/?orden=minimo')
     const { result } = renderHook(() => useUrlFilters())
     act(() => result.current.clear())
     expect(location.search).toBe('')

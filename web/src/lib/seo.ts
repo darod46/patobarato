@@ -148,9 +148,9 @@ export function homeMetadata(params: { q?: string; tag?: string; stores?: StoreS
 
 /**
  * `/chollos` metadata: a fixed title, the same store-honest description as the home, canonical on
- * `/chollos` (or the hashtag page for a legacy `?tag=`), and `noindex` for any search.
+ * `/chollos` (or the hashtag page for a legacy `?tag=`).
  */
-export function dealsMetadata(params: { q?: string; tag?: string; stores?: StoreStats[] }): Metadata {
+export function dealsMetadata(params: { tag?: string; stores?: StoreStats[] }): Metadata {
   const tag = params.tag ? parseTagParam(params.tag) : null
   const stores = params.stores ?? []
   const title = 'Chollos de hoy · PatoBarato'
@@ -164,7 +164,6 @@ export function dealsMetadata(params: { q?: string; tag?: string; stores?: Store
     alternates: { canonical: path },
     openGraph: { type: 'website', siteName: 'PatoBarato', locale: 'es_ES', url: path, title, description, images: [OG_IMAGE] },
     twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
-    ...(params.q?.trim() ? { robots: NOINDEX } : {}),
   }
 }
 

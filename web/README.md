@@ -54,14 +54,19 @@ Notas:
 - `/aviso-legal`, `/privacidad`, `/cookies`, `/afiliados`, `/contacto`: páginas estáticas. Los textos llevan marcadores `[TITULAR]`, `[NIF]`, `[DIRECCIÓN]`, `[EMAIL]`, `[CIUDAD]`, `[PLAZO]` que hay que sustituir.
 - `/oferta/{tienda}/{slug}-{id}`: ficha de producto (Amazon y AliExpress). Las tiendas de Awin usan `/oferta/{tienda}/{id}`, con el id codificado como porcentaje. Redirige con 308 a la URL canónica si el slug no coincide; 404 si la oferta no existe.
 - `/chollos/{hashtag}`: listado por hashtag. `noindex` si tiene menos de 3 ofertas.
-- `/buscar`: ruta interna a la que reescriben `/?q=`, `/?tag=` y `/?orden=`; siempre `noindex`. Cualquier URL con `?q=` lleva además `X-Robots-Tag: noindex`.
+- `/chollos`: listado puro (sin buscador) con orden (`?orden=`), tienda (`?tienda=`) y chips. Es dinámico: el servidor valida `?tag=`, `?orden=` y `?tienda=` con las mismas reglas que el cliente (`src/lib/filters.ts`) y pinta ya la página 0 filtrada, sin `revalidate`.
+- `/buscar`: buscador global, indexable sin `?q=` (con `?q=` lleva `noindex`, también por `X-Robots-Tag`). Un campo y tres bloques: «Chollos» (vista `web_deals`), «En AliExpress» (`/api/buscar/aliexpress`; se oculta si el endpoint responde 204) y «En tiendas» (catálogo propio, función `web_catalog_search`). Desde 2 letras; el campo escribe `?q=` en la URL. La cabecera de todas las demás páginas enlaza aquí con el botón «Buscar».
+- `/api/buscar/aliexpress?q=`: búsqueda en AliExpress desde el servidor. Variables `ALIEXPRESS_APP_KEY`, `ALIEXPRESS_APP_SECRET` y `ALIEXPRESS_TRACKING_ID`, **solo en Vercel y solo servidor** (nunca `NEXT_PUBLIC_*`). Sin ellas responde 204 y el bloque no se muestra. Caché de 15 min (`s-maxage=900`) y límite de 30 peticiones por minuto y cliente (429 con `Retry-After`).
+- Catálogo de tiendas: la tabla `catalog_products` la rellena el bot (`upsert_catalog_products`) y la web solo la consulta con la función `web_catalog_search` (anon); la tabla no se lee directamente.
+- Redirecciones (308, `next.config.ts`): `/?q=…` y `/chollos?q=…` van a `/buscar?q=…`; `/?tag=…`, `/?orden=…` y `/?tienda=…` van a `/chollos` con el mismo filtro. Ya no hay reescrituras hacia `/buscar`.
 - `/go/{ASIN}`: página de salto a Amazon (`public/go.html`, añade el tag de afiliado por script).
-- `/sitemap.xml` y `/robots.txt`: generados por `src/app/sitemap.ts` y `src/app/robots.ts`. El sitemap incluye `/guias` y `/guias/{slug}` (con `lastModified` = `updated_at`) aunque una guía aún no tenga precios, porque la página se marca `noindex` por su cuenta. robots.txt bloquea `/go/` y `/buscar`.
+- `/sitemap.xml` y `/robots.txt`: generados por `src/app/sitemap.ts` y `src/app/robots.ts`. El sitemap incluye `/guias` y `/guias/{slug}` (con `lastModified` = `updated_at`) aunque una guía aún no tenga precios, porque la página se marca `noindex` por su cuenta. El sitemap incluye `/buscar`; robots.txt solo bloquea `/go/`.
 - `/og.png`: imagen Open Graph (`public/og.png`), generada con `node scripts/render-og.mjs` a partir de `scripts/og.html` (necesita Playwright).
 
 ## Caché (ISR)
 
 - Listados (`/`, `/chollos/{hashtag}`, `/tiendas`, `/tiendas/{tienda}`): 60 s.
+- `/chollos` y `/buscar`: dinámicos (por petición); `/api/buscar/aliexpress`: 15 min.
 - Cupones (`/cupones`): 600 s.
 - Producto (`/oferta/...`): 600 s.
 - Sitemap: 3600 s.
@@ -106,6 +111,6 @@ La web solo usa la clave pública (anon) de Supabase y solo lee las vistas `web_
 
 1. Importa el repositorio `darod46/patobarato`.
 2. Root Directory: `web` (el framework Next.js lo fija `vercel.json`).
-3. Variables de entorno `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` en Production y Preview. Las `VITE_SUPABASE_*` antiguas siguen valiendo por el fallback de `next.config.ts`.
+3. Variables de entorno `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` en Production y Preview; además `ALIEXPRESS_APP_KEY`, `ALIEXPRESS_APP_SECRET` y `ALIEXPRESS_TRACKING_ID` (solo servidor) para el bloque de AliExpress. Las `VITE_SUPABASE_*` antiguas siguen valiendo por el fallback de `next.config.ts`.
 4. Las variables se incrustan en el build: tras cambiarlas hay que redesplegar.
 5. Dominio principal: `www.patobarato.com` (`patobarato.com` redirige a él).

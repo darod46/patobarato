@@ -10,12 +10,11 @@ import type { HashtagCount } from '../lib/types'
 import { DealFeed } from './DealFeed'
 import { Footer } from './Footer'
 import { Header } from './Header'
-import { HeaderSearch } from './HeaderSearch'
 
 type Props = {
   /** Server render time (ISO); the first client render uses it so hydration matches. */
   now: string
-  /** Unfiltered page 0 rendered on the server; the URL filters are only known after hydration. */
+  /** Page 0 rendered on the server for the URL filters; the client does not refetch it when they match. */
   initialDeals?: InitialDeals
   /** Top hashtags rendered on the server. */
   initialTags?: string[]
@@ -30,7 +29,15 @@ type Props = {
 const defaultFetchDeals: DealsFetcher = async (params) => api.fetchDeals(getSupabase(), params)
 const defaultFetchHashtags = async () => api.fetchHashtags(getSupabase())
 
-/** `/chollos` (and `/buscar`, which serves its filtered URLs): the full listing with sort, chips and search. */
+function searchOf({ tag, store, sort }: InitialDeals) {
+  const params = new URLSearchParams()
+  if (tag) params.set('tag', tag)
+  if (store) params.set('tienda', store)
+  if (sort && sort !== 'recientes') params.set('orden', sort)
+  return params.toString()
+}
+
+/** `/chollos`: the full listing with sort and chips. */
 export function DealsClient({
   now,
   initialDeals,
@@ -40,17 +47,18 @@ export function DealsClient({
   stores = [],
 }: Props) {
   // Chips are links to /chollos/{tag}; a legacy `?tag=` still filters here and marks its chip.
-  const { q, tag, store, sort, setQ, setSort, setStore, clear } = useUrlFilters()
+  // The server rendered page 0 for these filters, so the hydration render must use them too.
+  const { tag, store, sort, setSort, setStore, clear } = useUrlFilters(initialDeals ? searchOf(initialDeals) : '')
   const clock = useClock(now)
 
   return (
     <div className="min-h-screen bg-white font-sans text-ink">
-      <Header search={<HeaderSearch value={q} onChange={setQ} />} searchOpen={q !== ''} />
+      <Header />
       <main className="mx-auto max-w-[1200px] px-4 pt-24 pb-12 md:px-8 md:pt-24 md:pb-16">
         <h1 className="font-display text-2xl font-bold tracking-[-0.02em] md:text-[32px]">Chollos de hoy</h1>
         <p className="mt-1.5 mb-5 text-muted">Se actualiza automáticamente</p>
         <DealFeed
-          q={q}
+          q=""
           tag={tag}
           store={store}
           stores={stores}

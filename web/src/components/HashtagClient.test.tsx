@@ -1,9 +1,8 @@
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, expect, it, vi } from 'vitest'
 import type { Deal } from '../lib/types'
 import { HashtagClient } from './HashtagClient'
-import { openSearch } from '../test-utils/openSearch'
 
 const deal = (id: number): Deal => ({
   publicationId: id,
@@ -58,13 +57,9 @@ it('loads more within the tag', async () => {
   expect(fetchDeals).toHaveBeenCalledWith({ q: undefined, tag: 'niños', sort: 'recientes', page: 1 })
 })
 
-it('searches within the tag and clears the search', async () => {
-  history.replaceState(null, '', '/chollos/ni%C3%B1os')
-  const fetchDeals = setup(vi.fn().mockResolvedValue({ deals: [], hasMore: false }))
-  await userEvent.type(openSearch(), 'lego')
-  await waitFor(() => expect(fetchDeals).toHaveBeenCalledWith({ q: 'lego', tag: 'niños', sort: 'recientes', page: 0 }))
-  expect(window.location.pathname + window.location.search).toBe('/chollos/ni%C3%B1os?q=lego')
-  await userEvent.click(await screen.findByRole('button', { name: 'Quitar filtros' }))
-  await waitFor(() => expect(window.location.search).toBe(''))
-  await waitFor(() => expect(fetchDeals).toHaveBeenLastCalledWith({ q: undefined, tag: 'niños', sort: 'recientes', page: 0 }))
+it('has no search field; the header links to /buscar', () => {
+  setup()
+  expect(screen.queryByRole('searchbox')).toBeNull()
+  expect(screen.getByRole('link', { name: 'Buscar' })).toHaveAttribute('href', '/buscar')
 })
+

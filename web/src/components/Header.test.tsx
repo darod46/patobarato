@@ -5,7 +5,7 @@ import { Header } from './Header'
 
 describe('Header', () => {
   it('shows the logo, the main navigation and the channel button', () => {
-    render(<Header search={<input aria-label="Buscar chollos" />} />)
+    render(<Header />)
     expect(screen.getByAltText('PatoBarato')).toHaveAttribute('src', '/logo.svg')
     const nav = screen.getByRole('navigation', { name: 'Principal' })
     const links = within(nav).getAllByRole('link')
@@ -13,7 +13,7 @@ describe('Header', () => {
     expect(links.map((l) => l.getAttribute('href'))).toEqual(NAV_LINKS.map((l) => l.href))
     expect(links[0]).toHaveAttribute('href', '/chollos')
     expect(screen.getByRole('link', { name: 'Unirme al canal' })).toHaveAttribute('href', 'https://t.me/patobarato')
-    expect(screen.getByRole('button', { name: 'Buscar' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Buscar' })).toHaveAttribute('href', '/buscar')
   })
 
   it('is translucent with a backdrop blur so the page shows through', () => {
@@ -21,11 +21,11 @@ describe('Header', () => {
     expect(screen.getByRole('banner')).toHaveClass('bg-white/80', 'backdrop-blur')
   })
 
-  it('always carries the search behind a magnifier, as a GET form to /chollos by default', () => {
-    render(<Header />)
-    expect(screen.getByRole('button', { name: 'Buscar' })).toBeInTheDocument()
-    const form = screen.getByRole('search', { hidden: true })
-    expect(form).toHaveAttribute('action', '/chollos')
-    expect(screen.getByLabelText('Buscar chollos')).toHaveAttribute('name', 'q')
+  it('shows the search trigger by default and hides it with searchTrigger={false}', () => {
+    const { rerender } = render(<Header />)
+    expect(screen.getByRole('link', { name: 'Buscar' })).toHaveAttribute('href', '/buscar')
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument()
+    rerender(<Header searchTrigger={false} />)
+    expect(screen.queryByRole('link', { name: 'Buscar' })).not.toBeInTheDocument()
   })
 })
