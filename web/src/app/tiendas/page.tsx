@@ -7,14 +7,13 @@ import { storeInfo } from '../../lib/stores'
 import { fetchStores, type StoreStats } from '../../lib/stores-data'
 import { getSupabase } from '../../lib/supabase'
 import { countLabel } from '../../lib/text'
+import { optional } from '../../lib/optional'
 
 // Regenerated at most every 60 s, like the listings.
 export const revalidate = 60
 
-/** Resolves to undefined on any failure (including missing env vars, which throw synchronously). */
-const optional = <T,>(load: () => Promise<T>) => Promise.resolve().then(load).catch(() => undefined)
 
-const loadStores = () => optional(() => fetchStores(getSupabase()))
+const loadStores = () => optional('tiendas', () => fetchStores(getSupabase()))
 
 export async function generateMetadata(): Promise<Metadata> {
   return storesMetadata((await loadStores())?.length ?? 0)

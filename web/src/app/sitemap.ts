@@ -21,8 +21,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ])
     return buildSitemap(deals, tags, SITE_URL, { coupons: coupons.length > 0, stores, guides })
   } catch (error) {
-    console.error('sitemap: falling back to the home only', error)
-    // Never fail the build or the request: the home alone is still a valid sitemap.
-    return buildSitemap([], [], SITE_URL)
+    console.error('sitemap: deals unavailable —', error instanceof Error ? error.message : error)
+    // During the build a minimal sitemap keeps the deploy going. At runtime, failing the
+    // regeneration makes Next keep serving the last good sitemap instead of this poor one.
+    if (process.env.NEXT_PHASE === 'phase-production-build') return buildSitemap([], [], SITE_URL)
+    throw error
   }
 }

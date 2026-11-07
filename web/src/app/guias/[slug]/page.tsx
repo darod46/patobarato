@@ -8,6 +8,7 @@ import { breadcrumbJsonLd, guideJsonLd, guideMetadata, jsonLdScript } from '../.
 import { fetchStores } from '../../../lib/stores-data'
 import { getSupabase } from '../../../lib/supabase'
 import { SITE_URL } from '../../../lib/urls'
+import { optional } from '../../../lib/optional'
 
 // Regenerated at most every 60 s, like the listings.
 export const revalidate = 60
@@ -19,12 +20,10 @@ export function generateStaticParams() {
 
 type Props = { params: Promise<{ slug: string }> }
 
-/** Resolves to undefined on any failure (including missing env vars, which throw synchronously). */
-const optional = <T,>(load: () => Promise<T>) => Promise.resolve().then(load).catch(() => undefined)
 
 // Shared by generateMetadata and the page within one request. Null means 404 (unknown slug).
 // A failed lookup (or missing env) is a 404, never a 500.
-const loadGuide = cache(async (slug: string) => (await optional(() => fetchGuide(getSupabase(), slug))) ?? null)
+const loadGuide = cache(async (slug: string) => (await optional('guia', () => fetchGuide(getSupabase(), slug))) ?? null)
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const guide = await loadGuide((await params).slug)
@@ -34,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function GuidePage({ params }: Props) {
   const { slug } = await params
-  const [guide, stores] = await Promise.all([loadGuide(slug), optional(() => fetchStores(getSupabase()))])
+  const [guide, stores] = await Promise.all([loadGuide(slug), optional('guia', () => fetchStores(getSupabase()))])
   if (!guide) notFound()
   const now = new Date()
   const path = guidePath(guide.slug)

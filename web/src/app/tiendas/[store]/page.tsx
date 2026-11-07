@@ -8,6 +8,7 @@ import { breadcrumbJsonLd, jsonLdScript, storeMetadata } from '../../../lib/seo'
 import { storeFromSlug, storeInfo } from '../../../lib/stores'
 import { fetchStores } from '../../../lib/stores-data'
 import { getSupabase } from '../../../lib/supabase'
+import { optional } from '../../../lib/optional'
 
 // Listings are regenerated at most every 60 s.
 export const revalidate = 60
@@ -19,8 +20,6 @@ export function generateStaticParams() {
 
 type Props = { params: Promise<{ store: string }> }
 
-/** Resolves to undefined on any failure (including missing env vars, which throw synchronously). */
-const optional = <T,>(load: () => Promise<T>) => Promise.resolve().then(load).catch(() => undefined)
 
 // Shared by generateMetadata and the page within one request. Null means 404 (unknown store).
 // Every data part is optional: the page still renders without it, and the client fetches the listing.
@@ -28,10 +27,10 @@ const loadStore = cache(async (slug: string) => {
   const store = storeFromSlug(slug)
   if (!store) return null
   const [page, stores, coupons, tags] = await Promise.all([
-    optional(() => fetchDeals(getSupabase(), { page: 0, store })),
-    optional(() => fetchStores(getSupabase())),
-    optional(() => fetchCoupons(getSupabase(), MAX_STORE_COUPONS, store)),
-    optional(() => fetchHashtags(getSupabase(), 12)),
+    optional('tienda', () => fetchDeals(getSupabase(), { page: 0, store })),
+    optional('tienda', () => fetchStores(getSupabase())),
+    optional('tienda', () => fetchCoupons(getSupabase(), MAX_STORE_COUPONS, store)),
+    optional('tienda', () => fetchHashtags(getSupabase(), 12)),
   ])
   const deals = stores?.find((s) => s.store === store)?.deals ?? page?.deals.length ?? 0
   return { store, page, stores: stores ?? [], coupons, tags: tags ?? [], deals }

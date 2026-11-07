@@ -6,22 +6,21 @@ import { fetchGuides } from '../../lib/guides-data'
 import { breadcrumbJsonLd, guidesMetadata, jsonLdScript } from '../../lib/seo'
 import { fetchStores } from '../../lib/stores-data'
 import { getSupabase } from '../../lib/supabase'
+import { optional } from '../../lib/optional'
 
 // Regenerated at most every 60 s, like the listings.
 export const revalidate = 60
 
-/** Resolves to undefined on any failure (including missing env vars, which throw synchronously). */
-const optional = <T,>(load: () => Promise<T>) => Promise.resolve().then(load).catch(() => undefined)
 
 export async function generateMetadata(): Promise<Metadata> {
-  const guides = await optional(() => fetchGuides(getSupabase()))
+  const guides = await optional('guias', () => fetchGuides(getSupabase()))
   return guidesMetadata(guides?.length ?? 0)
 }
 
 export default async function GuidesPage() {
   const [guides, stores] = await Promise.all([
-    optional(() => fetchGuides(getSupabase())),
-    optional(() => fetchStores(getSupabase())),
+    optional('guias', () => fetchGuides(getSupabase())),
+    optional('guias', () => fetchStores(getSupabase())),
   ])
   const crumbs = breadcrumbJsonLd([
     { name: 'Inicio', path: '/' },

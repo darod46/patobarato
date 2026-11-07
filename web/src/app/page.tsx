@@ -7,16 +7,15 @@ import { heroHighlights } from '../lib/highlights'
 import { fetchStores } from '../lib/stores-data'
 import { homeMetadata, jsonLdScript, siteJsonLd } from '../lib/seo'
 import { getSupabase } from '../lib/supabase'
+import { optional } from '../lib/optional'
 
 // Listings are regenerated at most every 60 s. Requests with `?q=`, `?tag=`, `?orden=` or `?tienda=` are
 // rewritten to `/buscar` (see next.config), so this page never depends on the query string.
 export const revalidate = 60
 
-/** Resolves to undefined on any failure (including missing env vars, which throw synchronously). */
-const optional = <T,>(load: () => Promise<T>) => Promise.resolve().then(load).catch(() => undefined)
 
-const loadCoupons = () => optional(() => fetchCoupons(getSupabase(), 4))
-const loadStores = () => optional(() => fetchStores(getSupabase()))
+const loadCoupons = () => optional('home', () => fetchCoupons(getSupabase(), 4))
+const loadStores = () => optional('home', () => fetchStores(getSupabase()))
 
 export async function generateMetadata(): Promise<Metadata> {
   const stores = await loadStores()
@@ -27,10 +26,10 @@ export default async function HomePage() {
   const now = new Date()
   // Each part degrades on its own: without deals the carousel shows an honest fallback.
   const [page, coupons, stores, latest] = await Promise.all([
-    optional(() => fetchDeals(getSupabase(), { page: 0 })),
+    optional('home', () => fetchDeals(getSupabase(), { page: 0 })),
     loadCoupons(),
     loadStores(),
-    optional(() => fetchLatestDeal(getSupabase())),
+    optional('home', () => fetchLatestDeal(getSupabase())),
   ])
   const couponList = coupons ?? []
   return (
