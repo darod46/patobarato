@@ -50,9 +50,10 @@ const base = {
   discount_amount: null,
   discount_pct: null,
   min_purchase: null,
+  affiliate_url: null as string | null,
 }
 const itemRows = [
-  { ...base, item_id: 1, position: 1, name: 'A', award: 'Mejor', store: 'amazon', url: 'u1', store_position: 1 },
+  { ...base, item_id: 1, position: 1, name: 'A', award: 'Mejor', store: 'amazon', url: 'u1', store_position: 1, affiliate_url: 'https://aff/u1' },
   {
     ...base,
     item_id: 1,
@@ -140,8 +141,8 @@ describe('fetchGuide', () => {
       [2, 'B', ['amazon']],
     ])
     const [a1, a2] = guide!.items[0].stores
-    expect(a1).toMatchObject({ productId: 5, price: 99.5, previousPrice: 120, previousMinPrice: 95, coupon: null })
-    expect(a2).toMatchObject({ productId: null, price: null, previousPrice: null, previousMinPrice: null })
+    expect(a1).toMatchObject({ productId: 5, price: 99.5, previousPrice: 120, previousMinPrice: 95, coupon: null, affiliateUrl: 'https://aff/u1' })
+    expect(a2).toMatchObject({ productId: null, price: null, previousPrice: null, previousMinPrice: null, affiliateUrl: null })
     expect(a2.coupon).toEqual({
       code: 'PATO6',
       title: '-6',

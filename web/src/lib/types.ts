@@ -65,6 +65,7 @@ export type GuideStoreOffer = {
   store: string
   externalId: string
   url: string
+  affiliateUrl: string | null
   note: string | null
   productId: number | null
   price: number | null

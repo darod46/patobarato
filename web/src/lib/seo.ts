@@ -193,7 +193,7 @@ function firstSentence(md: string): string {
 
 export function guideMetadata(guide: Guide, indexable: boolean): Metadata {
   const title = `${guide.title} · Guías PatoBarato`
-  const description = guide.subtitle ?? firstSentence(guide.introMd)
+  const description = truncate(guide.subtitle ?? firstSentence(guide.introMd), MAX_DESCRIPTION)
   const path = guidePath(guide.slug)
   return {
     title,

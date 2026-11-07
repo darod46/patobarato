@@ -64,7 +64,7 @@ export function GuideView({ guide, now, stores }: Props) {
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[260px_minmax(0,720px)] lg:gap-12">
           <aside className="lg:sticky lg:top-24 lg:self-start">
-            <GuideToc items={guide.items} hasComparison={hasComparison} hasHowToChoose={hasHowToChoose} hasFaq={hasFaq} />
+            <GuideToc items={guide.items} hasQuickPicks={hasItems} hasComparison={hasComparison} hasHowToChoose={hasHowToChoose} hasFaq={hasFaq} />
           </aside>
           <div className="flex min-w-0 flex-col gap-10">
             {hasItems && <QuickPicks items={guide.items} now={now} />}

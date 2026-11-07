@@ -33,6 +33,7 @@ type GuideItemRow = {
   store: string
   external_id: string
   url: string
+  affiliate_url?: string | null
   note: string | null
   product_id: Num
   price: Num
@@ -82,6 +83,7 @@ function toOffer(row: GuideItemRow): GuideStoreOffer {
     store: row.store,
     externalId: row.external_id,
     url: row.url,
+    affiliateUrl: row.affiliate_url ?? null,
     note: row.note,
     productId: numOrNull(row.product_id),
     price: numOrNull(row.price),

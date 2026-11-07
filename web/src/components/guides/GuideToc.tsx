@@ -4,12 +4,12 @@ import type { GuideItem } from '../../lib/types'
 const LINK =
   'flex min-h-11 items-center text-sm text-ink hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
-type Props = { items: GuideItem[]; hasComparison?: boolean; hasHowToChoose?: boolean; hasFaq?: boolean }
+type Props = { items: GuideItem[]; hasQuickPicks?: boolean; hasComparison?: boolean; hasHowToChoose?: boolean; hasFaq?: boolean }
 
 /** Table of contents: a plain list on desktop, a native collapsible `<details>` on mobile (no JS either way). */
-export function GuideToc({ items, hasComparison = true, hasHowToChoose = true, hasFaq = true }: Props) {
+export function GuideToc({ items, hasQuickPicks = items.length > 0, hasComparison = true, hasHowToChoose = true, hasFaq = true }: Props) {
   const links = [
-    { href: '#eleccion-rapida', label: 'Nuestra elección rápida' },
+    ...(hasQuickPicks ? [{ href: '#eleccion-rapida', label: 'Nuestra elección rápida' }] : []),
     ...items.map((it, i) => ({ href: `#producto-${it.position}`, label: `${i + 1}. ${it.name}` })),
     ...(hasComparison ? [{ href: '#comparativa', label: 'Comparativa' }] : []),
     ...(hasHowToChoose ? [{ href: '#como-elegir', label: 'Cómo elegir' }] : []),

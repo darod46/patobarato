@@ -19,6 +19,7 @@ const offer = (over: Partial<GuideStoreOffer> = {}): GuideStoreOffer => ({
   store: 'amazon',
   externalId: 'e',
   url: 'https://x',
+  affiliateUrl: null,
   note: null,
   productId: 1,
   price: 100,

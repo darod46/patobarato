@@ -168,7 +168,7 @@ Las guías se escriben directamente en la base de datos. Parte de `supabase/migr
 update guides set status = 'published', published_at = now() where slug = 'freidoras-de-aire-menos-100';
 ```
 
-En el siguiente ciclo del planificador el ejecutor empezará a rellenar los precios de la guía.
+En el siguiente ciclo del planificador el ejecutor empezará a rellenar los precios de la guía (y el enlace de afiliado de cada tienda, `product_prices.affiliate_url`). `guides.updated_at` se mantiene solo: un trigger lo actualiza al editar la guía, sus productos o sus tiendas.
 
 ## 8. Amazon Afiliados
 

@@ -82,7 +82,7 @@ Los cupones también se sincronizan desde Awin (ver el README del bot); además 
 
 ## Guías de compra
 
-Vistas: `web_guides` (una fila por guía publicada, con `prices_checked_at`), `web_guide_items` (un producto por fila, con su oferta en cada tienda, el precio y el cupón vigente más valioso) y `web_guides_by_product` (qué guías citan cada producto, para enlazarlas desde la ficha). `web_coupons` añade `discount_amount`, `discount_pct` y `min_purchase` para calcular el precio final con el cupón.
+Vistas: `web_guides` (una fila por guía publicada, con `prices_checked_at`), `web_guide_items` (una fila por producto × tienda, con el precio, `affiliate_url` —el enlace de afiliado que guarda el bot para las tiendas que no son Amazon— y el cupón vigente que más descuenta) y `web_guides_by_product` (qué guías citan cada producto, para enlazarlas desde la ficha). `web_coupons` añade `discount_amount`, `discount_pct` y `min_purchase` para calcular el precio final con el cupón.
 
 Hoy una guía se publica con SQL, hasta que exista el panel de administración:
 
@@ -100,7 +100,7 @@ Los precios los actualiza el bot con la fuente `guide_prices` (cada 6 h, `every_
 
 ## Seguridad
 
-La web solo usa la clave pública (anon) de Supabase y solo lee las vistas `web_deals`, `web_hashtags`, `web_coupons`, `web_stores`, `web_guides`, `web_guide_items` y `web_guides_by_product`. Nunca pongas la clave `service_role` en la web ni en Vercel. `node scripts/check-views.mjs` comprueba con la clave anon que esas vistas se leen y que la tabla `coupons` no.
+La web solo usa la clave pública (anon) de Supabase y solo lee las vistas `web_deals`, `web_hashtags`, `web_coupons`, `web_stores`, `web_guides`, `web_guide_items` y `web_guides_by_product`. Nunca pongas la clave `service_role` en la web ni en Vercel. `node scripts/check-views.mjs` comprueba con la clave anon que esas vistas se leen y que la tabla `coupons` no; también cubre las vistas y tablas de guías (`web_guides*` legibles; `guides`, `guide_items`, `guide_item_stores` y `product_prices` no).
 
 ## Despliegue en Vercel
 

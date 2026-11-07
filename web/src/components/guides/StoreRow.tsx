@@ -16,9 +16,9 @@ function couponValueText(coupon: GuideCoupon): string {
   return ''
 }
 
-/** Amazon goes through the /go/ redirect (affiliate tag); other stores use their canonical URL. */
+/** Amazon goes through the /go/ redirect (affiliate tag); other stores use their affiliate link, else the canonical URL. */
 function buyUrl(offer: GuideStoreOffer): string {
-  return offer.store === 'amazon' ? `/go/${offer.externalId}` : offer.url
+  return offer.store === 'amazon' ? `/go/${offer.externalId}` : (offer.affiliateUrl ?? offer.url)
 }
 
 function StoreName({ offer }: { offer: GuideStoreOffer }) {

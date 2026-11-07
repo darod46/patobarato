@@ -22,6 +22,15 @@ describe('GuideToc', () => {
     expect(container.querySelector('details')?.className).toContain('lg:hidden')
   })
 
+  it('omits the quick-picks anchor when there are no items', () => {
+    const { container } = render(<GuideToc items={[]} hasComparison={false} />)
+    const hrefs = [...container.querySelectorAll('a')].map((a) => a.getAttribute('href'))
+    expect(hrefs.filter((h) => h === '#eleccion-rapida')).toEqual([])
+    expect(hrefs).toContain('#como-elegir')
+    const flagged = render(<GuideToc items={[item(1)]} hasQuickPicks={false} />)
+    expect([...flagged.container.querySelectorAll('a')].map((a) => a.getAttribute('href'))).not.toContain('#eleccion-rapida')
+  })
+
   it('omits anchors for missing sections', () => {
     const { container } = render(<GuideToc items={[item(1)]} hasComparison={false} hasHowToChoose={false} hasFaq={false} />)
     const hrefs = [...container.querySelectorAll('a')].map((a) => a.getAttribute('href'))

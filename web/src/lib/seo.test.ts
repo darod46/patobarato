@@ -241,6 +241,15 @@ describe('guideMetadata', () => {
     expect(m.description).toBe('Sub')
     expect(m.robots).toEqual({ index: false, follow: true })
   })
+  it('truncates a long subtitle to the description limit', () => {
+    const long =
+      'Hemos comparado Ninja, Cosori, Cecotec y Ufesa por capacidad, ruido, limpieza y precio real en las últimas semanas. Estas son las que de verdad merecen la pena, con precios revisados y cupones.'
+    const m = guideMetadata({ ...guide, subtitle: long }, true)
+    expect(long.length).toBeGreaterThan(160)
+    expect((m.description ?? '').length).toBeLessThanOrEqual(160)
+    expect(m.description).toMatch(/…$/)
+    expect(m.openGraph?.description).toBe(m.description)
+  })
 })
 
 describe('guidesMetadata', () => {

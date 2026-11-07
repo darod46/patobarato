@@ -60,6 +60,15 @@ describe('StoreRow', () => {
     expect(screen.queryByText(/99,90/)).not.toBeInTheDocument()
   })
 
+  it('uses the affiliate link for non-Amazon stores, falling back to the canonical url, and keeps /go/ for Amazon', () => {
+    const { rerender } = render(<StoreRow offer={offer({ affiliateUrl: 'https://aff.example/pcc' })} now={NOW} />)
+    expect(screen.getByRole('link', { name: 'Ir a PcComponentes' })).toHaveAttribute('href', 'https://aff.example/pcc')
+    rerender(<StoreRow offer={offer({ affiliateUrl: 'https://aff.example/pcc', checkedAt: '2026-11-01T00:00:00Z' })} now={NOW} />)
+    expect(screen.getByRole('link', { name: 'Ver en PcComponentes' })).toHaveAttribute('href', 'https://aff.example/pcc')
+    rerender(<StoreRow offer={offer({ store: 'amazon', externalId: 'B0X', affiliateUrl: 'https://amazon.es/dp/B0X?tag=t' })} now={NOW} />)
+    expect(screen.getByRole('link', { name: 'Ver en Amazon' })).toHaveAttribute('href', '/go/B0X')
+  })
+
   it('shows previous price struck through only when there is one, and Amazon goes through /go/', () => {
     const { rerender } = render(<StoreRow offer={offer({ store: 'amazon', externalId: 'B0ABCDEF12' })} now={NOW} />)
     expect(document.querySelector('s')).toBeNull()
