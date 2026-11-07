@@ -49,6 +49,18 @@ for (const t of ['guides', 'guide_items', 'guide_item_stores', 'product_prices']
   if (![401, 403].includes(r.status)) problems.push(`${t} table: HTTP ${r.status} (expected 401/403)`)
 }
 
+for (const t of ['catalog_products', 'catalog_feeds']) {
+  const r = await rest(`${t}?select=*&limit=1`)
+  if (![401, 403].includes(r.status)) problems.push(`${t} table: HTTP ${r.status} (expected 401/403)`)
+}
+const search = await fetch(`${url}/rest/v1/rpc/web_catalog_search`, {
+  method: 'POST',
+  headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify({ q: 'xx' }),
+})
+const searchBody = await search.json().catch(() => null)
+if (search.status !== 200 || !Array.isArray(searchBody)) problems.push(`web_catalog_search: HTTP ${search.status}`)
+
 if (problems.length) {
   console.error(problems.join('\n'))
   process.exit(1)
