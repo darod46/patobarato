@@ -4,9 +4,9 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 from patobarato.models import ParsedOffer
+from patobarato.storage.supabase_repo import SupabaseRepository
 
 NOW = datetime(2026, 11, 4, 12, 0, tzinfo=UTC)
-from patobarato.storage.supabase_repo import SupabaseRepository
 
 
 class _Query:
@@ -112,22 +112,10 @@ async def test_upsert_product_price_success_sends_full_row():
     assert args[0]["checked_at"] == NOW.isoformat()
 
 
-async def test_upsert_product_price_error_keeps_existing_price():
+async def test_upsert_product_price_error_sends_minimal_payload():
     client = _Client([{"price": 9.5, "previous_price": 12, "currency": "EUR"}])
     await SupabaseRepository(client).upsert_product_price(7, checked_at=NOW, error="captcha")
-    row = next(a[0] for n, a, _ in client.log if n == "upsert")
-    assert row == {
-        "product_id": 7,
-        "price": 9.5,
-        "previous_price": 12,
-        "currency": "EUR",
-        "checked_at": NOW.isoformat(),
-        "error": "captcha",
-    }
-
-
-async def test_upsert_product_price_error_without_row_inserts_null_price():
-    client = _Client([])
-    await SupabaseRepository(client).upsert_product_price(7, checked_at=NOW, error="x")
-    row = next(a[0] for n, a, _ in client.log if n == "upsert")
-    assert row["price"] is None and row["error"] == "x"
+    args, kwargs = next((a, k) for n, a, k in client.log if n == "upsert")
+    assert args[0] == {"product_id": 7, "checked_at": NOW.isoformat(), "error": "captcha"}
+    assert kwargs == {"on_conflict": "product_id"}
+    assert not any(n == "select" for n, _, _ in client.log)

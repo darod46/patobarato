@@ -334,6 +334,7 @@ class SupabaseRepository:
                 .eq("guide_items.guides.status", "published")
                 .order("store")
                 .order("external_id")
+                .order("guide_item_id")
                 .execute()
             )
 
@@ -364,25 +365,26 @@ class SupabaseRepository:
         error: str | None = None,
     ) -> None:
         def run():
+            if error is not None:
+                # Only these columns: the upsert merge leaves the stored price untouched.
+                row = {
+                    "product_id": product_id,
+                    "checked_at": checked_at.isoformat(),
+                    "error": error,
+                }
+                return (
+                    self._client.table("product_prices")
+                    .upsert(row, on_conflict="product_id")
+                    .execute()
+                )
             row = {
                 "product_id": product_id,
                 "price": _money(price),
                 "previous_price": _money(previous_price),
                 "currency": currency,
                 "checked_at": checked_at.isoformat(),
-                "error": error,
+                "error": None,
             }
-            if error is not None:
-                # Keep the last known price: resend the stored values with the error.
-                existing = (
-                    self._client.table("product_prices")
-                    .select("price, previous_price, currency")
-                    .eq("product_id", product_id)
-                    .limit(1)
-                    .execute()
-                )
-                if existing.data:
-                    row.update(existing.data[0])
             return (
                 self._client.table("product_prices")
                 .upsert(row, on_conflict="product_id")

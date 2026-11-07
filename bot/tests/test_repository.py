@@ -247,7 +247,8 @@ async def test_list_guide_products_dedupes_and_skips_drafts():
     repo.add_guide_product(GuideProduct("amazon", "B3", "https://a/B3", "Tres", None))
     repo.add_guide_product(shared)
     repo.add_guide_product(shared)  # same item in a second published guide
-    repo.add_guide_product(GuideProduct("amazon", "[ASIN]", "https://a/x", "Draft", None), published=False)
+    draft = GuideProduct("amazon", "[ASIN]", "https://a/x", "Draft", None)
+    repo.add_guide_product(draft, published=False)
     products = await repo.list_guide_products()
     assert [p.external_id for p in products] == ["B2", "B3"]
 
