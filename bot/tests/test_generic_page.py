@@ -44,3 +44,73 @@ async def test_failures_return_none():
         raise httpx.ConnectError("down")
 
     assert await og_image(client(boom), URL) is None
+
+
+from decimal import Decimal
+from pathlib import Path
+
+from patobarato.sources.generic_page import ProductMeta, fetch_product_meta, product_meta
+
+FIXTURES = Path(__file__).parent / "fixtures"
+
+
+def fixture(name: str) -> str:
+    return (FIXTURES / name).read_text(encoding="utf-8")
+
+
+def test_product_meta_json_ld_offer():
+    meta = product_meta(fixture("pccomponentes_product.html"))
+    assert meta == ProductMeta(
+        image_url="https://img.pccomponentes.com/articles/ninja-af300.jpg",
+        price=Decimal("89.99"),
+        previous_price=None,
+        currency="EUR",
+    )
+
+
+def test_product_meta_aggregate_offer_low_price():
+    meta = product_meta(fixture("mediamarkt_product.html"))
+    assert meta.price == Decimal("199.00")
+    assert meta.currency == "EUR"
+    assert meta.image_url == "https://assets.mmsrg.com/isr/166325/roborock-q7.jpg"
+
+
+def test_product_meta_meta_tags_fallback():
+    meta = product_meta(fixture("elcorteingles_product.html"))
+    assert meta.price == Decimal("149.90")
+    assert meta.currency == "EUR"
+    assert meta.image_url == "https://sgfm.elcorteingles.es/SGFM/dctm/conga3490.jpg"
+
+
+def test_product_meta_without_price():
+    meta = product_meta('<head><meta property="og:image" content="https://i.example/a.jpg"></head>')
+    assert meta == ProductMeta("https://i.example/a.jpg", None, None, None)
+
+
+def test_product_meta_json_ld_in_graph():
+    page = (
+        '<script type="application/ld+json">{"@graph":[{"@type":"Organization"},'
+        '{"@type":"Product","offers":[{"@type":"Offer"},{"@type":"Offer","price":"1.234,50","priceCurrency":"EUR"}]}]}'
+        "</script>"
+    )
+    assert product_meta(page).price == Decimal("1234.50")
+
+
+def test_product_meta_tolerates_invalid_json_and_list_root():
+    page = (
+        '<script type="application/ld+json">{not json</script>'
+        '<script type="application/ld+json">[{"@type":"Product","offers":{"price":12.5,"priceCurrency":"EUR"}}]</script>'
+    )
+    assert product_meta(page).price == Decimal("12.50")
+
+
+def test_product_meta_ignores_unusable_price():
+    page = '<script type="application/ld+json">{"@type":"Product","offers":{"price":"gratis"}}</script>'
+    assert product_meta(page).price is None
+
+
+async def test_fetch_product_meta():
+    http = client(lambda r: httpx.Response(200, text=fixture("pccomponentes_product.html")))
+    meta = await fetch_product_meta(http, URL)
+    assert meta is not None and meta.price == Decimal("89.99")
+    assert await fetch_product_meta(client(lambda r: httpx.Response(500)), URL) is None

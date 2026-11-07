@@ -5,7 +5,8 @@ from urllib.parse import parse_qsl, quote, unquote, urlencode, urlparse, urlunpa
 
 import httpx
 
-from patobarato.sources.generic_page import og_image
+from patobarato.models import PriceQuote
+from patobarato.sources.generic_page import fetch_product_meta, og_image
 from patobarato.stores.base import BaseStore
 
 log = logging.getLogger(__name__)
@@ -89,6 +90,19 @@ class AwinStore(BaseStore):
         if self._http is None:
             return None
         return await og_image(self._http, canonical_url)
+
+    async def fetch_price(self, product_id: str, canonical_url: str) -> PriceQuote | None:
+        if self._http is None:
+            return None
+        try:
+            meta = await fetch_product_meta(self._http, canonical_url)
+        except Exception as e:
+            log.warning("Awin price for %s not found: %s: %s", product_id, type(e).__name__, e)
+            return None
+        if meta is None or meta.price is None:
+            log.warning("Awin price for %s not found: no usable price in page", product_id)
+            return None
+        return PriceQuote(meta.price, meta.previous_price, meta.currency or "EUR", meta.image_url)
 
 
 def awin_store(

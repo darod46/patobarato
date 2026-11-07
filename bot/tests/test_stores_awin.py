@@ -84,3 +84,28 @@ async def test_find_image():
     )
     assert await make(http=http).find_image("p", URL) == "https://i.example/a.jpg"
     assert await make(http=None).find_image("p", URL) is None
+
+
+async def test_awin_store_fetch_price():
+    from decimal import Decimal
+    from pathlib import Path
+
+    text = (Path(__file__).parent / "fixtures" / "pccomponentes_product.html").read_text(encoding="utf-8")
+    http = httpx.AsyncClient(transport=httpx.MockTransport(lambda r: httpx.Response(200, text=text)))
+    quote = await make(http=http).fetch_price("ninja-af300-freidora-de-aire", URL)
+    assert quote is not None
+    assert (quote.price, quote.previous_price, quote.currency) == (Decimal("89.99"), None, "EUR")
+    assert quote.image_url == "https://img.pccomponentes.com/articles/ninja-af300.jpg"
+
+
+async def test_awin_store_fetch_price_http_error_is_none(caplog):
+    http = httpx.AsyncClient(transport=httpx.MockTransport(lambda r: httpx.Response(503)))
+    with caplog.at_level(logging.WARNING):
+        assert await make(http=http).fetch_price("x", URL) is None
+    assert URL not in caplog.text
+
+
+async def test_awin_store_fetch_price_without_http_or_price_is_none():
+    assert await make().fetch_price("x", URL) is None
+    http = httpx.AsyncClient(transport=httpx.MockTransport(lambda r: httpx.Response(200, text="<head></head>")))
+    assert await make(http=http).fetch_price("x", URL) is None
