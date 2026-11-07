@@ -19,5 +19,9 @@ export function fakeClient(result: FakeResult) {
     calls.push(['from', [table]])
     return builder
   })
-  return { client: { from } as unknown as SupabaseClient, calls }
+  const rpc = vi.fn((name: string, args: unknown) => {
+    calls.push(['rpc', [name, args]])
+    return builder
+  })
+  return { client: { from, rpc } as unknown as SupabaseClient, calls }
 }
