@@ -54,7 +54,7 @@ create table events (
     aliexpress_promo text,                     -- promotion_name de featuredpromo.get, null = sin bloque
     intro_md text not null default '',
     tips_md text not null default '',
-    faq jsonb not null default '[]',           -- [{"q": "...", "a": "..."}]
+    faq jsonb not null default '[]',           -- [{"q": "...", "a_md": "..."}], misma forma que guides.faq
     status text not null default 'draft' check (status in ('draft', 'published')),
     updated_at timestamptz not null default now(),
     created_at timestamptz not null default now(),
