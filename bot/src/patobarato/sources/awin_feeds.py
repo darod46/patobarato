@@ -43,16 +43,22 @@ class AwinFeedsSource:
         if not feeds:
             logger.warning("Awin feeds: no merchant ids configured for source %s; nothing to sync", source.id)
             return
+        failed = 0
         for index, (store, advertiser_id) in enumerate(feeds):
             if index:
                 await self._sleep(self._pause_seconds)
-            await self._sync_feed(store, advertiser_id)
+            if not await self._sync_feed(store, advertiser_id):
+                failed += 1
+        if failed == len(feeds):
+            # Lets the scheduler record sources.last_error; partial failures live in catalog_feeds.
+            raise RuntimeError(f"Awin feeds: all {failed} feeds failed")
 
-    async def _sync_feed(self, store: str, advertiser_id: int) -> None:
+    async def _sync_feed(self, store: str, advertiser_id: int) -> bool:
+        """Syncs one feed; True on success, False when it failed (already logged and recorded)."""
         ran_at = self._clock()
         seen: set[str] = set()
         batch: dict[str, CatalogRow] = {}
-        duplicates = 0
+        duplicates = 0  # same-batch repeats only (the only duplicates an upsert cannot take)
         try:
             async for product in self._client.download_feed(advertiser_id):
                 if product.external_id in batch:
@@ -109,7 +115,9 @@ class AwinFeedsSource:
                     type(record_error).__name__,
                     record_error,
                 )
-            return
+            return False
+        if not seen:
+            logger.warning("Awin feed of %s was empty; nothing marked out of stock", store)
         logger.info(
             "Awin feed of %s: products=%d dropped=%d out_of_stock=%d",
             store,
@@ -117,3 +125,4 @@ class AwinFeedsSource:
             duplicates,
             out_of_stock,
         )
+        return True

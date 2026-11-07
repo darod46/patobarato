@@ -213,14 +213,14 @@ async def test_record_feed_run_row_shape():
 async def test_mark_catalog_out_of_stock_updates_the_complement_in_chunks():
     stored = [{"external_id": f"id{i:04d}"} for i in range(2500)]
     pages = [stored[:1000], stored[1000:2000], stored[2000:]]
-    seen = {f"id{i:04d}" for i in range(100)}  # 2400 missing -> chunks of 1000/1000/400
+    seen = {f"id{i:04d}" for i in range(100)}  # 2400 missing -> chunks of 500x4/400
     client = _ScriptedClient(pages)
     count = await SupabaseRepository(client).mark_catalog_out_of_stock("mediamarkt", seen)
     assert count == 2400
     ranges = [a for n, a, _ in client.log if n == "range"]
     assert ranges == [(0, 999), (1000, 1999), (2000, 2999)]
     chunks = [a[1] for n, a, _ in client.log if n == "in_"]
-    assert [len(c) for c in chunks] == [1000, 1000, 400]
+    assert [len(c) for c in chunks] == [500] * 4 + [400]
     assert not set(chunks[0]) & seen
     assert ("update", ({"in_stock": False},), {}) in client.log
     assert ("eq", ("store", "mediamarkt"), {}) in client.log

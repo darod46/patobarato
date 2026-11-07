@@ -149,6 +149,28 @@ async def test_run_without_merchants_warns(caplog):
     assert "no merchant ids" in caplog.text
 
 
+async def test_run_raises_when_every_feed_fails_and_scheduler_records_it():
+    import pytest
+
+    from patobarato.sources.api_scheduler import ApiScheduler
+
+    repo = _SpyRepo()
+    source = repo.add_api_source("awin_feeds", "awin-feeds")
+    client = _FakeClient({1234: [AwinFeedError("HTTP 500")], 5678: [AwinFeedError("HTTP 503")]})
+    runner = _source_runner(client, repo)
+    with pytest.raises(RuntimeError, match="all 2 feeds failed"):
+        await runner.run(source)
+    await ApiScheduler(repo, [runner], clock=lambda: NOW).tick()
+    assert repo.source_runs[source.id] == (NOW, "RuntimeError: Awin feeds: all 2 feeds failed")
+
+
+async def test_run_empty_successful_feed_warns_with_store(caplog):
+    client = _FakeClient({1234: [], 5678: [_product(1)]})
+    with caplog.at_level(logging.WARNING, logger="patobarato.awin_feeds"):
+        await _source_runner(client, _SpyRepo()).run(_source())
+    assert "pccomponentes was empty" in caplog.text
+
+
 async def test_run_isolates_one_merchant_failure(caplog):
     repo = _SpyRepo()
     client = _FakeClient({1234: [AwinFeedError("HTTP 500")], 5678: [_product(1)]})

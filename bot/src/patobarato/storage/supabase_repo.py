@@ -22,6 +22,7 @@ from patobarato.storage.repository import clean_hashtags
 
 UNIQUE_VIOLATION = "23505"
 CATALOG_PAGE = 1000
+CATALOG_UPDATE_CHUNK = 500  # ids travel in the URL of the update request
 
 logger = logging.getLogger("patobarato.supabase_repo")
 
@@ -473,8 +474,8 @@ class SupabaseRepository:
                 start += CATALOG_PAGE
             missing = sorted(set(in_stock) - seen_ids)
             updated = 0
-            for i in range(0, len(missing), CATALOG_PAGE):
-                chunk = missing[i : i + CATALOG_PAGE]
+            for i in range(0, len(missing), CATALOG_UPDATE_CHUNK):
+                chunk = missing[i : i + CATALOG_UPDATE_CHUNK]
                 response = (
                     self._client.table("catalog_products")
                     .update({"in_stock": False})
