@@ -74,6 +74,12 @@ describe('events', () => {
     expect(whenLabel(prime, now)).toBe('en julio')
   })
 
+  it('whenLabel never counts negative days during an event', () => {
+    expect(whenLabel(bf, new Date('2026-11-27T12:00:00Z'))).toBe('está en marcha')
+    expect(whenLabel(bf, new Date('2026-11-28T12:00:00Z'))).toBe('está en marcha')
+    expect(whenLabel(ali, new Date('2026-11-11T12:00:00Z'))).toBe('es hoy')
+  })
+
   it('returns null with no future event', () => {
     expect(nextEvent(new Date('2030-01-01T00:00:00Z'), EVENTS)).toBeNull()
     expect(upcomingEvents(new Date('2030-01-01T00:00:00Z'), 4, EVENTS)).toEqual([])

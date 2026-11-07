@@ -46,3 +46,14 @@ describe('AnnouncementBar second event', () => {
     expect(screen.getByText('11.11 de AliExpress en 5 días')).toBeInTheDocument()
   })
 })
+
+describe('AnnouncementBar during an event', () => {
+  it('says the event is on, never a negative count', () => {
+    render(<AnnouncementBar event={second} latestPublishedAt={null} now={new Date('2026-11-28T12:00:00Z')} />)
+    expect(screen.getByText('Black Friday está en marcha')).toBeInTheDocument()
+  })
+  it('says hoy on the day of a one-day event', () => {
+    render(<AnnouncementBar event={event} latestPublishedAt={null} now={new Date('2026-11-11T12:00:00Z')} />)
+    expect(screen.getByText('11.11 de AliExpress es hoy')).toBeInTheDocument()
+  })
+})

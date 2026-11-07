@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { daysUntil, eventDateLabel, eventPath } from '../lib/events'
+import { daysUntil, eventDateLabel, eventLongDateLabel, eventPath, eventPhase } from '../lib/events'
 import { storeNames } from '../lib/stores'
 import type { SiteEvent } from '../lib/types'
 
@@ -7,6 +7,9 @@ type Props = { next: SiteEvent | null; upcoming: SiteEvent[]; now: Date }
 
 function countdown(event: SiteEvent, now: Date): string {
   if (event.approximate) return `En ${eventDateLabel(event)}`
+  if (eventPhase(event, now) === 'during') {
+    return event.startsOn === event.endsOn ? 'Es hoy' : `En marcha hasta el ${eventLongDateLabel(event, 'end')}`
+  }
   const days = daysUntil(event, now)
   if (days === 0) return 'Es hoy'
   if (days === 1) return 'Es mañana'

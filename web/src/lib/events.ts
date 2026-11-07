@@ -60,9 +60,13 @@ export const eventPath = (slug: string) => `/eventos/${slug}`
 
 export const eventYear = (event: SiteEvent) => parts(event.startsOn)[0]
 
-/** "en 5 días" / "es hoy" / "es mañana", or "en julio" for an approximate date — never a count to a guessed date. */
+/**
+ * "en 5 días" / "es hoy" / "es mañana", "está en marcha" while a multi-day event runs, or "en julio" for an
+ * approximate date — never a count to a guessed date, never a negative count.
+ */
 export function whenLabel(event: SiteEvent, now: Date): string {
   if (event.approximate) return `en ${eventDateLabel(event)}`
+  if (eventPhase(event, now) === 'during') return event.startsOn === event.endsOn ? 'es hoy' : 'está en marcha'
   const days = daysUntil(event, now)
   if (days === 0) return 'es hoy'
   if (days === 1) return 'es mañana'

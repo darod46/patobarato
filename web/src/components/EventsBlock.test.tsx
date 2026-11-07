@@ -42,3 +42,15 @@ describe('EventsBlock approximate dates', () => {
     expect(screen.getByText('En julio')).toBeInTheDocument()
   })
 })
+
+describe('EventsBlock during an event', () => {
+  it('says until when a multi-day event runs, never a negative count', () => {
+    render(<EventsBlock next={e2} upcoming={[e2]} now={new Date('2026-11-28T12:00:00Z')} />)
+    expect(screen.getByText('En marcha hasta el 29 de noviembre')).toBeInTheDocument()
+    expect(screen.queryByText(/Faltan/)).toBeNull()
+  })
+  it('says it is today on the day of a one-day event', () => {
+    render(<EventsBlock next={e1} upcoming={[e1]} now={new Date('2026-11-11T12:00:00Z')} />)
+    expect(screen.getByText('Es hoy')).toBeInTheDocument()
+  })
+})
