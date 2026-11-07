@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { DealCard } from '../../../../components/DealCard'
 import { Footer } from '../../../../components/Footer'
 import { Header } from '../../../../components/Header'
-import { SearchForm } from '../../../../components/SearchForm'
 import { fetchDeals } from '../../../../lib/deals'
 import { getSupabase } from '../../../../lib/supabase'
 import type { Deal } from '../../../../lib/types'
@@ -28,7 +27,7 @@ export default async function ProductNotFound() {
 
   return (
     <div className="min-h-screen bg-white font-sans text-ink">
-      <Header search={<SearchForm />} />
+      <Header />
       <main className="mx-auto max-w-[1200px] px-4 pt-32 pb-16 md:px-8 md:pt-24">
         <div className="flex flex-col items-center gap-4 py-8 text-center">
           <img src="/pato-placeholder.svg" alt="" width={120} height={120} className="h-28 w-28" />

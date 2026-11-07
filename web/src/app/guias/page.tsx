@@ -29,8 +29,8 @@ export default async function GuidesPage() {
   return (
     <div className="min-h-screen bg-white font-sans text-ink">
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(crumbs)} />
-      <Header search={null} />
-      <main className="mx-auto max-w-[1200px] px-4 pt-24 pb-16 md:px-8 md:pt-32">
+      <Header />
+      <main className="mx-auto max-w-[1200px] px-4 pt-32 pb-16 md:px-8 md:pt-32">
         <h1 className="font-display text-4xl font-bold tracking-[-0.03em] md:text-5xl">Guías de compra</h1>
         <p className="mt-3 max-w-2xl text-lg text-muted">
           Comparativas con los mejores productos de cada categoría, sus precios revisados y los cupones que aplican.

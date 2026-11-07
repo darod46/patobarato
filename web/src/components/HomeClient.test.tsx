@@ -88,10 +88,10 @@ it('server-renders the carousel deals', () => {
   expect(html).toContain('Chollo 2')
 })
 
-it('header search is a form that submits to /?q= (rewritten to the listing)', () => {
+it('header search is a form that submits to /chollos?q= (rewritten to the listing)', () => {
   render(<HomeClient {...props} />)
   const form = screen.getByRole('search')
-  expect(form).toHaveAttribute('action', '/')
+  expect(form).toHaveAttribute('action', '/chollos')
   expect(form).toHaveAttribute('method', 'get')
 })
 

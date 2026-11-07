@@ -4,7 +4,6 @@ import { cache } from 'react'
 import { Footer } from '../../../../components/Footer'
 import { Header } from '../../../../components/Header'
 import { ProductView } from '../../../../components/ProductView'
-import { SearchForm } from '../../../../components/SearchForm'
 import { fetchDealByProduct, fetchRelatedDeals } from '../../../../lib/deals'
 import { fetchGuidesByProduct } from '../../../../lib/guides-data'
 import { breadcrumbJsonLd, jsonLdScript, productJsonLd, productMetadata, type BreadcrumbItem } from '../../../../lib/seo'
@@ -68,7 +67,7 @@ export default async function ProductPage({ params }: Props) {
         dangerouslySetInnerHTML={jsonLdScript(productJsonLd(deal, SITE_URL + canonical))}
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(breadcrumbJsonLd(crumbs))} />
-      <Header search={<SearchForm />} />
+      <Header />
       <main className="mx-auto max-w-[1200px] px-4 pt-32 pb-12 md:px-8 md:pt-24 md:pb-16">
         <ProductView deal={deal} related={related} now={now} guides={guides} />
       </main>

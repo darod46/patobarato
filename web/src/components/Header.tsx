@@ -1,5 +1,6 @@
 import { Send } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { HeaderSearch } from './HeaderSearch'
 import { MobileNav } from './MobileNav'
 
 import { NAV_LINKS } from '../lib/nav'
@@ -8,8 +9,8 @@ const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visi
 
 const TELEGRAM = 'https://t.me/patobarato'
 
-/** Fixed header: logo, main navigation (collapsed into a menu on small screens), search and the channel button. */
-export function Header({ search }: { search: ReactNode }) {
+/** Fixed header: logo, main navigation (collapsed into a menu on small screens), the search (always present) and the channel button. */
+export function Header({ search = <HeaderSearch /> }: { search?: ReactNode }) {
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-white/80 backdrop-blur">
       <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-2 md:flex-nowrap md:px-8 md:py-3">
@@ -23,9 +24,7 @@ export function Header({ search }: { search: ReactNode }) {
             </a>
           ))}
         </nav>
-        {search !== null && search !== undefined && (
-          <div className="order-last w-full md:order-none md:max-w-xs md:flex-1">{search}</div>
-        )}
+        <div className="order-last w-full md:order-none md:max-w-sm md:flex-1">{search}</div>
         <div className="flex items-center gap-2">
           <a
             href={TELEGRAM}

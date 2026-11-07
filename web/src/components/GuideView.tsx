@@ -28,8 +28,8 @@ export function GuideView({ guide, now, stores }: Props) {
   const hasItems = guide.items.length > 0
   return (
     <div className="min-h-screen bg-white font-sans text-ink">
-      <Header search={null} />
-      <main className="mx-auto max-w-[1200px] px-4 pt-24 pb-16 md:px-8 md:pt-32">
+      <Header />
+      <main className="mx-auto max-w-[1200px] px-4 pt-32 pb-16 md:px-8 md:pt-32">
         <nav aria-label="Ruta de navegación" className="text-sm text-muted">
           <ol className="flex min-w-0 flex-wrap items-center gap-1.5">
             <li>

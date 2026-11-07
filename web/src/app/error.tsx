@@ -1,7 +1,6 @@
 'use client'
 
 import { Header } from '../components/Header'
-import { SearchForm } from '../components/SearchForm'
 
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
@@ -9,7 +8,7 @@ const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visi
 export default function ErrorPage({ retry }: { error: unknown; retry: () => void }) {
   return (
     <div className="min-h-screen bg-white font-sans text-ink">
-      <Header search={<SearchForm />} />
+      <Header />
       <main className="mx-auto max-w-[1200px] px-4 pt-32 pb-16 md:px-8 md:pt-24">
         <div className="flex flex-col items-center gap-4 py-8 text-center">
           <img src="/pato-placeholder.svg" alt="" width={120} height={120} className="h-28 w-28" />

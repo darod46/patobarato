@@ -17,12 +17,14 @@ describe('Header', () => {
   })
 
   it('is translucent with a backdrop blur so the page shows through', () => {
-    render(<Header search={null} />)
+    render(<Header />)
     expect(screen.getByRole('banner')).toHaveClass('bg-white/80', 'backdrop-blur')
   })
 
-  it('renders without a search box', () => {
-    render(<Header search={null} />)
-    expect(screen.queryByLabelText('Buscar chollos')).toBeNull()
+  it('always carries the search, as a GET form to /chollos by default', () => {
+    render(<Header />)
+    const form = screen.getByRole('search')
+    expect(form).toHaveAttribute('action', '/chollos')
+    expect(screen.getByLabelText('Buscar chollos')).toHaveAttribute('name', 'q')
   })
 })

@@ -18,7 +18,6 @@ import { Header } from './Header'
 import { StoresBlock } from './StoresBlock'
 import { Hero, type HeroHighlights } from './Hero'
 import { HowItWorks } from './HowItWorks'
-import { SearchForm } from './SearchForm'
 import { TelegramBlock } from './TelegramBlock'
 
 type Props = {
@@ -63,7 +62,7 @@ export function HomeClient({
 
   return (
     <div className="min-h-screen bg-white font-sans text-ink">
-      <Header search={<SearchForm />} />
+      <Header />
       <main className="pt-[118px] md:pt-[72px]">
         <AnnouncementBar
           event={barEvent}

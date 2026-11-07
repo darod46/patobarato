@@ -10,7 +10,7 @@ import type { HashtagCount } from '../lib/types'
 import { DealFeed } from './DealFeed'
 import { Footer } from './Footer'
 import { Header } from './Header'
-import { SearchBox } from './SearchBox'
+import { HeaderSearch } from './HeaderSearch'
 
 type Props = {
   /** Server render time (ISO); the first client render uses it so hydration matches. */
@@ -45,7 +45,7 @@ export function DealsClient({
 
   return (
     <div className="min-h-screen bg-white font-sans text-ink">
-      <Header search={<SearchBox value={q} onChange={setQ} />} />
+      <Header search={<HeaderSearch value={q} onChange={setQ} />} />
       <main className="mx-auto max-w-[1200px] px-4 pt-32 pb-12 md:px-8 md:pt-24 md:pb-16">
         <h1 className="font-display text-2xl font-bold tracking-[-0.02em] md:text-[32px]">Chollos de hoy</h1>
         <p className="mt-1.5 mb-5 text-muted">Se actualiza automáticamente</p>

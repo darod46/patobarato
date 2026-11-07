@@ -14,7 +14,7 @@ import { CouponsBlock } from './CouponsBlock'
 import { DealFeed } from './DealFeed'
 import { Footer } from './Footer'
 import { Header } from './Header'
-import { SearchBox } from './SearchBox'
+import { HeaderSearch } from './HeaderSearch'
 
 type Props = {
   /** Store id, fixed for the whole page. */
@@ -52,7 +52,7 @@ export function StoreClient({ store, now, initialDeals, initialTags, stores, cou
 
   return (
     <div className="min-h-screen bg-surface font-sans text-ink">
-      <Header search={<SearchBox value={q} onChange={setQ} />} />
+      <Header search={<HeaderSearch value={q} onChange={setQ} />} />
       <main>
         <div className="mx-auto max-w-[1200px] px-4 pt-32 md:px-8 md:pt-24">
         <h1 className="font-display text-2xl font-bold tracking-[-0.02em] md:text-[32px]">Chollos de {storeInfo(store).name}</h1>
