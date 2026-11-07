@@ -9,9 +9,12 @@ import html
 import json
 import logging
 import re
+from decimal import Decimal, InvalidOperation
 from typing import Protocol
 
 import httpx
+
+from patobarato.models import PriceQuote
 
 logger = logging.getLogger("patobarato.amazon")
 
@@ -70,6 +73,65 @@ def extract_image_url(page: str) -> str | None:
     return None
 
 
+_BUYBOX_IDS = ("corePriceDisplay_desktop_feature_div", "corePrice_feature_div", "apex_desktop")
+_DIV_TAG_RE = re.compile(r"<(/?)div\b", re.IGNORECASE)
+_PRICE_SPAN_RE = re.compile(
+    r'(<span\b[^>]*\bclass="[^"]*\ba-price\b[^"]*"[^>]*>)\s*'
+    r'<span\s+class="a-offscreen">([^<]*)</span>',
+    re.IGNORECASE,
+)
+_PRICE_TEXT_RE = re.compile(r"^\d{1,3}(?:\.\d{3})*(?:,\d{1,2})?$|^\d+(?:,\d{1,2})?$")
+
+
+def _buybox(page: str) -> str | None:
+    """The buy box's HTML, found by container id (the first one present wins)."""
+    for container_id in _BUYBOX_IDS:
+        opening = re.search(rf'<div\b[^>]*\bid="{container_id}"[^>]*>', page)
+        if opening is None:
+            continue
+        depth = 0
+        for tag in _DIV_TAG_RE.finditer(page, opening.start()):
+            depth += -1 if tag.group(1) else 1
+            if depth == 0:
+                return page[opening.start() : tag.end()]
+        return page[opening.start() :]
+    return None
+
+
+def _parse_price(text: str) -> Decimal | None:
+    cleaned = html.unescape(text).replace("€", "").replace("\xa0", "").replace(" ", "")
+    if not _PRICE_TEXT_RE.match(cleaned):
+        return None
+    try:
+        return Decimal(cleaned.replace(".", "").replace(",", "."))
+    except InvalidOperation:
+        return None
+
+
+def extract_price(page: str) -> PriceQuote | None:
+    """The current price (and the struck list price, if higher) of the buy box.
+
+    Prices elsewhere on the page (related products, carousels) are ignored.
+    """
+    box = _buybox(page)
+    if box is None:
+        return None
+    price: Decimal | None = None
+    struck: Decimal | None = None
+    for tag, text in _PRICE_SPAN_RE.findall(box):
+        value = _parse_price(text)
+        if value is None:
+            continue
+        if 'data-a-strike="true"' in tag or "a-text-price" in tag:
+            struck = struck if struck is not None else value
+        elif price is None:
+            price = value
+    if price is None:
+        return None
+    previous = struck if struck is not None and struck > price else None
+    return PriceQuote(price=price, previous_price=previous)
+
+
 _TITLE_RE = re.compile(r"<title[^>]*>(.*?)</title>", re.IGNORECASE | re.DOTALL)
 
 
@@ -90,18 +152,22 @@ class ImageFinder(Protocol):
     async def find(self, asin: str, country: str) -> str | None: ...
 
 
-class AmazonImageFinder(ImageFinder):
-    """Reads the product page with browser-like headers.
+class AmazonPageFetcher:
+    """One GET of the product page with browser-like headers.
 
-    Keeps running counts so the logs show how often Amazon lets us through.
+    Shared by the image finder and the price reader. Returns the HTML, or None
+    on a network error, a non-200 answer or a captcha. Keeps running counts so
+    the logs show how often Amazon lets us through; `label` names what the
+    caller is after ("image", "price") in those log lines.
     """
 
-    def __init__(self, client: httpx.AsyncClient) -> None:
+    def __init__(self, client: httpx.AsyncClient, label: str = "page") -> None:
         self._client = client
+        self._label = label
         self.found = 0
         self.failed = 0
 
-    async def find(self, asin: str, country: str) -> str | None:
+    async def fetch(self, asin: str, country: str) -> str | None:
         template = PRODUCT_PAGE_URLS.get(country)
         if template is None:
             return None
@@ -110,29 +176,56 @@ class AmazonImageFinder(ImageFinder):
                 template.format(asin=asin), headers=BROWSER_HEADERS, follow_redirects=True
             )
         except httpx.HTTPError as error:
-            return self._fail(asin, f"network error ({type(error).__name__})")
+            return self.fail(asin, f"network error ({type(error).__name__})")
         if response.status_code != 200:
-            return self._fail(asin, f"HTTP {response.status_code}")
+            return self.fail(asin, f"HTTP {response.status_code}")
         page = response.text
         if any(marker in page for marker in _CAPTCHA_MARKERS):
-            return self._fail(asin, "captcha")
-        url = extract_image_url(page)
-        if url is None:
-            return self._fail(asin, f"no image in page (title: {_page_title(page)!r})")
-        self.found += 1
-        logger.info("Amazon image for %s found (ok=%d, failed=%d)", asin, self.found, self.failed)
-        return resize_image_url(url)
+            return self.fail(asin, "captcha")
+        return page
 
-    def _fail(self, asin: str, reason: str) -> None:
+    def succeed(self, asin: str) -> None:
+        self.found += 1
+        logger.info(
+            "Amazon %s for %s found (ok=%d, failed=%d)", self._label, asin, self.found, self.failed
+        )
+
+    def fail(self, asin: str, reason: str) -> None:
         self.failed += 1
         logger.warning(
-            "Amazon image for %s not found: %s (ok=%d, failed=%d)",
+            "Amazon %s for %s not found: %s (ok=%d, failed=%d)",
+            self._label,
             asin,
             reason,
             self.found,
             self.failed,
         )
         return None
+
+
+class AmazonImageFinder(ImageFinder):
+    """Reads the product page through the shared fetcher and takes its image."""
+
+    def __init__(self, client: httpx.AsyncClient) -> None:
+        self._fetcher = AmazonPageFetcher(client, "image")
+
+    @property
+    def found(self) -> int:
+        return self._fetcher.found
+
+    @property
+    def failed(self) -> int:
+        return self._fetcher.failed
+
+    async def find(self, asin: str, country: str) -> str | None:
+        page = await self._fetcher.fetch(asin, country)
+        if page is None:
+            return None
+        url = extract_image_url(page)
+        if url is None:
+            return self._fetcher.fail(asin, f"no image in page (title: {_page_title(page)!r})")
+        self._fetcher.succeed(asin)
+        return resize_image_url(url)
 
 
 PRECIOREAL_URLS = {"ES": "https://precioreal.com/oferta/amazon_{asin}"}

@@ -2,6 +2,8 @@
 
 from typing import Protocol
 
+from patobarato.models import PriceQuote
+
 
 class Store(Protocol):
     id: str
@@ -18,6 +20,8 @@ class Store(Protocol):
     async def affiliate_url(self, canonical_url: str, product_id: str) -> str: ...
 
     async def find_image(self, product_id: str, canonical_url: str) -> str | None: ...
+
+    async def fetch_price(self, product_id: str, canonical_url: str) -> PriceQuote | None: ...
 
 
 class BaseStore:
@@ -40,3 +44,6 @@ class BaseStore:
         if product_id is None:
             raise ValueError(f"No product id in {url!r}")
         return self.canonical_url(product_id, country)
+
+    async def fetch_price(self, product_id: str, canonical_url: str) -> PriceQuote | None:
+        return None

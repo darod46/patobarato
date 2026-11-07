@@ -74,3 +74,38 @@ def test_registry(amazon):
     assert registry.get("amazon") is amazon
     assert registry.get("nope") is None
     assert registry.ids == ["amazon"]
+
+
+# --- fetch_price --------------------------------------------------------------------
+
+from decimal import Decimal  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+_FIXTURES = Path(__file__).parent / "fixtures"
+
+
+def _serve(name: str):
+    page = (_FIXTURES / name).read_text(encoding="utf-8")
+    return httpx.AsyncClient(
+        transport=httpx.MockTransport(lambda request: httpx.Response(200, text=page))
+    )
+
+
+async def test_amazon_store_fetch_price_returns_quote_with_image():
+    async with _serve("amazon_price.html") as client:
+        quote = await AmazonStore("patobarato-21", client).fetch_price("B09XS7JWHH", URL)
+    assert quote is not None
+    assert quote.price == Decimal("1234.56")
+    assert quote.previous_price == Decimal("1499.00")
+    assert quote.image_url == "https://m.media-amazon.com/images/I/71ESx2oXXVL._AC_SL500_.jpg"
+
+
+async def test_amazon_store_fetch_price_captcha_is_none():
+    async with _serve("amazon_captcha.html") as client:
+        assert await AmazonStore("patobarato-21", client).fetch_price("B09XS7JWHH", URL) is None
+
+
+async def test_amazon_store_fetch_price_without_buybox_or_http_is_none(amazon):
+    async with _serve("amazon_no_price.html") as client:
+        assert await AmazonStore("patobarato-21", client).fetch_price("B09XS7JWHH", URL) is None
+    assert await amazon.fetch_price("B09XS7JWHH", URL) is None

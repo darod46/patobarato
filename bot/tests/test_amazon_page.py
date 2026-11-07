@@ -176,3 +176,60 @@ async def test_amazon_no_image_log_includes_page_title(caplog):
     with caplog.at_level(logging.WARNING, logger="patobarato.amazon"):
         await _finder(lambda request: httpx.Response(200, text=page)).find("B0GS1K5XQ8", "ES")
     assert any("Algo ha ido mal" in r.getMessage() for r in caplog.records)
+
+
+# --- Price reader -------------------------------------------------------------------
+
+from decimal import Decimal  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+from patobarato.sources.amazon_page import AmazonPageFetcher, extract_price  # noqa: E402
+
+FIXTURES = Path(__file__).parent / "fixtures"
+
+
+def load_fixture(name: str) -> str:
+    return (FIXTURES / name).read_text(encoding="utf-8")
+
+
+def test_extract_price_parses_thousands_and_previous():
+    quote = extract_price(load_fixture("amazon_price.html"))
+    assert quote is not None
+    assert quote.price == Decimal("1234.56")
+    assert quote.previous_price == Decimal("1499.00")
+    assert quote.currency == "EUR"
+
+
+def test_extract_price_without_buybox_is_none():
+    assert extract_price(load_fixture("amazon_no_price.html")) is None
+
+
+def test_extract_price_ignores_prices_outside_buybox():
+    page = load_fixture("amazon_price.html")
+    quote = extract_price(page)
+    assert quote is not None and quote.price != Decimal("9.99")
+    # The related-products price precedes the buy box; without the box it is not read.
+    assert extract_price(page.replace("corePriceDisplay_desktop_feature_div", "other")) is None
+
+
+@pytest.mark.parametrize("box_id", ["corePrice_feature_div", "apex_desktop"])
+def test_extract_price_falls_back_to_other_buybox_ids(box_id):
+    page = load_fixture("amazon_price.html").replace("corePriceDisplay_desktop_feature_div", box_id)
+    quote = extract_price(page)
+    assert quote is not None and quote.price == Decimal("1234.56")
+
+
+def test_extract_price_previous_only_when_greater():
+    page = load_fixture("amazon_price.html").replace("1.499,00", "1.000,00")
+    quote = extract_price(page)
+    assert quote is not None and quote.previous_price is None
+
+
+async def test_fetcher_returns_page_and_none_on_captcha():
+    ok = AmazonPageFetcher(httpx.AsyncClient(transport=httpx.MockTransport(
+        lambda r: httpx.Response(200, text="<html>hola</html>"))))
+    assert await ok.fetch("B0GS1K5XQ8", "ES") == "<html>hola</html>"
+    captcha = AmazonPageFetcher(httpx.AsyncClient(transport=httpx.MockTransport(
+        lambda r: httpx.Response(200, text=load_fixture("amazon_captcha.html")))))
+    assert await captcha.fetch("B0GS1K5XQ8", "ES") is None
+    assert captcha.failed == 1
