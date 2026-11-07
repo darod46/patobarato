@@ -70,6 +70,7 @@ def to_source_message(
     source_id: int,
     now: datetime,
     preview_photo: PreviewPhoto | None,
+    attached_photo: PreviewPhoto | None = None,
 ) -> SourceMessage:
     text = message.message or ""
     entities = message.entities or []
@@ -107,11 +108,11 @@ def to_source_message(
         received_at=_received_at(message, now),
         preview_photo=preview_photo,
         preview_url=preview_url,
+        attached_photo=attached_photo,
     )
 
 
-def _preview_photo_loader(client, message: types.Message) -> PreviewPhoto | None:
-    photo = _webpage_photo(message.media)
+def _photo_loader(client, photo: types.Photo | None) -> PreviewPhoto | None:
     if photo is None:
         return None
 
@@ -121,19 +122,43 @@ def _preview_photo_loader(client, message: types.Message) -> PreviewPhoto | None
     return load
 
 
-def make_photo_provider(reader_client, resolver: UrlResolver) -> PhotoProvider:
-    """Builds the photo lookup: source preview if same ASIN, else Telegram's own preview.
+def _preview_photo_loader(client, message: types.Message) -> PreviewPhoto | None:
+    return _photo_loader(client, _webpage_photo(message.media))
 
-    Amazon pages are never fetched directly; Telegram builds the preview.
+
+def _attached_photo_loader(client, message: types.Message) -> PreviewPhoto | None:
+    """Loader for the photo posted with the message (MessageMediaPhoto), if any."""
+    media = message.media
+    if isinstance(media, types.MessageMediaPhoto) and isinstance(media.photo, types.Photo):
+        return _photo_loader(client, media.photo)
+    return None
+
+
+def make_photo_provider(reader_client, resolver: UrlResolver) -> PhotoProvider:
+    """Builds the Telegram side of the post photo lookup, first hit wins:
+
+    1. the source message's link preview photo, when it is for the same product;
+    2. the photo attached to the source message (the pipeline only leaves it
+       on messages that produced a single offer);
+    3. Telegram's own preview of the canonical URL.
+
+    A failing step is logged and the next one is tried. Amazon pages are never
+    fetched here; Telegram builds the preview.
     """
 
-    async def provide(msg: SourceMessage, canonical_url: str) -> bytes | None:
-        if msg.preview_photo is not None and msg.preview_url:
-            resolved = await resolver.resolve(msg.preview_url)
-            wanted = asin_from_url(canonical_url)
-            if resolved is not None and wanted and asin_from_url(resolved) == wanted:
-                return await msg.preview_photo()
+    async def same_product_preview(msg: SourceMessage, canonical_url: str) -> bytes | None:
+        if msg.preview_photo is None or not msg.preview_url:
+            return None
+        resolved = await resolver.resolve(msg.preview_url)
+        wanted = asin_from_url(canonical_url)
+        if resolved is not None and wanted and asin_from_url(resolved) == wanted:
+            return await msg.preview_photo()
+        return None
 
+    async def attached(msg: SourceMessage, canonical_url: str) -> bytes | None:
+        return await msg.attached_photo() if msg.attached_photo is not None else None
+
+    async def telegram_preview(msg: SourceMessage, canonical_url: str) -> bytes | None:
         result = await reader_client(
             functions.messages.GetWebPagePreviewRequest(message=canonical_url)
         )
@@ -144,6 +169,25 @@ def make_photo_provider(reader_client, resolver: UrlResolver) -> PhotoProvider:
         if photo is None:
             return None
         return await reader_client.download_media(photo, bytes)
+
+    steps = (
+        ("source preview", same_product_preview),
+        ("attached photo", attached),
+        ("Telegram preview", telegram_preview),
+    )
+
+    async def provide(msg: SourceMessage, canonical_url: str) -> bytes | None:
+        for name, step in steps:
+            try:
+                photo = await step(msg, canonical_url)
+            except Exception as exc:
+                logger.warning(
+                    "Photo step '%s' failed for %s: %s: %s", name, canonical_url, type(exc).__name__, exc
+                )
+                continue
+            if photo:
+                return photo
+        return None
 
     return provide
 
@@ -206,6 +250,7 @@ class TelegramListener:
                 source.id,
                 self._clock(),
                 _preview_photo_loader(self._client, message),
+                _attached_photo_loader(self._client, message),
             )
             await self._pipeline.submit(msg)
         except Exception:

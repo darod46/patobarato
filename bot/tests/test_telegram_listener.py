@@ -1,3 +1,4 @@
+import logging
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
@@ -7,7 +8,11 @@ from telethon.tl import functions, types
 from patobarato.models import SourceMessage
 from patobarato.parsing.links import UrlResolver
 from patobarato.parsing.text import parse_prices
-from patobarato.sources.telegram_listener import make_photo_provider, to_source_message
+from patobarato.sources.telegram_listener import (
+    _attached_photo_loader,
+    make_photo_provider,
+    to_source_message,
+)
 
 NOW = datetime(2026, 11, 4, 12, 0, tzinfo=UTC)
 CANONICAL = "https://www.amazon.es/dp/B09XS7JWHH"
@@ -279,3 +284,109 @@ def test_received_at_naive_message_date_is_utc():
     raw.date = (NOW - timedelta(minutes=1)).replace(tzinfo=None)
 
     assert to_source_message(raw, 1, NOW, None).received_at == NOW - timedelta(minutes=1)
+
+
+def _photo_message(photo_id: int = 3) -> types.Message:
+    return _message("x", media=types.MessageMediaPhoto(photo=_photo(photo_id)))
+
+
+def test_attached_photo_is_passed_through():
+    async def loader() -> bytes | None:
+        return b"img"
+
+    msg = to_source_message(_photo_message(), 1, NOW, None, attached_photo=loader)
+
+    assert msg.attached_photo is loader
+    assert to_source_message(_message("x"), 1, NOW, None).attached_photo is None
+
+
+async def test_attached_photo_loader_downloads_the_message_photo():
+    reader = FakeReader()
+
+    loader = _attached_photo_loader(reader, _photo_message(3))
+
+    assert loader is not None
+    assert await loader() == b"photo-3"
+    assert _attached_photo_loader(reader, _message("x")) is None
+    assert _attached_photo_loader(reader, _message("x", media=_webpage_media(CANONICAL, _photo()))) is None
+
+
+def _msg_with(preview_url=None, preview=None, attached=None) -> SourceMessage:
+    return SourceMessage(
+        1, 1, "", [], [], NOW, preview_photo=preview, preview_url=preview_url, attached_photo=attached
+    )
+
+
+def _loader(result: bytes | None = None, error: Exception | None = None):
+    calls: list[int] = []
+
+    async def load() -> bytes | None:
+        calls.append(1)
+        if error is not None:
+            raise error
+        return result
+
+    load.calls = calls
+    return load
+
+
+def _preview_reader(photo_id: int = 9) -> FakeReader:
+    return FakeReader(
+        types.messages.WebPagePreview(media=_webpage_media(CANONICAL, _photo(photo_id)), chats=[], users=[])
+    )
+
+
+async def test_same_product_preview_comes_before_attached_photo():
+    attached = _loader(b"attached")
+    provider = make_photo_provider(FakeReader(), _resolver())
+
+    photo = await provider(_msg_with("https://amzn.to/same", _loader(b"preview"), attached), CANONICAL)
+
+    assert photo == b"preview"
+    assert attached.calls == []
+
+
+async def test_attached_photo_comes_before_preview_request():
+    reader = _preview_reader()
+    provider = make_photo_provider(reader, _resolver())
+
+    photo = await provider(_msg_with("https://amzn.to/other", _loader(b"preview"), _loader(b"attached")), CANONICAL)
+
+    assert photo == b"attached"
+    assert reader.requests == []
+
+
+async def test_failing_steps_fall_through_to_preview_request(caplog):
+    reader = _preview_reader(9)
+    provider = make_photo_provider(reader, _resolver())
+    msg = _msg_with(
+        "https://amzn.to/same", _loader(error=RuntimeError("preview gone")), _loader(error=RuntimeError("attached gone"))
+    )
+
+    with caplog.at_level(logging.WARNING, logger="patobarato.listener"):
+        photo = await provider(msg, CANONICAL)
+
+    assert photo == b"photo-9"
+    messages = " ".join(r.getMessage() for r in caplog.records)
+    assert "preview gone" in messages and "attached gone" in messages
+
+
+async def test_empty_steps_fall_through_to_preview_request():
+    reader = _preview_reader(9)
+    provider = make_photo_provider(reader, _resolver())
+
+    photo = await provider(_msg_with("https://amzn.to/same", _loader(None), _loader(None)), CANONICAL)
+
+    assert photo == b"photo-9"
+
+
+async def test_failing_preview_request_gives_none(caplog):
+    class BrokenReader(FakeReader):
+        async def __call__(self, request):
+            raise RuntimeError("flood wait")
+
+    provider = make_photo_provider(BrokenReader(), _resolver())
+
+    with caplog.at_level(logging.WARNING, logger="patobarato.listener"):
+        assert await provider(_msg_with(), CANONICAL) is None
+    assert any("flood wait" in r.getMessage() for r in caplog.records)

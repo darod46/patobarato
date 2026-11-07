@@ -200,3 +200,18 @@ async def test_on_new_message_logs_conversion_errors(caplog):
     assert any(
         r.exc_info for r in caplog.records if r.name == "patobarato.listener"
     )
+
+
+async def test_on_new_message_passes_attached_photo_loader():
+    listener, pipeline = await _mapped_listener()
+    raw = _raw_message("Oferta")
+    raw.media = types.MessageMediaPhoto(
+        photo=types.Photo(id=1, access_hash=0, file_reference=b"", date=NOW, sizes=[], dc_id=1)
+    )
+
+    await listener._on_new_message(SimpleNamespace(chat_id=_peer(11), message=raw))
+    await listener._on_new_message(SimpleNamespace(chat_id=_peer(11), message=_raw_message("Otra")))
+
+    with_photo, without_photo = pipeline.submitted
+    assert with_photo.attached_photo is not None
+    assert without_photo.attached_photo is None
