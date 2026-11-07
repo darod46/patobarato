@@ -136,6 +136,11 @@ import pytest
         (1e-7, None),
         (12.5, Decimal("12.50")),
         (1000, Decimal("1000.00")),
+        (1.234, None),
+        (89.999, None),
+        (0.006, None),
+        (89.99, Decimal("89.99")),
+        (90, Decimal("90.00")),
     ],
 )
 def test_price_parsing_is_strict(raw, expected):

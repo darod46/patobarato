@@ -61,9 +61,13 @@ def _to_price(value: object) -> Decimal | None:
         return None
     if isinstance(value, (int, float)):
         try:
-            return _quantise(Decimal(str(value)))
+            number = Decimal(str(value))
         except InvalidOperation:
             return None
+        exponent = number.as_tuple().exponent
+        if isinstance(exponent, int) and exponent < -2:
+            return None
+        return _quantise(number)
     if not isinstance(value, str):
         return None
     text = value.strip()
