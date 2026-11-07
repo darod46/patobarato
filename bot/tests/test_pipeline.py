@@ -10,7 +10,11 @@ import pytest
 from telethon.errors import FloodWaitError, ImageProcessFailedError, PhotoInvalidDimensionsError
 
 from patobarato.config import Settings
-from patobarato.core.pipeline import MIN_PUBLISH_INTERVAL_SECONDS, Pipeline
+from patobarato.core.pipeline import (
+    MIN_PUBLISH_INTERVAL_SECONDS,
+    PRICE_FETCH_TIMEOUT_SECONDS,
+    Pipeline,
+)
 from patobarato.models import OfferStatus, PriceQuote, SourceMessage
 from patobarato.parsing.extract import extract_offers
 from patobarato.parsing.links import UrlResolver
@@ -137,6 +141,7 @@ def make_pipeline(repo, resolver, publisher, fake_time):
         image_finder=None,
         registry=None,
         image_downloader=None,
+        **extra,
     ) -> Pipeline:
         if registry is None:
             registry = StoreRegistry([FakeAmazon(image_finder)])
@@ -151,6 +156,7 @@ def make_pipeline(repo, resolver, publisher, fake_time):
             monotonic=fake_time.monotonic,
             registry=registry,
             image_downloader=image_downloader,
+            **extra,
         )
 
     return factory
@@ -822,3 +828,25 @@ async def test_transient_failure_with_photo_is_not_retried(make_pipeline, repo, 
     statuses = await make_pipeline(photo_provider=_photo, pub=pub).process(_msg())
     assert statuses == [OfferStatus.PUBLISH_FAILED]
     assert len(pub.calls) == 1
+
+
+class SlowStore(PricedStore):
+    async def fetch_price(self, product_id: str, canonical_url: str) -> PriceQuote | None:
+        self.price_calls.append((product_id, canonical_url))
+        await asyncio.sleep(10)
+        return PriceQuote(Decimal("1"), None)
+
+
+async def test_slow_store_price_times_out_as_no_price(make_pipeline, publisher, caplog):
+    store = SlowStore()
+    pipeline = make_pipeline(registry=StoreRegistry([store]), price_fetch_timeout_seconds=0.05)
+    with caplog.at_level(logging.WARNING, logger="patobarato.pipeline"):
+        statuses = await asyncio.wait_for(pipeline.process(_priceless_msg()), 2)
+    assert statuses == [OfferStatus.SKIPPED_NO_PRICE]
+    assert len(store.price_calls) == 1
+    assert publisher.calls == []
+    assert any("timed out" in r.getMessage() for r in caplog.records)
+
+
+def test_price_fetch_timeout_default_is_short():
+    assert PRICE_FETCH_TIMEOUT_SECONDS == 5.0

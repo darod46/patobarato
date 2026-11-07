@@ -23,6 +23,8 @@ logger = logging.getLogger("patobarato.pipeline")
 
 # Minimum gap between two publications in the channel.
 MIN_PUBLISH_INTERVAL_SECONDS = 3.0
+# Cap on a store price fetch (offers without a text price): the worker is single.
+PRICE_FETCH_TIMEOUT_SECONDS = 5.0
 
 
 class Publisher(Protocol):
@@ -62,6 +64,7 @@ class Pipeline:
         *,
         registry: StoreRegistry,
         image_downloader: ImageDownloader | None = None,
+        price_fetch_timeout_seconds: float = PRICE_FETCH_TIMEOUT_SECONDS,
     ) -> None:
         self._repo = repo
         self._resolver = resolver
@@ -74,6 +77,7 @@ class Pipeline:
         self._publish_interval = publish_interval_seconds
         self._registry = registry
         self._image_downloader = image_downloader
+        self._price_fetch_timeout = price_fetch_timeout_seconds
         self._last_publish: float | None = None
         self._queue: asyncio.Queue[SourceMessage] = asyncio.Queue()
 
@@ -236,7 +240,17 @@ class Pipeline:
         if store is None:
             return offer
         try:
-            quote = await store.fetch_price(offer.asin, offer.canonical_url)
+            quote = await asyncio.wait_for(
+                store.fetch_price(offer.asin, offer.canonical_url), self._price_fetch_timeout
+            )
+        except TimeoutError:
+            logger.warning(
+                "Store price for %s %s timed out after %ss",
+                offer.store,
+                offer.asin,
+                self._price_fetch_timeout,
+            )
+            return offer
         except Exception as exc:
             logger.warning(
                 "Store price for %s %s failed: %s: %s", offer.store, offer.asin, type(exc).__name__, exc
