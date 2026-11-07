@@ -88,7 +88,7 @@ class AwinStore(BaseStore):
     def canonical_for(self, url: str, country: str) -> str:
         return canonical_awin_url(url)
 
-    async def affiliate_url(self, canonical_url: str, product_id: str) -> str:
+    async def affiliate_url(self, canonical_url: str, product_id: str) -> str | None:
         if self.merchant_id and self.publisher_id:
             return (
                 f"https://www.awin1.com/cread.php?awinmid={self.merchant_id}"
@@ -97,7 +97,7 @@ class AwinStore(BaseStore):
         if not self._warned:
             self._warned = True
             log.warning("affiliate=missing store=%s", self.id)
-        return canonical_url
+        return None
 
     async def find_image(self, product_id: str, canonical_url: str) -> str | None:
         if self._http is None:

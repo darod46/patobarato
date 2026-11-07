@@ -493,8 +493,14 @@ class FakeStore(BaseStore):
     id = "fake"
     name = "Tienda Fake"
 
-    def __init__(self, fail_affiliate: bool = False, image: str | None = None) -> None:
+    def __init__(
+        self,
+        fail_affiliate: bool = False,
+        image: str | None = None,
+        affiliate: str | None | type(...) = ...,
+    ) -> None:
         self.fail_affiliate = fail_affiliate
+        self.affiliate = affiliate
         self.image = image
         self.affiliate_calls: list[tuple[str, str]] = []
         self.image_calls: list[tuple[str, str]] = []
@@ -508,10 +514,12 @@ class FakeStore(BaseStore):
     def canonical_url(self, product_id: str, country: str) -> str:
         return f"https://fake.example/p/{product_id}"
 
-    async def affiliate_url(self, canonical_url: str, product_id: str) -> str:
+    async def affiliate_url(self, canonical_url: str, product_id: str) -> str | None:
         self.affiliate_calls.append((canonical_url, product_id))
         if self.fail_affiliate:
             raise RuntimeError("affiliate api down")
+        if self.affiliate is not ...:
+            return self.affiliate
         return canonical_url + "?aff=1"
 
     async def find_image(self, product_id: str, canonical_url: str) -> str | None:
@@ -531,17 +539,52 @@ def _fake_msg() -> SourceMessage:
     )
 
 
-async def test_failed_affiliate_url_publishes_canonical_and_logs(
+async def test_failed_affiliate_url_is_not_published_and_logs(
     make_pipeline, repo, publisher, caplog
 ):
     store = FakeStore(fail_affiliate=True)
     with caplog.at_level(logging.WARNING, logger="patobarato.pipeline"):
         statuses = await make_pipeline(registry=StoreRegistry([store])).process(_fake_msg())
-    assert statuses == [OfferStatus.PUBLISHED]
-    assert "https://fake.example/p/P1" in publisher.calls[0][0]
-    assert "?aff=1" not in publisher.calls[0][0]
-    assert repo.publications()[0]["affiliate_url"] == "https://fake.example/p/P1"
-    assert any("affiliate=missing" in r.getMessage() for r in caplog.records)
+    assert statuses == [OfferStatus.SKIPPED_NO_AFFILIATE]
+    assert publisher.calls == []
+    assert repo.publications() == []
+    assert repo.offer_statuses() == [OfferStatus.SKIPPED_NO_AFFILIATE]
+    assert any(
+        "affiliate=missing store=fake product=P1" in r.getMessage()
+        and "not published" in r.getMessage()
+        for r in caplog.records
+    )
+
+
+async def test_none_affiliate_url_is_not_published(make_pipeline, repo, publisher):
+    store = FakeStore(affiliate=None)
+    statuses = await make_pipeline(registry=StoreRegistry([store])).process(_fake_msg())
+    assert statuses == [OfferStatus.SKIPPED_NO_AFFILIATE]
+    assert publisher.calls == []
+
+
+async def test_affiliate_equal_to_canonical_is_not_published(make_pipeline, repo, publisher):
+    store = FakeStore(affiliate="https://fake.example/p/P1")
+    statuses = await make_pipeline(registry=StoreRegistry([store])).process(_fake_msg())
+    assert statuses == [OfferStatus.SKIPPED_NO_AFFILIATE]
+    assert publisher.calls == []
+    assert repo.publications() == []
+
+
+async def test_no_affiliate_skips_before_photo_work_and_publish_slot(make_pipeline, fake_time):
+    finder = FakeImageFinder()
+    downloads: list[str] = []
+
+    async def downloader(url: str) -> bytes:
+        downloads.append(url)
+        return b"x"
+
+    store = FakeStore(affiliate=None, image="https://img.example/a.jpg")
+    pipeline = make_pipeline(registry=StoreRegistry([store]), image_downloader=downloader)
+    await pipeline.process(_fake_msg())
+    assert store.image_calls == []
+    assert downloads == []
+    assert fake_time.sleeps == []
 
 
 async def test_store_affiliate_url_and_name_used_in_caption(make_pipeline, publisher):

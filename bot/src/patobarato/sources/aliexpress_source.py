@@ -32,6 +32,8 @@ class _HotProductsClient(Protocol):
         page_no: int,
     ) -> list[AliProduct]: ...
 
+    async def link_generate(self, url: str) -> str: ...
+
 
 def offer_message_id(product_id: str, day: date) -> int:
     """Stable 63-bit offer key per (product, day): one offer a day, reconsidered daily."""
@@ -137,11 +139,15 @@ class AliExpressSource:
             timedelta(minutes=self._settings.stale_after_minutes),
         )
         if status == OfferStatus.PUBLISHED:
-            if not product.promotion_link:
+            affiliate = product.promotion_link or await self._generate_link(offer)
+            if not affiliate:
                 logger.warning(
-                    "AliExpress product %s published with canonical URL affiliate=missing",
+                    "affiliate=missing store=%s product=%s — not published",
+                    STORE_ID,
                     product.product_id,
                 )
+                await self._repo.set_offer_status(offer_id, OfferStatus.SKIPPED_NO_AFFILIATE)
+                return
             try:
                 await self._repo.insert_publication(
                     offer_id,
@@ -150,7 +156,7 @@ class AliExpressSource:
                     None,
                     None,
                     product.price,
-                    product.promotion_link or offer.canonical_url,
+                    affiliate,
                     now,
                     channel="web",
                 )
@@ -169,6 +175,16 @@ class AliExpressSource:
                     )
             status = OfferStatus.PUBLISHED_WEB
         await self._repo.set_offer_status(offer_id, status)
+
+    async def _generate_link(self, offer: ParsedOffer) -> str | None:
+        try:
+            return await self._client.link_generate(offer.canonical_url)
+        except Exception as e:
+            # No traceback: HTTP errors may carry a signed request URL.
+            logger.warning(
+                "AliExpress link_generate for %s failed: %s: %s", offer.asin, type(e).__name__, e
+            )
+            return None
 
 
 def _decimal(value: object) -> Decimal | None:

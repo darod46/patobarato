@@ -67,11 +67,11 @@ async def test_affiliate_url():
     )
 
 
-async def test_affiliate_missing_returns_canonical_and_warns_once(caplog):
+async def test_affiliate_missing_returns_none_and_warns_once(caplog):
     s = make(None, "5678")
     with caplog.at_level(logging.WARNING):
-        assert await s.affiliate_url(URL, "p") == URL
-        assert await s.affiliate_url(URL, "p") == URL
+        assert await s.affiliate_url(URL, "p") is None
+        assert await s.affiliate_url(URL, "p") is None
     msgs = [r.getMessage() for r in caplog.records if "affiliate=missing" in r.getMessage()]
     assert len(msgs) == 1 and "store=pccomponentes" in msgs[0]
 

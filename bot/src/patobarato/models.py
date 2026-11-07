@@ -13,6 +13,7 @@ class OfferStatus(StrEnum):
     SKIPPED_DUPLICATE = "skipped_duplicate"
     SKIPPED_NO_PRICE = "skipped_no_price"
     SKIPPED_STALE = "skipped_stale"
+    SKIPPED_NO_AFFILIATE = "skipped_no_affiliate"
     PUBLISH_FAILED = "publish_failed"
 
 

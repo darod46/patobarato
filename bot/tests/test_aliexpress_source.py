@@ -7,7 +7,7 @@ from patobarato.config import Settings
 from patobarato.models import OfferStatus
 from patobarato.sources.aliexpress_source import AliExpressSource, offer_message_id
 from patobarato.storage.repository import InMemoryRepository
-from patobarato.stores.aliexpress_client import AliProduct
+from patobarato.stores.aliexpress_client import AliExpressError, AliProduct
 
 NOW = datetime(2026, 11, 6, 12, 0, tzinfo=UTC)
 
@@ -37,9 +37,17 @@ def _product(pid, discount, price="10.00", original=None, image="http://img/x.jp
 
 
 class _Client:
-    def __init__(self, products):
+    def __init__(self, products, link=None):
         self.products = products
+        self.link = link  # str: link_generate result; Exception: raised; None: raises no_link
         self.calls: list[dict] = []
+        self.link_calls: list[str] = []
+
+    async def link_generate(self, url):
+        self.link_calls.append(url)
+        if isinstance(self.link, str):
+            return self.link
+        raise self.link or AliExpressError("no_link", "No promotion link returned")
 
     async def hot_products(self, category_ids, keywords, page_size, page_no):
         self.calls.append(
@@ -230,12 +238,24 @@ async def test_next_day_price_drop_publishes_again():
     assert repo.offer_statuses() == [OfferStatus.PUBLISHED_WEB] * 2
 
 
-async def test_missing_promotion_link_logs_warning_and_uses_canonical(caplog):
+async def test_missing_promotion_link_is_generated_once():
     product = dataclasses.replace(_product("7", 50), promotion_link=None)
-    repo, source, _, runner = _setup([product])
+    repo, source, client, runner = _setup([product])
+    client.link = "https://s.click.aliexpress.com/e/gen7"
+    await runner.run(source)
+    assert client.link_calls == ["https://es.aliexpress.com/item/7.html"]
+    assert repo.publications()[0]["affiliate_url"] == "https://s.click.aliexpress.com/e/gen7"
+    assert repo.offer_statuses() == [OfferStatus.PUBLISHED_WEB]
+
+
+async def test_missing_promotion_link_and_link_generate_failing_is_not_published(caplog):
+    product = dataclasses.replace(_product("7", 50), promotion_link=None)
+    repo, source, client, runner = _setup([product])
     with caplog.at_level(logging.WARNING):
         await runner.run(source)
-    assert repo.publications()[0]["affiliate_url"] == "https://es.aliexpress.com/item/7.html"
+    assert len(client.link_calls) == 1
+    assert repo.publications() == []
+    assert repo.offer_statuses() == [OfferStatus.SKIPPED_NO_AFFILIATE]
     warnings = [r.getMessage() for r in caplog.records if r.levelno == logging.WARNING]
-    assert any("affiliate=missing" in m and "7" in m for m in warnings)
+    assert any("affiliate=missing" in m and "7" in m and "not published" in m for m in warnings)
     assert all("http" not in m for m in warnings)

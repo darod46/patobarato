@@ -154,6 +154,13 @@ class Pipeline:
         if store is None:  # extract_offers only yields registered stores
             logger.error("No store %s for offer %s", offer.store, offer_id)
             return OfferStatus.PUBLISH_FAILED
+        # Never publish without a monetised link: resolve it before any other work.
+        affiliate_url = await self._affiliate_url(offer, store)
+        if affiliate_url is None:
+            logger.warning(
+                "affiliate=missing store=%s product=%s — not published", offer.store, offer.asin
+            )
+            return OfferStatus.SKIPPED_NO_AFFILIATE
         photo = await self._get_photo(msg, offer)
         # The store's image serves as the post photo (last resort) and as the product image.
         image_url = offer.image_url
@@ -163,7 +170,6 @@ class Pipeline:
                 image_url, looked_up = await self._find_image(offer, store), True
             if image_url:
                 photo = await self._download_photo(image_url)
-        affiliate_url = await self._affiliate_url(offer, store)
         await self._wait_publish_slot()
         caption = format_caption(offer, affiliate_url, store.name)
         try:
@@ -267,21 +273,25 @@ class Pipeline:
             image_url=offer.image_url or quote.image_url,
         )
 
-    async def _affiliate_url(self, offer: ParsedOffer, store: Store) -> str:
-        if offer.affiliate_url:
-            return offer.affiliate_url
-        try:
-            return await store.affiliate_url(offer.canonical_url, offer.asin)
-        except Exception as exc:
-            # No traceback: HTTP errors may carry a signed request URL.
-            logger.warning(
-                "affiliate=missing store=%s product=%s (%s: %s); publishing the canonical link",
-                offer.store,
-                offer.asin,
-                type(exc).__name__,
-                exc,
-            )
-            return offer.canonical_url
+    async def _affiliate_url(self, offer: ParsedOffer, store: Store) -> str | None:
+        """The offer's monetised link, or None when it has none (never the plain store URL)."""
+        url = offer.affiliate_url
+        if not url:
+            try:
+                url = await store.affiliate_url(offer.canonical_url, offer.asin)
+            except Exception as exc:
+                # No traceback: HTTP errors may carry a signed request URL.
+                logger.warning(
+                    "affiliate=missing store=%s product=%s (%s: %s)",
+                    offer.store,
+                    offer.asin,
+                    type(exc).__name__,
+                    exc,
+                )
+                return None
+        if not url or url in (offer.canonical_url, offer.product_url):
+            return None  # a link equal to the product URL earns nothing
+        return url
 
     async def _wait_publish_slot(self) -> None:
         """Keeps at least ``publish_interval_seconds`` between publications."""
