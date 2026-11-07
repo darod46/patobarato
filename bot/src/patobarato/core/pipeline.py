@@ -30,7 +30,10 @@ class Publisher(Protocol):
         ...
 
 
+# Telegram-side photo lookup for (source message, canonical URL); see make_photo_provider.
 PhotoProvider = Callable[[SourceMessage, str], Awaitable[bytes | None]]
+# Downloads an image URL into bytes, or None (last-resort post photo).
+ImageDownloader = Callable[[str], Awaitable[bytes | None]]
 
 
 def utcnow() -> datetime:
@@ -57,6 +60,7 @@ class Pipeline:
         publish_interval_seconds: float = MIN_PUBLISH_INTERVAL_SECONDS,
         *,
         registry: StoreRegistry,
+        image_downloader: ImageDownloader | None = None,
     ) -> None:
         self._repo = repo
         self._resolver = resolver
@@ -68,6 +72,7 @@ class Pipeline:
         self._monotonic = monotonic
         self._publish_interval = publish_interval_seconds
         self._registry = registry
+        self._image_downloader = image_downloader
         self._last_publish: float | None = None
         self._queue: asyncio.Queue[SourceMessage] = asyncio.Queue()
 
@@ -90,6 +95,9 @@ class Pipeline:
 
     async def process(self, msg: SourceMessage) -> list[OfferStatus]:
         offers = await extract_offers(msg, self._resolver, self._registry)
+        if len(offers) != 1 and msg.attached_photo is not None:
+            # One attached photo cannot tell which of several products it shows.
+            msg = replace(msg, attached_photo=None)
         statuses: list[OfferStatus] = []
         for offer in offers:
             status = await self._process_offer(msg, offer)
@@ -137,11 +145,19 @@ class Pipeline:
     ) -> OfferStatus:
         if offer.price is None:  # decide() never publishes without a price
             return OfferStatus.SKIPPED_NO_PRICE
-        photo = await self._get_photo(msg, offer)
         store = self._registry.get(offer.store)
         if store is None:  # extract_offers only yields registered stores
             logger.error("No store %s for offer %s", offer.store, offer_id)
             return OfferStatus.PUBLISH_FAILED
+        photo = await self._get_photo(msg, offer)
+        # The store's image serves as the post photo (last resort) and as the product image.
+        image_url = offer.image_url
+        looked_up = image_url is not None
+        if photo is None and self._image_downloader is not None:
+            if not looked_up:
+                image_url, looked_up = await self._find_image(offer, store), True
+            if image_url:
+                photo = await self._download_photo(image_url)
         affiliate_url = await self._affiliate_url(offer, store)
         await self._wait_publish_slot()
         try:
@@ -173,13 +189,29 @@ class Pipeline:
             lambda: self._repo.set_offer_status(offer_id, OfferStatus.PUBLISHED),
             f"Mensaje publicado pero no registrado (estado de la oferta): {what}",
         )
+        if not looked_up:
+            image_url = await self._find_image(offer, store)
+        if image_url:
+            try:
+                await self._repo.set_product_image(product_id, image_url)
+            except Exception:
+                logger.error("Image store failed for %s", offer.asin, exc_info=True)
+        return OfferStatus.PUBLISHED
+
+    async def _find_image(self, offer: ParsedOffer, store: Store) -> str | None:
         try:
-            url = offer.image_url or await store.find_image(offer.asin, offer.canonical_url)
-            if url:
-                await self._repo.set_product_image(product_id, url)
+            return await store.find_image(offer.asin, offer.canonical_url)
         except Exception:
             logger.error("Image lookup failed for %s", offer.asin, exc_info=True)
-        return OfferStatus.PUBLISHED
+            return None
+
+    async def _download_photo(self, url: str) -> bytes | None:
+        assert self._image_downloader is not None
+        try:
+            return await self._image_downloader(url)
+        except Exception as exc:
+            logger.warning("Photo download failed for %s: %s: %s", url, type(exc).__name__, exc)
+            return None
 
     def _is_stale(self, msg: SourceMessage) -> bool:
         """A message decide() would skip anyway: no point fetching its price."""

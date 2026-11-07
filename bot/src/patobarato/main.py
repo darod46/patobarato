@@ -19,6 +19,7 @@ from patobarato.config import Settings, get_settings
 from patobarato.core.backfill import backfill_images
 from patobarato.core.pipeline import Pipeline, utcnow
 from patobarato.parsing.links import UrlResolver
+from patobarato.publishing.photo_download import download_photo
 from patobarato.publishing.telegram_publisher import TelegramPublisher
 from patobarato.sources.aliexpress_source import AliExpressSource
 from patobarato.sources.api_scheduler import ApiScheduler, ApiSourceRunner
@@ -165,6 +166,7 @@ async def run(settings: Settings) -> int:
             make_photo_provider(reader, resolver),
             settings,
             registry=registry,
+            image_downloader=lambda url: download_photo(http, url),
         )
         scheduler = ApiScheduler(repo, build_runners(registry, repo, settings, utcnow, http))
         listener = TelegramListener(

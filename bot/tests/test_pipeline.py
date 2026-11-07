@@ -130,7 +130,12 @@ def fake_time():
 @pytest.fixture
 def make_pipeline(repo, resolver, publisher, fake_time):
     def factory(
-        photo_provider=_no_photo, pub=None, repository=None, image_finder=None, registry=None
+        photo_provider=_no_photo,
+        pub=None,
+        repository=None,
+        image_finder=None,
+        registry=None,
+        image_downloader=None,
     ) -> Pipeline:
         if registry is None:
             registry = StoreRegistry([FakeAmazon(image_finder)])
@@ -144,6 +149,7 @@ def make_pipeline(repo, resolver, publisher, fake_time):
             sleep=fake_time.sleep,
             monotonic=fake_time.monotonic,
             registry=registry,
+            image_downloader=image_downloader,
         )
 
     return factory
@@ -662,3 +668,117 @@ async def test_store_previous_price_not_above_price_is_dropped(make_pipeline, pu
     await make_pipeline(registry=StoreRegistry([store])).process(_priceless_msg())
     assert "8,50" in publisher.calls[0][0]
     assert publisher.calls[0][0].count("8,50") == 1
+
+
+TWO_OFFERS = (
+    "Auriculares 249,99€ https://www.amazon.es/dp/B09XS7JWHH\n\n"
+    "Ratón 19,95€ https://www.amazon.es/dp/B0BDJH7LQ2"
+)
+
+
+def _attached_msg(text: str, urls: list[str]) -> SourceMessage:
+    async def attached() -> bytes | None:
+        return b"attached"
+
+    return SourceMessage(1, 1, text, urls, [], NOW, attached_photo=attached)
+
+
+class RecordingProvider:
+    def __init__(self, result: bytes | None = None) -> None:
+        self.result = result
+        self.seen: list[SourceMessage] = []
+
+    async def __call__(self, msg: SourceMessage, url: str) -> bytes | None:
+        self.seen.append(msg)
+        return self.result
+
+
+async def test_attached_photo_offered_only_for_single_offer_messages(make_pipeline):
+    provider = RecordingProvider()
+    url = "https://www.amazon.es/dp/B09XS7JWHH"
+    await make_pipeline(photo_provider=provider).process(_attached_msg(f"Cascos 9€ {url}", [url]))
+    two = _attached_msg(
+        TWO_OFFERS, ["https://www.amazon.es/dp/B09XS7JWHH", "https://www.amazon.es/dp/B0BDJH7LQ2"]
+    )
+    await make_pipeline(photo_provider=provider, repository=InMemoryRepository()).process(two)
+
+    single, *multi = provider.seen
+    assert single.attached_photo is not None
+    assert len(multi) == 2
+    assert all(m.attached_photo is None for m in multi)
+
+
+class FakeDownloader:
+    def __init__(self, result: bytes | None = b"downloaded", fail: bool = False) -> None:
+        self.result = result
+        self.fail = fail
+        self.urls: list[str] = []
+
+    async def __call__(self, url: str) -> bytes | None:
+        self.urls.append(url)
+        if self.fail:
+            raise RuntimeError("cdn down")
+        return self.result
+
+
+def _pipeline_with_downloader(make_pipeline, store, downloader, provider=_no_photo) -> Pipeline:
+    return make_pipeline(
+        registry=StoreRegistry([store]), photo_provider=provider, image_downloader=downloader
+    )
+
+
+async def test_store_image_is_downloaded_when_telegram_has_no_photo(make_pipeline, repo, publisher):
+    store = FakeStore(image="https://img/found.jpg")
+    downloader = FakeDownloader()
+
+    await _pipeline_with_downloader(make_pipeline, store, downloader).process(_fake_msg())
+
+    assert downloader.urls == ["https://img/found.jpg"]
+    assert publisher.calls[0][1] == b"downloaded"
+    # One lookup serves both the post photo and the product image.
+    assert store.image_calls == [("P1", "https://fake.example/p/P1")]
+    assert list(repo.product_images.values()) == ["https://img/found.jpg"]
+
+
+async def test_store_price_image_is_downloaded_without_lookup(make_pipeline, publisher):
+    store = PricedStore(PriceQuote(Decimal("8.50"), None, image_url="https://img/q.jpg"))
+    downloader = FakeDownloader()
+
+    await _pipeline_with_downloader(make_pipeline, store, downloader).process(_priceless_msg())
+
+    assert downloader.urls == ["https://img/q.jpg"]
+    assert store.image_calls == []
+    assert publisher.calls[0][1] == b"downloaded"
+
+
+async def test_telegram_photo_skips_download(make_pipeline, publisher):
+    store = FakeStore(image="https://img/found.jpg")
+    downloader = FakeDownloader()
+
+    await _pipeline_with_downloader(
+        make_pipeline, store, downloader, provider=RecordingProvider(b"tg")
+    ).process(_fake_msg())
+
+    assert downloader.urls == []
+    assert publisher.calls[0][1] == b"tg"
+
+
+@pytest.mark.parametrize("downloader", [FakeDownloader(None), FakeDownloader(fail=True)])
+async def test_failed_download_publishes_without_photo(make_pipeline, publisher, downloader, caplog):
+    store = FakeStore(image="https://img/found.jpg")
+    with caplog.at_level(logging.WARNING, logger="patobarato.pipeline"):
+        statuses = await _pipeline_with_downloader(make_pipeline, store, downloader).process(_fake_msg())
+    assert statuses == [OfferStatus.PUBLISHED]
+    assert publisher.calls[0][1] is None
+
+
+async def test_failed_image_lookup_publishes_without_photo(make_pipeline, publisher):
+    class BrokenImages(FakeStore):
+        async def find_image(self, product_id: str, canonical_url: str) -> str | None:
+            raise RuntimeError("image finder down")
+
+    downloader = FakeDownloader()
+    statuses = await _pipeline_with_downloader(make_pipeline, BrokenImages(), downloader).process(_fake_msg())
+    assert statuses == [OfferStatus.PUBLISHED]
+    assert downloader.urls == []
+    assert publisher.calls[0][1] is None
