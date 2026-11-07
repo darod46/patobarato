@@ -55,6 +55,6 @@ describe('GuideItemCard', () => {
 
   it('falls back to the placeholder image', () => {
     render(<GuideItemCard item={item(1)} index={1} now={NOW} />)
-    expect(screen.getByRole('img', { name: 'Freidora 1' })).toHaveAttribute('src', '/pato-placeholder.svg')
+    expect(document.querySelector('img')).toHaveAttribute('src', '/pato-placeholder.svg')
   })
 })

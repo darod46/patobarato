@@ -20,7 +20,7 @@ export function GuideItemCard({ item, index, now }: { item: GuideItem; index: nu
           {item.imageUrl ? (
             <img src={item.imageUrl} alt={item.name} width={320} height={320} loading="lazy" className="absolute inset-0 h-full w-full object-contain p-3 mix-blend-multiply" />
           ) : (
-            <img src="/pato-placeholder.svg" alt={item.name} width={160} height={160} loading="lazy" className="absolute inset-0 m-auto h-1/2 w-1/2 object-contain opacity-90" />
+            <img src="/pato-placeholder.svg" alt="" width={160} height={160} loading="lazy" className="absolute inset-0 m-auto h-1/2 w-1/2 object-contain opacity-90" />
           )}
           {discount !== null && (
             <span aria-label={`Descuento del ${discount} %`} className="absolute top-2 left-2 rounded-lg bg-danger px-2 py-0.5 text-xs font-bold text-white">{`-${discount} %`}</span>

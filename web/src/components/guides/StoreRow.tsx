@@ -49,7 +49,9 @@ export function StoreRow({ offer, now }: { offer: GuideStoreOffer; now: Date }) 
   }
 
   const final = finalPrice(offer.price, offer.coupon, now)
-  const value = offer.coupon && final !== null ? couponValueText(offer.coupon) : ''
+  const value = offer.coupon ? couponValueText(offer.coupon) : ''
+  // A coupon with a structured value that does not apply is hidden; one without a value still shows its code.
+  const showCoupon = offer.coupon !== null && (value === '' || final !== null)
   return (
     <li className="flex flex-col gap-3 rounded-xl border border-line bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex flex-col gap-1.5">
@@ -60,13 +62,13 @@ export function StoreRow({ offer, now }: { offer: GuideStoreOffer; now: Date }) 
             <s className="price text-sm text-muted">{formatPrice(offer.previousPrice)}</s>
           )}
         </div>
-        {offer.coupon && final !== null && (
+        {offer.coupon && showCoupon && (
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="inline-flex items-center gap-1.5 rounded-lg bg-accent/20 px-2 py-1 font-semibold text-accent-ink">
               <code className="font-display tracking-[0.04em]">{offer.coupon.code}</code>
               {value && <span>{value}</span>}
             </span>
-            <span className="price font-semibold text-success">{`Te queda en ${formatPrice(final)}`}</span>
+            {final !== null && <span className="price font-semibold text-success">{`Te queda en ${formatPrice(final)}`}</span>}
           </div>
         )}
       </div>

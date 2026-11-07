@@ -28,6 +28,13 @@ describe('StoreRow', () => {
     expect(screen.queryByText('PATO10')).not.toBeInTheDocument()
   })
 
+  it('shows the code of a coupon without structured value, with no saving', () => {
+    render(<StoreRow offer={offer({ coupon: { ...amountCoupon, discountAmount: null } })} now={NOW} />)
+    expect(screen.getByText('PATO10')).toBeInTheDocument()
+    expect(screen.queryByText(/Te queda en/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/−/)).not.toBeInTheDocument()
+  })
+
   it('shows no coupon, price or saving on a stale offer', () => {
     render(<StoreRow offer={offer({ checkedAt: '2026-11-01T00:00:00Z', coupon: amountCoupon })} now={NOW} />)
     expect(screen.queryByText('PATO10')).not.toBeInTheDocument()
