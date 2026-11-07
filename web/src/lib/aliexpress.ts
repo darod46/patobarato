@@ -49,7 +49,9 @@ function discountFromString(v: unknown): number | null {
   const s = String(v).trim().replace(/%$/, '').trim()
   if (s === '') return null
   const n = Number(s)
-  return Number.isFinite(n) ? Math.trunc(n) : null
+  if (!Number.isFinite(n)) return null
+  const pct = Math.trunc(n)
+  return pct >= 1 && pct <= 99 ? pct : null
 }
 
 function toProduct(raw: RawProduct): CatalogProduct | null {

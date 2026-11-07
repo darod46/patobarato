@@ -26,9 +26,11 @@ type CatalogRow = {
   affiliate_url: string
 }
 
-function toProduct(row: CatalogRow): CatalogProduct {
-  const sale = numOrNull(row.sale_price)
-  const regular = Number(row.price)
+function toProduct(row: CatalogRow): CatalogProduct | null {
+  const regular = row.price === null || row.price === '' ? NaN : Number(row.price)
+  if (!Number.isFinite(regular) || regular <= 0) return null
+  const rawSale = numOrNull(row.sale_price)
+  const sale = rawSale !== null && Number.isFinite(rawSale) && rawSale > 0 ? rawSale : null
   const price = sale ?? regular
   const originalPrice = sale !== null ? regular : null
   return {
@@ -52,5 +54,7 @@ export async function fetchCatalogSearch(
 ): Promise<CatalogProduct[]> {
   const { data, error } = await client.rpc('web_catalog_search', { q, max })
   if (error) throw new Error(error.message)
-  return ((data ?? []) as CatalogRow[]).map(toProduct)
+  return ((data ?? []) as CatalogRow[])
+    .map(toProduct)
+    .filter((p): p is CatalogProduct => p !== null)
 }

@@ -147,6 +147,26 @@ describe('searchAliExpress', () => {
     expect(p.discountPct).toBe(25)
   })
 
+  it.each(['0%', '100%', '-5', '250%', 'abc'])(
+    'falls back to the computed discount when the string is %s',
+    async (discount) => {
+      const fetchImpl = reply(
+        okBody([
+          {
+            product_id: 1,
+            product_title: 't',
+            target_sale_price: '75',
+            target_original_price: '100',
+            product_detail_url: 'u',
+            discount,
+          },
+        ]),
+      )
+      const [p] = await searchAliExpress('x', creds, fetchImpl as unknown as typeof fetch)
+      expect(p.discountPct).toBe(25)
+    },
+  )
+
   it('returns an empty list when there are no products', async () => {
     const fetchImpl = reply({
       aliexpress_affiliate_product_query_response: {

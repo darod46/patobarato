@@ -47,6 +47,34 @@ describe('fetchCatalogSearch', () => {
     })
   })
 
+  it.each(['0', '-3', 'abc'])('treats sale_price %s as no sale', async (sale) => {
+    const { client } = fakeClient({
+      data: [{ ...row, sale_price: sale }],
+      error: null,
+    })
+    const [p] = await fetchCatalogSearch(client, 'x')
+    expect(p).toMatchObject({
+      price: 100,
+      originalPrice: null,
+      discountPct: null,
+    })
+  })
+
+  it('drops rows whose price is not a finite positive number', async () => {
+    const { client } = fakeClient({
+      data: [
+        { ...row, external_id: 'a', price: '0' },
+        { ...row, external_id: 'b', price: 'abc' },
+        { ...row, external_id: 'c', price: null },
+        { ...row, external_id: 'd', price: '-1' },
+        { ...row, external_id: 'ok' },
+      ],
+      error: null,
+    })
+    const out = await fetchCatalogSearch(client, 'x')
+    expect(out.map((p) => p.externalId)).toEqual(['ok'])
+  })
+
   it('throws on rpc errors', async () => {
     const { client } = fakeClient({ data: null, error: { message: 'boom' } })
     await expect(fetchCatalogSearch(client, 'x')).rejects.toThrow('boom')
