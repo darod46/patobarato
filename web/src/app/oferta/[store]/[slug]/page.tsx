@@ -6,6 +6,7 @@ import { Header } from '../../../../components/Header'
 import { ProductView } from '../../../../components/ProductView'
 import { SearchForm } from '../../../../components/SearchForm'
 import { fetchDealByProduct, fetchRelatedDeals } from '../../../../lib/deals'
+import { fetchGuidesByProduct } from '../../../../lib/guides-data'
 import { breadcrumbJsonLd, jsonLdScript, productJsonLd, productMetadata, type BreadcrumbItem } from '../../../../lib/seo'
 import { getSupabase } from '../../../../lib/supabase'
 import { SITE_URL, parseProductSlug, productPath, tagPath } from '../../../../lib/urls'
@@ -47,6 +48,10 @@ export default async function ProductPage({ params }: Props) {
 
   // Related deals are optional: a failed query must not turn the product page into a 500.
   const related = await fetchRelatedDeals(getSupabase(), deal, 10).catch(() => [])
+  // Guides featuring the product are optional too.
+  const guides = await Promise.resolve()
+    .then(() => fetchGuidesByProduct(getSupabase(), deal.productId))
+    .catch(() => [])
   const now = new Date().toISOString()
   const tag = deal.hashtags[0]
   const crumbs: BreadcrumbItem[] = [
@@ -65,7 +70,7 @@ export default async function ProductPage({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(breadcrumbJsonLd(crumbs))} />
       <Header search={<SearchForm />} />
       <main className="mx-auto max-w-[1200px] px-4 pt-32 pb-12 md:px-8 md:pt-24 md:pb-16">
-        <ProductView deal={deal} related={related} now={now} />
+        <ProductView deal={deal} related={related} now={now} guides={guides} />
       </main>
       <Footer year={new Date(now).getUTCFullYear()} />
     </div>

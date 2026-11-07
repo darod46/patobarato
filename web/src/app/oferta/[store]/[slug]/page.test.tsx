@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { fetchDealByProduct } from '../../../../lib/deals'
+import { fetchGuidesByProduct } from '../../../../lib/guides-data'
 import type { Deal } from '../../../../lib/types'
 import { productPath } from '../../../../lib/urls'
 import ProductPage from './page'
@@ -32,7 +33,25 @@ vi.mock('../../../../lib/deals', () => ({
   }),
 }))
 
+vi.mock('../../../../lib/guides-data', () => ({
+  fetchGuidesByProduct: vi.fn(async () => [{ slug: 'mejores-freidoras', title: 'Mejores freidoras' }]),
+}))
+
 describe('ProductPage', () => {
+  it('links the guides featuring the product, and renders without them when the query fails', async () => {
+    const slug = productPath(deal).split('/').pop()!
+    const { unmount } = render(await ProductPage({ params: Promise.resolve({ store: 'amazon', slug }) }))
+    expect(fetchGuidesByProduct).toHaveBeenLastCalledWith({}, 7)
+    expect(screen.getByRole('link', { name: 'Mejores freidoras' })).toHaveAttribute('href', '/guias/mejores-freidoras')
+    unmount()
+    vi.mocked(fetchGuidesByProduct).mockImplementationOnce(async () => {
+      throw new Error('down')
+    })
+    render(await ProductPage({ params: Promise.resolve({ store: 'amazon', slug }) }))
+    expect(screen.getByRole('heading', { level: 1, name: deal.title })).toBeInTheDocument()
+    expect(screen.queryByText(/Esta oferta aparece en la guía/)).toBeNull()
+  })
+
   it('still renders the product when the related deals fail to load', async () => {
     const slug = productPath(deal).split('/').pop()!
     const page = await ProductPage({ params: Promise.resolve({ store: 'amazon', slug }) })

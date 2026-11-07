@@ -1,5 +1,6 @@
 import { ChevronRight, Store, TrendingDown } from 'lucide-react'
 import { discountPercent, formatPrice, timeAgo } from '../lib/format'
+import { guidePath } from '../lib/guides'
 import { storeInfo } from '../lib/stores'
 import type { Deal } from '../lib/types'
 import { tagPath } from '../lib/urls'
@@ -19,9 +20,11 @@ type Props = {
   related: Deal[]
   /** Server render time (ISO), so relative times are identical on server and client. */
   now: string
+  /** Guides that feature this offer. */
+  guides?: { slug: string; title: string }[]
 }
 
-export function ProductView({ deal, related, now }: Props) {
+export function ProductView({ deal, related, now, guides = [] }: Props) {
   const clock = new Date(now)
   const store = storeInfo(deal.store)
   const discount =
@@ -116,6 +119,18 @@ export function ProductView({ deal, related, now }: Props) {
           <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur md:static md:z-auto md:w-full md:max-w-sm md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
             <BuyButton url={deal.affiliateUrl} store={deal.store} className="w-full" />
           </div>
+          {guides.length > 0 && (
+            <ul className="flex max-w-sm flex-col text-sm text-muted">
+              {guides.map((g) => (
+                <li key={g.slug} className="flex min-h-11 flex-wrap items-center justify-center gap-x-1 md:justify-start">
+                  <span>Esta oferta aparece en la guía:</span>
+                  <a href={guidePath(g.slug)} className={`font-semibold text-primary hover:underline ${FOCUS}`}>
+                    {g.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
           <p className="max-w-sm text-xs text-muted">
             {deal.store === 'amazon' ? AFFILIATE_DISCLAIMER : GENERIC_DISCLAIMER}
           </p>

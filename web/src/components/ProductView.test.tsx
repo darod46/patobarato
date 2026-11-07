@@ -122,4 +122,26 @@ describe('ProductView lowest price', () => {
     render(<ProductView deal={deal} related={[]} now={now} />)
     expect(screen.queryByText('Mínimo histórico')).toBeNull()
   })
+
+  it('links the guides that feature the offer under the buy button', () => {
+    render(
+      <ProductView
+        deal={deal}
+        related={[]}
+        now={now}
+        guides={[
+          { slug: 'mejores-freidoras', title: 'Mejores freidoras' },
+          { slug: 'airfryer-baratas', title: 'Airfryers baratas' },
+        ]}
+      />,
+    )
+    expect(screen.getByRole('link', { name: 'Mejores freidoras' })).toHaveAttribute('href', '/guias/mejores-freidoras')
+    expect(screen.getByRole('link', { name: 'Airfryers baratas' })).toHaveAttribute('href', '/guias/airfryer-baratas')
+    expect(screen.getAllByText(/Esta oferta aparece en la guía:/)).toHaveLength(2)
+  })
+
+  it('shows no guide links by default', () => {
+    render(<ProductView deal={deal} related={[]} now={now} />)
+    expect(screen.queryByText(/Esta oferta aparece en la guía/)).toBeNull()
+  })
 })
