@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { GuideCoupon, GuideStoreOffer } from './types'
-import { bestOffer, discountPct, finalPrice, freshnessLabel, guidePath, isLowest, isRecent } from './guides'
+import { bestOffer, discountPct, finalPrice, freshnessLabel, guidePath, hasFreshPrices, isLowest, isRecent } from './guides'
 
 const now = new Date('2026-11-07T12:00:00Z')
 const hoursAgo = (h: number) => new Date(now.getTime() - h * 3_600_000).toISOString()
@@ -163,5 +163,15 @@ describe('isLowest', () => {
 describe('guidePath', () => {
   it('builds the path', () => {
     expect(guidePath('mejores-freidoras')).toBe('/guias/mejores-freidoras')
+  })
+})
+
+describe('hasFreshPrices', () => {
+  const now = new Date('2026-11-07T12:00:00Z')
+  it('is true only when prices were checked within 48 h', () => {
+    expect(hasFreshPrices('2026-11-06T12:00:00Z', now)).toBe(true)
+    expect(hasFreshPrices('2026-11-05T11:00:00Z', now)).toBe(false)
+    expect(hasFreshPrices(null, now)).toBe(false)
+    expect(hasFreshPrices('nope', now)).toBe(false)
   })
 })

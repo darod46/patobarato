@@ -65,3 +65,10 @@ export function isLowest(price: number, previousMinPrice: number | null): boolea
 export function guidePath(slug: string): string {
   return `/guias/${slug}`
 }
+
+/** Guide prices were checked within 48 h (guides without that are served but kept out of the index). */
+export function hasFreshPrices(checkedAt: string | null, now: Date): boolean {
+  if (checkedAt === null) return false
+  const age = now.getTime() - new Date(checkedAt).getTime()
+  return !Number.isNaN(age) && age < FRESH_MS
+}

@@ -31,3 +31,8 @@ export function timeAgo(iso: string, now: Date): string {
 export function escapeIlike(text: string): string {
   return text.replace(/[\\%_]/g, '\\$&').replace(/\*/g, '_')
 }
+
+/** Spanish long date (e.g. "7 de noviembre de 2026") in Madrid time. */
+export function formatLongDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Madrid' })
+}
