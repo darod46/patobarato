@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import re
 from collections.abc import Awaitable, Callable
 from datetime import datetime
 
@@ -14,6 +15,7 @@ logger = logging.getLogger("patobarato.guide_prices")
 
 COUNTRY = "ES"
 DEFAULT_DELAY_SECONDS = 1.5
+_URL = re.compile(r"https?://\S+")
 
 
 class GuidePriceRefresher:
@@ -32,12 +34,18 @@ class GuidePriceRefresher:
         self._clock = clock
         self._sleep = sleep
         self._delay = delay_seconds
+        self._imageless: set[int] = set()
+        self._network = False
 
     async def run(self, source: ApiSource) -> None:
         products = await self._repo.list_guide_products()
+        # Images already stored (Telegram, backfill) are never overwritten.
+        self._imageless = {row[0] for row in await self._repo.get_products_without_image()}
         updated = failed = skipped = 0
-        for index, product in enumerate(products):
-            if index > 0:
+        fetched_before = False
+        for product in products:
+            self._network = False
+            if fetched_before:
                 await self._sleep(self._delay)
             try:
                 outcome = await self._refresh(product)
@@ -48,9 +56,10 @@ class GuidePriceRefresher:
                     product.store,
                     product.external_id,
                     type(e).__name__,
-                    e,
+                    _URL.sub("<url>", str(e)),
                 )
                 outcome = "failed"
+            fetched_before = self._network
             if outcome == "updated":
                 updated += 1
             elif outcome == "skipped":
@@ -84,6 +93,7 @@ class GuidePriceRefresher:
         product_id = await self._repo.find_product_id(
             product.store, COUNTRY, product.external_id
         )
+        created = product_id is None
         if product_id is None:
             product_id = await self._repo.upsert_product(
                 ParsedOffer(
@@ -97,9 +107,9 @@ class GuidePriceRefresher:
                     hashtags=[],
                     canonical_url=canonical,
                     product_url=product.url,
-                    image_url=product.image_url,
                 )
             )
+        self._network = True
         quote = await store.fetch_price(product.external_id, canonical)
         if quote is None:
             await self._repo.upsert_product_price(product_id, checked_at=now, error="no price")
@@ -111,6 +121,6 @@ class GuidePriceRefresher:
             previous_price=quote.previous_price,
             currency=quote.currency,
         )
-        if quote.image_url:
+        if quote.image_url and (created or product_id in self._imageless):
             await self._repo.set_product_image(product_id, quote.image_url)
         return "updated"

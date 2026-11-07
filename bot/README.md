@@ -158,12 +158,7 @@ El ejecutor de cupones de Awin solo existe si están `AWIN_PUBLISHER_ID` y `AWIN
 
 El ejecutor `guide_prices` refresca el precio de todos los productos de las guías **publicadas** (las guías en borrador, con ids de relleno como `[ASIN]`, nunca se consultan). Para cada producto lee el precio con el lector de su tienda y lo guarda junto con la hora de la comprobación; si la lectura falla, conserva el último precio y anota el error (`no price`, o `store_disabled` si la tienda no está activa en el bot). Las peticiones van una detrás de otra, con una pausa de `GUIDE_PRICE_DELAY_SECONDS` segundos (por defecto 1,5) entre productos. Un producto que ya existe en `products` conserva su título y su URL; solo los nuevos toman el nombre de la guía.
 
-El ejecutor existe siempre; hay que dar de alta su fuente (sin ella no se ejecuta):
-
-```sql
-insert into sources (type, identifier, country, active, config, every_minutes, hashtags)
-values ('guide_prices', 'guide-prices', 'ES', true, '{}', 360, '{}');
-```
+La fuente `guide_prices` (cada 360 minutos) ya viene creada por la migración `20261108000000_guides.sql`; no hay que darla de alta. Para pausarla: `update sources set active = false where type = 'guide_prices';`.
 
 ### Cómo dar de alta una guía por SQL
 

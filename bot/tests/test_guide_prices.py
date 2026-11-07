@@ -24,7 +24,7 @@ class FakeStore(BaseStore):
         return url.rsplit("/", 1)[-1]
 
     def canonical_url(self, product_id, country):
-        return f"https://fake.example/p/{product_id}"
+        return f"https://fake.example/p/{product_id}?canon=1"
 
     async def fetch_price(self, product_id, canonical_url):
         self.calls.append((product_id, canonical_url))
@@ -68,7 +68,7 @@ async def test_refresh_writes_price_and_image():
     assert repo.prices[pid]["error"] is None
     assert repo.prices[pid]["checked_at"] == NOW
     assert repo.product_images[pid] == "http://img/a.jpg"
-    assert store.calls == [("a", "https://fake.example/p/a")]
+    assert store.calls == [("a", "https://fake.example/p/a?canon=1")]
 
 
 async def test_refresh_records_error_and_keeps_old_price():
@@ -120,6 +120,7 @@ async def test_refresh_isolates_repo_exception(caplog):
     errors = [r.getMessage() for r in caplog.records if r.levelno >= logging.ERROR]
     assert errors and all("RuntimeError: boom" in m for m in errors)
     assert all("http" not in r.getMessage() for r in caplog.records)
+    assert "boom" in errors[0]
 
 
 async def test_refresh_sleeps_between_products():
@@ -160,7 +161,7 @@ async def test_refresh_uses_canonical_for_and_logs_totals(caplog):
     _, refresher, _ = _make([_gp("a")], store)
     with caplog.at_level(logging.INFO):
         await refresher.run(SOURCE)
-    assert any("GuidePrices:" in r.getMessage() and "1" in r.getMessage() for r in caplog.records)
+    assert "GuidePrices: 1 products, 1 updated, 0 failed, 0 skipped" in caplog.text
 
 
 async def test_refresh_bad_url_is_isolated():
@@ -176,3 +177,41 @@ async def test_refresh_bad_url_is_isolated():
     assert await repo.find_product_id("fake", "ES", "a") is None
     pid = await repo.find_product_id("fake", "ES", "b")
     assert repo.prices[pid]["price"] == Decimal("2")
+
+
+async def test_refresh_redacts_urls_in_errors(caplog):
+    class Leaky(FakeStore):
+        async def fetch_price(self, product_id, canonical_url):
+            raise RuntimeError(f"failed GET {canonical_url} now")
+
+    _, refresher, _ = _make([_gp("a")], Leaky())
+    with caplog.at_level(logging.ERROR):
+        await refresher.run(SOURCE)
+    assert "RuntimeError: failed GET <url> now" in caplog.text
+    assert "fake.example" not in caplog.text
+
+
+async def test_refresh_keeps_existing_image_and_sets_missing_one():
+    store = FakeStore({k: PriceQuote(Decimal("1"), None, image_url=f"http://img/new-{k}") for k in "ab"})
+    repo, refresher, _ = _make([_gp("a"), _gp("b")], store)
+    has = await repo.upsert_product(_offer_for("fake", "a"))
+    lacks = await repo.upsert_product(_offer_for("fake", "b"))
+    await repo.set_product_image(has, "http://img/old")
+    await refresher.run(SOURCE)
+    assert repo.product_images[has] == "http://img/old"
+    assert repo.product_images[lacks] == "http://img/new-b"
+
+
+async def test_refresh_sets_image_on_product_created_in_this_pass():
+    store = FakeStore({"a": PriceQuote(Decimal("1"), None, image_url="http://img/a")})
+    repo, refresher, _ = _make([_gp("a")], store)
+    await refresher.run(SOURCE)
+    pid = await repo.find_product_id("fake", "ES", "a")
+    assert repo.product_images[pid] == "http://img/a"
+
+
+async def test_refresh_does_not_sleep_after_product_without_network_call():
+    store = FakeStore({"b": PriceQuote(Decimal("1"), None), "c": PriceQuote(Decimal("1"), None)})
+    _, refresher, sleeps = _make([_gp("a", store="aaa"), _gp("b"), _gp("c")], store)
+    await refresher.run(SOURCE)
+    assert sleeps == [1.5]

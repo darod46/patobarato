@@ -325,16 +325,17 @@ def test_build_runners_skips_awin_without_token_or_publisher():
         ] == ["guide_prices"]
 
 
-def test_build_runners_always_includes_guide_prices():
+def test_build_runners_passes_guide_price_delay():
     import httpx
 
     from patobarato.storage.repository import InMemoryRepository
     from patobarato.stores.registry import build_registry
 
-    settings = _ali_settings()
+    settings = _ali_settings(guide_price_delay_seconds=0.25)
     http = httpx.AsyncClient()
     registry = build_registry(settings, http, http)
 
-    runners = main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None)
+    (runner,) = main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None)
 
-    assert [r.type for r in runners] == ["guide_prices"]
+    assert runner.type == "guide_prices"
+    assert runner._delay == 0.25
