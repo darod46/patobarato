@@ -12,6 +12,9 @@ const row = {
   url: null,
   starts_at: '2026-11-01T00:00:00Z',
   expires_at: null,
+  discount_amount: '6',
+  discount_pct: null,
+  min_purchase: 40,
 }
 
 describe('fetchCoupons', () => {
@@ -34,7 +37,16 @@ describe('fetchCoupons', () => {
       url: null,
       startsAt: '2026-11-01T00:00:00Z',
       expiresAt: null,
+      discountAmount: 6,
+      discountPct: null,
+      minPurchase: 40,
     })
+  })
+
+  it('maps missing coupon values to null', async () => {
+    const { client } = fakeClient({ data: [{ ...row, discount_amount: undefined, discount_pct: 15, min_purchase: undefined }], error: null })
+    const [c] = await fetchCoupons(client)
+    expect(c).toMatchObject({ discountAmount: null, discountPct: 15, minPurchase: null })
   })
 
   it('does not limit when no limit is given', async () => {

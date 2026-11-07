@@ -7,7 +7,7 @@ const deal = (id: number, discountPct: number | null, isLowest = false): Deal =>
   affiliateUrl: '', title: `Deal ${id}`, imageUrl: null, asin: `A${id}`, country: 'ES', store: 'amazon', productId: id,
   discountPct, previousMinPrice: null, isLowest,
 })
-const coupon: Coupon = { id: 1, store: 'aliexpress', code: 'X', title: '−6 € en 40 €', conditions: null, url: null, startsAt: '', expiresAt: null }
+const coupon: Coupon = { id: 1, store: 'aliexpress', code: 'X', title: '−6 € en 40 €', conditions: null, url: null, startsAt: '', expiresAt: null, discountAmount: null, discountPct: null, minPurchase: null }
 
 describe('heroHighlights', () => {
   it('picks the biggest discount, the first coupon and whether any deal is at its lowest', () => {

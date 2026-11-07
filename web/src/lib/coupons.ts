@@ -10,6 +10,14 @@ type CouponRow = {
   url: string | null
   starts_at: string
   expires_at: string | null
+  discount_amount?: number | string | null
+  discount_pct?: number | string | null
+  min_purchase?: number | string | null
+}
+
+/** PostgREST may return numeric columns as strings; null and undefined stay null. */
+export function numOrNull(v: number | string | null | undefined): number | null {
+  return v === null || v === undefined ? null : Number(v)
 }
 
 function toCoupon(row: CouponRow): Coupon {
@@ -22,6 +30,9 @@ function toCoupon(row: CouponRow): Coupon {
     url: row.url,
     startsAt: row.starts_at,
     expiresAt: row.expires_at,
+    discountAmount: numOrNull(row.discount_amount),
+    discountPct: numOrNull(row.discount_pct),
+    minPurchase: numOrNull(row.min_purchase),
   }
 }
 
