@@ -59,7 +59,8 @@ function toProduct(raw: RawProduct): CatalogProduct | null {
   if (sale === null || raw.product_id == null) return null
   const original = price(raw.target_original_price)
   const originalPrice = original !== null && original > sale ? original : null
-  const link = raw.promotion_link || raw.product_detail_url
+  // Never fall back to product_detail_url: a result without an affiliate link is not shown.
+  const link = raw.promotion_link
   if (typeof link !== 'string' || link === '') return null
   const image = raw.product_main_image_url
   return {

@@ -116,18 +116,6 @@ describe('searchAliExpress', () => {
         imageUrl: 'https://img/a.jpg',
         affiliateUrl: 'https://s.click/a',
       },
-      {
-        origin: 'aliexpress',
-        store: 'aliexpress',
-        externalId: '2',
-        title: 'Sin promo',
-        price: 10,
-        originalPrice: null,
-        discountPct: null,
-        currency: 'EUR',
-        imageUrl: null,
-        affiliateUrl: 'https://ali/b',
-      },
     ])
   })
 
@@ -139,6 +127,7 @@ describe('searchAliExpress', () => {
           product_title: 't',
           target_sale_price: '75',
           target_original_price: '100',
+          promotion_link: 'https://s.click/u',
           product_detail_url: 'u',
         },
       ]),
@@ -157,6 +146,7 @@ describe('searchAliExpress', () => {
             product_title: 't',
             target_sale_price: '75',
             target_original_price: '100',
+            promotion_link: 'https://s.click/u',
             product_detail_url: 'u',
             discount,
           },
