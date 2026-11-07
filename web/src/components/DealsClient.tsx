@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useClock } from '../hooks/useClock'
 import type { DealsFetcher, InitialDeals } from '../hooks/useDeals'
 import { useUrlFilters } from '../hooks/useUrlFilters'
@@ -47,8 +48,9 @@ export function DealsClient({
   stores = [],
 }: Props) {
   // Chips are links to /chollos/{tag}; a legacy `?tag=` still filters here and marks its chip.
+  const serverSearch = useMemo(() => (initialDeals ? searchOf(initialDeals) : ''), [initialDeals])
   // The server rendered page 0 for these filters, so the hydration render must use them too.
-  const { tag, store, sort, setSort, setStore, clear } = useUrlFilters(initialDeals ? searchOf(initialDeals) : '')
+  const { tag, store, sort, setSort, setStore, clear } = useUrlFilters(serverSearch)
   const clock = useClock(now)
 
   return (

@@ -105,7 +105,7 @@ it('hides the header search link (the page is the search) and has no hashtag chi
       fetchCatalog={vi.fn().mockResolvedValue([])}
     />,
   )
-  expect(screen.queryByRole('link', { name: 'Buscar' })).toBeNull()
+  expect(screen.queryByRole('link', { name: /Buscar chollos/ })).toBeNull()
   await screen.findByRole('button', { name: 'Quitar filtros' })
   expect(screen.queryByRole('link', { name: '#sony' })).toBeNull()
   expect(screen.queryByRole('button', { name: '#sony' })).toBeNull()

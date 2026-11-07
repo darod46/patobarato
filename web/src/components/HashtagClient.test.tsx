@@ -60,6 +60,6 @@ it('loads more within the tag', async () => {
 it('has no search field; the header links to /buscar', () => {
   setup()
   expect(screen.queryByRole('searchbox')).toBeNull()
-  expect(screen.getByRole('link', { name: 'Buscar' })).toHaveAttribute('href', '/buscar')
+  expect(screen.getByRole('link', { name: /Buscar chollos/ })).toHaveAttribute('href', '/buscar')
 })
 

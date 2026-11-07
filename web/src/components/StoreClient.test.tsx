@@ -78,7 +78,7 @@ it('loads more with the store fixed and ignores ?tienda=', async () => {
 it('has no search field; the header links to /buscar', () => {
   setup()
   expect(screen.queryByRole('searchbox')).toBeNull()
-  expect(screen.getByRole('link', { name: 'Buscar' })).toHaveAttribute('href', '/buscar')
+  expect(screen.getByRole('link', { name: /Buscar chollos/ })).toHaveAttribute('href', '/buscar')
 })
 
 const noStats = (initialDeals?: { deals: Deal[]; hasMore: boolean }, ...rest: [coupons?: Coupon[] | undefined]) =>

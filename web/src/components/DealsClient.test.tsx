@@ -36,7 +36,7 @@ it('renders the H1, the subtitle, the header search link, feed with sort and foo
   )
   expect(screen.getByRole('heading', { level: 1, name: 'Chollos de hoy' })).toBeInTheDocument()
   expect(screen.getByText('Se actualiza automáticamente')).toBeInTheDocument()
-  expect(within(screen.getByRole('banner')).getByRole('link', { name: 'Buscar' })).toHaveAttribute('href', '/buscar')
+  expect(within(screen.getByRole('banner')).getByRole('link', { name: /Buscar chollos/ })).toHaveAttribute('href', '/buscar')
   expect(screen.queryByRole('searchbox')).toBeNull()
   expect(await screen.findByText('Auriculares Sony')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Cargar más chollos' })).toBeInTheDocument()
@@ -147,5 +147,37 @@ it('server-renders the initial page and hydrates without refetching it', async (
   } finally {
     act(() => root?.unmount())
     container.remove()
+  }
+})
+
+it('hydrates a server-filtered page 0 without mismatches and without refetching it', async () => {
+  const props = {
+    now: '2026-11-04T12:00:00Z',
+    initialDeals: { q: '', tag: 'sony', store: 'amazon', sort: 'minimo' as const, deals: [deal], hasMore: false },
+    initialTags: ['sony'],
+    stores: [{ store: 'amazon', deals: 3, coupons: 0 }, { store: 'aliexpress', deals: 2, coupons: 1 }],
+    fetchDeals: vi.fn().mockResolvedValue({ deals: [], hasMore: false }),
+    fetchHashtags: vi.fn().mockResolvedValue([]),
+  }
+  const container = document.createElement('div')
+  container.innerHTML = renderToString(<DealsClient {...props} />)
+  // The URL must match the filters the server rendered for, or the client refetches.
+  history.replaceState(null, '', '/chollos?tag=sony&tienda=amazon&orden=minimo')
+  document.body.appendChild(container)
+  const onRecoverableError = vi.fn()
+  const errors = vi.spyOn(console, 'error').mockImplementation(() => {})
+  let root: Root | undefined
+  try {
+    await act(async () => {
+      root = hydrateRoot(container, <DealsClient {...props} />, { onRecoverableError })
+    })
+    expect(screen.getByText('Auriculares Sony')).toBeInTheDocument()
+    expect(props.fetchDeals).not.toHaveBeenCalled()
+    expect(onRecoverableError).not.toHaveBeenCalled()
+    expect(errors).not.toHaveBeenCalled()
+  } finally {
+    act(() => root?.unmount())
+    container.remove()
+    errors.mockRestore()
   }
 })

@@ -7,11 +7,11 @@ export function SearchTrigger() {
   return (
     <a
       href="/buscar"
-      aria-label="Buscar"
       className={`inline-flex size-11 shrink-0 items-center justify-center rounded-full text-ink hover:bg-surface md:size-auto md:h-11 md:w-full md:max-w-[320px] md:min-w-[200px] md:justify-start md:gap-2 md:border md:border-[#d7dae0] md:bg-surface md:px-4 md:hover:border-muted ${FOCUS}`}
     >
       <Search size={22} aria-hidden="true" className="md:size-[18px] md:text-muted" />
       <span className="hidden text-[15px] text-muted md:inline">Buscar chollos…</span>
+      <span className="sr-only md:hidden">Buscar chollos</span>
     </a>
   )
 }

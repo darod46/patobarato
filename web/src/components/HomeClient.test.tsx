@@ -34,7 +34,7 @@ const props = {
 it('renders header, hero, carousel, telegram block and footer', () => {
   render(<HomeClient {...props} deals={[deal]} />)
   expect(within(screen.getByRole('banner')).getByRole('img', { name: 'PatoBarato' })).toBeInTheDocument()
-  expect(within(screen.getByRole('banner')).getByRole('link', { name: 'Buscar' })).toHaveAttribute('href', '/buscar')
+  expect(within(screen.getByRole('banner')).getByRole('link', { name: /Buscar chollos/ })).toHaveAttribute('href', '/buscar')
   expect(within(screen.getByRole('banner')).getByRole('link', { name: 'Unirme al canal' })).toHaveAttribute(
     'href',
     'https://t.me/patobarato',
