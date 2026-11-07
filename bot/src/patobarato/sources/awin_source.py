@@ -220,7 +220,9 @@ class AwinClient:
                             advertiser_id,
                             MAX_FEED_LINES,
                         )
-                        break
+                        # A partial feed must not look complete: the caller keeps what it read and
+                        # skips the out-of-stock marking.
+                        raise AwinFeedError("truncated")
                     lines += 1
                     raw = _decode_feed_line(line)
                     if raw is not None and raw.get("id") is None and ("error" in raw or "message" in raw):

@@ -330,5 +330,10 @@ async def test_record_feed_run_overwrites_and_find_catalog_product_by_url():
     assert repo.feed_runs[("pccomponentes", 1)] == {"last_run_at": NOW, "products": 7, "last_error": None}
     await repo.upsert_catalog_products([_catalog_row(url="https://shop/x")])
     assert (await repo.find_catalog_product("pccomponentes", "https://shop/x")).external_id == "a"
+    other = InMemoryRepository()
+    await other.upsert_catalog_products(
+        [_catalog_row(ext="old", url="https://shop/y", in_stock=False), _catalog_row(ext="new", url="https://shop/y")]
+    )
+    assert (await other.find_catalog_product("pccomponentes", "https://shop/y")).external_id == "new"
     assert await repo.find_catalog_product("mediamarkt", "https://shop/x") is None
     assert await repo.find_catalog_product("pccomponentes", "https://shop/none") is None

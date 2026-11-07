@@ -1,4 +1,6 @@
 import logging
+
+import httpx
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -197,3 +199,20 @@ async def test_run_stores_canonical_awin_url():
     client = _FakeClient({1234: [product], 5678: []})
     await _source_runner(client, repo).run(_source())
     assert repo.catalog[("pccomponentes", "1")].url == "https://www.pccomponentes.com/foo"
+
+
+async def test_truncated_feed_keeps_rows_skips_stock_marking_and_records_error(monkeypatch):
+    from patobarato.sources import awin_source
+
+    monkeypatch.setattr(awin_source, "MAX_FEED_LINES", 3)
+    lines = "\n".join(
+        '{"id": %d, "title": "P%d", "price": "10.00", "availability": "in stock", '
+        '"link": "https://shop/%d", "aw_deep_link": "https://aff/%d"}' % (i, i, i, i) for i in range(1, 7)
+    )
+    http = httpx.AsyncClient(transport=httpx.MockTransport(lambda r: httpx.Response(200, content=lines.encode())))
+    repo = _SpyRepo()
+    runner = _source_runner(awin_source.AwinClient(http, "999", "tok"), repo)
+    assert await runner._sync_feed("pccomponentes", 1234) is False
+    assert len(repo.catalog) == 3
+    assert repo.oos_calls == []
+    assert "truncated" in repo.feed_runs[("pccomponentes", 1234)]["last_error"]

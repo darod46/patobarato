@@ -517,6 +517,8 @@ class SupabaseRepository:
                 .select("*")
                 .eq("store", store)
                 .eq("url", url)
+                .eq("in_stock", True)
+                .order("updated_at", desc=True)
                 .limit(1)
                 .execute()
             )

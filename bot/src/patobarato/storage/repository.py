@@ -440,7 +440,5 @@ class InMemoryRepository(Repository):
         }
 
     async def find_catalog_product(self, store: str, url: str) -> CatalogRow | None:
-        for (row_store, _), row in self.catalog.items():
-            if row_store == store and row.url == url:
-                return row
-        return None
+        matches = [r for (s, _), r in self.catalog.items() if s == store and r.url == url]
+        return next((r for r in matches if r.in_stock), matches[0] if matches else None)

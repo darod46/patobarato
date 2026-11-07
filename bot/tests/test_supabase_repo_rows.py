@@ -233,3 +233,12 @@ async def test_mark_catalog_out_of_stock_nothing_missing_or_empty_seen():
     client = _ScriptedClient()
     assert await SupabaseRepository(client).mark_catalog_out_of_stock("s", set()) == 0
     assert client.log == []
+
+
+async def test_find_catalog_product_prefers_in_stock_and_latest():
+    client = _Client([])
+    assert await SupabaseRepository(client).find_catalog_product("mediamarkt", "https://shop/e1") is None
+    names = [e[0] for e in client.log]
+    assert ("eq", ("in_stock", True), {}) in client.log
+    assert ("order", ("updated_at",), {"desc": True}) in client.log
+    assert names.index("order") < names.index("limit")

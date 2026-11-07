@@ -71,7 +71,10 @@ async def test_download_feed_streams_products_and_raises_on_error_line():
 async def test_download_feed_stops_at_line_cap(monkeypatch, caplog):
     monkeypatch.setattr(awin_source, "MAX_FEED_LINES", 3)
     caplog.set_level(logging.WARNING, logger="patobarato.awin_source")
-    got = [p async for p in _client(_ok).download_feed(123)]
+    got = []
+    with pytest.raises(AwinFeedError, match="truncated"):
+        async for p in _client(_ok).download_feed(123):
+            got.append(p)
     assert len(got) == 3
     assert any(r.levelno == logging.WARNING and "123" in r.getMessage() for r in caplog.records)
 
