@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 
 import httpx
 
+from patobarato.models import PriceQuote
 from patobarato.stores.aliexpress_client import AliExpressClient, AliExpressError
 from patobarato.stores.base import BaseStore
 
@@ -58,3 +59,18 @@ class AliExpressStore(BaseStore):
             log.warning("AliExpress image lookup failed for %s: %s", product_id, type(exc).__name__)
             return None
         return product.image_url if product else None
+
+    async def fetch_price(self, product_id: str, canonical_url: str) -> PriceQuote | None:
+        try:
+            product = await self._client.product_detail(product_id)
+        except (AliExpressError, httpx.HTTPError) as exc:
+            log.warning(
+                "AliExpress price for %s not found: %s: %s", product_id, type(exc).__name__, exc
+            )
+            return None
+        if product is None:
+            return None
+        previous = product.original_price if (product.original_price or 0) > product.price else None
+        return PriceQuote(
+            price=product.price, previous_price=previous, image_url=product.image_url
+        )

@@ -1,11 +1,13 @@
 import json
+from decimal import Decimal
 from pathlib import Path
 
 import httpx
 import pytest
 
+from patobarato.models import PriceQuote
 from patobarato.stores.aliexpress import AliExpressStore
-from patobarato.stores.aliexpress_client import AliExpressClient
+from patobarato.stores.aliexpress_client import AliExpressClient, AliExpressError, AliProduct
 from patobarato.stores.registry import StoreRegistry
 
 FIX = Path(__file__).parent / "fixtures"
@@ -75,6 +77,55 @@ async def test_find_image_errors_are_none():
     assert await store_with(lambda r: httpx.Response(500)).find_image("1", URL) is None
     err = {"error_response": {"code": "x", "msg": "y"}}
     assert await store_with(lambda r: httpx.Response(200, json=err)).find_image("1", URL) is None
+
+
+class FakeClient:
+    def __init__(self, product=None, error=None):
+        self.product = product
+        self.error = error
+
+    async def product_detail(self, product_id):
+        if self.error is not None:
+            raise self.error
+        return self.product
+
+
+def product(price: str, original: str | None) -> AliProduct:
+    return AliProduct(
+        product_id="1005006123456789",
+        title="Auriculares",
+        price=Decimal(price),
+        original_price=Decimal(original) if original else None,
+        discount=None,
+        image_url="https://ae01.alicdn.com/kf/Sabc.jpg",
+        url=URL,
+        promotion_link=None,
+    )
+
+
+async def test_fetch_price_maps_product_detail():
+    store = AliExpressStore(FakeClient(product=product("89.99", "119.99")))
+    quote = await store.fetch_price("1005006123456789", URL)
+    assert quote == PriceQuote(
+        price=Decimal("89.99"),
+        previous_price=Decimal("119.99"),
+        image_url="https://ae01.alicdn.com/kf/Sabc.jpg",
+    )
+
+
+async def test_fetch_price_without_original_has_no_previous():
+    store = AliExpressStore(FakeClient(product=product("89.99", None)))
+    quote = await store.fetch_price("1005006123456789", URL)
+    assert quote is not None
+    assert quote.price == Decimal("89.99")
+    assert quote.previous_price is None
+
+
+async def test_fetch_price_api_error_is_none_and_logged(caplog):
+    store = AliExpressStore(FakeClient(error=AliExpressError("50001", "invalid session")))
+    assert await store.fetch_price("1005006123456789", URL) is None
+    assert "AliExpressError" in caplog.text
+    assert URL not in caplog.text
 
 
 def test_registry(ali):
