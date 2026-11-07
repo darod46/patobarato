@@ -107,6 +107,32 @@ describe('freshnessLabel', () => {
   })
 })
 
+describe('fix round 1', () => {
+  it('48 h boundary is exclusive and consistent with the label', () => {
+    const t = hoursAgo(47.9)
+    expect(isRecent(offer({ checkedAt: t }), now)).toBe(true)
+    expect(freshnessLabel(t, now)).toMatch(/^Precios revisados hace /)
+    expect(isRecent(offer({ checkedAt: hoursAgo(48) }), now)).toBe(false)
+    expect(freshnessLabel(hoursAgo(48), now)).toBe('Precios de hace 2 días')
+  })
+  it('freshnessLabel handles garbage and future dates', () => {
+    expect(freshnessLabel('not a date', now)).toBe('Precios no disponibles')
+    expect(freshnessLabel(hoursAgo(-3), now)).toBe('Precios revisados ahora')
+  })
+  it('non-positive coupon values are ignored', () => {
+    expect(finalPrice(100, coupon({ discountAmount: 0 }), now)).toBeNull()
+    expect(finalPrice(100, coupon({ discountPct: -5 }), now)).toBeNull()
+    expect(finalPrice(100, coupon({ discountPct: 100 }), now)).toBeNull()
+    expect(finalPrice(100, coupon({ discountPct: 120 }), now)).toBeNull()
+  })
+  it('amount wins over pct when both are set', () => {
+    expect(finalPrice(100, coupon({ discountAmount: 10, discountPct: 50 }), now)).toBe(90)
+  })
+  it('bestOffer is null when every offer is stale', () => {
+    expect(bestOffer([offer({ checkedAt: hoursAgo(100) }), offer({ checkedAt: hoursAgo(60) })], now)).toBeNull()
+  })
+})
+
 describe('discountPct', () => {
   it('is null without a real discount', () => {
     expect(discountPct(100, 100)).toBeNull()

@@ -10,8 +10,9 @@ export function finalPrice(price: number | null, coupon: GuideCoupon | null, now
   if (coupon.expiresAt !== null && new Date(coupon.expiresAt).getTime() <= now.getTime()) return null
   if (coupon.minPurchase !== null && price < coupon.minPurchase) return null
   let result: number
-  if (coupon.discountAmount !== null) result = price - coupon.discountAmount
-  else if (coupon.discountPct !== null) result = price * (1 - coupon.discountPct / 100)
+  // Structured values must be positive; when both are set, the fixed amount wins over the percentage.
+  if (coupon.discountAmount !== null && coupon.discountAmount > 0) result = price - coupon.discountAmount
+  else if (coupon.discountPct !== null && coupon.discountPct > 0) result = price * (1 - coupon.discountPct / 100)
   else return null
   result = Math.round(result * 100) / 100
   return result > 0 ? result : null
@@ -23,7 +24,7 @@ export function isRecent(offer: GuideStoreOffer, now: Date): boolean {
     !offer.priceError &&
     offer.price !== null &&
     offer.checkedAt !== null &&
-    now.getTime() - new Date(offer.checkedAt).getTime() <= FRESH_MS
+    now.getTime() - new Date(offer.checkedAt).getTime() < FRESH_MS
   )
 }
 
@@ -44,8 +45,10 @@ export function bestOffer(
 
 export function freshnessLabel(checkedAt: string | null, now: Date): string {
   if (checkedAt === null) return 'Precios no disponibles'
-  const age = now.getTime() - new Date(checkedAt).getTime()
-  if (age < FRESH_MS) return `Precios revisados ${timeAgo(checkedAt, now)}`
+  const raw = now.getTime() - new Date(checkedAt).getTime()
+  if (Number.isNaN(raw)) return 'Precios no disponibles'
+  const age = Math.max(0, raw)
+  if (age < FRESH_MS) return `Precios revisados ${age === 0 ? timeAgo(now.toISOString(), now) : timeAgo(checkedAt, now)}`
   return `Precios de hace ${Math.floor(age / (24 * HOUR_MS))} días`
 }
 

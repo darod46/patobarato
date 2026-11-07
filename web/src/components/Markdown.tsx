@@ -8,7 +8,9 @@ function isExternal(href: string | undefined): boolean {
   if (href.startsWith('#')) return false
   if (href.startsWith('/') && !href.startsWith('//')) return false
   try {
-    const host = new URL(href, `https://${SITE_HOST}`).hostname.toLowerCase()
+    const url = new URL(href, `https://${SITE_HOST}`)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return false
+    const host = url.hostname.toLowerCase()
     return host !== SITE_HOST && host !== `www.${SITE_HOST}`
   } catch {
     return false
@@ -31,6 +33,7 @@ export function Markdown({ source, className }: { source: string; className?: st
         skipHtml
         components={{
           a({ node: _node, href, children, ...props }) {
+            if (!href) return <span>{children}</span>
             return isExternal(href) ? (
               <a {...props} href={href} target="_blank" rel="nofollow noopener noreferrer">
                 {children}

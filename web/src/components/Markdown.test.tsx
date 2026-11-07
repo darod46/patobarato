@@ -37,4 +37,19 @@ describe('Markdown', () => {
     const { container } = render(<Markdown source="[x](//evil.com/p)" />)
     expect(container.querySelector('a')!.getAttribute('target')).toBe('_blank')
   })
+
+  it('keeps mailto links plain', () => {
+    const { container } = render(<Markdown source={'[m](mailto:a@b.com)'} />)
+    for (const a of container.querySelectorAll('a')) {
+      expect(a.hasAttribute('target')).toBe(false)
+      expect(a.hasAttribute('rel')).toBe(false)
+    }
+    expect(container.querySelectorAll('a')).toHaveLength(1)
+  })
+
+  it('renders unsafe-protocol links as plain text', () => {
+    const { container } = render(<Markdown source={'[x](javascript:alert(1))'} />)
+    expect(container.querySelector('a')).toBeNull()
+    expect(container.textContent).toContain('x')
+  })
 })
