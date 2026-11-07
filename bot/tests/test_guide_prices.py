@@ -1,5 +1,5 @@
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from patobarato.models import ApiSource, GuideProduct, PriceQuote
@@ -167,7 +167,7 @@ async def test_refresh_uses_canonical_for_and_logs_totals(caplog):
     _, refresher, _ = _make([_gp("a")], store)
     with caplog.at_level(logging.INFO):
         await refresher.run(SOURCE)
-    assert "GuidePrices: 1 products, 1 updated, 0 failed, 0 skipped" in caplog.text
+    assert "GuidePrices: 1 products, 1 updated (0 from_catalog), 0 failed, 0 skipped" in caplog.text
 
 
 async def test_refresh_bad_url_is_isolated():
@@ -244,3 +244,77 @@ async def test_refresh_affiliate_failure_stores_none_and_logs_without_url(caplog
     assert repo.prices[pid]["affiliate_url"] is None
     assert "affiliate=missing (RuntimeError:" in caplog.text
     assert "secret.example" not in caplog.text
+
+
+CANON = "https://fake.example/p/a?canon=1"
+
+
+def _catalog_row(updated_at, sale="8.00", price="10.00", image="http://img/cat"):
+    from patobarato.models import CatalogRow
+
+    return CatalogRow(
+        "fake", "a", "Título", None, None, None, None, Decimal(price),
+        Decimal(sale) if sale else None, "EUR", True, image, CANON,
+        "https://aff.example/cat", None, updated_at,
+    )
+
+
+def _put(repo, row):
+    repo.catalog[(row.store, row.external_id)] = row
+
+
+async def test_refresh_prefers_fresh_catalog_row(caplog):
+    store = FakeStore({"a": PriceQuote(Decimal("1"), None)}, affiliate="https://aff.example/live")
+    repo, refresher, _ = _make([_gp("a")], store)
+    _put(repo, _catalog_row(NOW - timedelta(hours=2)))
+    with caplog.at_level(logging.INFO):
+        await refresher.run(SOURCE)
+    pid = await repo.find_product_id("fake", "ES", "a")
+    assert store.calls == []
+    assert repo.prices[pid]["price"] == Decimal("8.00")
+    assert repo.prices[pid]["previous_price"] == Decimal("10.00")
+    assert repo.prices[pid]["currency"] == "EUR"
+    assert repo.prices[pid]["affiliate_url"] == "https://aff.example/cat"
+    assert repo.prices[pid]["error"] is None
+    assert repo.prices[pid]["checked_at"] == NOW
+    assert repo.product_images[pid] == "http://img/cat"
+    assert "1 updated (1 from_catalog)" in caplog.text
+
+
+async def test_refresh_ignores_stale_catalog_row():
+    store = FakeStore({"a": PriceQuote(Decimal("1"), None)})
+    repo, refresher, _ = _make([_gp("a")], store)
+    _put(repo, _catalog_row(NOW - timedelta(hours=40)))
+    await refresher.run(SOURCE)
+    pid = await repo.find_product_id("fake", "ES", "a")
+    assert len(store.calls) == 1
+    assert repo.prices[pid]["price"] == Decimal("1")
+
+
+async def test_refresh_catalog_row_without_updated_at_is_stale():
+    store = FakeStore({"a": PriceQuote(Decimal("1"), None)})
+    repo, refresher, _ = _make([_gp("a")], store)
+    _put(repo, _catalog_row(None))
+    await refresher.run(SOURCE)
+    assert len(store.calls) == 1
+
+
+async def test_refresh_catalog_row_without_sale_has_no_previous():
+    store = FakeStore()
+    repo, refresher, _ = _make([_gp("a")], store)
+    _put(repo, _catalog_row(NOW - timedelta(hours=1), sale=None))
+    await refresher.run(SOURCE)
+    pid = await repo.find_product_id("fake", "ES", "a")
+    assert repo.prices[pid]["price"] == Decimal("10.00")
+    assert repo.prices[pid]["previous_price"] is None
+
+
+async def test_refresh_catalog_keeps_existing_image_and_does_not_sleep():
+    store = FakeStore({"b": PriceQuote(Decimal("1"), None)})
+    repo, refresher, sleeps = _make([_gp("a"), _gp("b")], store)
+    pid = await repo.upsert_product(_offer_for("fake", "a"))
+    await repo.set_product_image(pid, "http://img/old")
+    _put(repo, _catalog_row(NOW - timedelta(hours=1)))
+    await refresher.run(SOURCE)
+    assert repo.product_images[pid] == "http://img/old"
+    assert sleeps == []

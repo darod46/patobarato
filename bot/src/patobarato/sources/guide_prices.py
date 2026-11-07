@@ -4,10 +4,10 @@ import asyncio
 import logging
 import re
 from collections.abc import Awaitable, Callable
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from patobarato.core.pipeline import utcnow
-from patobarato.models import ApiSource, GuideProduct, ParsedOffer
+from patobarato.models import ApiSource, CatalogRow, GuideProduct, ParsedOffer
 from patobarato.storage.repository import Repository
 from patobarato.stores.registry import StoreRegistry
 
@@ -15,6 +15,7 @@ logger = logging.getLogger("patobarato.guide_prices")
 
 COUNTRY = "ES"
 DEFAULT_DELAY_SECONDS = 1.5
+CATALOG_FRESH_HOURS = 36
 _URL = re.compile(r"https?://\S+")
 
 
@@ -41,7 +42,7 @@ class GuidePriceRefresher:
         products = await self._repo.list_guide_products()
         # Images already stored (Telegram, backfill) are never overwritten.
         self._imageless = {row[0] for row in await self._repo.get_products_without_image()}
-        updated = failed = skipped = 0
+        updated = failed = skipped = from_catalog = 0
         fetched_before = False
         for product in products:
             self._network = False
@@ -60,16 +61,20 @@ class GuidePriceRefresher:
                 )
                 outcome = "failed"
             fetched_before = self._network
-            if outcome == "updated":
+            if outcome == "catalog":
+                updated += 1
+                from_catalog += 1
+            elif outcome == "updated":
                 updated += 1
             elif outcome == "skipped":
                 skipped += 1
             else:
                 failed += 1
         logger.info(
-            "GuidePrices: %d products, %d updated, %d failed, %d skipped",
+            "GuidePrices: %d products, %d updated (%d from_catalog), %d failed, %d skipped",
             len(products),
             updated,
+            from_catalog,
             failed,
             skipped,
         )
@@ -109,6 +114,20 @@ class GuidePriceRefresher:
                     product_url=product.url,
                 )
             )
+        row = await self._repo.find_catalog_product(product.store, canonical)
+        if row is not None and self._is_fresh(row, now):
+            await self._repo.upsert_product_price(
+                product_id,
+                checked_at=now,
+                price=row.sale_price or row.price,
+                previous_price=row.price if row.sale_price else None,
+                currency=row.currency,
+                affiliate_url=row.affiliate_url,
+                error=None,
+            )
+            if row.image_url and (created or product_id in self._imageless):
+                await self._repo.set_product_image(product_id, row.image_url)
+            return "catalog"
         self._network = True
         quote = await store.fetch_price(product.external_id, canonical)
         if quote is None:
@@ -136,3 +155,9 @@ class GuidePriceRefresher:
         if quote.image_url and (created or product_id in self._imageless):
             await self._repo.set_product_image(product_id, quote.image_url)
         return "updated"
+
+    @staticmethod
+    def _is_fresh(row: CatalogRow, now: datetime) -> bool:
+        if row.updated_at is None:
+            return False
+        return now - row.updated_at < timedelta(hours=CATALOG_FRESH_HOURS)
