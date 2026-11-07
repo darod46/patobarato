@@ -103,6 +103,10 @@ def _to_price(value: object) -> Decimal | None:
         return None
 
 
+# Public alias: the strict price parser is shared with the Awin feed client.
+parse_price = _to_price
+
+
 def _is_product(node: dict) -> bool:
     kind = node.get("@type")
     return kind == "Product" or (isinstance(kind, list) and "Product" in kind)

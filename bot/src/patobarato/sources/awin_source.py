@@ -1,6 +1,8 @@
 """Awin promotions (vouchers) synced into the ``coupons`` table."""
 
+import json
 import logging
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
@@ -8,7 +10,8 @@ from typing import Any
 import httpx
 
 from patobarato.config import Settings
-from patobarato.models import ApiSource, CouponUpsert
+from patobarato.models import ApiSource, AwinFeedProduct, CouponUpsert
+from patobarato.sources.generic_page import parse_price
 from patobarato.storage.repository import Repository
 
 logger = logging.getLogger("patobarato.awin_source")
@@ -17,6 +20,12 @@ API_BASE = "https://api.awin.com"
 PAGE_SIZE = 200
 MAX_PAGES = 50  # safety bound against an API that never returns a short page
 REGION = "ES"
+MAX_FEED_LINES = 200_000  # safety bound against an endless feed
+DESCRIPTION_MAX = 500
+
+
+class AwinFeedError(Exception):
+    """The product feed could not be downloaded or reported an error."""
 
 
 @dataclass
@@ -59,6 +68,61 @@ def _promotion(raw: dict[str, Any]) -> AwinPromotion:
     )
 
 
+def _text(value: Any) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
+def _parse_feed_object(raw: dict[str, Any]) -> AwinFeedProduct | None:
+    price = parse_price(raw.get("price"))
+    if price is None:
+        logger.debug("Awin feed: dropped product (reason=invalid_price)")
+        return None
+    url = _text(raw.get("link"))
+    if url is None:
+        logger.debug("Awin feed: dropped product (reason=no_link)")
+        return None
+    affiliate_url = _text(raw.get("aw_deep_link"))
+    if affiliate_url is None:
+        logger.debug("Awin feed: dropped product (reason=no_affiliate_link)")
+        return None
+    sale_price = parse_price(raw.get("sale_price"))
+    if sale_price is not None and sale_price >= price:
+        sale_price = None
+    availability = str(raw.get("availability") or "").strip().lower()
+    in_stock = True if not availability else availability.startswith("in stock") or availability == "in_stock"
+    description = _text(raw.get("description"))
+    return AwinFeedProduct(
+        external_id=str(raw.get("id")),
+        title=_text(raw.get("title")) or "",
+        description=description[:DESCRIPTION_MAX] if description else None,
+        brand=_text(raw.get("brand")),
+        gtin=_text(raw.get("gtin")),
+        category=_text(raw.get("google_product_category")) or _text(raw.get("product_type")),
+        price=price,
+        sale_price=sale_price,
+        in_stock=in_stock,
+        image_url=_text(raw.get("image_link")),
+        url=url,
+        affiliate_url=affiliate_url,
+    )
+
+
+def parse_feed_line(line: str) -> AwinFeedProduct | None:
+    """Map one JSONL feed line to a product; None when unusable (logged at DEBUG)."""
+    try:
+        raw = json.loads(line)
+    except ValueError:
+        logger.debug("Awin feed: dropped line (reason=invalid_json)")
+        return None
+    if not isinstance(raw, dict) or raw.get("id") in (None, ""):
+        logger.debug("Awin feed: dropped line (reason=no_id)")
+        return None
+    return _parse_feed_object(raw)
+
+
 class AwinClient:
     def __init__(self, http: httpx.AsyncClient, publisher_id: str, api_token: str) -> None:
         self._http = http
@@ -91,6 +155,45 @@ class AwinClient:
                 return result
             page += 1
         raise RuntimeError(f"Awin promotions: more than {MAX_PAGES} pages; aborting")
+
+
+    def feed_url(self, advertiser_id: int, locale: str = "es_ES") -> str:
+        return (
+            f"{API_BASE}/publishers/{self._publisher_id}/awinfeeds/download/"
+            f"{advertiser_id}-retail-{locale}.jsonl"
+        )
+
+    async def download_feed(self, advertiser_id: int, locale: str = "es_ES") -> AsyncIterator[AwinFeedProduct]:
+        """Stream the advertiser's JSONL feed; raises AwinFeedError on HTTP or feed-reported errors."""
+        url = self.feed_url(advertiser_id, locale)
+        yielded = dropped = lines = 0
+        async with self._http.stream("GET", url, headers={"Authorization": f"Bearer {self._token}"}) as response:
+            if not response.is_success:
+                raise AwinFeedError(f"HTTP {response.status_code}")
+            async for line in response.aiter_lines():
+                if not line.strip():
+                    continue
+                if lines >= MAX_FEED_LINES:
+                    logger.warning(
+                        "Awin feed of advertiser %s exceeded %d lines; truncated", advertiser_id, MAX_FEED_LINES
+                    )
+                    break
+                lines += 1
+                try:
+                    raw = json.loads(line)
+                except ValueError:
+                    dropped += 1
+                    logger.debug("Awin feed: invalid JSON line skipped")
+                    continue
+                if isinstance(raw, dict) and raw.get("id") is None and ("error" in raw or "message" in raw):
+                    raise AwinFeedError(str(raw.get("message") or raw.get("error")))
+                product = parse_feed_line(line)
+                if product is None:
+                    dropped += 1
+                    continue
+                yielded += 1
+                yield product
+        logger.info("Awin feed of advertiser %s: yielded=%d dropped=%d", advertiser_id, yielded, dropped)
 
 
 class AwinPromotionsSource:

@@ -106,3 +106,19 @@ class GuideProduct:
     url: str
     name: str
     image_url: str | None
+
+
+@dataclass(frozen=True)
+class AwinFeedProduct:
+    external_id: str
+    title: str
+    description: str | None
+    brand: str | None
+    gtin: str | None
+    category: str | None
+    price: Decimal
+    sale_price: Decimal | None
+    in_stock: bool
+    image_url: str | None
+    url: str
+    affiliate_url: str
