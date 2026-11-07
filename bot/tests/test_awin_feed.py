@@ -101,3 +101,54 @@ async def test_download_feed_http_error_raises_feed_error():
             pass
     assert "401" in str(exc.value)
     assert "api.awin.com" not in str(exc.value)
+
+
+def _line(**kw) -> str:
+    d = {"id": 1, "title": "t", "price": "1.00", "link": "https://a", "aw_deep_link": "https://b"}
+    d.update(kw)
+    return json.dumps(d)
+
+
+@pytest.mark.parametrize(
+    ("price", "expected"),
+    [("19.99 EUR", "19.99"), ("1234.50 EUR", "1234.50"), ("1.234,50 EUR", "1234.50"), ("19.99eur", "19.99")],
+)
+def test_parse_feed_line_accepts_eur_suffixed_price(price, expected):
+    assert parse_feed_line(_line(price=price)).price == Decimal(expected)
+
+
+def test_parse_feed_line_drops_other_currency():
+    assert parse_feed_line(_line(price="19.99 USD")) is None
+
+
+def test_parse_feed_line_accepts_suffixed_sale_price():
+    product = parse_feed_line(_line(price="19.99 EUR", sale_price="14.99 EUR"))
+    assert product.sale_price == Decimal("14.99")
+    assert parse_feed_line(_line(price="19.99 EUR", sale_price="9.99 USD")).sale_price is None
+
+
+def test_parse_feed_line_availability_normalisation():
+    assert parse_feed_line(_line(availability="In_Stock")).in_stock is True
+    assert parse_feed_line(_line(availability="preorder")).in_stock is False
+
+
+async def test_download_feed_network_error_hides_url(caplog):
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("boom", request=request)
+
+    caplog.set_level(logging.DEBUG, logger="patobarato.awin_source")
+    with pytest.raises(AwinFeedError) as exc:
+        async for _ in _client(handler).download_feed(123):
+            pass
+    assert str(exc.value) == "ConnectError"
+    assert all("http" not in r.getMessage() for r in caplog.records)
+
+
+async def test_download_feed_logs_totals_without_urls(caplog):
+    caplog.set_level(logging.DEBUG, logger="patobarato.awin_source")
+    with pytest.raises(AwinFeedError):
+        async for _ in _client(_ok).download_feed(123):
+            pass
+    messages = [r.getMessage() for r in caplog.records]
+    assert any("yielded=7" in m and "truncated=False" in m for m in messages)
+    assert all("http" not in m for m in messages)

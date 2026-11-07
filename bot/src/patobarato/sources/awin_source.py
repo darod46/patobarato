@@ -2,9 +2,11 @@
 
 import json
 import logging
+import re
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Any
 
 import httpx
@@ -75,8 +77,32 @@ def _text(value: Any) -> str | None:
     return text or None
 
 
+_CURRENCY_SUFFIX = re.compile(r"^\s*(.*?\d)\s*([A-Za-z]{3})\s*$")
+
+
+def _split_currency(value: Any) -> tuple[Any, str | None]:
+    """Split a trailing ISO currency code ("19.99 EUR") off a price string."""
+    if isinstance(value, str):
+        match = _CURRENCY_SUFFIX.match(value)
+        if match:
+            return match.group(1), match.group(2).upper()
+    return value, None
+
+
+def _feed_price(value: Any) -> Decimal | None:
+    """Strict price parse that tolerates an EUR suffix; other currencies yield None."""
+    number, currency = _split_currency(value)
+    if currency is not None and currency != "EUR":
+        return None
+    return parse_price(number)
+
+
 def _parse_feed_object(raw: dict[str, Any]) -> AwinFeedProduct | None:
-    price = parse_price(raw.get("price"))
+    _, currency = _split_currency(raw.get("price"))
+    if currency is not None and currency != "EUR":
+        logger.debug("Awin feed: dropped product (reason=unsupported_currency)")
+        return None
+    price = _feed_price(raw.get("price"))
     if price is None:
         logger.debug("Awin feed: dropped product (reason=invalid_price)")
         return None
@@ -88,11 +114,12 @@ def _parse_feed_object(raw: dict[str, Any]) -> AwinFeedProduct | None:
     if affiliate_url is None:
         logger.debug("Awin feed: dropped product (reason=no_affiliate_link)")
         return None
-    sale_price = parse_price(raw.get("sale_price"))
+    sale_price = _feed_price(raw.get("sale_price"))
     if sale_price is not None and sale_price >= price:
         sale_price = None
-    availability = str(raw.get("availability") or "").strip().lower()
-    in_stock = True if not availability else availability.startswith("in stock") or availability == "in_stock"
+    availability = str(raw.get("availability") or "").strip().lower().replace("_", " ")
+    # Missing availability defaults to in stock; "preorder" and the like do not count.
+    in_stock = True if not availability else availability.startswith("in stock")
     description = _text(raw.get("description"))
     return AwinFeedProduct(
         external_id=str(raw.get("id")),
@@ -110,17 +137,26 @@ def _parse_feed_object(raw: dict[str, Any]) -> AwinFeedProduct | None:
     )
 
 
-def parse_feed_line(line: str) -> AwinFeedProduct | None:
-    """Map one JSONL feed line to a product; None when unusable (logged at DEBUG)."""
+def _decode_feed_line(line: str) -> dict[str, Any] | None:
     try:
         raw = json.loads(line)
     except ValueError:
-        logger.debug("Awin feed: dropped line (reason=invalid_json)")
+        logger.debug("Awin feed: invalid JSON line skipped")
         return None
-    if not isinstance(raw, dict) or raw.get("id") in (None, ""):
+    return raw if isinstance(raw, dict) else None
+
+
+def _product_from_dict(raw: dict[str, Any]) -> AwinFeedProduct | None:
+    if raw.get("id") in (None, ""):
         logger.debug("Awin feed: dropped line (reason=no_id)")
         return None
     return _parse_feed_object(raw)
+
+
+def parse_feed_line(line: str) -> AwinFeedProduct | None:
+    """Map one JSONL feed line to a product; None when unusable (logged at DEBUG)."""
+    raw = _decode_feed_line(line)
+    return None if raw is None else _product_from_dict(raw)
 
 
 class AwinClient:
@@ -167,33 +203,45 @@ class AwinClient:
         """Stream the advertiser's JSONL feed; raises AwinFeedError on HTTP or feed-reported errors."""
         url = self.feed_url(advertiser_id, locale)
         yielded = dropped = lines = 0
-        async with self._http.stream("GET", url, headers={"Authorization": f"Bearer {self._token}"}) as response:
-            if not response.is_success:
-                raise AwinFeedError(f"HTTP {response.status_code}")
-            async for line in response.aiter_lines():
-                if not line.strip():
-                    continue
-                if lines >= MAX_FEED_LINES:
-                    logger.warning(
-                        "Awin feed of advertiser %s exceeded %d lines; truncated", advertiser_id, MAX_FEED_LINES
-                    )
-                    break
-                lines += 1
-                try:
-                    raw = json.loads(line)
-                except ValueError:
-                    dropped += 1
-                    logger.debug("Awin feed: invalid JSON line skipped")
-                    continue
-                if isinstance(raw, dict) and raw.get("id") is None and ("error" in raw or "message" in raw):
-                    raise AwinFeedError(str(raw.get("message") or raw.get("error")))
-                product = parse_feed_line(line)
-                if product is None:
-                    dropped += 1
-                    continue
-                yielded += 1
-                yield product
-        logger.info("Awin feed of advertiser %s: yielded=%d dropped=%d", advertiser_id, yielded, dropped)
+        truncated = False
+        try:
+            async with self._http.stream(
+                "GET", url, headers={"Authorization": f"Bearer {self._token}"}
+            ) as response:
+                if not response.is_success:
+                    raise AwinFeedError(f"HTTP {response.status_code}")
+                async for line in response.aiter_lines():
+                    if not line.strip():
+                        continue
+                    if lines >= MAX_FEED_LINES:
+                        truncated = True
+                        logger.warning(
+                            "Awin feed of advertiser %s exceeded %d lines; truncated",
+                            advertiser_id,
+                            MAX_FEED_LINES,
+                        )
+                        break
+                    lines += 1
+                    raw = _decode_feed_line(line)
+                    if raw is not None and raw.get("id") is None and ("error" in raw or "message" in raw):
+                        raise AwinFeedError(str(raw.get("message") or raw.get("error")))
+                    product = None if raw is None else _product_from_dict(raw)
+                    if product is None:
+                        dropped += 1
+                        continue
+                    yielded += 1
+                    yield product
+        except httpx.HTTPError as exc:
+            # Only the exception type: httpx messages can embed the URL.
+            raise AwinFeedError(type(exc).__name__) from None
+        finally:
+            logger.info(
+                "Awin feed of advertiser %s: yielded=%d dropped=%d truncated=%s",
+                advertiser_id,
+                yielded,
+                dropped,
+                truncated,
+            )
 
 
 class AwinPromotionsSource:
