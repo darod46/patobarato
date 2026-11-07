@@ -209,3 +209,9 @@ async def test_reference_store_search_link_is_not_an_offer(resolver):
     amazon = "https://www.amazon.es/dp/B084ZK9QVF?tag=cazachollazos-21"
     offers = await extract_offers(_msg(CAZACHOLLAZOS_A, [ECI_SEARCH, amazon]), resolver, registry)
     assert [(o.store, o.asin) for o in offers] == [("amazon", "B084ZK9QVF")]
+
+
+async def test_offer_price_ignores_only_other_stores(resolver, registry):
+    url = "https://www.amazon.es/dp/B09XS7JWHH"
+    offers = await extract_offers(_msg(f"Precio en Amazon: 19,99€ {url}", [url]), resolver, registry)
+    assert offers[0].price == Decimal("19.99")

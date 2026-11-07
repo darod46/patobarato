@@ -51,7 +51,7 @@ async def _store_links(
 
 
 def _build_offer(link: _Link, text: str, source_hashtags: list[str]) -> ParsedOffer:
-    prices = parse_prices(text)
+    prices = parse_prices(text, link.store.id)
     hashtags = list(dict.fromkeys([*source_hashtags, *parse_hashtags(text)]))
     return ParsedOffer(
         asin=link.product_id,
@@ -83,7 +83,8 @@ def _split_blocks(text: str, links: list[_Link]) -> list[str] | None:
     for block in blocks:
         if sum(link.original in block for link in links) != 1:
             return None
-        if parse_prices(block).price is None:
+    for link, block in zip(links, ordered):
+        if parse_prices(block, link.store.id).price is None:
             return None
     return ordered
 

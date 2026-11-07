@@ -5,6 +5,8 @@ import unicodedata
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 
+from patobarato.stores.names import STORE_ALIASES, store_for_alias
+
 # --- Tunable rules -----------------------------------------------------------
 
 # A number as written in Spanish posts: "1.299,99", "1299", "29.99", "29,99".
@@ -31,17 +33,17 @@ STRIKE_MARK = "~~"  # added by the listener around strikethrough text
 STRIKETHROUGH_RE = re.compile(r"~~(.*?)~~", re.DOTALL)
 # Keywords (accent-free, lowercase) that make the amount right after them the price.
 PRICE_KEYWORD_RE = re.compile(r"\b(?:precio final|precio|ahora|oferta)\s*[:\-]?\s*$")
-# "Precio <store>", "Precio en <store>", "PVP <store>": another store's reference price,
-# neither the deal price nor its previous price. Any word right after the keyword marks
-# one, except these generic price words (accent-free, lowercase).
-GENERIC_PRICE_WORDS = frozenset(
-    {
-        "final", "oferta", "actual", "habitual", "anterior", "original", "minimo",
-        "recomendado", "normal", "rebajado", "total", "especial", "ahora", "antes", "hoy",
-    }
+# "Precio <store>", "Precio en <store>", "PVP <store>": when <store> is a known store other
+# than the offer's own, the amount is that store's reference price, neither the deal
+# price nor its previous price. Unknown words ("Precio Prime 19,99€") change nothing.
+_STORE_ALIAS_RE = "|".join(
+    r"\s+".join(map(re.escape, alias.split()))
+    for alias in sorted(
+        {a for aliases in STORE_ALIASES.values() for a in aliases}, key=len, reverse=True
+    )
 )
 REFERENCE_STORE_RE = re.compile(
-    r"\b(?:precio|pvp)\s+(?:(?:en|de|del)\s+)?(?!(?:en|de|del)\b)(?P<word>[^\W\d_][\w'&.\-]*)"
+    rf"\b(?:precio|pvp)\s+(?:(?:en|de|del)\s+)?(?P<store>{_STORE_ALIAS_RE})\b"
 )
 # Max characters between the store name and its amount.
 REFERENCE_GAP = 20
@@ -133,11 +135,11 @@ def _overlaps(start: int, end: int, spans: list[Span]) -> bool:
     return any(start < span_end and end > span_start for span_start, span_end in spans)
 
 
-def _reference_spans(folded: str) -> list[Span]:
+def _reference_spans(folded: str, own_store: str | None) -> list[Span]:
     """Spans of amounts quoted as another store's price ("Precio MediaMarkt: 25€")."""
     spans: list[Span] = []
     for m in REFERENCE_STORE_RE.finditer(folded):
-        if m.group("word") in GENERIC_PRICE_WORDS:
+        if store_for_alias(m.group("store")) == own_store:
             continue
         line_end = folded.find("\n", m.end())
         window = folded[m.end() : line_end if line_end != -1 else len(folded)]
@@ -198,9 +200,10 @@ def _find_coupon(text: str, folded: str) -> str | None:
     return None
 
 
-def parse_prices(text: str) -> PriceInfo:
+def parse_prices(text: str, own_store: str | None = None) -> PriceInfo:
+    """Prices in a post; ``own_store`` (a store id) is the store the deal is for."""
     folded = _fold(text)
-    references = _reference_spans(folded)
+    references = _reference_spans(folded, own_store)
     previous, span = _find_previous(folded, references)
     price = _find_price(folded, references + ([span] if span else []))
     if price is None or (previous is not None and previous <= price):

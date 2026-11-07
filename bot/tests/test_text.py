@@ -263,3 +263,30 @@ def test_brand_separator_without_variation_selector():
 
 def test_brand_separator_title_is_capped():
     assert len(parse_title("Oferta\nMarca ▫️ " + "x" * 300)) == 200
+
+
+@pytest.mark.parametrize(
+    ("text", "price"),
+    [
+        ("Precio en Amazon: 19,99€", Decimal("19.99")),
+        ("Precio Amazon 19,99€", Decimal("19.99")),
+        ("Precio con cupón: 12€", Decimal("12")),
+        ("Precio Prime 19,99€", Decimal("19.99")),
+        ("Precio Black Friday 49€", Decimal("49")),
+        ("Precio por unidad 2€", Decimal("2")),
+        ("Precio con descuento 9€", Decimal("9")),
+        ("Precio aplicando cupón 12€", Decimal("12")),
+        ("Precio Mediamarkt 30€ / Amazon 25€", Decimal("25")),
+    ],
+)
+def test_own_store_and_unknown_words_keep_the_price(text, price):
+    assert parse_prices(text, own_store="amazon").price == price
+
+
+def test_own_store_reference_is_the_deal_price():
+    assert parse_prices("Precio Mediamarkt 30€ / Amazon 25€", own_store="mediamarkt").price == Decimal("30")
+
+
+def test_other_store_price_ignored_with_own_store():
+    assert parse_prices(_cazachollazos("a"), own_store="amazon").price is None
+    assert parse_prices("Precio en Fnac: 30€\nCascos 25€", own_store="amazon").price == Decimal("25")
