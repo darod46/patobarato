@@ -1,6 +1,6 @@
 # PatoBarato web
 
-Web pública de [PatoBarato](https://www.patobarato.com): Next.js 16 (App Router), React, TypeScript y Tailwind v4. Los datos vienen de Supabase con la clave pública (anon) y solo se leen las vistas `web_deals`, `web_hashtags`, `web_coupons` y `web_stores`.
+Web pública de [PatoBarato](https://www.patobarato.com): Next.js 16 (App Router), React, TypeScript y Tailwind v4. Los datos vienen de Supabase con la clave pública (anon) y solo se leen las vistas `web_deals`, `web_hashtags`, `web_coupons`, `web_stores`, `web_guides`, `web_guide_items` y `web_guides_by_product`.
 
 ## Desarrollo local
 
@@ -49,12 +49,14 @@ Notas:
 - `/tiendas`: índice de tiendas con chollos o cupones activos (vista `web_stores`), con sus recuentos. `noindex` salvo que haya más de una tienda con datos; si la vista no carga, muestra un aviso en lugar de datos inventados.
 - `/tiendas/{tienda}`: chollos y cupones de una tienda (el slug es el id de `src/lib/stores.ts`; 404 si no existe). Cabecera con los recuentos reales, cupones vigentes de la tienda y listado con orden, hashtags y «cargar más». `noindex` si tiene menos de 3 chollos.
 - `?tienda={id}`: filtra por tienda el listado de la portada (y de `/buscar`) y lo marca con chips; en `/tiendas/{tienda}` se ignora porque la tienda viene de la ruta.
+- `/guias`: índice de guías de compra publicadas (vista `web_guides`), más recientes primero. `noindex` si no hay ninguna.
+- `/guias/{slug}`: una guía con sus productos (vista `web_guide_items`), precios y cupones de la tienda. `noindex` mientras sus precios no estén frescos (ver «Guías de compra»); 404 si el slug no existe o no está publicada.
 - `/aviso-legal`, `/privacidad`, `/cookies`, `/afiliados`, `/contacto`: páginas estáticas. Los textos llevan marcadores `[TITULAR]`, `[NIF]`, `[DIRECCIÓN]`, `[EMAIL]`, `[CIUDAD]`, `[PLAZO]` que hay que sustituir.
 - `/oferta/{tienda}/{slug}-{id}`: ficha de producto (Amazon y AliExpress). Las tiendas de Awin usan `/oferta/{tienda}/{id}`, con el id codificado como porcentaje. Redirige con 308 a la URL canónica si el slug no coincide; 404 si la oferta no existe.
 - `/chollos/{hashtag}`: listado por hashtag. `noindex` si tiene menos de 3 ofertas.
 - `/buscar`: ruta interna a la que reescriben `/?q=`, `/?tag=` y `/?orden=`; siempre `noindex`. Cualquier URL con `?q=` lleva además `X-Robots-Tag: noindex`.
 - `/go/{ASIN}`: página de salto a Amazon (`public/go.html`, añade el tag de afiliado por script).
-- `/sitemap.xml` y `/robots.txt`: generados por `src/app/sitemap.ts` y `src/app/robots.ts`. robots.txt bloquea `/go/` y `/buscar`.
+- `/sitemap.xml` y `/robots.txt`: generados por `src/app/sitemap.ts` y `src/app/robots.ts`. El sitemap incluye `/guias` y `/guias/{slug}` (con `lastModified` = `updated_at`) aunque una guía aún no tenga precios, porque la página se marca `noindex` por su cuenta. robots.txt bloquea `/go/` y `/buscar`.
 - `/og.png`: imagen Open Graph (`public/og.png`), generada con `node scripts/render-og.mjs` a partir de `scripts/og.html` (necesita Playwright).
 
 ## Caché (ISR)
@@ -78,13 +80,27 @@ Solo iconos de [Lucide](https://lucide.dev) vía `lucide-react`; `src/icons.test
 
 Los cupones también se sincronizan desde Awin (ver el README del bot); además se pueden insertar a mano en la tabla `coupons` desde el panel de Supabase (`store` con el id de `src/lib/stores.ts`, p. ej. `aliexpress`; `code`; `title` como «−6 € en 40 €»; `conditions`; `url` de afiliado opcional; `starts_at`, `expires_at`, `active`). La vista `web_coupons` solo devuelve los vigentes; la portada los recoge en ≤ 60 s y `/cupones` en ≤ 600 s.
 
+## Guías de compra
+
+Vistas: `web_guides` (una fila por guía publicada, con `prices_checked_at`), `web_guide_items` (un producto por fila, con su oferta en cada tienda, el precio y el cupón vigente más valioso) y `web_guides_by_product` (qué guías citan cada producto, para enlazarlas desde la ficha). `web_coupons` añade `discount_amount`, `discount_pct` y `min_purchase` para calcular el precio final con el cupón.
+
+Hoy una guía se publica con SQL, hasta que exista el panel de administración:
+
+1. Inserta la fila en `guides` (`slug` en minúsculas con guiones, `title`, `subtitle`, `category`, `intro_md`, `how_to_choose_md`, `faq` como `[{"q": "...", "a_md": "..."}]`, `reading_minutes`) con `status = 'draft'`.
+2. Añade los productos en `guide_items` (`guide_id`, `position`, `name`, `award`, `summary_md`, `pros`, `cons`, `specs`) y sus tiendas en `guide_item_stores` (`store`, `external_id` = ASIN o id de la tienda, `url` canónica, `note`).
+3. Cuando el contenido esté listo, pon `status = 'published'` y `published_at`. La guía aparece en `/guias` y en el sitemap.
+
+El ejemplo completo es `supabase/migrations/20261108000001_guides_seed.sql` (la guía de freidoras de aire, como borrador con los valores entre corchetes por rellenar).
+
+Los precios los actualiza el bot con la fuente `guide_prices` (cada 6 h, `every_minutes = 360`), que escribe en `product_prices` para los productos de las guías. Una guía sin precios frescos (menos de 48 h) se sirve igualmente, pero con `noindex` y con la fecha de comprobación visible; así no se indexa una guía con precios antiguos.
+
 ## Calendario de eventos
 
 `src/content/events.ts` es la lista estática de eventos (11.11, Black Friday, rebajas…). La barra de anuncio muestra el siguiente; el bloque de eventos, los cuatro siguientes.
 
 ## Seguridad
 
-La web solo usa la clave pública (anon) de Supabase y solo lee las vistas `web_deals`, `web_hashtags`, `web_coupons` y `web_stores`. Nunca pongas la clave `service_role` en la web ni en Vercel. `node scripts/check-views.mjs` comprueba con la clave anon que esas vistas se leen y que la tabla `coupons` no.
+La web solo usa la clave pública (anon) de Supabase y solo lee las vistas `web_deals`, `web_hashtags`, `web_coupons`, `web_stores`, `web_guides`, `web_guide_items` y `web_guides_by_product`. Nunca pongas la clave `service_role` en la web ni en Vercel. `node scripts/check-views.mjs` comprueba con la clave anon que esas vistas se leen y que la tabla `coupons` no.
 
 ## Despliegue en Vercel
 
