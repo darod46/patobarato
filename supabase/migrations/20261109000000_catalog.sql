@@ -1,5 +1,6 @@
 -- Store catalogue (Awin product feeds) and the full-text search function the web calls with the anon key.
-create extension if not exists pg_trgm;
+create schema if not exists extensions;
+create extension if not exists pg_trgm with schema extensions;
 
 create table catalog_products (
     id bigint generated always as identity primary key,
@@ -26,7 +27,7 @@ create table catalog_products (
     unique (store, external_id)
 );
 create index catalog_products_tsv on catalog_products using gin (tsv);
-create index catalog_products_title_trgm on catalog_products using gin (title gin_trgm_ops);
+create index catalog_products_title_trgm on catalog_products using gin (title extensions.gin_trgm_ops);
 create index catalog_products_store_url on catalog_products (store, url);
 
 create table catalog_feeds (
@@ -53,13 +54,13 @@ create function web_catalog_search(q text, max int default 24)
 returns table (store text, external_id text, title text, brand text, price numeric,
                sale_price numeric, currency char(3), image_url text, url text,
                affiliate_url text, updated_at timestamptz)
-language sql stable security definer set search_path = public as $$
+language sql stable security definer set search_path = public, extensions as $$
     with query as (select websearch_to_tsquery('spanish', q) as tsq, lower(q) as raw)
     select p.store, p.external_id, p.title, p.brand, p.price, p.sale_price, p.currency,
            p.image_url, p.url, p.affiliate_url, p.updated_at
     from catalog_products p, query
     where length(btrim(q)) >= 2 and p.in_stock
-      and (p.tsv @@ query.tsq or similarity(lower(p.title), query.raw) > 0.3)
+      and (p.tsv @@ query.tsq or p.title % q)
     order by ts_rank(p.tsv, query.tsq) desc, similarity(lower(p.title), query.raw) desc, p.id
     limit greatest(1, least(max, 48));
 $$;
