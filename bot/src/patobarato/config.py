@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     stale_after_minutes: int = 30
     sources_refresh_seconds: int = 300
     http_timeout_seconds: float = 10.0
+    guide_price_delay_seconds: float = 1.5
     aliexpress_app_key: str | None = None
     aliexpress_app_secret: str | None = None
     aliexpress_tracking_id: str | None = None

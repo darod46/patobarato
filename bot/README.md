@@ -154,7 +154,28 @@ Los cupones de Awin se guardan en la tabla `coupons`; cuando un cupón deja de a
 
 El ejecutor de cupones de Awin solo existe si están `AWIN_PUBLISHER_ID` y `AWIN_API_TOKEN`; los merchant ids salen de `AWIN_MERCHANTS` o, por fuente, de `config.merchants` (que tiene prioridad). Si faltan las credenciales de una tienda, esa tienda se omite con un aviso en el log y el bot sigue funcionando con el resto. Una fila de `sources` de un tipo sin credenciales simplemente no se ejecuta. Si una fuente `awin_promotions` acaba sin ningún merchant id (ni en `config` ni en `AWIN_MERCHANTS`), registra un aviso y no hace nada.
 
-## 7. Amazon Afiliados
+## 7. Guías de compra y precios
+
+El ejecutor `guide_prices` refresca el precio de todos los productos de las guías **publicadas** (las guías en borrador, con ids de relleno como `[ASIN]`, nunca se consultan). Para cada producto lee el precio con el lector de su tienda y lo guarda junto con la hora de la comprobación; si la lectura falla, conserva el último precio y anota el error (`no price`, o `store_disabled` si la tienda no está activa en el bot). Las peticiones van una detrás de otra, con una pausa de `GUIDE_PRICE_DELAY_SECONDS` segundos (por defecto 1,5) entre productos. Un producto que ya existe en `products` conserva su título y su URL; solo los nuevos toman el nombre de la guía.
+
+El ejecutor existe siempre; hay que dar de alta su fuente (sin ella no se ejecuta):
+
+```sql
+insert into sources (type, identifier, country, active, config, every_minutes, hashtags)
+values ('guide_prices', 'guide-prices', 'ES', true, '{}', 360, '{}');
+```
+
+### Cómo dar de alta una guía por SQL
+
+Las guías se escriben directamente en la base de datos. Parte de `supabase/migrations/20261108000001_guides_seed.sql`: crea la guía como borrador con sus productos y sus tiendas. Sustituye todos los valores `[CORCHETES]` (ids de tienda, URLs y textos pendientes) y, cuando esté lista, publícala:
+
+```sql
+update guides set status = 'published', published_at = now() where slug = 'freidoras-de-aire-menos-100';
+```
+
+En el siguiente ciclo del planificador el ejecutor empezará a rellenar los precios de la guía.
+
+## 8. Amazon Afiliados
 
 Recuerda registrar el canal @patobarato en tu cuenta de Amazon Afiliados y comprobar que el tag `patobarato-21` está asociado a él; si no, las comisiones no se contabilizan.
 

@@ -23,6 +23,7 @@ from patobarato.publishing.telegram_publisher import TelegramPublisher
 from patobarato.sources.aliexpress_source import AliExpressSource
 from patobarato.sources.api_scheduler import ApiScheduler, ApiSourceRunner
 from patobarato.sources.awin_source import AwinClient, AwinPromotionsSource
+from patobarato.sources.guide_prices import GuidePriceRefresher
 from patobarato.sources.telegram_listener import TelegramListener, make_photo_provider
 from patobarato.storage.repository import Repository
 from patobarato.storage.supabase_repo import SupabaseRepository
@@ -121,6 +122,9 @@ def build_runners(
             settings.awin_api_token,
         )
         runners.append(AwinPromotionsSource(client, repo, settings))
+    runners.append(
+        GuidePriceRefresher(registry, repo, clock, delay_seconds=settings.guide_price_delay_seconds)
+    )
     return runners
 
 

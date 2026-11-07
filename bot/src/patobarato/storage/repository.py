@@ -29,6 +29,10 @@ class Repository(Protocol):
 
     async def upsert_product(self, offer: ParsedOffer) -> int: ...
 
+    async def find_product_id(self, store: str, country: str, asin: str) -> int | None:
+        """The id of an existing product, or None; never writes."""
+        ...
+
     async def insert_offer(
         self,
         product_id: int,
@@ -192,6 +196,9 @@ class InMemoryRepository(Repository):
         self.product_titles[product_id] = offer.title
         self.product_urls[product_id] = offer.product_url
         return product_id
+
+    async def find_product_id(self, store: str, country: str, asin: str) -> int | None:
+        return self._products.get((store, country, asin))
 
     async def insert_offer(
         self,

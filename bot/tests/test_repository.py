@@ -274,3 +274,11 @@ async def test_upsert_product_price_clears_error_on_success():
     await repo.upsert_product_price(1, checked_at=NOW, price=Decimal("5"))
     assert repo.prices[1]["error"] is None
     assert repo.prices[1]["price"] == Decimal("5")
+
+
+async def test_find_product_id_returns_id_or_none():
+    repo = InMemoryRepository()
+    assert await repo.find_product_id("amazon", "ES", "B000000001") is None
+    product_id = await repo.upsert_product(make_offer())
+    assert await repo.find_product_id("amazon", "ES", "B000000001") == product_id
+    assert await repo.find_product_id("amazon", "PT", "B000000001") is None

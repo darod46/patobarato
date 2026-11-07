@@ -85,6 +85,21 @@ class SupabaseRepository:
         response = await asyncio.to_thread(run)
         return response.data[0]["id"]
 
+    async def find_product_id(self, store: str, country: str, asin: str) -> int | None:
+        def run():
+            return (
+                self._client.table("products")
+                .select("id")
+                .eq("store", store)
+                .eq("country", country)
+                .eq("asin", asin)
+                .limit(1)
+                .execute()
+            )
+
+        response = await asyncio.to_thread(run)
+        return response.data[0]["id"] if response.data else None
+
     async def insert_offer(
         self,
         product_id: int,

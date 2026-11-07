@@ -119,3 +119,13 @@ async def test_upsert_product_price_error_sends_minimal_payload():
     assert args[0] == {"product_id": 7, "checked_at": NOW.isoformat(), "error": "captcha"}
     assert kwargs == {"on_conflict": "product_id"}
     assert not any(n == "select" for n, _, _ in client.log)
+
+
+async def test_find_product_id_selects_by_key_and_returns_none_when_missing():
+    client = _Client([{"id": 9}])
+    assert await SupabaseRepository(client).find_product_id("awin", "ES", "p1") == 9
+    assert ("table", ("products",), {}) in client.log
+    for column, value in (("store", "awin"), ("country", "ES"), ("asin", "p1")):
+        assert ("eq", (column, value), {}) in client.log
+    assert ("limit", (1,), {}) in client.log
+    assert await SupabaseRepository(_Client([])).find_product_id("awin", "ES", "p1") is None

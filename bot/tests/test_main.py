@@ -272,7 +272,7 @@ def test_build_runners_includes_aliexpress_with_credentials():
 
     runners = main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None)
 
-    assert [r.type for r in runners] == ["aliexpress_api"]
+    assert [r.type for r in runners] == ["aliexpress_api", "guide_prices"]
 
 
 def test_build_runners_is_empty_without_credentials():
@@ -285,7 +285,9 @@ def test_build_runners_is_empty_without_credentials():
     http = httpx.AsyncClient()
     registry = build_registry(settings, http, http)
 
-    assert main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None) == []
+    assert [
+        r.type for r in main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None)
+    ] == ["guide_prices"]
 
 
 def test_build_runners_includes_awin_with_publisher_and_token():
@@ -301,7 +303,7 @@ def test_build_runners_includes_awin_with_publisher_and_token():
 
     runners = main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None, http)
 
-    assert [r.type for r in runners] == ["awin_promotions"]
+    assert [r.type for r in runners] == ["awin_promotions", "guide_prices"]
 
 
 def test_build_runners_skips_awin_without_token_or_publisher():
@@ -317,4 +319,22 @@ def test_build_runners_skips_awin_without_token_or_publisher():
     ):
         settings = _ali_settings(**kw)
         registry = build_registry(settings, http, http)
-        assert main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None, http) == []
+        assert [
+            r.type
+            for r in main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None, http)
+        ] == ["guide_prices"]
+
+
+def test_build_runners_always_includes_guide_prices():
+    import httpx
+
+    from patobarato.storage.repository import InMemoryRepository
+    from patobarato.stores.registry import build_registry
+
+    settings = _ali_settings()
+    http = httpx.AsyncClient()
+    registry = build_registry(settings, http, http)
+
+    runners = main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None)
+
+    assert [r.type for r in runners] == ["guide_prices"]
