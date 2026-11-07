@@ -112,6 +112,29 @@ class GuideProduct:
 
 
 @dataclass(frozen=True)
+class EventRef:
+    """An event with an AliExpress campaign configured (``events``)."""
+
+    id: int
+    slug: str
+    aliexpress_promo: str
+
+
+@dataclass(frozen=True)
+class EventPromoRow:
+    """One promo product of an event (``event_promos``)."""
+
+    external_id: str
+    title: str
+    price: Decimal
+    original_price: Decimal | None
+    image_url: str | None
+    affiliate_url: str
+    position: int
+    currency: str = "EUR"
+
+
+@dataclass(frozen=True)
 class AwinFeedProduct:
     external_id: str
     title: str

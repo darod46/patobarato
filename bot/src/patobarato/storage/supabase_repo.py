@@ -10,6 +10,8 @@ from patobarato.models import (
     ApiSource,
     CatalogRow,
     CouponUpsert,
+    EventPromoRow,
+    EventRef,
     GuideProduct,
     LastPublication,
     OfferStatus,
@@ -446,6 +448,47 @@ class SupabaseRepository:
             self._client.table("catalog_products").upsert(
                 payload, on_conflict="store,external_id"
             ).execute()
+
+        await asyncio.to_thread(run)
+
+    async def list_events_with_promo(self) -> list[EventRef]:
+        def run():
+            return (
+                self._client.table("events")
+                .select("id, slug, aliexpress_promo")
+                .not_.is_("aliexpress_promo", "null")
+                .neq("aliexpress_promo", "")
+                .order("id")
+                .execute()
+            )
+
+        result = await asyncio.to_thread(run)
+        return [
+            EventRef(r["id"], r["slug"], r["aliexpress_promo"]) for r in result.data or []
+        ]
+
+    async def replace_event_promos(self, event_id: int, rows: list[EventPromoRow]) -> None:
+        synced_at = datetime.now(UTC).isoformat()
+        payload = [
+            {
+                "event_id": event_id,
+                "external_id": r.external_id,
+                "title": r.title,
+                "price": _money(r.price),
+                "original_price": _money(r.original_price),
+                "currency": r.currency,
+                "image_url": r.image_url,
+                "affiliate_url": r.affiliate_url,
+                "position": r.position,
+                "synced_at": synced_at,
+            }
+            for r in rows
+        ]
+
+        def run():
+            self._client.table("event_promos").delete().eq("event_id", event_id).execute()
+            if payload:
+                self._client.table("event_promos").insert(payload).execute()
 
         await asyncio.to_thread(run)
 

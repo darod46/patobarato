@@ -2,7 +2,14 @@ import dataclasses
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
-from patobarato.models import CouponUpsert, GuideProduct, OfferStatus, ParsedOffer
+from patobarato.models import (
+    CouponUpsert,
+    EventPromoRow,
+    EventRef,
+    GuideProduct,
+    OfferStatus,
+    ParsedOffer,
+)
 from patobarato.storage.repository import InMemoryRepository
 
 NOW = datetime(2026, 11, 4, 12, 0, tzinfo=UTC)
@@ -337,3 +344,28 @@ async def test_record_feed_run_overwrites_and_find_catalog_product_by_url():
     assert (await other.find_catalog_product("pccomponentes", "https://shop/y")).external_id == "new"
     assert await repo.find_catalog_product("mediamarkt", "https://shop/x") is None
     assert await repo.find_catalog_product("pccomponentes", "https://shop/none") is None
+
+
+def _promo(external_id: str) -> EventPromoRow:
+    return EventPromoRow(
+        external_id, f"t{external_id}", Decimal("9.99"), None, None, f"https://aff/{external_id}", 1
+    )
+
+
+async def test_list_events_with_promo_skips_events_without_campaign():
+    repo = InMemoryRepository()
+    repo.add_event("black-friday")
+    repo.add_event("empty", aliexpress_promo="")
+    ali = repo.add_event("aliexpress-1111", aliexpress_promo="11.11 Big Sale", status="draft")
+    assert [e.slug for e in await repo.list_events_with_promo()] == ["aliexpress-1111"]
+    assert (await repo.list_events_with_promo())[0] == EventRef(
+        ali, "aliexpress-1111", "11.11 Big Sale"
+    )
+
+
+async def test_replace_event_promos_drops_previous_rows():
+    repo = InMemoryRepository()
+    ev = repo.add_event("x", aliexpress_promo="p")
+    await repo.replace_event_promos(ev, [_promo("1"), _promo("2")])
+    await repo.replace_event_promos(ev, [_promo("3")])
+    assert [r.external_id for r in repo.event_promos[ev]] == ["3"]

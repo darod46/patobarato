@@ -3,7 +3,7 @@
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from patobarato.models import ParsedOffer
+from patobarato.models import EventPromoRow, EventRef, ParsedOffer
 from patobarato.storage.supabase_repo import SupabaseRepository
 
 NOW = datetime(2026, 11, 4, 12, 0, tzinfo=UTC)
@@ -20,6 +20,12 @@ class _Query:
             return self
 
         return call
+
+    @property
+    def not_(self):
+        # postgrest-py exposes ``not_`` as a property that negates the next filter
+        self._log.append(("not_", (), {}))
+        return self
 
     def execute(self):
         class R:
@@ -242,3 +248,49 @@ async def test_find_catalog_product_prefers_in_stock_and_latest():
     assert ("eq", ("in_stock", True), {}) in client.log
     assert ("order", ("updated_at",), {"desc": True}) in client.log
     assert names.index("order") < names.index("limit")
+
+
+async def test_list_events_with_promo_filters_null_and_empty():
+    client = _Client([
+        {"id": 2, "slug": "aliexpress-1111", "aliexpress_promo": "11.11 Big Sale"},
+        {"id": 5, "slug": "x", "aliexpress_promo": "p"},
+    ])
+    events = await SupabaseRepository(client).list_events_with_promo()
+    assert events == [
+        EventRef(2, "aliexpress-1111", "11.11 Big Sale"),
+        EventRef(5, "x", "p"),
+    ]
+    assert ("table", ("events",), {}) in client.log
+    names = [(n, a) for n, a, _ in client.log]
+    assert ("select", ("id, slug, aliexpress_promo",)) in names
+    assert names.index(("not_", ())) < names.index(("is_", ("aliexpress_promo", "null")))
+    assert ("neq", ("aliexpress_promo", "")) in names
+    assert ("order", ("id",)) in names
+
+
+async def test_replace_event_promos_deletes_then_inserts():
+    client = _Client([])
+    rows = [
+        EventPromoRow("1", "A", Decimal("19.99"), None, None, "https://aff/1", 1),
+        EventPromoRow("2", "B", Decimal("5"), Decimal("9.5"), "https://img/2", "https://aff/2", 2),
+    ]
+    await SupabaseRepository(client).replace_event_promos(7, rows)
+    ops = [(n, a) for n, a, _ in client.log if n in ("table", "delete", "eq", "insert")]
+    assert [o[0] for o in ops] == ["table", "delete", "eq", "table", "insert"]
+    assert ops[0][1] == ("event_promos",) and ops[3][1] == ("event_promos",)
+    assert ops[2][1] == ("event_id", 7)
+    payload = ops[4][1][0]
+    assert [p["external_id"] for p in payload] == ["1", "2"]
+    assert payload[0]["event_id"] == 7
+    assert payload[0]["price"] == "19.99" and payload[0]["original_price"] is None
+    assert payload[0]["position"] == 1 and payload[0]["currency"] == "EUR"
+    assert payload[1]["original_price"] == "9.5" and payload[1]["image_url"] == "https://img/2"
+    assert payload[0]["affiliate_url"] == "https://aff/1"
+    assert datetime.fromisoformat(payload[0]["synced_at"]).tzinfo is not None
+
+
+async def test_replace_event_promos_empty_only_deletes():
+    client = _Client([])
+    await SupabaseRepository(client).replace_event_promos(7, [])
+    names = [n for n, _, _ in client.log]
+    assert "delete" in names and "insert" not in names

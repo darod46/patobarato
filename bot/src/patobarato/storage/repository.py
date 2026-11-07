@@ -8,6 +8,8 @@ from patobarato.models import (
     ApiSource,
     CatalogRow,
     CouponUpsert,
+    EventPromoRow,
+    EventRef,
     GuideProduct,
     LastPublication,
     OfferStatus,
@@ -125,6 +127,14 @@ class Repository(Protocol):
         """
         ...
 
+    async def list_events_with_promo(self) -> list[EventRef]:
+        """Events (any status) with a non-empty ``aliexpress_promo``, ordered by id."""
+        ...
+
+    async def replace_event_promos(self, event_id: int, rows: list[EventPromoRow]) -> None:
+        """Deletes the event's promos, then inserts ``rows`` with ``synced_at`` = now."""
+        ...
+
     async def record_feed_run(
         self,
         store: str,
@@ -156,6 +166,8 @@ class InMemoryRepository(Repository):
         self._guide_products: list[tuple[GuideProduct, bool]] = []
         self.prices: dict[int, dict] = {}
         self.catalog: dict[tuple[str, str], CatalogRow] = {}
+        self._events: dict[int, tuple[str, str | None, str]] = {}
+        self._event_promos: dict[int, list[EventPromoRow]] = {}
         self.feed_runs: dict[tuple[str, int], dict] = {}
         self._next_id = {
             "source": 1,
@@ -424,6 +436,27 @@ class InMemoryRepository(Repository):
                 self.catalog[key] = dataclasses.replace(row, in_stock=False)
                 count += 1
         return count
+
+    def add_event(
+        self, slug: str, aliexpress_promo: str | None = None, status: str = "published"
+    ) -> int:
+        event_id = max(self._events, default=0) + 1
+        self._events[event_id] = (slug, aliexpress_promo, status)
+        return event_id
+
+    @property
+    def event_promos(self) -> dict[int, list[EventPromoRow]]:
+        return self._event_promos
+
+    async def list_events_with_promo(self) -> list[EventRef]:
+        return [
+            EventRef(event_id, slug, promo)
+            for event_id, (slug, promo, _status) in sorted(self._events.items())
+            if promo
+        ]
+
+    async def replace_event_promos(self, event_id: int, rows: list[EventPromoRow]) -> None:
+        self._event_promos[event_id] = list(rows)
 
     async def record_feed_run(
         self,
