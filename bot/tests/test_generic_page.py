@@ -114,3 +114,85 @@ async def test_fetch_product_meta():
     meta = await fetch_product_meta(http, URL)
     assert meta is not None and meta.price == Decimal("89.99")
     assert await fetch_product_meta(client(lambda r: httpx.Response(500)), URL) is None
+
+
+import pytest
+
+
+@pytest.mark.parametrize(
+    "raw,expected",
+    [
+        ("1.234", None),
+        ("1,234", None),
+        ("-5", None),
+        ("1e3", None),
+        ("0.004", None),
+        ("12.345", None),
+        ("1.234,56", Decimal("1234.56")),
+        ("1,234.56", Decimal("1234.56")),
+        ("89,99", Decimal("89.99")),
+        ("12.5", Decimal("12.50")),
+        ("0", None),
+        (1e-7, None),
+        (12.5, Decimal("12.50")),
+        (1000, Decimal("1000.00")),
+    ],
+)
+def test_price_parsing_is_strict(raw, expected):
+    import json as _json
+
+    page = '<script type="application/ld+json">%s</script>' % _json.dumps(
+        {"@type": "Product", "offers": {"price": raw}}
+    )
+    assert product_meta(page).price == expected
+
+
+def _two_products() -> str:
+    a = '{"@type":"Product","url":"https://s.example/a","offers":{"price":"10.00","priceCurrency":"EUR"}}'
+    b = '{"@type":"Product","url":"https://s.example/b","offers":{"price":"20.00","priceCurrency":"EUR"}}'
+    return f'<script type="application/ld+json">{b}</script><script type="application/ld+json">{a}</script>'
+
+
+def test_conflicting_products_without_url_match_is_none():
+    assert product_meta(_two_products()).price is None
+    assert product_meta(_two_products(), "https://s.example/zzz").price is None
+
+
+def test_conflicting_products_prefers_url_match():
+    assert product_meta(_two_products(), "https://s.example/a/").price == Decimal("10.00")
+
+
+def test_agreeing_products_return_price():
+    one = '{"@type":"Product","offers":{"price":"10.00"}}'
+    page = f'<script type="application/ld+json">[{one},{one}]</script>'
+    assert product_meta(page).price == Decimal("10.00")
+
+
+def test_deep_nesting_does_not_raise():
+    deep = '{"@graph":' * 3000 + "[]" + "}" * 3000
+    page = f'<script type="application/ld+json">{deep}</script>'
+    assert product_meta(page).price is None
+    nested = '{"@graph":' * 50 + '{"@type":"Product","offers":{"price":"5"}}' + "}" * 50
+    assert product_meta(f'<script type="application/ld+json">{nested}</script>').price is None
+
+
+async def test_fetch_never_raises():
+    def boom(request):
+        raise ValueError("bad")
+
+    assert await fetch_product_meta(client(boom), URL) is None
+    assert await og_image(client(boom), URL) is None
+    assert await og_image(client(lambda r: httpx.Response(200)), "http://[bad") is None
+
+
+def test_json_ld_currency_falls_back_to_meta():
+    page = (
+        '<meta property="product:price:currency" content="eur">'
+        '<script type="application/ld+json">{"@type":"Product","offers":{"price":"9.99"}}</script>'
+    )
+    assert product_meta(page).currency == "EUR"
+
+
+def test_json_ld_parsed_before_unescape():
+    page = '<script type="application/ld+json">{"@type":"Product","name":"A &quot;x&quot;","offers":{"price":"9.99"}}</script>'
+    assert product_meta(page).price == Decimal("9.99")

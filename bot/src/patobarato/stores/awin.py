@@ -102,7 +102,11 @@ class AwinStore(BaseStore):
         if meta is None or meta.price is None:
             log.warning("Awin price for %s not found: no usable price in page", product_id)
             return None
-        return PriceQuote(meta.price, meta.previous_price, meta.currency or "EUR", meta.image_url)
+        currency = meta.currency or "EUR"
+        if currency != "EUR":
+            log.warning("Awin price for %s not found: unsupported currency %s", product_id, currency)
+            return None
+        return PriceQuote(meta.price, meta.previous_price, currency, meta.image_url)
 
 
 def awin_store(

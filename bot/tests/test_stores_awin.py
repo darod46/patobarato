@@ -103,9 +103,21 @@ async def test_awin_store_fetch_price_http_error_is_none(caplog):
     with caplog.at_level(logging.WARNING):
         assert await make(http=http).fetch_price("x", URL) is None
     assert URL not in caplog.text
+    assert "HTTP 503" in caplog.text
 
 
 async def test_awin_store_fetch_price_without_http_or_price_is_none():
     assert await make().fetch_price("x", URL) is None
     http = httpx.AsyncClient(transport=httpx.MockTransport(lambda r: httpx.Response(200, text="<head></head>")))
     assert await make(http=http).fetch_price("x", URL) is None
+
+
+async def test_awin_store_fetch_price_rejects_non_eur(caplog):
+    text = (
+        '<script type="application/ld+json">{"@type":"Product","offers":'
+        '{"price":"89.99","priceCurrency":"USD"}}</script>'
+    )
+    http = httpx.AsyncClient(transport=httpx.MockTransport(lambda r: httpx.Response(200, text=text)))
+    with caplog.at_level(logging.WARNING):
+        assert await make(http=http).fetch_price("x", URL) is None
+    assert "USD" in caplog.text
