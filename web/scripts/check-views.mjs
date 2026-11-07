@@ -30,6 +30,7 @@ for (const col of ['discount_pct', 'previous_min_price', 'is_lowest']) {
 }
 const coupons = await rest('web_coupons?select=*&limit=1')
 if (coupons.status !== 200 || !Array.isArray(coupons.body)) problems.push(`web_coupons: HTTP ${coupons.status}`)
+if (coupons.body?.[0] && !('event_id' in coupons.body[0])) problems.push('web_coupons: missing column event_id')
 const table = await rest('coupons?select=*&limit=1')
 if (table.status === 200) problems.push('coupons table is readable by anon (expected permission denied)')
 const stores = await rest('web_stores?select=*&limit=1')
@@ -60,6 +61,15 @@ const search = await fetch(`${url}/rest/v1/rpc/web_catalog_search`, {
 })
 const searchBody = await search.json().catch(() => null)
 if (search.status !== 200 || !Array.isArray(searchBody)) problems.push(`web_catalog_search: HTTP ${search.status}`)
+
+for (const view of ['web_events', 'web_event_promos']) {
+  const r = await rest(`${view}?select=*&limit=1`)
+  if (r.status !== 200 || !Array.isArray(r.body)) problems.push(`${view}: HTTP ${r.status}`)
+}
+for (const t of ['events', 'event_promos']) {
+  const r = await rest(`${t}?select=*&limit=1`)
+  if (r.status === 200) problems.push(`${t} table is readable by anon (expected permission denied)`)
+}
 
 if (problems.length) {
   console.error(problems.join('\n'))
