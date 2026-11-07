@@ -42,7 +42,7 @@ export type Coupon = {
 export type GuideSummary = {
   slug: string
   title: string
-  subtitle: string
+  subtitle: string | null
   category: string
   author: string
   readingMinutes: number

@@ -7,7 +7,7 @@ type Num = number | string | null | undefined
 type GuideRow = {
   slug: string
   title: string
-  subtitle: string
+  subtitle: string | null
   category: string
   author: string
   reading_minutes: Num
@@ -146,7 +146,8 @@ export async function fetchGuide(client: SupabaseClient, slug: string): Promise<
       .select('*')
       .eq('guide_slug', slug)
       .order('position', { ascending: true })
-      .order('store_position', { ascending: true }),
+      .order('store_position', { ascending: true })
+      .order('store', { ascending: true }),
   ])
   if (guideRes.error) throw new Error(guideRes.error.message)
   if (itemsRes.error) throw new Error(itemsRes.error.message)

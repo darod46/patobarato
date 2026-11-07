@@ -126,8 +126,11 @@ describe('fetchGuide', () => {
     expect(m.calls('web_guides')).toContainEqual(['eq', ['slug', 'mejores-aspiradoras']])
     expect(m.calls('web_guides')).toContainEqual(['limit', [1]])
     expect(m.calls('web_guide_items')).toContainEqual(['eq', ['guide_slug', 'mejores-aspiradoras']])
-    expect(m.calls('web_guide_items')).toContainEqual(['order', ['position', { ascending: true }]])
-    expect(m.calls('web_guide_items')).toContainEqual(['order', ['store_position', { ascending: true }]])
+    expect(m.calls('web_guide_items').filter((c) => c[0] === 'order')).toEqual([
+      ['order', ['position', { ascending: true }]],
+      ['order', ['store_position', { ascending: true }]],
+      ['order', ['store', { ascending: true }]],
+    ])
     expect(guide).not.toBeNull()
     expect(guide!.introMd).toBe('Intro')
     expect(guide!.howToChooseMd).toBe('Choose')
@@ -164,6 +167,22 @@ describe('fetchGuide', () => {
       web_guide_items: { data: [], error: null },
     })
     expect(await fetchGuide(m.client, 'nope')).toBeNull()
+  })
+  it('treats a null price_error and null subtitle as false and null', async () => {
+    const m = multiClient({
+      web_guides: { data: [{ ...summaryRow, subtitle: null }], error: null },
+      web_guide_items: { data: [{ ...itemRows[0], price_error: null }], error: null },
+    })
+    const guide = await fetchGuide(m.client, 's')
+    expect(guide!.subtitle).toBeNull()
+    expect(guide!.items[0].stores[0].priceError).toBe(false)
+  })
+  it('rejects when the guide query fails', async () => {
+    const m = multiClient({
+      web_guides: { data: null, error: { message: 'guide boom' } },
+      web_guide_items: { data: [], error: null },
+    })
+    await expect(fetchGuide(m.client, 's')).rejects.toThrow('guide boom')
   })
   it('rejects when either query fails', async () => {
     const m = multiClient({
