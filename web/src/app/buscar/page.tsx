@@ -1,13 +1,12 @@
 import type { Metadata } from 'next'
-import { DealsClient } from '../../components/DealsClient'
+import { SearchClient } from '../../components/SearchClient'
+import { fetchHashtags } from '../../lib/deals'
+import { optional } from '../../lib/optional'
+import { breadcrumbJsonLd, jsonLdScript, searchMetadata } from '../../lib/seo'
 import { fetchStores } from '../../lib/stores-data'
-import { dealsMetadata } from '../../lib/seo'
 import { getSupabase } from '../../lib/supabase'
 
-// Serves `/?q=…`, `/?tag=…` and `/chollos?q=…` (rewritten here by next.config; the browser URL stays the original).
-// Rendered per request for its metadata; the listing itself is fetched on the client as in v1,
-// since the filters are read from the URL after hydration.
-
+// Per request (reads `?q=`): the results themselves are fetched on the client.
 type SearchParams = Record<string, string | string[] | undefined>
 
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value)
@@ -18,14 +17,29 @@ export async function generateMetadata({
   searchParams: Promise<SearchParams>
 }): Promise<Metadata> {
   const params = await searchParams
-  const stores = await loadStores()
-  return dealsMetadata({ q: first(params.q), tag: first(params.tag), stores })
+  return searchMetadata(first(params.q) ?? null)
 }
 
-/** Resolves to [] on any failure, including missing env vars. */
-const loadStores = () => Promise.resolve().then(() => fetchStores(getSupabase())).catch(() => [])
-
-export default async function FilteredDealsPage() {
-  const stores = await loadStores()
-  return <DealsClient now={new Date().toISOString()} stores={stores} />
+export default async function SearchPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const params = await searchParams
+  const initialQ = first(params.q) ?? ''
+  const [tags, stores] = await Promise.all([
+    optional('buscar', () => fetchHashtags(getSupabase(), 12)),
+    optional('buscar', () => fetchStores(getSupabase())),
+  ])
+  const crumbs = breadcrumbJsonLd([
+    { name: 'Inicio', path: '/' },
+    { name: 'Buscar', path: '/buscar' },
+  ])
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(crumbs)} />
+      <SearchClient
+        now={new Date().toISOString()}
+        initialQ={initialQ}
+        tags={tags?.map((h) => h.tag) ?? []}
+        stores={stores ?? []}
+      />
+    </>
+  )
 }

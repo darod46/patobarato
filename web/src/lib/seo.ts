@@ -168,6 +168,20 @@ export function dealsMetadata(params: { q?: string; tag?: string; stores?: Store
   }
 }
 
+/** `/buscar`: canonical on itself; any search is `noindex`. */
+export function searchMetadata(q: string | null): Metadata {
+  const title = 'Buscar chollos · PatoBarato'
+  const description = 'Busca un producto y compara los chollos de PatoBarato, AliExpress y las tiendas con las que trabajamos.'
+  return {
+    title,
+    description,
+    alternates: { canonical: '/buscar' },
+    openGraph: { type: 'website', siteName: 'PatoBarato', locale: 'es_ES', url: '/buscar', title, description, images: [OG_IMAGE] },
+    twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
+    ...(q?.trim() ? { robots: NOINDEX } : {}),
+  }
+}
+
 export function storeMetadata(store: string, deals: number): Metadata {
   const { name, slug } = storeInfo(store)
   const title = `Chollos de ${name} · PatoBarato`

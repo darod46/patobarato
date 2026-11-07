@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { formatPrice } from './format'
-import { OG_IMAGE, breadcrumbJsonLd, couponsMetadata, guideJsonLd, guideMetadata, guidesMetadata, dealsMetadata, hashtagMetadata, homeMetadata, productJsonLd, productMetadata, siteJsonLd, storeMetadata, storesMetadata, jsonLdScript } from './seo'
+import { OG_IMAGE, breadcrumbJsonLd, couponsMetadata, guideJsonLd, guideMetadata, guidesMetadata, dealsMetadata, searchMetadata, hashtagMetadata, homeMetadata, productJsonLd, productMetadata, siteJsonLd, storeMetadata, storesMetadata, jsonLdScript } from './seo'
 import type { Deal, Guide } from './types'
 import { SITE_URL, productPath } from './urls'
 
@@ -305,5 +305,19 @@ describe('dealsMetadata', () => {
       'Los mejores chollos de Amazon y cupones de otras tiendas, seleccionados cada día por PatoBarato.',
     )
     expect(dealsMetadata({}).description).not.toMatch(/Amazon|cupones/)
+  })
+})
+
+describe('searchMetadata', () => {
+  it('is canonical on /buscar and indexable without a query', () => {
+    const meta = searchMetadata(null)
+    expect(meta.title).toBe('Buscar chollos · PatoBarato')
+    expect(meta.alternates?.canonical).toBe('/buscar')
+    expect(meta.robots).toBeUndefined()
+  })
+
+  it('is noindex with a query', () => {
+    expect(searchMetadata('freidora').robots).toEqual({ index: false, follow: true })
+    expect(searchMetadata('  ').robots).toBeUndefined()
   })
 })
