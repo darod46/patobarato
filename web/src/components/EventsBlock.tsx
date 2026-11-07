@@ -1,6 +1,7 @@
-import type { SiteEvent } from '../content/events'
-import { daysUntil, eventDateLabel } from '../lib/events'
+import Link from 'next/link'
+import { daysUntil, eventDateLabel, eventPath } from '../lib/events'
 import { storeNames } from '../lib/stores'
+import type { SiteEvent } from '../lib/types'
 
 type Props = { next: SiteEvent | null; upcoming: SiteEvent[]; now: Date }
 
@@ -20,7 +21,11 @@ export function EventsBlock({ next, upcoming, now }: Props) {
         {next && (
           <div className="flex flex-col justify-center gap-4">
             <span className="text-[13px] font-semibold uppercase tracking-[0.06em] text-accent">Próximo gran evento</span>
-            <h2 className="font-display text-3xl font-bold tracking-[-0.02em] md:text-[40px]">{next.name}</h2>
+            <h2 className="font-display text-3xl font-bold tracking-[-0.02em] md:text-[40px]">
+              <Link href={eventPath(next.slug)} className="inline-flex min-h-11 items-center hover:underline">
+                {next.name}
+              </Link>
+            </h2>
             <p className="font-display text-2xl font-bold text-white/90">{countdown(next, now)}</p>
             {next.stores.length > 0 && (
               <p className="text-[#b7bcc6]">Tiendas: {storeNames(next.stores).join(', ')}.</p>
@@ -31,9 +36,11 @@ export function EventsBlock({ next, upcoming, now }: Props) {
           <span className="mb-1 text-sm font-semibold text-[#b7bcc6]">Calendario de chollos</span>
           {upcoming.length === 0 && <p className="text-[#b7bcc6]">No hay eventos próximos en el calendario.</p>}
           {upcoming.map((event) => (
-            <div key={event.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl bg-[#23262c] px-4 py-3.5">
+            <div key={event.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl bg-[#23262c] px-4 py-1">
               <span className="min-w-16 font-display text-base font-bold">{eventDateLabel(event)}</span>
-              <span className="flex-1 text-[15px]">{event.name}</span>
+              <Link href={eventPath(event.slug)} className="flex min-h-11 flex-1 items-center text-[15px] hover:underline">
+                {event.name}
+              </Link>
               {event.stores.length > 0 && (
                 <span className="text-xs text-[#b7bcc6]">{storeNames(event.stores).join(', ')}</span>
               )}

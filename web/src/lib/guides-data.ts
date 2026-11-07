@@ -51,7 +51,7 @@ type GuideItemRow = {
 }
 
 /** jsonb normally arrives parsed, but accept a JSON string too; anything unusable becomes an empty list. */
-function jsonList<T>(value: unknown): T[] {
+export function jsonList<T>(value: unknown): T[] {
   let v = value
   if (typeof v === 'string') {
     try {

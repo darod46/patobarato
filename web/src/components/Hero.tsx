@@ -1,5 +1,7 @@
-import { Check, Send, TrendingDown } from 'lucide-react'
+import { Check, Send, TrendingDown, Zap } from 'lucide-react'
+import { eventPath } from '../lib/events'
 import { joinNames } from '../lib/text'
+import type { SiteEvent } from '../lib/types'
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
 /** Facts taken from the current listing; a null/false value hides its badge. */
@@ -23,7 +25,14 @@ function Badge({ className, children }: { className: string; children: React.Rea
   )
 }
 
-export function Hero({ highlights, storeNames }: { highlights: HeroHighlights; storeNames: string[] }) {
+type Props = {
+  highlights: HeroHighlights
+  storeNames: string[]
+  /** Event in progress: the primary button then leads to its page. */
+  activeEvent?: SiteEvent | null
+}
+
+export function Hero({ highlights, storeNames, activeEvent = null }: Props) {
   const { topDiscountPct, topDiscountTitle, latestCouponTitle, hasLowest } = highlights
   return (
     <section className="bg-gradient-to-b from-warm to-white">
@@ -42,10 +51,11 @@ export function Hero({ highlights, storeNames }: { highlights: HeroHighlights; s
           </p>
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
             <a
-              href="/#chollos"
-              className={`inline-flex h-13 items-center justify-center rounded-xl bg-primary px-6 text-base font-semibold text-white hover:bg-primary-hover ${FOCUS}`}
+              href={activeEvent ? eventPath(activeEvent.slug) : '/#chollos'}
+              className={`inline-flex h-13 items-center justify-center gap-2 rounded-xl bg-primary px-6 text-base font-semibold text-white hover:bg-primary-hover ${FOCUS}`}
             >
-              Ver chollos de hoy
+              {activeEvent && <Zap size={18} aria-hidden="true" />}
+              {activeEvent ? `Chollos del ${activeEvent.name}` : 'Ver chollos de hoy'}
             </a>
             <a
               href="https://t.me/patobarato"

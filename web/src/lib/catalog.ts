@@ -15,7 +15,7 @@ export type CatalogProduct = {
   affiliateUrl: string
 }
 
-type CatalogRow = {
+export type CatalogRow = {
   store: string
   external_id: string
   title: string
@@ -26,7 +26,8 @@ type CatalogRow = {
   affiliate_url: string
 }
 
-function toProduct(row: CatalogRow): CatalogProduct | null {
+/** Maps a catalog row (regular `price`, optional lower `sale_price`) to a product; null when it has no usable price. */
+export function catalogProductFromRow(row: CatalogRow): CatalogProduct | null {
   const regular = row.price === null || row.price === '' ? NaN : Number(row.price)
   if (!Number.isFinite(regular) || regular <= 0) return null
   const rawSale = numOrNull(row.sale_price)
@@ -55,6 +56,6 @@ export async function fetchCatalogSearch(
   const { data, error } = await client.rpc('web_catalog_search', { q, max })
   if (error) throw new Error(error.message)
   return ((data ?? []) as CatalogRow[])
-    .map(toProduct)
+    .map((row) => catalogProductFromRow(row))
     .filter((p): p is CatalogProduct => p !== null)
 }

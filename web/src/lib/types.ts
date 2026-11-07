@@ -96,3 +96,24 @@ export type Guide = Omit<GuideSummary, 'items'> & {
   faq: { q: string; aMd: string }[]
   items: GuideItem[]
 }
+
+/** A shopping event from `web_events`. Dates are inclusive calendar days (YYYY-MM-DD) in Europe/Madrid. */
+export type SiteEvent = {
+  id: number
+  slug: string
+  name: string
+  /** Store ids (see lib/stores.ts) the event is relevant for; empty when it is general. */
+  stores: string[]
+  startsOn: string
+  endsOn: string
+  /** Dates not yet announced: only the month is shown. */
+  approximate: boolean
+  hashtags: string[]
+  aliexpressPromo: string | null
+  introMd: string
+  tipsMd: string
+  faq: { q: string; aMd: string }[]
+  updatedAt: string
+}
+
+export type EventPhase = 'before' | 'during' | 'after'

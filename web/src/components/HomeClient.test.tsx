@@ -3,6 +3,7 @@ import { renderToString } from 'react-dom/server'
 import { expect, it, vi } from 'vitest'
 import { HomeClient } from './HomeClient'
 import type { Deal } from '../lib/types'
+import { siteEvent } from '../test-utils/siteEvent'
 
 const deal: Deal = {
   publicationId: 1,
@@ -25,6 +26,8 @@ const deal: Deal = {
 
 const deals = (n: number): Deal[] =>
   Array.from({ length: n }, (_, i) => ({ ...deal, publicationId: i + 1, asin: `A${i + 1}`, title: `Chollo ${i + 1}` }))
+
+const ali = siteEvent({ id: 1, slug: 'aliexpress-1111', name: '11.11 de AliExpress', startsOn: '2026-11-11', stores: ['aliexpress'] })
 
 const props = {
   now: '2026-11-04T12:00:00Z',
@@ -94,8 +97,8 @@ it('mounts the v3 sections in order and omits coupons when there are none', () =
       now="2026-11-06T10:00:00Z"
       fetchLatestDeal={vi.fn().mockResolvedValue(null)}
       coupons={[]}
-      event={{ id: 'a', name: '11.11 de AliExpress', date: '2026-11-11', stores: ['aliexpress'] }}
-      upcoming={[{ id: 'a', name: '11.11 de AliExpress', date: '2026-11-11', stores: ['aliexpress'] }]}
+      event={ali}
+      upcoming={[ali]}
       latestPublishedAt="2026-11-06T09:48:00Z"
     />,
   )
@@ -125,4 +128,17 @@ it('shows the stores block only with two or more stores', () => {
   render(<HomeClient {...base} stores={[{ store: 'amazon', deals: 3, coupons: 0 }, { store: 'aliexpress', deals: 2, coupons: 1 }]} />)
   expect(document.querySelector('section#tiendas')).not.toBeNull()
   expect(screen.getByText(/^Amazon y AliExpress\. Cada oferta/)).toBeInTheDocument()
+})
+
+it('renders no bar and no calendar when no events are given', () => {
+  const { container } = render(<HomeClient {...props} />)
+  expect(screen.queryByText(/ en \d+ días/)).toBeNull()
+  expect(screen.queryByText('Calendario de chollos')).toBeNull()
+  expect(container.querySelector('section#eventos')).toBeNull()
+})
+
+it('passes the event in progress to the hero', () => {
+  const bf = siteEvent({ id: 2, slug: 'black-friday', name: 'Black Friday', startsOn: '2026-11-27', endsOn: '2026-11-29' })
+  render(<HomeClient {...props} now="2026-11-28T10:00:00Z" event={bf} upcoming={[bf]} activeEvent={bf} />)
+  expect(screen.getByRole('link', { name: 'Chollos del Black Friday' })).toHaveAttribute('href', '/eventos/black-friday')
 })

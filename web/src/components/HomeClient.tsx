@@ -1,13 +1,11 @@
 'use client'
 
-import { EVENTS, type SiteEvent } from '../content/events'
-import { ANNOUNCE_WINDOW_DAYS, nextEvent, upcomingEvents } from '../lib/events'
 import { useClock } from '../hooks/useClock'
 import * as api from '../lib/deals'
 import { storeNames } from '../lib/stores'
 import type { StoreStats } from '../lib/stores-data'
 import { getSupabase } from '../lib/supabase'
-import type { Coupon, Deal } from '../lib/types'
+import type { Coupon, Deal, SiteEvent } from '../lib/types'
 import { AboutBlock } from './AboutBlock'
 import { AnnouncementBar } from './AnnouncementBar'
 import { CouponsBlock } from './CouponsBlock'
@@ -32,9 +30,12 @@ type Props = {
   coupons?: Coupon[]
   /** Stores with active deals or coupons (hero copy, stores block, chips, affiliate notice). */
   stores?: StoreStats[]
-  /** Event for the announcement bar (within the window) and the calendar list; derived from the static calendar when omitted. */
+  /** Event for the announcement bar (within the window); no bar when omitted or null. */
   event?: SiteEvent | null
+  /** Calendar list; the events block is omitted when it is empty or omitted. */
   upcoming?: SiteEvent[]
+  /** Event in progress, which the hero's primary button links to. */
+  activeEvent?: SiteEvent | null
   /** Newest publication date for the announcement bar; null when unknown. */
   latestPublishedAt?: string | null
 }
@@ -51,26 +52,25 @@ export function HomeClient({
   highlights = NO_HIGHLIGHTS,
   coupons = [],
   stores = [],
-  event,
-  upcoming,
+  event = null,
+  upcoming = [],
+  activeEvent = null,
   latestPublishedAt = null,
 }: Props) {
   const clock = useClock(now)
   const renderTime = new Date(now)
-  const barEvent = event === undefined ? nextEvent(renderTime, EVENTS, ANNOUNCE_WINDOW_DAYS) : event
-  const calendar = upcoming ?? upcomingEvents(renderTime, 4)
 
   return (
     <div className="min-h-screen bg-white font-sans text-ink">
       <Header />
       <main className="pt-[60px] md:pt-[72px]">
         <AnnouncementBar
-          event={barEvent}
-          second={barEvent && calendar[0]?.id === barEvent.id ? (calendar[1] ?? null) : null}
+          event={event}
+          second={event && upcoming[0]?.id === event.id ? (upcoming[1] ?? null) : null}
           latestPublishedAt={latestPublishedAt}
           now={renderTime}
         />
-        <Hero highlights={highlights} storeNames={storeNames(stores.map((s) => s.store))} />
+        <Hero highlights={highlights} storeNames={storeNames(stores.map((s) => s.store))} activeEvent={activeEvent} />
         <StoresBlock stores={stores} />
         <section id="chollos" className="mx-auto max-w-[1200px] scroll-mt-32 px-4 pt-8 pb-12 md:px-8 md:pt-12">
           <h2 className="font-display text-2xl font-bold tracking-[-0.02em] md:text-[32px]">Chollos de hoy</h2>
@@ -79,7 +79,7 @@ export function HomeClient({
         </section>
         <CouponsBlock coupons={coupons} />
         <HowItWorks />
-        <EventsBlock next={calendar[0] ?? null} upcoming={calendar} now={renderTime} />
+        {upcoming.length > 0 && <EventsBlock next={upcoming[0]} upcoming={upcoming} now={renderTime} />}
         <AboutBlock />
         <TelegramBlock fetchLatestDeal={fetchLatestDeal} />
       </main>

@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+import { siteEvent } from '../test-utils/siteEvent'
 import { Hero, type HeroHighlights } from './Hero'
 
 const none: HeroHighlights = {
@@ -70,5 +71,18 @@ describe('Hero', () => {
     two.unmount()
     render(<Hero highlights={none} storeNames={[]} />)
     expect(screen.getByText(/^Amazon\. Cada oferta/)).toBeInTheDocument()
+  })
+
+  it('points the primary button at the event in progress', () => {
+    const bf = siteEvent({ slug: 'black-friday', name: 'Black Friday', startsOn: '2026-11-27', endsOn: '2026-11-29' })
+    render(<Hero highlights={none} storeNames={['Amazon']} activeEvent={bf} />)
+    expect(screen.getByRole('link', { name: 'Chollos del Black Friday' })).toHaveAttribute('href', '/eventos/black-friday')
+    expect(screen.queryByRole('link', { name: 'Ver chollos de hoy' })).toBeNull()
+    expect(screen.getByRole('link', { name: 'Recibirlos en Telegram' })).toHaveAttribute('href', 'https://t.me/patobarato')
+  })
+
+  it('keeps the deals button without an event in progress', () => {
+    render(<Hero highlights={none} storeNames={['Amazon']} activeEvent={null} />)
+    expect(screen.getByRole('link', { name: 'Ver chollos de hoy' })).toHaveAttribute('href', '/#chollos')
   })
 })
