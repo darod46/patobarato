@@ -9,7 +9,7 @@ describe('Header', () => {
     expect(screen.getByAltText('PatoBarato')).toHaveAttribute('src', '/logo.svg')
     const nav = screen.getByRole('navigation', { name: 'Principal' })
     const links = within(nav).getAllByRole('link')
-    expect(links.map((l) => l.textContent)).toEqual(['Chollos', 'Cupones', 'Tiendas', 'Guías', 'Cómo funciona', 'Telegram'])
+    expect(links.map((l) => l.textContent)).toEqual(['Chollos', 'Cupones', 'Tiendas', 'Guías'])
     expect(links.map((l) => l.getAttribute('href'))).toEqual(NAV_LINKS.map((l) => l.href))
     expect(screen.getByRole('link', { name: 'Unirme al canal' })).toHaveAttribute('href', 'https://t.me/patobarato')
     expect(screen.getByLabelText('Buscar chollos')).toBeInTheDocument()
