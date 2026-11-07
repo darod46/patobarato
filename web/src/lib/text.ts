@@ -8,3 +8,14 @@ export function joinNames(names: string[]): string {
 export function countLabel(n: number, one: string, many: string): string {
   return `${n} ${n === 1 ? one : many}`
 }
+
+/** Plain text from Markdown: drops emphasis, code ticks and headings; links become their text, images their alt. */
+export function stripMarkdown(md: string): string {
+  return md
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+    .replace(/(\*\*|__|[*_`])/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}

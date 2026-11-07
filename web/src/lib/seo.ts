@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { discountPercent, formatPrice } from './format'
 import { guidePath } from './guides'
 import { storeInfo } from './stores'
+import { stripMarkdown } from './text'
 import type { StoreStats } from './stores-data'
 import type { Deal, Guide } from './types'
 import { SITE_URL, parseTagParam, productPath, tagPath } from './urls'
@@ -185,7 +186,7 @@ export function couponsMetadata(count: number): Metadata {
 }
 
 function firstSentence(md: string): string {
-  const plain = md.replace(/[*_`#>[\]]/g, '').replace(/\s+/g, ' ').trim()
+  const plain = stripMarkdown(md)
   const m = /^.*?[.!?](?=\s|$)/.exec(plain)
   return truncate(m ? m[0] : plain, MAX_DESCRIPTION)
 }
@@ -247,7 +248,7 @@ export function guideJsonLd(guide: Guide, url: string): Record<string, unknown>[
       mainEntity: guide.faq.map((f) => ({
         '@type': 'Question',
         name: f.q,
-        acceptedAnswer: { '@type': 'Answer', text: f.aMd },
+        acceptedAnswer: { '@type': 'Answer', text: stripMarkdown(f.aMd) },
       })),
     })
   }

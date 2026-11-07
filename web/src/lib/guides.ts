@@ -32,13 +32,13 @@ export function isRecent(offer: GuideStoreOffer, now: Date): boolean {
 export function bestOffer(
   stores: GuideStoreOffer[],
   now: Date,
-): { store: string; price: number; withCoupon: boolean } | null {
-  let best: { store: string; price: number; withCoupon: boolean } | null = null
+): { store: string; price: number; withCoupon: boolean; offer: GuideStoreOffer } | null {
+  let best: { store: string; price: number; withCoupon: boolean; offer: GuideStoreOffer } | null = null
   for (const s of stores) {
     if (!isRecent(s, now) || s.price === null) continue
     const withCoupon = finalPrice(s.price, s.coupon, now)
     const price = withCoupon ?? s.price
-    if (best === null || price < best.price) best = { store: s.store, price, withCoupon: withCoupon !== null }
+    if (best === null || price < best.price) best = { store: s.store, price, withCoupon: withCoupon !== null, offer: s }
   }
   return best
 }

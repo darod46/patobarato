@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { NOW, item, offer } from './fixtures'
+import { NOW, item, offer } from './test-fixtures'
 import { QuickPicks } from './QuickPicks'
 
 describe('QuickPicks', () => {

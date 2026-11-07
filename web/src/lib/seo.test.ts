@@ -263,7 +263,7 @@ describe('guideJsonLd', () => {
     expect(list.itemListElement[1]).toMatchObject({ '@type': 'ListItem', position: 2, name: 'Cosori', url: `${url}#producto-2` })
     expect(faq['@type']).toBe('FAQPage')
     expect(faq.mainEntity).toHaveLength(2)
-    expect(faq.mainEntity[0].acceptedAnswer.text).toBe('Sí **claro**')
+    expect(faq.mainEntity[0].acceptedAnswer.text).toBe('Sí claro')
   })
   it('omits FAQPage without questions', () => {
     expect(guideJsonLd({ ...guide, faq: [] }, 'u')).toHaveLength(2)

@@ -23,7 +23,7 @@ export function QuickPicks({ items, now }: { items: GuideItem[]; now: Date }) {
               )}
               <a
                 href={`#producto-${it.position}`}
-                className="font-semibold text-ink hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="inline-flex min-h-11 items-center font-semibold text-ink hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 {it.name}
               </a>

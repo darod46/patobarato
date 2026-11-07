@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { NOW, offer } from './fixtures'
+import { NOW, offer } from './test-fixtures'
 import { StoreRow } from './StoreRow'
 
 const amountCoupon = { code: 'PATO10', title: 't', expiresAt: null, discountAmount: 10, discountPct: null, minPurchase: null }
@@ -18,13 +18,32 @@ describe('StoreRow', () => {
       <StoreRow offer={offer({ coupon: { ...amountCoupon, discountAmount: null, discountPct: 5 } })} now={NOW} />,
     )
     expect(screen.getByText('−5 %')).toBeInTheDocument()
-    rerender(<StoreRow offer={offer({ coupon: { ...amountCoupon, minPurchase: 100 } })} now={NOW} />)
+    rerender(<StoreRow offer={offer({ price: 120, coupon: { ...amountCoupon, minPurchase: 100 } })} now={NOW} />)
     expect(screen.getByText('−10 € en 100 €')).toBeInTheDocument()
   })
 
-  it('omits "Te queda en" when the coupon does not apply', () => {
+  it('hides the coupon chip entirely when the coupon does not apply', () => {
     render(<StoreRow offer={offer({ coupon: { ...amountCoupon, minPurchase: 500 } })} now={NOW} />)
     expect(screen.queryByText(/Te queda en/)).not.toBeInTheDocument()
+    expect(screen.queryByText('PATO10')).not.toBeInTheDocument()
+  })
+
+  it('shows no coupon, price or saving on a stale offer', () => {
+    render(<StoreRow offer={offer({ checkedAt: '2026-11-01T00:00:00Z', coupon: amountCoupon })} now={NOW} />)
+    expect(screen.queryByText('PATO10')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Te queda en/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/99,90/)).not.toBeInTheDocument()
+  })
+
+  it('shows only the link when there is no price', () => {
+    render(<StoreRow offer={offer({ price: null })} now={NOW} />)
+    expect(screen.getByRole('link', { name: 'Ver en PcComponentes' })).toBeInTheDocument()
+    expect(screen.getAllByRole('link')).toHaveLength(1)
+  })
+
+  it('renders the store CTA on a fresh row', () => {
+    render(<StoreRow offer={offer()} now={NOW} />)
+    expect(screen.getByRole('link', { name: 'Ir a PcComponentes' })).toBeInTheDocument()
   })
 
   it('renders only the store and a link when the offer is stale', () => {

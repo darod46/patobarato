@@ -83,18 +83,24 @@ describe('bestOffer', () => {
       ],
       now,
     )
-    expect(r).toEqual({ store: 'ok', price: 50, withCoupon: false })
+    expect(r).toMatchObject({ store: 'ok', price: 50, withCoupon: false })
+    expect(r?.offer.store).toBe('ok')
   })
   it('prefers the coupon-adjusted price', () => {
     const r = bestOffer(
       [offer({ store: 'a', price: 90 }), offer({ store: 'b', price: 100, coupon: coupon({ discountAmount: 20 }) })],
       now,
     )
-    expect(r).toEqual({ store: 'b', price: 80, withCoupon: true })
+    expect(r).toMatchObject({ store: 'b', price: 80, withCoupon: true })
   })
   it('keeps the first on ties', () => {
     const r = bestOffer([offer({ store: 'a', price: 50 }), offer({ store: 'b', price: 50 })], now)
     expect(r?.store).toBe('a')
+  })
+  it('returns the winning offer even when a store appears twice', () => {
+    const cheap = offer({ store: 'a', externalId: 'two', price: 40 })
+    const r = bestOffer([offer({ store: 'a', externalId: 'one', price: 50 }), cheap], now)
+    expect(r?.offer).toBe(cheap)
   })
 })
 

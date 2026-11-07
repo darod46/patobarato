@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { ComparisonTable } from './ComparisonTable'
-import { item } from './fixtures'
+import { item } from './test-fixtures'
 
 describe('ComparisonTable', () => {
   it('has one row per distinct spec label and one column per item', () => {
@@ -15,5 +15,6 @@ describe('ComparisonTable', () => {
     expect(screen.getByText('7 L')).toBeInTheDocument()
     expect(screen.getByText('—')).toBeInTheDocument()
     expect(container.querySelector('.overflow-x-auto')).not.toBeNull()
+    expect(screen.getByRole('region', { name: 'Comparativa de productos' })).toHaveAttribute('tabindex', '0')
   })
 })

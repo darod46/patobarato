@@ -6,7 +6,7 @@ export function ComparisonTable({ items }: { items: GuideItem[] }) {
   return (
     <section id="comparativa" aria-labelledby="comparativa-titulo" className="scroll-mt-24">
       <h2 id="comparativa-titulo" className="font-display text-2xl font-bold tracking-[-0.02em]">Comparativa</h2>
-      <div className="mt-4 overflow-x-auto rounded-2xl border border-line bg-white">
+      <div tabIndex={0} role="region" aria-label="Comparativa de productos" className="mt-4 overflow-x-auto rounded-2xl border border-line bg-white">
         <table className="w-full min-w-[32rem] text-left text-sm">
           <thead>
             <tr className="border-b border-line bg-surface">

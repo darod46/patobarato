@@ -1,6 +1,6 @@
 import { ThumbsDown, ThumbsUp, Trophy } from 'lucide-react'
 import { formatPrice } from '../../lib/format'
-import { bestOffer, discountPct, isLowest, isRecent } from '../../lib/guides'
+import { bestOffer, discountPct, isLowest } from '../../lib/guides'
 import { storeInfo } from '../../lib/stores'
 import type { GuideItem } from '../../lib/types'
 import { Markdown } from '../Markdown'
@@ -8,20 +8,22 @@ import { StoreRow } from './StoreRow'
 
 export function GuideItemCard({ item, index, now }: { item: GuideItem; index: number; now: Date }) {
   const best = bestOffer(item.stores, now)
-  // Badge and lowest tag come from the offer that gives the best price.
-  const source = best ? item.stores.find((s) => s.store === best.store && isRecent(s, now)) : undefined
-  const discount = source ? discountPct(source.price, source.previousPrice) : null
-  const lowest = source && source.price !== null ? isLowest(best!.price, source.previousMinPrice) : false
+  // Badge and lowest tag use the winning offer's listed price (never the coupon price) against its own history.
+  const winner = best?.offer
+  const discount = winner ? discountPct(winner.price, winner.previousPrice) : null
+  const lowest = winner && winner.price !== null ? isLowest(winner.price, winner.previousMinPrice) : false
 
   return (
     <section id={`producto-${item.position}`} aria-labelledby={`producto-${item.position}-titulo`} className="scroll-mt-24 rounded-2xl border border-line bg-white p-5">
       <div className="grid gap-4 sm:grid-cols-[160px_1fr]">
         <div className="relative mx-auto aspect-square w-full max-w-40 overflow-hidden rounded-xl border border-line bg-white">
-          {item.imageUrl && (
+          {item.imageUrl ? (
             <img src={item.imageUrl} alt={item.name} width={320} height={320} loading="lazy" className="absolute inset-0 h-full w-full object-contain p-3 mix-blend-multiply" />
+          ) : (
+            <img src="/pato-placeholder.svg" alt={item.name} width={160} height={160} loading="lazy" className="absolute inset-0 m-auto h-1/2 w-1/2 object-contain opacity-90" />
           )}
           {discount !== null && (
-            <span className="absolute top-2 left-2 rounded-lg bg-danger px-2 py-0.5 text-xs font-bold text-white">{`-${discount} %`}</span>
+            <span aria-label={`Descuento del ${discount} %`} className="absolute top-2 left-2 rounded-lg bg-danger px-2 py-0.5 text-xs font-bold text-white">{`-${discount} %`}</span>
           )}
         </div>
         <div className="flex flex-col gap-2">
