@@ -127,13 +127,15 @@ left join lateral (
       and c.store = s.store
       and c.starts_at <= now()
       and (c.expires_at is null or c.expires_at > now())
-    order by (case
+    -- A coupon with min_purchase may still be attached to a priceless row; the web decides using min_purchase.
+    order by coalesce(case
                 when c.discount_amount is not null and (c.min_purchase is null or pp.price >= c.min_purchase)
                     then c.discount_amount
                 when c.discount_pct is not null then pp.price * c.discount_pct / 100
                 else 0
-              end) desc,
-             c.expires_at nulls last
+              end, 0) desc,
+             c.expires_at nulls last,
+             c.id
     limit 1
 ) cp on true
 where g.status = 'published'
