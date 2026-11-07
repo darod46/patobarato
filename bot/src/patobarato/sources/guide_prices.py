@@ -114,12 +114,24 @@ class GuidePriceRefresher:
         if quote is None:
             await self._repo.upsert_product_price(product_id, checked_at=now, error="no price")
             return "failed"
+        try:
+            affiliate = await store.affiliate_url(canonical, product.external_id)
+        except Exception as e:
+            affiliate = None
+            logger.warning(
+                "GuidePrices: %s %s affiliate=missing (%s: %s)",
+                product.store,
+                product.external_id,
+                type(e).__name__,
+                _URL.sub("<url>", str(e)),
+            )
         await self._repo.upsert_product_price(
             product_id,
             checked_at=now,
             price=quote.price,
             previous_price=quote.previous_price,
             currency=quote.currency,
+            affiliate_url=affiliate,
         )
         if quote.image_url and (created or product_id in self._imageless):
             await self._repo.set_product_image(product_id, quote.image_url)

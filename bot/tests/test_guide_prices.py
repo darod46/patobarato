@@ -16,8 +16,9 @@ class FakeStore(BaseStore):
     id = "fake"
     name = "Fake"
 
-    def __init__(self, quotes=None):
+    def __init__(self, quotes=None, affiliate=None):
         self.quotes = quotes or {}
+        self.affiliate = affiliate
         self.calls: list[tuple[str, str]] = []
 
     def product_id(self, url):
@@ -25,6 +26,11 @@ class FakeStore(BaseStore):
 
     def canonical_url(self, product_id, country):
         return f"https://fake.example/p/{product_id}?canon=1"
+
+    async def affiliate_url(self, canonical_url, product_id):
+        if isinstance(self.affiliate, Exception):
+            raise self.affiliate
+        return self.affiliate
 
     async def fetch_price(self, product_id, canonical_url):
         self.calls.append((product_id, canonical_url))
@@ -215,3 +221,26 @@ async def test_refresh_does_not_sleep_after_product_without_network_call():
     _, refresher, sleeps = _make([_gp("a", store="aaa"), _gp("b"), _gp("c")], store)
     await refresher.run(SOURCE)
     assert sleeps == [1.5]
+
+
+async def test_refresh_stores_affiliate_url():
+    store = FakeStore({"a": PriceQuote(Decimal("9.99"), None)}, affiliate="https://aff.example/x")
+    repo, refresher, _ = _make([_gp("a")], store)
+    await refresher.run(SOURCE)
+    pid = await repo.find_product_id("fake", "ES", "a")
+    assert repo.prices[pid]["affiliate_url"] == "https://aff.example/x"
+
+
+async def test_refresh_affiliate_failure_stores_none_and_logs_without_url(caplog):
+    store = FakeStore(
+        {"a": PriceQuote(Decimal("9.99"), None)},
+        affiliate=RuntimeError("boom https://secret.example/t?k=1"),
+    )
+    repo, refresher, _ = _make([_gp("a")], store)
+    with caplog.at_level(logging.WARNING, logger="patobarato.guide_prices"):
+        await refresher.run(SOURCE)
+    pid = await repo.find_product_id("fake", "ES", "a")
+    assert repo.prices[pid]["price"] == Decimal("9.99")
+    assert repo.prices[pid]["affiliate_url"] is None
+    assert "affiliate=missing (RuntimeError:" in caplog.text
+    assert "secret.example" not in caplog.text

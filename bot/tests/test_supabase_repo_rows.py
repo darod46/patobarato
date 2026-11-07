@@ -100,7 +100,11 @@ async def test_list_guide_products_selects_published_and_dedupes():
 async def test_upsert_product_price_success_sends_full_row():
     client = _Client([])
     await SupabaseRepository(client).upsert_product_price(
-        7, checked_at=NOW, price=Decimal("9.5"), previous_price=None
+        7,
+        checked_at=NOW,
+        price=Decimal("9.5"),
+        previous_price=None,
+        affiliate_url="https://aff.example/x",
     )
     args, kwargs = next((a, k) for n, a, k in client.log if n == "upsert")
     assert kwargs == {"on_conflict": "product_id"}
@@ -109,6 +113,7 @@ async def test_upsert_product_price_success_sends_full_row():
     assert args[0]["previous_price"] is None
     assert args[0]["error"] is None
     assert args[0]["currency"] == "EUR"
+    assert args[0]["affiliate_url"] == "https://aff.example/x"
     assert args[0]["checked_at"] == NOW.isoformat()
 
 

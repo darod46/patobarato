@@ -104,6 +104,7 @@ class Repository(Protocol):
         previous_price: Decimal | None = None,
         currency: str = "EUR",
         error: str | None = None,
+        affiliate_url: str | None = None,
     ) -> None:
         """Stores the last-known price; with ``error`` set, an existing price is kept."""
         ...
@@ -363,6 +364,7 @@ class InMemoryRepository(Repository):
         previous_price: Decimal | None = None,
         currency: str = "EUR",
         error: str | None = None,
+        affiliate_url: str | None = None,
     ) -> None:
         existing = self.prices.get(product_id)
         if error is not None and existing is not None:
@@ -375,4 +377,5 @@ class InMemoryRepository(Repository):
             "currency": currency,
             "checked_at": checked_at,
             "error": error,
+            "affiliate_url": affiliate_url,
         }

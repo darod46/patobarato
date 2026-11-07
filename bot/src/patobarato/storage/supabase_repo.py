@@ -378,6 +378,7 @@ class SupabaseRepository:
         previous_price: Decimal | None = None,
         currency: str = "EUR",
         error: str | None = None,
+        affiliate_url: str | None = None,
     ) -> None:
         def run():
             if error is not None:
@@ -399,6 +400,7 @@ class SupabaseRepository:
                 "currency": currency,
                 "checked_at": checked_at.isoformat(),
                 "error": None,
+                "affiliate_url": affiliate_url,
             }
             return (
                 self._client.table("product_prices")
