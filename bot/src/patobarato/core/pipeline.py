@@ -4,6 +4,7 @@ import asyncio
 import logging
 import time
 from collections.abc import Awaitable, Callable
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from typing import Protocol
 
@@ -99,6 +100,8 @@ class Pipeline:
     async def _process_offer(
         self, msg: SourceMessage, offer: ParsedOffer
     ) -> OfferStatus | None:
+        if offer.price is None and not self._is_stale(msg):
+            offer = await self._with_store_price(offer)
         product_id = await self._repo.upsert_product(offer)
         offer_id = await self._repo.insert_offer(
             product_id,
@@ -177,6 +180,34 @@ class Pipeline:
         except Exception:
             logger.error("Image lookup failed for %s", offer.asin, exc_info=True)
         return OfferStatus.PUBLISHED
+
+    def _is_stale(self, msg: SourceMessage) -> bool:
+        """A message decide() would skip anyway: no point fetching its price."""
+        stale_after = timedelta(minutes=self._settings.stale_after_minutes)
+        return self._clock() - msg.received_at > stale_after
+
+    async def _with_store_price(self, offer: ParsedOffer) -> ParsedOffer:
+        """Fills a price the text lacks (channels that put it in the photo) from the store."""
+        store = self._registry.get(offer.store)
+        if store is None:
+            return offer
+        try:
+            quote = await store.fetch_price(offer.asin, offer.canonical_url)
+        except Exception as exc:
+            logger.warning(
+                "Store price for %s %s failed: %s: %s", offer.store, offer.asin, type(exc).__name__, exc
+            )
+            return offer
+        if quote is None or quote.price is None:
+            return offer
+        logger.info("Price for %s %s taken from the store: %s", offer.store, offer.asin, quote.price)
+        previous = offer.previous_price or quote.previous_price
+        return replace(
+            offer,
+            price=quote.price,
+            previous_price=previous if previous is not None and previous > quote.price else None,
+            image_url=offer.image_url or quote.image_url,
+        )
 
     async def _affiliate_url(self, offer: ParsedOffer, store: Store) -> str:
         if offer.affiliate_url:

@@ -10,7 +10,7 @@ import pytest
 
 from patobarato.config import Settings
 from patobarato.core.pipeline import MIN_PUBLISH_INTERVAL_SECONDS, Pipeline
-from patobarato.models import OfferStatus, SourceMessage
+from patobarato.models import OfferStatus, PriceQuote, SourceMessage
 from patobarato.parsing.extract import extract_offers
 from patobarato.parsing.links import UrlResolver
 from patobarato.storage.repository import InMemoryRepository
@@ -586,3 +586,79 @@ async def test_telegram_post_goes_out_after_web_only_publication(
 
     assert statuses == [OfferStatus.PUBLISHED]
     assert len(publisher.calls) == 1
+
+
+class PricedStore(FakeStore):
+    """A store whose page has a price (or None, or fails)."""
+
+    def __init__(self, quote: PriceQuote | None = None, fail: bool = False, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.quote = quote
+        self.fail = fail
+        self.price_calls: list[tuple[str, str]] = []
+
+    async def fetch_price(self, product_id: str, canonical_url: str) -> PriceQuote | None:
+        self.price_calls.append((product_id, canonical_url))
+        if self.fail:
+            raise RuntimeError("store page down")
+        return self.quote
+
+
+def _priceless_msg() -> SourceMessage:
+    url = "https://fake.example/p/P1"
+    return SourceMessage(1, 1, f"PRECIAZO!\nCacharro\n{url}", [url], [], NOW)
+
+
+async def test_missing_text_price_is_fetched_from_the_store(make_pipeline, repo, publisher):
+    store = PricedStore(PriceQuote(Decimal("8.50"), Decimal("12.00"), image_url="https://img/q.jpg"))
+
+    statuses = await make_pipeline(registry=StoreRegistry([store])).process(_priceless_msg())
+
+    assert statuses == [OfferStatus.PUBLISHED]
+    assert store.price_calls == [("P1", "https://fake.example/p/P1")]
+    caption = publisher.calls[0][0]
+    assert "8,50" in caption
+    assert "12" in caption
+    assert repo.publications()[0]["published_price"] == Decimal("8.50")
+    # The quote's image is the product image: no extra lookup.
+    assert store.image_calls == []
+    assert list(repo.product_images.values()) == ["https://img/q.jpg"]
+
+
+async def test_text_price_is_not_fetched(make_pipeline):
+    store = PricedStore(PriceQuote(Decimal("1"), None))
+    await make_pipeline(registry=StoreRegistry([store])).process(_fake_msg())
+    assert store.price_calls == []
+
+
+async def test_store_without_price_still_skips(make_pipeline, repo, publisher):
+    store = PricedStore(None)
+    statuses = await make_pipeline(registry=StoreRegistry([store])).process(_priceless_msg())
+    assert statuses == [OfferStatus.SKIPPED_NO_PRICE]
+    assert store.price_calls == [("P1", "https://fake.example/p/P1")]
+    assert publisher.calls == []
+
+
+async def test_store_price_failure_is_logged_and_skips(make_pipeline, publisher, caplog):
+    store = PricedStore(fail=True)
+    with caplog.at_level(logging.WARNING, logger="patobarato.pipeline"):
+        statuses = await make_pipeline(registry=StoreRegistry([store])).process(_priceless_msg())
+    assert statuses == [OfferStatus.SKIPPED_NO_PRICE]
+    assert len(store.price_calls) == 1
+    assert publisher.calls == []
+    assert any("store page down" in r.getMessage() for r in caplog.records)
+
+
+async def test_stale_priceless_message_does_not_fetch(make_pipeline):
+    store = PricedStore(PriceQuote(Decimal("8.50"), None))
+    msg = dataclasses.replace(_priceless_msg(), received_at=NOW - timedelta(days=1))
+    statuses = await make_pipeline(registry=StoreRegistry([store])).process(msg)
+    assert statuses == [OfferStatus.SKIPPED_NO_PRICE]
+    assert store.price_calls == []
+
+
+async def test_store_previous_price_not_above_price_is_dropped(make_pipeline, publisher):
+    store = PricedStore(PriceQuote(Decimal("8.50"), Decimal("8.50")))
+    await make_pipeline(registry=StoreRegistry([store])).process(_priceless_msg())
+    assert "8,50" in publisher.calls[0][0]
+    assert publisher.calls[0][0].count("8,50") == 1
