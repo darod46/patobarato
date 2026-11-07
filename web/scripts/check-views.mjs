@@ -40,6 +40,15 @@ for (const col of ['store', 'deals', 'coupons']) {
 const sources = await rest('sources?select=*&limit=1')
 if (sources.status === 200) problems.push('sources table is readable by anon (expected permission denied)')
 
+for (const view of ['web_guides', 'web_guide_items', 'web_guides_by_product']) {
+  const r = await rest(`${view}?select=*&limit=1`)
+  if (r.status !== 200 || !Array.isArray(r.body)) problems.push(`${view}: HTTP ${r.status}`)
+}
+for (const t of ['guides', 'guide_items', 'guide_item_stores', 'product_prices']) {
+  const r = await rest(`${t}?select=*&limit=1`)
+  if (![401, 403].includes(r.status)) problems.push(`${t} table: HTTP ${r.status} (expected 401/403)`)
+}
+
 if (problems.length) {
   console.error(problems.join('\n'))
   process.exit(1)
