@@ -9,7 +9,7 @@ const COLUMNS: Column[] = [
   {
     title: 'Chollos',
     links: [
-      { label: 'Por categoría', href: '/#chollos' },
+      { label: 'Por categoría', href: '/chollos' },
       { label: 'Cupones', href: '/cupones' },
       { label: 'Calendario', href: '/#eventos' },
     ],

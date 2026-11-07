@@ -109,7 +109,7 @@ describe('DealFeed', () => {
     setup({ onTag: undefined, tag: 'hogar', initialTags: ['hogar', 'sony'] })
     expect(screen.getByRole('link', { name: '#sony' })).toHaveAttribute('href', '/chollos/sony')
     expect(screen.getByRole('link', { name: '#hogar' })).toHaveAttribute('aria-current', 'page')
-    expect(screen.getByRole('link', { name: 'Todos' })).toHaveAttribute('href', '/')
+    expect(screen.getByRole('link', { name: 'Todos' })).toHaveAttribute('href', '/chollos')
     await screen.findByText('Chollo 1')
   })
 })

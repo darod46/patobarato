@@ -26,7 +26,7 @@ describe('HashtagChips', () => {
     expect(screen.getByRole('link', { name: '#hogar' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('link', { name: '#niños' })).toHaveAttribute('href', '/chollos/ni%C3%B1os')
     expect(screen.getByRole('link', { name: '#niños' })).not.toHaveAttribute('aria-current')
-    expect(screen.getByRole('link', { name: 'Todos' })).toHaveAttribute('href', '/')
+    expect(screen.getByRole('link', { name: 'Todos' })).toHaveAttribute('href', '/chollos')
     expect(screen.getByRole('link', { name: 'Todos' })).not.toHaveAttribute('aria-current')
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })

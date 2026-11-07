@@ -22,6 +22,7 @@ export function buildSitemap(
   const guides = extra.guides ?? []
   return [
     { url: `${siteUrl}/` },
+    { url: `${siteUrl}/chollos` },
     ...(extra.coupons ? [{ url: `${siteUrl}/cupones` }] : []),
     ...(stores.length >= 2 ? [{ url: `${siteUrl}/tiendas` }] : []),
     ...stores.filter((s) => s.deals >= MIN_INDEXABLE_DEALS).map((s) => ({ url: `${siteUrl}/tiendas/${storeInfo(s.store).slug}` })),

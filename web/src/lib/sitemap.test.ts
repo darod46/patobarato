@@ -19,8 +19,9 @@ describe('buildSitemap', () => {
       ],
       SITE_URL,
     )
-    expect(entries.map((e) => e.url).filter((u) => u.includes('/oferta/') || u.includes('/chollos/') || u.endsWith('.com/'))).toEqual([
+    expect(entries.map((e) => e.url).filter((u) => u.includes('/oferta/') || u.includes('/chollos') || u.endsWith('.com/'))).toEqual([
       'https://www.patobarato.com/',
+      'https://www.patobarato.com/chollos',
       'https://www.patobarato.com/oferta/amazon/freidora-de-aire-b0abcdef12',
       'https://www.patobarato.com/oferta/amazon/cafe-molido-b0zzzzzz99',
       'https://www.patobarato.com/chollos/hogar',
@@ -30,12 +31,13 @@ describe('buildSitemap', () => {
 
   it('uses publishedAt as lastModified for deals', () => {
     const entries = buildSitemap(deals, [], SITE_URL)
-    expect(entries[1].lastModified).toEqual(new Date('2026-11-04T11:19:00Z'))
+    expect(entries[2].lastModified).toEqual(new Date('2026-11-04T11:19:00Z'))
   })
 
   it('returns the home and the static pages when there is no data', () => {
     expect(buildSitemap([], [], SITE_URL).map((e) => e.url)).toEqual([
       'https://www.patobarato.com/',
+      'https://www.patobarato.com/chollos',
       'https://www.patobarato.com/aviso-legal',
       'https://www.patobarato.com/privacidad',
       'https://www.patobarato.com/cookies',
@@ -114,6 +116,7 @@ describe('buildSitemap guides', () => {
   it('returns the same entries when guides are omitted', () => {
     expect(buildSitemap(deals, [], SITE_URL, { coupons: false }).map((e) => e.url)).toEqual([
       'https://www.patobarato.com/',
+      'https://www.patobarato.com/chollos',
       'https://www.patobarato.com/oferta/amazon/freidora-de-aire-b0abcdef12',
       'https://www.patobarato.com/oferta/amazon/cafe-molido-b0zzzzzz99',
       'https://www.patobarato.com/aviso-legal',

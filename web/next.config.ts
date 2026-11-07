@@ -34,6 +34,11 @@ const nextConfig: NextConfig = {
         { source: '/', has: [{ type: 'query', key: 'tag' }], destination: '/buscar' },
         { source: '/', has: [{ type: 'query', key: 'orden' }], destination: '/buscar' },
         { source: '/', has: [{ type: 'query', key: 'tienda' }], destination: '/buscar' },
+        // Same for the listing page: filtered `/chollos` URLs are served by `/buscar`.
+        { source: '/chollos', has: [{ type: 'query', key: 'q' }], destination: '/buscar' },
+        { source: '/chollos', has: [{ type: 'query', key: 'tag' }], destination: '/buscar' },
+        { source: '/chollos', has: [{ type: 'query', key: 'orden' }], destination: '/buscar' },
+        { source: '/chollos', has: [{ type: 'query', key: 'tienda' }], destination: '/buscar' },
       ],
       afterFiles: [
         // /go/{ASIN} is served by the static redirect page (affiliate tag added by script).

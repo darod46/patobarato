@@ -44,7 +44,7 @@ it('renders the heading, initial cards and link chips without fetching', async (
   expect(screen.getByText('Chollo 1')).toBeInTheDocument()
   expect(screen.getByRole('link', { name: '#niños' })).toHaveAttribute('aria-current', 'page')
   expect(screen.getByRole('link', { name: '#hogar' })).toHaveAttribute('href', '/chollos/hogar')
-  expect(screen.getByRole('link', { name: 'Todos' })).toHaveAttribute('href', '/')
+  expect(screen.getByRole('link', { name: 'Todos' })).toHaveAttribute('href', '/chollos')
   expect(screen.getByText(/En calidad de Afiliado de Amazon/)).toBeInTheDocument()
   await act(async () => {})
   expect(fetchDeals).not.toHaveBeenCalled()

@@ -11,6 +11,7 @@ describe('Header', () => {
     const links = within(nav).getAllByRole('link')
     expect(links.map((l) => l.textContent)).toEqual(['Chollos', 'Cupones', 'Tiendas', 'Guías'])
     expect(links.map((l) => l.getAttribute('href'))).toEqual(NAV_LINKS.map((l) => l.href))
+    expect(links[0]).toHaveAttribute('href', '/chollos')
     expect(screen.getByRole('link', { name: 'Unirme al canal' })).toHaveAttribute('href', 'https://t.me/patobarato')
     expect(screen.getByLabelText('Buscar chollos')).toBeInTheDocument()
   })

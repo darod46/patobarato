@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { formatPrice } from './format'
-import { OG_IMAGE, breadcrumbJsonLd, couponsMetadata, guideJsonLd, guideMetadata, guidesMetadata, hashtagMetadata, homeMetadata, productJsonLd, productMetadata, siteJsonLd, storeMetadata, storesMetadata, jsonLdScript } from './seo'
+import { OG_IMAGE, breadcrumbJsonLd, couponsMetadata, guideJsonLd, guideMetadata, guidesMetadata, dealsMetadata, hashtagMetadata, homeMetadata, productJsonLd, productMetadata, siteJsonLd, storeMetadata, storesMetadata, jsonLdScript } from './seo'
 import type { Deal, Guide } from './types'
 import { SITE_URL, productPath } from './urls'
 
@@ -276,5 +276,34 @@ describe('guideJsonLd', () => {
   })
   it('omits FAQPage without questions', () => {
     expect(guideJsonLd({ ...guide, faq: [] }, 'u')).toHaveLength(2)
+  })
+})
+
+describe('dealsMetadata', () => {
+  const st = (store: string, deals: number, coupons: number) => ({ store, deals, coupons })
+
+  it('has a fixed title and canonical /chollos', () => {
+    const meta = dealsMetadata({})
+    expect(meta.title).toBe('Chollos de hoy · PatoBarato')
+    expect(meta.alternates?.canonical).toBe('/chollos')
+    expect(meta.robots).toBeUndefined()
+  })
+
+  it('is canonical on the hashtag page for a legacy ?tag= and ignores an invalid one', () => {
+    expect(dealsMetadata({ tag: 'Hogar' }).alternates?.canonical).toBe('/chollos/hogar')
+    expect(dealsMetadata({ tag: 'a b<' }).alternates?.canonical).toBe('/chollos')
+  })
+
+  it('is noindex when there is a search', () => {
+    expect(dealsMetadata({ q: 'lego' }).robots).toEqual({ index: false, follow: true })
+    expect(dealsMetadata({ q: ' ' }).robots).toBeUndefined()
+  })
+
+  it('only claims coupons and other stores when the data shows them', () => {
+    expect(dealsMetadata({ stores: [st('amazon', 5, 0)] }).description).not.toMatch(/cupones|otras tiendas/)
+    expect(dealsMetadata({ stores: [st('amazon', 5, 2), st('aliexpress', 1, 0)] }).description).toBe(
+      'Los mejores chollos de Amazon y cupones de otras tiendas, seleccionados cada día por PatoBarato.',
+    )
+    expect(dealsMetadata({}).description).not.toMatch(/Amazon|cupones/)
   })
 })

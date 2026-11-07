@@ -1,14 +1,14 @@
 import type { Metadata } from 'next'
 import { HomeClient } from '../components/HomeClient'
 import { fetchCoupons } from '../lib/coupons'
-import { fetchDeals, fetchHashtags, fetchLatestDeal } from '../lib/deals'
+import { fetchDeals, fetchLatestDeal } from '../lib/deals'
 import { ANNOUNCE_WINDOW_DAYS, nextEvent, upcomingEvents } from '../lib/events'
 import { heroHighlights } from '../lib/highlights'
 import { fetchStores } from '../lib/stores-data'
 import { homeMetadata, jsonLdScript, siteJsonLd } from '../lib/seo'
 import { getSupabase } from '../lib/supabase'
 
-// Listings are regenerated at most every 60 s. Requests with `?q=`, `?tag=` or `?orden=` are
+// Listings are regenerated at most every 60 s. Requests with `?q=`, `?tag=`, `?orden=` or `?tienda=` are
 // rewritten to `/buscar` (see next.config), so this page never depends on the query string.
 export const revalidate = 60
 
@@ -25,10 +25,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function HomePage() {
   const now = new Date()
-  // Each part degrades on its own: without server data the client fetches it as in v1.
-  const [page, tags, coupons, stores, latest] = await Promise.all([
+  // Each part degrades on its own: without deals the carousel shows an honest fallback.
+  const [page, coupons, stores, latest] = await Promise.all([
     optional(() => fetchDeals(getSupabase(), { page: 0 })),
-    optional(() => fetchHashtags(getSupabase(), 12)),
     loadCoupons(),
     loadStores(),
     optional(() => fetchLatestDeal(getSupabase())),
@@ -39,8 +38,7 @@ export default async function HomePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(siteJsonLd())} />
       <HomeClient
         now={now.toISOString()}
-        initialDeals={page && { q: '', tag: null, sort: 'recientes', ...page }}
-        initialTags={tags?.map((h) => h.tag)}
+        deals={page?.deals.slice(0, 5)}
         highlights={heroHighlights(page?.deals ?? [], couponList)}
         coupons={couponList}
         stores={stores ?? []}

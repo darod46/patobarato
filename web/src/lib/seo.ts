@@ -119,6 +119,16 @@ export function hashtagMetadata(tag: string, count: number): Metadata {
   }
 }
 
+/** Honest title/description parts from the stores with data; undefined without stores. */
+function storeCopy(stores: StoreStats[]) {
+  const coupons = stores.some((s) => s.coupons > 0)
+  const others = stores.some((s) => s.store !== 'amazon' && (s.deals > 0 || s.coupons > 0))
+  return {
+    title: `PatoBarato · Chollos${coupons ? ' y cupones' : ''} de Amazon${others ? ' y otras tiendas' : ''}`,
+    description: `Los mejores chollos de Amazon${coupons ? ' y cupones' : ''}${others ? ' de otras tiendas' : ''}, seleccionados cada día por PatoBarato.`,
+  }
+}
+
 /**
  * Home metadata. For the v1 query links, `?tag=` is canonical on its hashtag page and `?q=` is never
  * indexed. With `stores` (those with deals or coupons) the title mentions coupons only if some store
@@ -128,17 +138,32 @@ export function hashtagMetadata(tag: string, count: number): Metadata {
 export function homeMetadata(params: { q?: string; tag?: string; stores?: StoreStats[] }): Metadata {
   const tag = params.tag ? parseTagParam(params.tag) : null
   const stores = params.stores ?? []
-  const coupons = stores.some((s) => s.coupons > 0)
-  const others = stores.some((s) => s.store !== 'amazon' && (s.deals > 0 || s.coupons > 0))
-  const title = stores.length
-    ? `PatoBarato · Chollos${coupons ? ' y cupones' : ''} de Amazon${others ? ' y otras tiendas' : ''}`
-    : undefined
-  const description = stores.length
-    ? `Los mejores chollos de Amazon${coupons ? ' y cupones' : ''}${others ? ' de otras tiendas' : ''}, seleccionados cada día por PatoBarato.`
-    : undefined
+  const { title, description } = storeCopy(stores)
   return {
-    ...(title && { title, description, openGraph: { title, description, images: [OG_IMAGE] } }),
+    ...(stores.length > 0 && { title, description, openGraph: { title, description, images: [OG_IMAGE] } }),
     alternates: { canonical: tag ? tagPath(tag) : '/' },
+    ...(params.q?.trim() ? { robots: NOINDEX } : {}),
+  }
+}
+
+/**
+ * `/chollos` metadata: a fixed title, the same store-honest description as the home, canonical on
+ * `/chollos` (or the hashtag page for a legacy `?tag=`), and `noindex` for any search.
+ */
+export function dealsMetadata(params: { q?: string; tag?: string; stores?: StoreStats[] }): Metadata {
+  const tag = params.tag ? parseTagParam(params.tag) : null
+  const stores = params.stores ?? []
+  const title = 'Chollos de hoy · PatoBarato'
+  const description = stores.length
+    ? storeCopy(stores).description
+    : 'Los últimos chollos cazados por PatoBarato, con su precio, el precio anterior y el cupón si lo hay.'
+  const path = tag ? tagPath(tag) : '/chollos'
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: { type: 'website', siteName: 'PatoBarato', locale: 'es_ES', url: path, title, description, images: [OG_IMAGE] },
+    twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
     ...(params.q?.trim() ? { robots: NOINDEX } : {}),
   }
 }

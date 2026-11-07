@@ -1,11 +1,10 @@
 import type { Metadata } from 'next'
-import { HomeClient } from '../../components/HomeClient'
-import { fetchCoupons } from '../../lib/coupons'
+import { DealsClient } from '../../components/DealsClient'
 import { fetchStores } from '../../lib/stores-data'
-import { homeMetadata } from '../../lib/seo'
+import { dealsMetadata } from '../../lib/seo'
 import { getSupabase } from '../../lib/supabase'
 
-// Serves `/?q=…` and `/?tag=…` (rewritten here by next.config; the browser URL stays `/?…`).
+// Serves `/?q=…`, `/?tag=…` and `/chollos?q=…` (rewritten here by next.config; the browser URL stays the original).
 // Rendered per request for its metadata; the listing itself is fetched on the client as in v1,
 // since the filters are read from the URL after hydration.
 
@@ -20,22 +19,13 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const params = await searchParams
   const stores = await loadStores()
-  return homeMetadata({ q: first(params.q), tag: first(params.tag), stores })
+  return dealsMetadata({ q: first(params.q), tag: first(params.tag), stores })
 }
 
 /** Resolves to [] on any failure, including missing env vars. */
-const loadCoupons = () => Promise.resolve().then(() => fetchCoupons(getSupabase(), 4)).catch(() => [])
-
 const loadStores = () => Promise.resolve().then(() => fetchStores(getSupabase())).catch(() => [])
 
-export default async function FilteredHomePage() {
-  const [coupons, stores] = await Promise.all([loadCoupons(), loadStores()])
-  // Events and the calendar come from the static calendar inside HomeClient, as on the home.
-  return (
-    <HomeClient
-      now={new Date().toISOString()}
-      coupons={coupons}
-      stores={stores}
-    />
-  )
+export default async function FilteredDealsPage() {
+  const stores = await loadStores()
+  return <DealsClient now={new Date().toISOString()} stores={stores} />
 }

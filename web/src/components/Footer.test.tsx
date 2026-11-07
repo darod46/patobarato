@@ -5,10 +5,15 @@ import { Footer } from './Footer'
 describe('Footer', () => {
   it('links to the legal pages and coupons', () => {
     render(<Footer year={2026} />)
-    for (const href of ['/aviso-legal', '/privacidad', '/cookies', '/afiliados', '/contacto', '/cupones']) {
+    for (const href of ['/aviso-legal', '/privacidad', '/cookies', '/afiliados', '/contacto', '/cupones', '/chollos']) {
       expect(screen.getAllByRole('link').some((l) => l.getAttribute('href') === href)).toBe(true)
     }
     expect(screen.getByText('© 2026 PatoBarato')).toBeInTheDocument()
+  })
+
+  it('links «Por categoría» to the listing page', () => {
+    render(<Footer year={2026} />)
+    expect(screen.getByRole('link', { name: 'Por categoría' })).toHaveAttribute('href', '/chollos')
   })
 
   it('names other stores in the affiliate notice only when they have data', () => {

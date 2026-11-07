@@ -3,7 +3,7 @@ import { tagPath } from '../lib/urls'
 type Props = {
   tags: string[]
   active: string | null
-  /** Button mode (filters in place). Without it the chips are links to `/chollos/{tag}` and `/`. */
+  /** Button mode (filters in place). Without it the chips are links to `/chollos/{tag}` and `/chollos`. */
   onSelect?: (tag: string | null) => void
 }
 
@@ -45,7 +45,7 @@ export function HashtagChips({ tags, active, onSelect }: Props) {
       <Chip
         label="Todos"
         pressed={active === null}
-        href="/"
+        href="/chollos"
         onSelect={onSelect && (() => onSelect(null))}
       />
       {shown.map((tag) => (
