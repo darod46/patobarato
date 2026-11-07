@@ -31,6 +31,20 @@ STRIKE_MARK = "~~"  # added by the listener around strikethrough text
 STRIKETHROUGH_RE = re.compile(r"~~(.*?)~~", re.DOTALL)
 # Keywords (accent-free, lowercase) that make the amount right after them the price.
 PRICE_KEYWORD_RE = re.compile(r"\b(?:precio final|precio|ahora|oferta)\s*[:\-]?\s*$")
+# "Precio <store>", "Precio en <store>", "PVP <store>": another store's reference price,
+# neither the deal price nor its previous price. Any word right after the keyword marks
+# one, except these generic price words (accent-free, lowercase).
+GENERIC_PRICE_WORDS = frozenset(
+    {
+        "final", "oferta", "actual", "habitual", "anterior", "original", "minimo",
+        "recomendado", "normal", "rebajado", "total", "especial", "ahora", "antes", "hoy",
+    }
+)
+REFERENCE_STORE_RE = re.compile(
+    r"\b(?:precio|pvp)\s+(?:(?:en|de|del)\s+)?(?!(?:en|de|del)\b)(?P<word>[^\W\d_][\w'&.\-]*)"
+)
+# Max characters between the store name and its amount.
+REFERENCE_GAP = 20
 # An amount followed by one of these (accent-free, lowercase) is a discount, not a price.
 DISCOUNT_SUFFIX_RE = re.compile(r"\s*(?:de\s+)?(?:descuento|dto)\b")
 
@@ -109,8 +123,29 @@ def _money_value(m: re.Match[str]) -> Decimal | None:
     return parse_amount(m.group("before") or m.group("after"))
 
 
-def _find_previous(folded: str) -> tuple[Decimal | None, tuple[int, int] | None]:
-    """Return the previous price and the span of its text, if any."""
+Span = tuple[int, int]
+
+
+def _overlaps(start: int, end: int, spans: list[Span]) -> bool:
+    return any(start < span_end and end > span_start for span_start, span_end in spans)
+
+
+def _reference_spans(folded: str) -> list[Span]:
+    """Spans of amounts quoted as another store's price ("Precio MediaMarkt: 25€")."""
+    spans: list[Span] = []
+    for m in REFERENCE_STORE_RE.finditer(folded):
+        if m.group("word") in GENERIC_PRICE_WORDS:
+            continue
+        line_end = folded.find("\n", m.end())
+        window = folded[m.end() : line_end if line_end != -1 else len(folded)]
+        found = MONEY_RE.search(window) or BARE_AMOUNT_RE.search(window)
+        if found and found.start() <= REFERENCE_GAP:
+            spans.append((m.end() + found.start(), m.end() + found.end()))
+    return spans
+
+
+def _find_previous(folded: str, excluded: list[Span]) -> tuple[Decimal | None, Span | None]:
+    """Return the previous price and the span of its text, if any (not in ``excluded``)."""
     for m in STRIKETHROUGH_RE.finditer(folded):
         inner = MONEY_RE.search(m.group(1)) or BARE_AMOUNT_RE.search(m.group(1))
         if inner:
@@ -122,16 +157,18 @@ def _find_previous(folded: str) -> tuple[Decimal | None, tuple[int, int] | None]
         window = folded[m.end() : line_end if line_end != -1 else len(folded)]
         for pattern in (MONEY_RE, BARE_AMOUNT_RE):
             found = pattern.search(window)
+            if found and _overlaps(m.end() + found.start(), m.end() + found.end(), excluded):
+                break
             if found and found.start() <= PREVIOUS_GAP:
                 value = _money_value(found) if pattern is MONEY_RE else parse_amount(found.group())
                 return value, (m.end() + found.start(), m.end() + found.end())
     return None, None
 
 
-def _find_price(folded: str, previous_span: tuple[int, int] | None) -> Decimal | None:
+def _find_price(folded: str, excluded: list[Span]) -> Decimal | None:
     first: Decimal | None = None
     for m in MONEY_RE.finditer(folded):
-        if previous_span and m.start() < previous_span[1] and m.end() > previous_span[0]:
+        if _overlaps(m.start(), m.end(), excluded):
             continue
         value = _money_value(m)
         if value is None or value <= 0:
@@ -160,8 +197,9 @@ def _find_coupon(text: str, folded: str) -> str | None:
 
 def parse_prices(text: str) -> PriceInfo:
     folded = _fold(text)
-    previous, span = _find_previous(folded)
-    price = _find_price(folded, span)
+    references = _reference_spans(folded)
+    previous, span = _find_previous(folded, references)
+    price = _find_price(folded, references + ([span] if span else []))
     if price is None or (previous is not None and previous <= price):
         previous = None
     return PriceInfo(price, previous, _find_coupon(unicodedata.normalize("NFC", text), folded))

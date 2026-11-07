@@ -1,4 +1,5 @@
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -195,3 +196,50 @@ def test_title_starting_with_demonstrative_keeps_the_product():
 
 def test_title_with_colon_but_no_lead_in_is_kept():
     assert parse_title("Xiaomi Redmi Note 13: 8GB + 256GB 189€") == "Xiaomi Redmi Note 13: 8GB + 256GB"
+
+
+CAZACHOLLAZOS = Path(__file__).parent / "fixtures"
+
+
+def _cazachollazos(name: str) -> str:
+    return (CAZACHOLLAZOS / f"cazachollazos_{name}.txt").read_text("utf-8")
+
+
+def test_other_store_reference_price_is_not_the_deal_price():
+    info = parse_prices(_cazachollazos("a"))
+    assert (info.price, info.previous_price) == (None, None)
+
+
+@pytest.mark.parametrize(
+    ("text", "price"),
+    [
+        ("Precio en MediaMarkt: 25€", None),
+        ("Auriculares 19,99€\nPrecio en MediaMarkt: 25€", Decimal("19.99")),
+        ("Precio en MediaMarkt: 25€\nAuriculares a 19,99€", Decimal("19.99")),
+        ("PVP Carrefour 30€", None),
+        ("Precio El Corte Inglés: 40€ y aquí 29,99€", Decimal("29.99")),
+    ],
+)
+def test_reference_store_prices_are_ignored(text, price):
+    info = parse_prices(text)
+    assert (info.price, info.previous_price) == (price, None)
+
+
+def test_reference_store_pvp_is_not_the_previous_price():
+    assert parse_prices("Cascos 20€ PVP Carrefour 30€") == PriceInfo(Decimal("20"), None, None)
+
+
+@pytest.mark.parametrize(
+    ("text", "price", "previous"),
+    [
+        ("Precio oferta 9,99€", Decimal("9.99"), None),
+        ("Precio final: 12,50€", Decimal("12.50"), None),
+        ("Precio actual 15€ precio habitual 20€", Decimal("15"), Decimal("20")),
+        ("Precio mínimo 7€", Decimal("7"), None),
+        ("Precio de 25€", Decimal("25"), None),
+        ("Ratón 10€ PVP recomendado 18€", Decimal("10"), Decimal("18")),
+    ],
+)
+def test_generic_price_words_are_not_stores(text, price, previous):
+    info = parse_prices(text)
+    assert (info.price, info.previous_price) == (price, previous)
