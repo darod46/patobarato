@@ -84,6 +84,9 @@ TITLE_PITCH_RE = re.compile(
     re.IGNORECASE,
 )
 TITLE_MAX_LENGTH = 200
+# "Durex ▫️ Lubricante…": white small square (optionally with the emoji selector)
+# between brand and product.
+BRAND_SEPARATOR_RE = re.compile("\\s*\u25ab\ufe0f?\\s*")
 
 HASHTAG_RE = re.compile(r"(?<!\w)#(\w+)")
 
@@ -225,17 +228,29 @@ def _strip_marketing(title: str) -> str:
     return product[0].upper() + product[1:]
 
 
+def _clean_title_line(line: str) -> str:
+    line = URL_RE.sub("", line)
+    line = MONEY_RE.sub("", line).replace(STRIKE_MARK, "")
+    line = _strip_emojis(line)
+    line = LEADING_NOISE_RE.sub("", line)
+    line = TITLE_FORMULA_RE.sub("", line)
+    line = TITLE_TRAILING_RE.sub("", " ".join(line.split()))
+    line = _strip_marketing(line)
+    return line[:TITLE_MAX_LENGTH].rstrip()
+
+
 def parse_title(text: str) -> str:
-    for line in text.splitlines():
-        line = URL_RE.sub("", line)
-        line = MONEY_RE.sub("", line).replace(STRIKE_MARK, "")
-        line = _strip_emojis(line)
-        line = LEADING_NOISE_RE.sub("", line)
-        line = TITLE_FORMULA_RE.sub("", line)
-        line = TITLE_TRAILING_RE.sub("", " ".join(line.split()))
-        line = _strip_marketing(line)
-        if line:
-            return line[:TITLE_MAX_LENGTH].rstrip()
+    lines = text.splitlines()
+    # "Brand ▫️ Product" names the product, whatever headline comes before it.
+    for line in lines:
+        if BRAND_SEPARATOR_RE.search(line):
+            title = _clean_title_line(BRAND_SEPARATOR_RE.sub(" ", line))
+            if title:
+                return title
+    for line in lines:
+        title = _clean_title_line(line)
+        if title:
+            return title
     return ""
 
 

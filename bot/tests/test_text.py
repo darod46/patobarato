@@ -243,3 +243,23 @@ def test_reference_store_pvp_is_not_the_previous_price():
 def test_generic_price_words_are_not_stores(text, price, previous):
     info = parse_prices(text)
     assert (info.price, info.previous_price) == (price, previous)
+
+
+@pytest.mark.parametrize(
+    ("name", "title"),
+    [
+        ("a", "Durex Lubricante Original H2O 100 ml"),
+        ("b", "Skechers Slip-ins Summits Rosa Ros"),
+        ("c", "Xiaomi Power Bank 10000mAh 22.5W Lite, Ligera y Portátil, Potencia Máxima de 22,5 W"),
+    ],
+)
+def test_title_from_brand_separator_line(name, title):
+    assert parse_title(_cazachollazos(name)) == title
+
+
+def test_brand_separator_without_variation_selector():
+    assert parse_title("Top ventas\nAnker ▫ Cargador 65W 25€") == "Anker Cargador 65W"
+
+
+def test_brand_separator_title_is_capped():
+    assert len(parse_title("Oferta\nMarca ▫️ " + "x" * 300)) == 200
