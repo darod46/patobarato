@@ -25,6 +25,7 @@ export function GuideView({ guide, now, stores }: Props) {
   const hasComparison = guide.items.some((it) => it.specs.length > 0)
   const hasHowToChoose = guide.howToChooseMd.trim() !== ''
   const hasFaq = guide.faq.length > 0
+  const hasItems = guide.items.length > 0
   return (
     <div className="min-h-screen bg-white font-sans text-ink">
       <Header search={null} />
@@ -44,7 +45,7 @@ export function GuideView({ guide, now, stores }: Props) {
             </li>
             <li className="flex min-w-0 items-center gap-1.5">
               <ChevronRight size={14} aria-hidden="true" />
-              <span aria-current="page">{guide.category}</span>
+              <span aria-current="page">{guide.title}</span>
             </li>
           </ol>
         </nav>
@@ -66,9 +67,10 @@ export function GuideView({ guide, now, stores }: Props) {
             <GuideToc items={guide.items} hasComparison={hasComparison} hasHowToChoose={hasHowToChoose} hasFaq={hasFaq} />
           </aside>
           <div className="flex min-w-0 flex-col gap-10">
-            <QuickPicks items={guide.items} now={now} />
+            {hasItems && <QuickPicks items={guide.items} now={now} />}
             <AffiliateNotice />
             <Markdown source={guide.introMd} />
+            {hasItems && (
             <section aria-labelledby="recomendaciones-titulo" className="flex flex-col gap-6">
               <h2 id="recomendaciones-titulo" className="font-display text-2xl font-bold tracking-[-0.02em]">
                 Nuestras recomendaciones
@@ -77,6 +79,7 @@ export function GuideView({ guide, now, stores }: Props) {
                 <GuideItemCard key={it.id} item={it} index={i + 1} now={now} />
               ))}
             </section>
+            )}
             {hasComparison && <ComparisonTable items={guide.items} />}
             {hasHowToChoose && (
               <section id="como-elegir" aria-labelledby="como-elegir-titulo" className="scroll-mt-24">

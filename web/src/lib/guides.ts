@@ -70,5 +70,5 @@ export function guidePath(slug: string): string {
 export function hasFreshPrices(checkedAt: string | null, now: Date): boolean {
   if (checkedAt === null) return false
   const age = now.getTime() - new Date(checkedAt).getTime()
-  return !Number.isNaN(age) && age < FRESH_MS
+  return !Number.isNaN(age) && age >= 0 && age < FRESH_MS
 }

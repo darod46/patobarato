@@ -39,7 +39,9 @@ describe('GuideView', () => {
     expect(document.getElementById('como-elegir')).not.toBeNull()
     const crumbs = within(screen.getByRole('navigation', { name: 'Ruta de navegación' }))
     expect(crumbs.getByRole('link', { name: 'Guías' })).toHaveAttribute('href', '/guias')
-    expect(crumbs.queryByRole('link', { name: 'Cocina' })).toBeNull()
+    expect(crumbs.queryByRole('link', { name: 'Mejores freidoras de aire' })).toBeNull()
+    expect(crumbs.getByText('Mejores freidoras de aire')).toHaveAttribute('aria-current', 'page')
+    for (const id of ['eleccion-rapida', 'comparativa', 'faq']) expect(document.getElementById(id)).not.toBeNull()
   })
 
   it('shows the stale-price label and still renders the guide', () => {
@@ -55,9 +57,17 @@ describe('GuideView', () => {
     expect(screen.queryByRole('heading', { name: 'Comparativa' })).toBeNull()
     expect(screen.queryByRole('heading', { name: 'Preguntas frecuentes' })).toBeNull()
     expect(document.getElementById('como-elegir')).toBeNull()
+    expect(document.getElementById('comparativa')).toBeNull()
+    expect(document.getElementById('faq')).toBeNull()
     const toc = within(screen.getAllByRole('navigation', { name: 'En esta guía' })[0]!)
     expect(toc.queryByRole('link', { name: 'Comparativa' })).toBeNull()
     expect(toc.queryByRole('link', { name: 'Cómo elegir' })).toBeNull()
     expect(toc.queryByRole('link', { name: 'Preguntas frecuentes' })).toBeNull()
+  })
+
+  it('omits quick picks and recommendations when there are no items', () => {
+    render(<GuideView guide={guide({ items: [] })} now={NOW} stores={[]} />)
+    expect(document.getElementById('eleccion-rapida')).toBeNull()
+    expect(screen.queryByRole('heading', { name: 'Nuestras recomendaciones' })).toBeNull()
   })
 })

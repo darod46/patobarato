@@ -2,11 +2,12 @@ import { render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { item, offer } from '../../../components/guides/test-fixtures'
 import { fetchGuide } from '../../../lib/guides-data'
+import { getSupabase } from '../../../lib/supabase'
 import { fetchStores } from '../../../lib/stores-data'
 import type { Guide } from '../../../lib/types'
 import GuidePage, { generateMetadata } from './page'
 
-vi.mock('../../../lib/supabase', () => ({ getSupabase: () => ({}) }))
+vi.mock('../../../lib/supabase', () => ({ getSupabase: vi.fn(() => ({})) }))
 vi.mock('../../../lib/guides-data', () => ({ fetchGuide: vi.fn() }))
 vi.mock('../../../lib/stores-data', () => ({ fetchStores: vi.fn() }))
 
@@ -33,6 +34,7 @@ const params = (slug: string) => ({ params: Promise.resolve({ slug }) })
 
 beforeEach(() => {
   vi.mocked(fetchGuide).mockReset()
+  vi.mocked(getSupabase).mockReset().mockReturnValue({} as never)
   vi.mocked(fetchStores).mockReset().mockResolvedValue([])
 })
 
@@ -69,7 +71,27 @@ describe('GuidePage', () => {
     const all = types.join('\n')
     expect(all).toContain('"Article"')
     expect(all).toContain('"FAQPage"')
+    expect(all).toContain('"ItemList"')
     expect(all).toContain('"BreadcrumbList"')
+  })
+
+  it('omits FAQPage JSON-LD when there are no questions', async () => {
+    vi.mocked(fetchGuide).mockResolvedValue(guide({ faq: [] }))
+    const { container } = render(await GuidePage(params('mejores-freidoras')))
+    const all = [...container.querySelectorAll('script[type="application/ld+json"]')].map((s) => s.textContent).join('\n')
+    expect(all).toContain('"Article"')
+    expect(all).not.toContain('FAQPage')
+  })
+
+  it.each([
+    ['fetchGuide rejects', () => vi.mocked(fetchGuide).mockImplementation(async () => { throw new Error('down') })],
+    ['getSupabase throws', () => vi.mocked(getSupabase).mockImplementation(() => { throw new Error('no env') })],
+  ])('responds 404 when %s', async (_n, setup) => {
+    setup()
+    const page = await GuidePage(params('x')).catch((e: unknown) => e)
+    expect((page as { digest?: string }).digest).toBe('NEXT_HTTP_ERROR_FALLBACK;404')
+    const meta = await generateMetadata(params('x')).catch((e: unknown) => e)
+    expect((meta as { digest?: string }).digest).toBe('NEXT_HTTP_ERROR_FALLBACK;404')
   })
 
   it('still renders when the stores for the footer fail to load', async () => {

@@ -23,7 +23,8 @@ type Props = { params: Promise<{ slug: string }> }
 const optional = <T,>(load: () => Promise<T>) => Promise.resolve().then(load).catch(() => undefined)
 
 // Shared by generateMetadata and the page within one request. Null means 404 (unknown slug).
-const loadGuide = cache(async (slug: string) => fetchGuide(getSupabase(), slug))
+// A failed lookup (or missing env) is a 404, never a 500.
+const loadGuide = cache(async (slug: string) => (await optional(() => fetchGuide(getSupabase(), slug))) ?? null)
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const guide = await loadGuide((await params).slug)

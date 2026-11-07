@@ -172,6 +172,7 @@ describe('hasFreshPrices', () => {
     expect(hasFreshPrices('2026-11-06T12:00:00Z', now)).toBe(true)
     expect(hasFreshPrices('2026-11-05T11:00:00Z', now)).toBe(false)
     expect(hasFreshPrices(null, now)).toBe(false)
+    expect(hasFreshPrices('2026-11-08T12:00:00Z', now)).toBe(false)
     expect(hasFreshPrices('nope', now)).toBe(false)
   })
 })
