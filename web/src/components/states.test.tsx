@@ -13,6 +13,12 @@ describe('listing states', () => {
     expect(onClear).toHaveBeenCalled()
   })
 
+  it('EmptyState takes a message and omits the button without onClear', () => {
+    render(<EmptyState message="Ningún chollo coincide con “x”" />)
+    expect(screen.getByText('Ningún chollo coincide con “x”')).toBeInTheDocument()
+    expect(screen.queryByRole('button')).toBeNull()
+  })
+
   it('ErrorState retries', async () => {
     const onRetry = vi.fn()
     render(<ErrorState onRetry={onRetry} />)

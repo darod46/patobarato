@@ -130,19 +130,16 @@ function storeCopy(stores: StoreStats[]) {
 }
 
 /**
- * Home metadata. For the v1 query links, `?tag=` is canonical on its hashtag page and `?q=` is never
- * indexed. With `stores` (those with deals or coupons) the title mentions coupons only if some store
- * has them, and "otras tiendas" only when a non-Amazon store has data — never claim what the data
+ * Home metadata. With `stores` (those with deals or coupons) the title mentions coupons only if some
+ * store has them, and "otras tiendas" only when a non-Amazon store has data — never claim what the data
  * does not show. Without stores the layout's default title stays.
  */
-export function homeMetadata(params: { q?: string; tag?: string; stores?: StoreStats[] }): Metadata {
-  const tag = params.tag ? parseTagParam(params.tag) : null
+export function homeMetadata(params: { stores?: StoreStats[] }): Metadata {
   const stores = params.stores ?? []
   const { title, description } = storeCopy(stores)
   return {
     ...(stores.length > 0 && { title, description, openGraph: { title, description, images: [OG_IMAGE] } }),
-    alternates: { canonical: tag ? tagPath(tag) : '/' },
-    ...(params.q?.trim() ? { robots: NOINDEX } : {}),
+    alternates: { canonical: '/' },
   }
 }
 
@@ -303,7 +300,7 @@ export function siteJsonLd(): Record<string, unknown>[] {
       url: SITE_URL,
       potentialAction: {
         '@type': 'SearchAction',
-        target: `${SITE_URL}/?q={search_term_string}`,
+        target: `${SITE_URL}/buscar?q={search_term_string}`,
         'query-input': 'required name=search_term_string',
       },
     },

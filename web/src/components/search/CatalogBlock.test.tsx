@@ -25,13 +25,23 @@ describe('CatalogBlock', () => {
     expect(screen.getByText('Ahora mismo no podemos buscar en AliExpress')).toBeInTheDocument()
   })
 
-  it('ready and empty shows the message, or nothing with hideWhenEmpty', () => {
+  it('onlyWhenResults hides loading, error and empty, shows ready with products', () => {
+    for (const status of ['loading', 'error'] as const) {
+      const { container, unmount } = render(<CatalogBlock title="En tiendas" state={{ status, products: [] }} onlyWhenResults />)
+      expect(container).toBeEmptyDOMElement()
+      unmount()
+    }
+    render(<CatalogBlock title="En tiendas" state={{ status: 'ready', products: many(1) }} onlyWhenResults />)
+    expect(screen.getByText('Prod 0')).toBeInTheDocument()
+  })
+
+  it('ready and empty shows the message, or nothing with onlyWhenResults', () => {
     const state = { status: 'ready' as const, products: [] }
     const { unmount } = render(<CatalogBlock title="En tiendas" state={state} />)
     expect(screen.getByText('No hemos encontrado nada en tiendas')).toBeInTheDocument()
     expect(screen.queryByText('Enlaces de afiliado')).toBeNull()
     unmount()
-    const { container } = render(<CatalogBlock title="En tiendas" state={state} hideWhenEmpty />)
+    const { container } = render(<CatalogBlock title="En tiendas" state={state} onlyWhenResults />)
     expect(container).toBeEmptyDOMElement()
   })
 

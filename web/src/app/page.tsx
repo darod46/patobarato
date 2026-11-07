@@ -10,7 +10,7 @@ import { getSupabase } from '../lib/supabase'
 import { optional } from '../lib/optional'
 
 // Listings are regenerated at most every 60 s. Requests with `?q=`, `?tag=`, `?orden=` or `?tienda=` are
-// rewritten to `/buscar` (see next.config), so this page never depends on the query string.
+// redirected (308) to `/buscar` or `/chollos` (see next.config), so this page never depends on the query string.
 export const revalidate = 60
 
 

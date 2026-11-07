@@ -119,23 +119,8 @@ describe('hashtagMetadata', () => {
 })
 
 describe('homeMetadata', () => {
-  it('has no extra metadata without filters', () => {
+  it('has only the canonical without stores', () => {
     expect(homeMetadata({})).toEqual({ alternates: { canonical: '/' } })
-  })
-
-  it('points ?tag= to the hashtag page', () => {
-    expect(homeMetadata({ tag: 'Hogar' }).alternates?.canonical).toBe('/chollos/hogar')
-    expect(homeMetadata({ tag: 'niños' }).alternates?.canonical).toBe('/chollos/ni%C3%B1os')
-  })
-
-  it('ignores an invalid tag', () => {
-    expect(homeMetadata({ tag: 'a b<' }).alternates?.canonical).toBe('/')
-  })
-
-  it('marks searches noindex', () => {
-    expect(homeMetadata({ q: 'lego' }).robots).toEqual({ index: false, follow: true })
-    expect(homeMetadata({ q: 'lego', tag: 'hogar' }).robots).toEqual({ index: false, follow: true })
-    expect(homeMetadata({ q: '' }).robots).toBeUndefined()
   })
 })
 
@@ -145,7 +130,7 @@ describe('siteJsonLd', () => {
     expect(site['@type']).toBe('WebSite')
     expect(site.url).toBe(SITE_URL)
     expect(site.potentialAction['@type']).toBe('SearchAction')
-    expect(site.potentialAction.target).toBe(`${SITE_URL}/?q={search_term_string}`)
+    expect(site.potentialAction.target).toBe(`${SITE_URL}/buscar?q={search_term_string}`)
     expect(site.potentialAction['query-input']).toBe('required name=search_term_string')
     expect(org['@type']).toBe('Organization')
     expect(org.name).toBe('PatoBarato')

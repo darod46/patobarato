@@ -9,14 +9,15 @@ type Props = {
   note?: string
   state: CatalogState
   maxItems?: number
-  hideWhenEmpty?: boolean
+  /** Render only in `ready` state with at least one product: nothing while loading, on error or when empty. */
+  onlyWhenResults?: boolean
 }
 
-export function CatalogBlock({ title, note, state, maxItems = 12, hideWhenEmpty = false }: Props) {
+export function CatalogBlock({ title, note, state, maxItems = 12, onlyWhenResults = false }: Props) {
   if (state.status === 'idle') return null
   const origin = title.replace(/^En /, '')
   const empty = state.status === 'ready' && state.products.length === 0
-  if (empty && hideWhenEmpty) return null
+  if (onlyWhenResults && !(state.status === 'ready' && state.products.length > 0)) return null
   const products = state.status === 'ready' ? state.products.slice(0, maxItems) : []
 
   return (

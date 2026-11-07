@@ -43,7 +43,7 @@ export function SearchClient({
   fetchAli,
   fetchCatalog = defaultFetchCatalog,
 }: Props) {
-  const { q, setQ, flush } = useSearchQuery(initialQ)
+  const { q, debouncedQ, setQ, flush } = useSearchQuery(initialQ)
   const clock = useClock(now)
   const [aliAvailable, setAliAvailable] = useState(true)
 
@@ -60,11 +60,10 @@ export function SearchClient({
     [],
   )
 
-  const term = q.trim()
+  const term = debouncedQ.trim()
   const searching = term.length >= 2
   const ali = useCatalogSearch(term, fetchAli ?? defaultFetchAli)
   const catalog = useCatalogSearch(term, fetchCatalog)
-  const clear = useCallback(() => setQ(''), [setQ])
 
   return (
     <div className="min-h-screen bg-white font-sans text-ink">
@@ -86,14 +85,14 @@ export function SearchClient({
                 q={term}
                 tag={null}
                 sort="recientes"
-                onClear={clear}
+                emptyMessage={`Ningún chollo coincide con “${term}”`}
                 fetchDeals={fetchDeals}
                 initialTags={[]}
                 now={clock}
               />
             </section>
-            <CatalogBlock title="En AliExpress" note={ALI_NOTE} state={ali} hideWhenEmpty={!aliAvailable} />
-            <CatalogBlock title="En tiendas" state={catalog} hideWhenEmpty />
+            <CatalogBlock title="En AliExpress" note={ALI_NOTE} state={ali} onlyWhenResults={!aliAvailable} />
+            <CatalogBlock title="En tiendas" state={catalog} onlyWhenResults />
           </div>
         )}
       </main>

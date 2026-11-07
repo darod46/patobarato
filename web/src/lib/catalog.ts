@@ -30,7 +30,7 @@ function toProduct(row: CatalogRow): CatalogProduct | null {
   const regular = row.price === null || row.price === '' ? NaN : Number(row.price)
   if (!Number.isFinite(regular) || regular <= 0) return null
   const rawSale = numOrNull(row.sale_price)
-  const sale = rawSale !== null && Number.isFinite(rawSale) && rawSale > 0 ? rawSale : null
+  const sale = rawSale !== null && Number.isFinite(rawSale) && rawSale > 0 && rawSale < regular ? rawSale : null
   const price = sale ?? regular
   const originalPrice = sale !== null ? regular : null
   return {

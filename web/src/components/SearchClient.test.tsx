@@ -106,15 +106,23 @@ it('hides the header search link (the page is the search) and has no hashtag chi
     />,
   )
   expect(screen.queryByRole('link', { name: /Buscar chollos/ })).toBeNull()
-  await screen.findByRole('button', { name: 'Quitar filtros' })
+  await screen.findByText('Ningún chollo coincide con “lego”')
   expect(screen.queryByRole('link', { name: '#sony' })).toBeNull()
   expect(screen.queryByRole('button', { name: '#sony' })).toBeNull()
 })
 
-it('the empty deals state clears the field and the URL', async () => {
-  history.replaceState(null, '', '/buscar?q=lego')
+it('the empty deals state names the query and has no clear button', async () => {
   render(<SearchClient now={NOW} initialQ="lego" fetchDeals={fetchDeals()} fetchAli={vi.fn().mockResolvedValue([])} fetchCatalog={vi.fn().mockResolvedValue([])} />)
-  await userEvent.click(await screen.findByRole('button', { name: 'Quitar filtros' }))
-  await waitFor(() => expect(screen.getByRole('searchbox', { name: 'Buscar' })).toHaveValue(''))
-  await waitFor(() => expect(window.location.pathname + window.location.search).toBe('/buscar'))
+  expect(await screen.findByText('Ningún chollo coincide con “lego”')).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Quitar filtros' })).toBeNull()
+})
+
+it('typing a word letter by letter fetches deals once', async () => {
+  const fd = fetchDeals()
+  render(<SearchClient now={NOW} fetchDeals={fd} fetchAli={vi.fn().mockResolvedValue([])} fetchCatalog={vi.fn().mockResolvedValue([])} />)
+  await userEvent.type(screen.getByRole('searchbox', { name: 'Buscar' }), 'freidora')
+  await waitFor(() => expect(fd).toHaveBeenCalledTimes(1))
+  await new Promise((r) => setTimeout(r, 400))
+  expect(fd).toHaveBeenCalledTimes(1)
+  expect(fd.mock.calls[0][0]).toMatchObject({ q: 'freidora' })
 })

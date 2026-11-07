@@ -47,7 +47,7 @@ describe('fetchCatalogSearch', () => {
     })
   })
 
-  it.each(['0', '-3', 'abc'])('treats sale_price %s as no sale', async (sale) => {
+  it.each(['0', '-3', 'abc', '100', '120'])('treats sale_price %s as no sale', async (sale) => {
     const { client } = fakeClient({
       data: [{ ...row, sale_price: sale }],
       error: null,
