@@ -304,9 +304,9 @@ git commit -m "feat(bot): promos command listing AliExpress campaigns"
 
 **Files:**
 - Delete: `web/src/content/events.ts`
-- Modify: `web/src/lib/events.ts`, `web/src/lib/types.ts`, `web/src/components/EventsBlock.tsx`, `web/src/components/AnnouncementBar.tsx`, `web/src/components/HomeClient.tsx`, `web/src/app/page.tsx`
+- Modify: `web/src/lib/events.ts`, `web/src/lib/types.ts`, `web/src/components/EventsBlock.tsx`, `web/src/components/AnnouncementBar.tsx`, `web/src/components/Hero.tsx`, `web/src/components/HomeClient.tsx`, `web/src/app/page.tsx`
 - Create: `web/src/lib/events-data.ts`
-- Test: `web/src/lib/events.test.ts`, `web/src/lib/events-data.test.ts`, `web/src/components/EventsBlock.test.tsx`, `web/src/components/AnnouncementBar.test.tsx`, `web/src/components/HomeClient.test.tsx`
+- Test: `web/src/lib/events.test.ts`, `web/src/lib/events-data.test.ts`, `web/src/components/Hero.test.tsx`, `web/src/components/EventsBlock.test.tsx`, `web/src/components/AnnouncementBar.test.tsx`, `web/src/components/HomeClient.test.tsx`
 
 **Interfaces:**
 - Produces, in `types.ts`:
@@ -322,7 +322,9 @@ git commit -m "feat(bot): promos command listing AliExpress campaigns"
 - `lib/events.ts` (pure): keeps `daysUntil(event, now)` (to `startsOn`), `upcomingEvents(now, n, events)` (now **requires** `events`; "upcoming" = `endsOn ≥ today`), `nextEvent(now, events, withinDays?)`, `whenLabel`, `eventDateLabel`, `eventLongDateLabel`, `ANNOUNCE_WINDOW_DAYS = 45`; adds `eventPhase(event, now): EventPhase`, `eventPath(slug): string` (`/eventos/${slug}`), `eventYear(event): number` (from `startsOn`), `eventRangeLabel(event): string` — approximate → month name alone ("julio"); one day → "11 de noviembre"; same month → `"${d1} – ${d2} de ${m}"` ("27 – 29 de noviembre"); different months → `"${d1} de ${m1} – ${d2} de ${m2}"`.
 - `lib/events-data.ts`: `fetchEvents(client): Promise<SiteEvent[]>` (all rows of `web_events` ordered by `starts_on`), `fetchEvent(client, slug): Promise<SiteEvent | null>`, `fetchEventPromos(client, slug): Promise<CatalogProduct[]>` (rows of `web_event_promos` by `slug` ordered by `position`, mapped with `origin: 'aliexpress'`, `store: 'aliexpress'`, `externalId`, `price`, `originalPrice`, `discountPct` via `discountPercent`, `currency`, `imageUrl`, `affiliateUrl` — export a `toCatalogProduct`-compatible mapper from `lib/catalog.ts` if `toProduct` is private: make `toProduct` exported as `catalogProductFromRow`). `faq` parsed like guides (`a_md` → `aMd`).
 - `HomeClient` props: `event?: SiteEvent | null`, `upcoming?: SiteEvent[]` stay; when both are omitted it renders no bar and no `EventsBlock` (no static fallback). `EventsBlock` and `AnnouncementBar` link the event name to `eventPath(slug)` (`next/link`; the bar's whole text is the link, `min-h-11`).
-- `app/page.tsx`: `const events = await optional('home-events', () => fetchEvents(getSupabase()))`; passes `event={events ? nextEvent(now, events, ANNOUNCE_WINDOW_DAYS) : null}` and `upcoming={events ? upcomingEvents(now, 4, events) : []}`.
+- `app/page.tsx`: `const events = await optional('home-events', () => fetchEvents(getSupabase()))`; passes `event={events ? nextEvent(now, events, ANNOUNCE_WINDOW_DAYS) : null}`, `upcoming={events ? upcomingEvents(now, 4, events) : []}` and `activeEvent={events ? activeEvent(now, events) : null}`.
+- `lib/events.ts` adds `activeEvent(now, events): SiteEvent | null` — the event in phase `during` with the greatest `startsOn`, else null.
+- `Hero` gets a new prop `activeEvent?: SiteEvent | null` (default null). When set, the primary button renders `Chollos del ${activeEvent.name}` with the Lucide `Zap` icon (size 18) and `href={eventPath(activeEvent.slug)}` instead of «Ver chollos de hoy» → `/#chollos`; the Telegram button is unchanged. `HomeClient` passes it through.
 
 - [ ] **Step 1: Write failing tests**
 
@@ -339,6 +341,8 @@ it('labels ranges', () => { expect(eventRangeLabel(bf)).toBe('27 – 29 de novie
 it('eventPath and eventYear', ...)
 // events-data.test.ts — fake supabase client as in guides-data.test.ts
 it('maps web_events rows and faq a_md', ...); it('returns null for unknown slug', ...); it('maps promos to CatalogProduct with origin aliexpress', ...)
+it('activeEvent picks the latest-started event in progress', ...)   // two overlapping → greater startsOn; none during → null
+// Hero test: with activeEvent → link text 'Chollos del Black Friday', href '/eventos/black-friday'; without → 'Ver chollos de hoy', href '/#chollos'
 // EventsBlock/AnnouncementBar tests: link href === '/eventos/black-friday'
 // HomeClient test: without event/upcoming → no AnnouncementBar text, no "Calendario de chollos"
 ```
