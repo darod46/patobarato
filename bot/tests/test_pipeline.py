@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import httpx
 import pytest
+from telethon.errors import FloodWaitError, ImageProcessFailedError, PhotoInvalidDimensionsError
 
 from patobarato.config import Settings
 from patobarato.core.pipeline import MIN_PUBLISH_INTERVAL_SECONDS, Pipeline
@@ -782,3 +783,42 @@ async def test_failed_image_lookup_publishes_without_photo(make_pipeline, publis
     assert statuses == [OfferStatus.PUBLISHED]
     assert downloader.urls == []
     assert publisher.calls[0][1] is None
+
+
+class PhotoRejectingPublisher(FakePublisher):
+    def __init__(self, error: Exception) -> None:
+        super().__init__()
+        self.error = error
+
+    async def publish(self, caption: str, photo: bytes | None) -> tuple[int, int]:
+        self.calls.append((caption, photo))
+        if photo is not None:
+            raise self.error
+        return (-100123, len(self.calls))
+
+
+async def _photo(msg: SourceMessage, url: str) -> bytes | None:
+    return b"bad-photo"
+
+
+@pytest.mark.parametrize(
+    "error", [PhotoInvalidDimensionsError(request=None), ImageProcessFailedError(request=None)]
+)
+async def test_rejected_photo_is_retried_without_photo(make_pipeline, repo, error, caplog):
+    pub = PhotoRejectingPublisher(error)
+    with caplog.at_level(logging.WARNING, logger="patobarato.pipeline"):
+        statuses = await make_pipeline(photo_provider=_photo, pub=pub).process(_msg())
+    assert statuses == [OfferStatus.PUBLISHED]
+    assert [photo for _, photo in pub.calls] == [b"bad-photo", None]
+    assert len(repo.publications()) == 1
+    assert any("without photo" in r.getMessage() for r in caplog.records)
+
+
+@pytest.mark.parametrize(
+    "error", [ConnectionError("down"), FloodWaitError(request=None, capture=60)]
+)
+async def test_transient_failure_with_photo_is_not_retried(make_pipeline, repo, error):
+    pub = PhotoRejectingPublisher(error)
+    statuses = await make_pipeline(photo_provider=_photo, pub=pub).process(_msg())
+    assert statuses == [OfferStatus.PUBLISH_FAILED]
+    assert len(pub.calls) == 1

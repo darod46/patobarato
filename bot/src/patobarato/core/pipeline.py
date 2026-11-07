@@ -14,6 +14,7 @@ from patobarato.models import OfferStatus, ParsedOffer, SourceMessage
 from patobarato.parsing.extract import extract_offers
 from patobarato.parsing.links import UrlResolver
 from patobarato.publishing.format import format_caption
+from patobarato.publishing.telegram_publisher import can_retry_without_photo
 from patobarato.storage.repository import Repository
 from patobarato.stores.base import Store
 from patobarato.stores.registry import StoreRegistry
@@ -160,10 +161,21 @@ class Pipeline:
                 photo = await self._download_photo(image_url)
         affiliate_url = await self._affiliate_url(offer, store)
         await self._wait_publish_slot()
+        caption = format_caption(offer, affiliate_url, store.name)
         try:
-            chat_id, message_id = await self._publisher.publish(
-                format_caption(offer, affiliate_url, store.name), photo
-            )
+            try:
+                chat_id, message_id = await self._publisher.publish(caption, photo)
+            except Exception as exc:
+                if photo is None or not can_retry_without_photo(exc):
+                    raise
+                logger.warning(
+                    "Offer %s (%s) rejected with photo (%s: %s); publishing without photo",
+                    offer_id,
+                    offer.asin,
+                    type(exc).__name__,
+                    exc,
+                )
+                chat_id, message_id = await self._publisher.publish(caption, None)
         except Exception:
             logger.exception("Failed to publish offer %s (%s)", offer_id, offer.asin)
             return OfferStatus.PUBLISH_FAILED

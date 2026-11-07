@@ -23,6 +23,14 @@ def _is_transient(exc: BaseException) -> bool:
     return isinstance(exc, RPCError) and exc.code == 500
 
 
+def can_retry_without_photo(exc: BaseException) -> bool:
+    """A publish error that a post without photo may avoid (e.g. a photo Telegram rejects).
+
+    Transient and flood-wait errors would hit the text-only post just the same.
+    """
+    return not isinstance(exc, FloodWaitError) and not _is_transient(exc)
+
+
 class TelegramPublisher:
     def __init__(
         self,
