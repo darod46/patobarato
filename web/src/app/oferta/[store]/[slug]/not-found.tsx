@@ -28,7 +28,7 @@ export default async function ProductNotFound() {
   return (
     <div className="min-h-screen bg-white font-sans text-ink">
       <Header />
-      <main className="mx-auto max-w-[1200px] px-4 pt-32 pb-16 md:px-8 md:pt-24">
+      <main className="mx-auto max-w-[1200px] px-4 pt-24 pb-16 md:px-8 md:pt-24">
         <div className="flex flex-col items-center gap-4 py-8 text-center">
           <img src="/pato-placeholder.svg" alt="" width={120} height={120} className="h-28 w-28" />
           <h1 className="font-display text-2xl font-bold tracking-[-0.02em] md:text-3xl">Esta oferta ya ha volado</h1>

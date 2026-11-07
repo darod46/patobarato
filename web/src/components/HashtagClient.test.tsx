@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, expect, it, vi } from 'vitest'
 import type { Deal } from '../lib/types'
 import { HashtagClient } from './HashtagClient'
+import { openSearch } from '../test-utils/openSearch'
 
 const deal = (id: number): Deal => ({
   publicationId: id,
@@ -60,7 +61,7 @@ it('loads more within the tag', async () => {
 it('searches within the tag and clears the search', async () => {
   history.replaceState(null, '', '/chollos/ni%C3%B1os')
   const fetchDeals = setup(vi.fn().mockResolvedValue({ deals: [], hasMore: false }))
-  await userEvent.type(screen.getByRole('searchbox', { name: 'Buscar chollos' }), 'lego')
+  await userEvent.type(openSearch(), 'lego')
   await waitFor(() => expect(fetchDeals).toHaveBeenCalledWith({ q: 'lego', tag: 'niños', sort: 'recientes', page: 0 }))
   expect(window.location.pathname + window.location.search).toBe('/chollos/ni%C3%B1os?q=lego')
   await userEvent.click(await screen.findByRole('button', { name: 'Quitar filtros' }))

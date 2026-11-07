@@ -68,7 +68,7 @@ export default async function ProductPage({ params }: Props) {
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(breadcrumbJsonLd(crumbs))} />
       <Header />
-      <main className="mx-auto max-w-[1200px] px-4 pt-32 pb-12 md:px-8 md:pt-24 md:pb-16">
+      <main className="mx-auto max-w-[1200px] px-4 pt-24 pb-12 md:px-8 md:pt-24 md:pb-16">
         <ProductView deal={deal} related={related} now={now} guides={guides} />
       </main>
       <Footer year={new Date(now).getUTCFullYear()} />

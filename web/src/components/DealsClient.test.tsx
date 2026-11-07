@@ -4,6 +4,7 @@ import { renderToString } from 'react-dom/server'
 import { afterEach, expect, it, vi } from 'vitest'
 import type { Deal } from '../lib/types'
 import { DealsClient } from './DealsClient'
+import { openSearch } from '../test-utils/openSearch'
 
 const deal: Deal = {
   publicationId: 1,
@@ -36,7 +37,7 @@ it('renders the H1, the subtitle, search, feed with sort and footer', async () =
   )
   expect(screen.getByRole('heading', { level: 1, name: 'Chollos de hoy' })).toBeInTheDocument()
   expect(screen.getByText('Se actualiza automáticamente')).toBeInTheDocument()
-  expect(within(screen.getByRole('banner')).getByRole('searchbox', { name: 'Buscar chollos' })).toBeInTheDocument()
+  expect(within(screen.getByRole('banner')).getByRole('button', { name: 'Buscar' })).toBeInTheDocument()
   expect(await screen.findByText('Auriculares Sony')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Cargar más chollos' })).toBeInTheDocument()
   expect(await screen.findByRole('link', { name: '#sony' })).toHaveAttribute('href', '/chollos/sony')
@@ -55,7 +56,7 @@ it('reads the URL filters and shows store chips with two or more stores', async 
       stores={[{ store: 'amazon', deals: 3, coupons: 0 }, { store: 'aliexpress', deals: 2, coupons: 1 }]}
     />,
   )
-  expect(screen.getByRole('searchbox', { name: 'Buscar chollos' })).toHaveValue('lego')
+  expect(openSearch()).toHaveValue('lego')
   await waitFor(() =>
     expect(fetchDeals).toHaveBeenLastCalledWith({ q: 'lego', tag: undefined, store: 'aliexpress', sort: 'recientes', page: 0 }),
   )
@@ -109,7 +110,7 @@ it('hydrates server HTML without mismatches and then applies the URL filters', a
     await act(async () => {
       root = hydrateRoot(container, <DealsClient {...props} />, { onRecoverableError })
     })
-    expect(screen.getByRole('searchbox', { name: 'Buscar chollos' })).toHaveValue('lego')
+    expect(openSearch()).toHaveValue('lego')
     await waitFor(() =>
       expect(props.fetchDeals).toHaveBeenLastCalledWith({ q: 'lego', tag: 'sony', sort: 'recientes', page: 0 }),
     )

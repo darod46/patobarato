@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import FilteredDealsPage, { generateMetadata } from './page'
+import { openSearch } from '../../test-utils/openSearch'
 
 describe('/buscar', () => {
   beforeEach(() => {
@@ -12,7 +13,7 @@ describe('/buscar', () => {
   it('renders the listing page (DealsClient), not the home', async () => {
     const { container } = render(await FilteredDealsPage())
     expect(screen.getByRole('heading', { level: 1, name: 'Chollos de hoy' })).toBeInTheDocument()
-    expect(screen.getByRole('searchbox', { name: 'Buscar chollos' })).toBeInTheDocument()
+    expect(openSearch()).toBeInTheDocument()
     expect(container.querySelector('section#como-funciona')).toBeNull()
     expect(screen.queryByRole('region', { name: 'Últimos chollos' })).toBeNull()
   })

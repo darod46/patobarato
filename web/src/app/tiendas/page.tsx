@@ -69,7 +69,7 @@ export default async function StoresPage() {
     <div className="min-h-screen bg-white font-sans text-ink">
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(crumbs)} />
       <Header />
-      <main className="mx-auto max-w-[1200px] px-4 pt-32 pb-16 md:px-8 md:pt-32">
+      <main className="mx-auto max-w-[1200px] px-4 pt-24 pb-16 md:px-8 md:pt-32">
         <h1 className="font-display text-4xl font-bold tracking-[-0.03em] md:text-5xl">Tiendas</h1>
         <p className="mt-3 max-w-2xl text-lg text-muted">
           Las tiendas de las que publicamos chollos y cupones. Los recuentos son los de ahora mismo.

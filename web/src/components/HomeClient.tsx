@@ -63,7 +63,7 @@ export function HomeClient({
   return (
     <div className="min-h-screen bg-white font-sans text-ink">
       <Header />
-      <main className="pt-[118px] md:pt-[72px]">
+      <main className="pt-[60px] md:pt-[72px]">
         <AnnouncementBar
           event={barEvent}
           second={barEvent && calendar[0]?.id === barEvent.id ? (calendar[1] ?? null) : null}

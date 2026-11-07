@@ -52,9 +52,9 @@ export function StoreClient({ store, now, initialDeals, initialTags, stores, cou
 
   return (
     <div className="min-h-screen bg-surface font-sans text-ink">
-      <Header search={<HeaderSearch value={q} onChange={setQ} />} />
+      <Header search={<HeaderSearch value={q} onChange={setQ} />} searchOpen={q !== ''} />
       <main>
-        <div className="mx-auto max-w-[1200px] px-4 pt-32 md:px-8 md:pt-24">
+        <div className="mx-auto max-w-[1200px] px-4 pt-24 md:px-8 md:pt-24">
         <h1 className="font-display text-2xl font-bold tracking-[-0.02em] md:text-[32px]">Chollos de {storeInfo(store).name}</h1>
         <p className="mt-1.5 mb-5 text-muted">{summary}</p>
         </div>

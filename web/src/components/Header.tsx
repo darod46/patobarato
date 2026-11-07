@@ -1,6 +1,7 @@
 import { Send } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { HeaderSearch } from './HeaderSearch'
+import { HeaderSearchToggle } from './HeaderSearchToggle'
 import { MobileNav } from './MobileNav'
 
 import { NAV_LINKS } from '../lib/nav'
@@ -9,8 +10,15 @@ const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visi
 
 const TELEGRAM = 'https://t.me/patobarato'
 
-/** Fixed header: logo, main navigation (collapsed into a menu on small screens), the search (always present) and the channel button. */
-export function Header({ search = <HeaderSearch /> }: { search?: ReactNode }) {
+type Props = {
+  /** The search field; defaults to a plain GET form to /chollos. Listing pages pass a live one. */
+  search?: ReactNode
+  /** Open the search strip from the start (a listing page with a query in the URL). */
+  searchOpen?: boolean
+}
+
+/** Fixed header: logo, main navigation (collapsed into a menu on small screens), a magnifier that drops a search strip, and the channel button. */
+export function Header({ search = <HeaderSearch />, searchOpen = false }: Props) {
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-white/80 backdrop-blur">
       <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-2 md:flex-nowrap md:px-8 md:py-3">
@@ -24,8 +32,8 @@ export function Header({ search = <HeaderSearch /> }: { search?: ReactNode }) {
             </a>
           ))}
         </nav>
-        <div className="order-last w-full md:order-none md:max-w-sm md:flex-1">{search}</div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
+          <HeaderSearchToggle initiallyOpen={searchOpen}>{search}</HeaderSearchToggle>
           <a
             href={TELEGRAM}
             target="_blank"

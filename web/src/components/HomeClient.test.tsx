@@ -3,6 +3,7 @@ import { renderToString } from 'react-dom/server'
 import { expect, it, vi } from 'vitest'
 import { HomeClient } from './HomeClient'
 import type { Deal } from '../lib/types'
+import { openSearch } from '../test-utils/openSearch'
 
 const deal: Deal = {
   publicationId: 1,
@@ -34,7 +35,7 @@ const props = {
 it('renders header, hero, carousel, telegram block and footer', () => {
   render(<HomeClient {...props} deals={[deal]} />)
   expect(within(screen.getByRole('banner')).getByRole('img', { name: 'PatoBarato' })).toBeInTheDocument()
-  expect(screen.getByRole('searchbox', { name: 'Buscar chollos' })).toBeInTheDocument()
+  expect(openSearch()).toBeInTheDocument()
   expect(within(screen.getByRole('banner')).getByRole('link', { name: 'Unirme al canal' })).toHaveAttribute(
     'href',
     'https://t.me/patobarato',
@@ -90,7 +91,7 @@ it('server-renders the carousel deals', () => {
 
 it('header search is a form that submits to /chollos?q= (rewritten to the listing)', () => {
   render(<HomeClient {...props} />)
-  const form = screen.getByRole('search')
+  const form = screen.getByRole('search', { hidden: true })
   expect(form).toHaveAttribute('action', '/chollos')
   expect(form).toHaveAttribute('method', 'get')
 })

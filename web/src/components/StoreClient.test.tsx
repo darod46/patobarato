@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, expect, it, vi } from 'vitest'
 import type { Coupon, Deal } from '../lib/types'
 import { StoreClient } from './StoreClient'
+import { openSearch } from '../test-utils/openSearch'
 
 const deal = (id: number): Deal => ({
   publicationId: id,
@@ -78,7 +79,7 @@ it('loads more with the store fixed and ignores ?tienda=', async () => {
 it('searches within the store', async () => {
   history.replaceState(null, '', '/tiendas/aliexpress')
   const fetchDeals = setup(vi.fn().mockResolvedValue({ deals: [], hasMore: false }))
-  await userEvent.type(screen.getByRole('searchbox', { name: 'Buscar chollos' }), 'lego')
+  await userEvent.type(openSearch(), 'lego')
   await waitFor(() =>
     expect(fetchDeals).toHaveBeenCalledWith({ q: 'lego', tag: undefined, store: 'aliexpress', sort: 'recientes', page: 0 }),
   )

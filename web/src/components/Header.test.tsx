@@ -13,7 +13,7 @@ describe('Header', () => {
     expect(links.map((l) => l.getAttribute('href'))).toEqual(NAV_LINKS.map((l) => l.href))
     expect(links[0]).toHaveAttribute('href', '/chollos')
     expect(screen.getByRole('link', { name: 'Unirme al canal' })).toHaveAttribute('href', 'https://t.me/patobarato')
-    expect(screen.getByLabelText('Buscar chollos')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Buscar' })).toBeInTheDocument()
   })
 
   it('is translucent with a backdrop blur so the page shows through', () => {
@@ -21,9 +21,10 @@ describe('Header', () => {
     expect(screen.getByRole('banner')).toHaveClass('bg-white/80', 'backdrop-blur')
   })
 
-  it('always carries the search, as a GET form to /chollos by default', () => {
+  it('always carries the search behind a magnifier, as a GET form to /chollos by default', () => {
     render(<Header />)
-    const form = screen.getByRole('search')
+    expect(screen.getByRole('button', { name: 'Buscar' })).toBeInTheDocument()
+    const form = screen.getByRole('search', { hidden: true })
     expect(form).toHaveAttribute('action', '/chollos')
     expect(screen.getByLabelText('Buscar chollos')).toHaveAttribute('name', 'q')
   })
