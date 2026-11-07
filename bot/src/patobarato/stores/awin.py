@@ -30,6 +30,16 @@ def _is_tracking(name: str) -> bool:
     return lowered.startswith("utm_") or lowered in _TRACKING
 
 
+def canonical_awin_url(url: str) -> str:
+    """Strip tracking params, fragment and trailing slash; keep the path."""
+    parts = urlparse(url)
+    query = urlencode([(k, v) for k, v in parse_qsl(parts.query, keep_blank_values=True) if not _is_tracking(k)])
+    path = parts.path
+    if len(path) > 1:
+        path = path.rstrip("/") or "/"
+    return urlunparse((parts.scheme, parts.netloc, path, "", query, ""))
+
+
 class AwinStore(BaseStore):
     country = COUNTRY
 
@@ -68,12 +78,7 @@ class AwinStore(BaseStore):
         return f"https://{self.hosts[0]}/{quote(product_id, safe='')}"
 
     def canonical_for(self, url: str, country: str) -> str:
-        parts = urlparse(url)
-        query = urlencode([(k, v) for k, v in parse_qsl(parts.query, keep_blank_values=True) if not _is_tracking(k)])
-        path = parts.path
-        if len(path) > 1:
-            path = path.rstrip("/") or "/"
-        return urlunparse((parts.scheme, parts.netloc, path, "", query, ""))
+        return canonical_awin_url(url)
 
     async def affiliate_url(self, canonical_url: str, product_id: str) -> str:
         if self.merchant_id and self.publisher_id:

@@ -115,7 +115,7 @@ class GuidePriceRefresher:
                 )
             )
         row = await self._repo.find_catalog_product(product.store, canonical)
-        if row is not None and self._is_fresh(row, now):
+        if row is not None and row.in_stock and self._is_fresh(row, now):
             await self._repo.upsert_product_price(
                 product_id,
                 checked_at=now,

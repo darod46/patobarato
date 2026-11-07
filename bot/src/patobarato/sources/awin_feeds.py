@@ -10,6 +10,7 @@ from patobarato.core.pipeline import utcnow
 from patobarato.models import ApiSource, CatalogRow
 from patobarato.sources.awin_source import AwinClient
 from patobarato.storage.repository import Repository
+from patobarato.stores.awin import canonical_awin_url
 
 logger = logging.getLogger("patobarato.awin_feeds")
 
@@ -78,7 +79,7 @@ class AwinFeedsSource:
                     currency="EUR",
                     in_stock=product.in_stock,
                     image_url=product.image_url,
-                    url=product.url,
+                    url=canonical_awin_url(product.url),
                     affiliate_url=product.affiliate_url,
                     feed_updated_at=ran_at,
                 )

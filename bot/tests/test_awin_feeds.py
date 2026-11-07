@@ -187,3 +187,13 @@ async def test_run_config_merchants_take_priority():
     client = _FakeClient({42: [_product(1)]})
     await _source_runner(client, _SpyRepo()).run(_source({"merchants": {"fnac": 42}}))
     assert client.calls == [42]
+
+
+async def test_run_stores_canonical_awin_url():
+    import dataclasses
+
+    repo = _SpyRepo()
+    product = dataclasses.replace(_product(1), url="https://www.pccomponentes.com/foo/?utm_source=x&awc=1")
+    client = _FakeClient({1234: [product], 5678: []})
+    await _source_runner(client, repo).run(_source())
+    assert repo.catalog[("pccomponentes", "1")].url == "https://www.pccomponentes.com/foo"

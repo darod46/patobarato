@@ -249,12 +249,12 @@ async def test_refresh_affiliate_failure_stores_none_and_logs_without_url(caplog
 CANON = "https://fake.example/p/a?canon=1"
 
 
-def _catalog_row(updated_at, sale="8.00", price="10.00", image="http://img/cat"):
+def _catalog_row(updated_at, sale="8.00", price="10.00", image="http://img/cat", in_stock=True):
     from patobarato.models import CatalogRow
 
     return CatalogRow(
         "fake", "a", "Título", None, None, None, None, Decimal(price),
-        Decimal(sale) if sale else None, "EUR", True, image, CANON,
+        Decimal(sale) if sale else None, "EUR", in_stock, image, CANON,
         "https://aff.example/cat", None, updated_at,
     )
 
@@ -318,3 +318,41 @@ async def test_refresh_catalog_keeps_existing_image_and_does_not_sleep():
     await refresher.run(SOURCE)
     assert repo.product_images[pid] == "http://img/old"
     assert sleeps == []
+
+
+async def test_refresh_ignores_out_of_stock_catalog_row():
+    store = FakeStore({"a": PriceQuote(Decimal("1"), None)})
+    repo, refresher, _ = _make([_gp("a")], store)
+    _put(repo, _catalog_row(NOW - timedelta(hours=1), in_stock=False))
+    await refresher.run(SOURCE)
+    assert len(store.calls) == 1
+
+
+async def test_refresh_catalog_row_exactly_36h_is_stale():
+    store = FakeStore({"a": PriceQuote(Decimal("1"), None)})
+    repo, refresher, _ = _make([_gp("a")], store)
+    _put(repo, _catalog_row(NOW - timedelta(hours=36)))
+    await refresher.run(SOURCE)
+    assert len(store.calls) == 1
+
+
+async def test_refresh_finds_awin_row_stored_at_canonical_url_from_tagged_guide_url():
+    from patobarato.stores.awin import awin_store
+
+    store = awin_store("pccomponentes", None, None, None)
+    repo = InMemoryRepository()
+    url = "https://www.pccomponentes.com/foo-bar?tag=x"
+    repo.add_guide_product(GuideProduct("pccomponentes", "foo-bar", url, "Foo", None))
+    row = _catalog_row(NOW - timedelta(hours=1))
+    import dataclasses
+
+    row = dataclasses.replace(row, store="pccomponentes", url=store.canonical_for(url, "ES"))
+    _put(repo, row)
+
+    async def sleep(_):
+        pass
+
+    refresher = GuidePriceRefresher(StoreRegistry([store]), repo, clock=lambda: NOW, sleep=sleep)
+    await refresher.run(SOURCE)
+    pid = await repo.find_product_id("pccomponentes", "ES", "foo-bar")
+    assert repo.prices[pid]["price"] == Decimal("8.00")
