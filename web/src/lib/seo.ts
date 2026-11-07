@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
 import { discountPercent, formatPrice } from './format'
+import { guidePath } from './guides'
 import { storeInfo } from './stores'
 import type { StoreStats } from './stores-data'
-import type { Deal } from './types'
+import type { Deal, Guide } from './types'
 import { SITE_URL, parseTagParam, productPath, tagPath } from './urls'
 
 const MAX_DESCRIPTION = 160
@@ -181,6 +182,76 @@ export function couponsMetadata(count: number): Metadata {
     twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
     ...(count === 0 && { robots: NOINDEX }),
   }
+}
+
+function firstSentence(md: string): string {
+  const plain = md.replace(/[*_`#>[\]]/g, '').replace(/\s+/g, ' ').trim()
+  const m = /^.*?[.!?](?=\s|$)/.exec(plain)
+  return truncate(m ? m[0] : plain, MAX_DESCRIPTION)
+}
+
+export function guideMetadata(guide: Guide, indexable: boolean): Metadata {
+  const title = `${guide.title} · Guías PatoBarato`
+  const description = guide.subtitle ?? firstSentence(guide.introMd)
+  const path = guidePath(guide.slug)
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: { type: 'article', siteName: 'PatoBarato', locale: 'es_ES', url: path, title, description, images: [OG_IMAGE] },
+    twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
+    ...(!indexable && { robots: NOINDEX }),
+  }
+}
+
+export function guidesMetadata(count: number): Metadata {
+  const title = 'Guías de compra · PatoBarato'
+  const description = 'Guías de compra con los mejores productos, sus precios revisados y los cupones que aplican, por PatoBarato.'
+  return {
+    title,
+    description,
+    alternates: { canonical: '/guias' },
+    openGraph: { type: 'website', siteName: 'PatoBarato', locale: 'es_ES', url: '/guias', title, description, images: [OG_IMAGE] },
+    twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
+    ...(count === 0 && { robots: NOINDEX }),
+  }
+}
+
+/** Article, ItemList and (when there are questions) FAQPage structured data for a guide page. */
+export function guideJsonLd(guide: Guide, url: string): Record<string, unknown>[] {
+  const data: Record<string, unknown>[] = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: guide.title,
+      author: { '@type': 'Organization', name: 'PatoBarato' },
+      datePublished: guide.publishedAt,
+      dateModified: guide.updatedAt,
+      mainEntityOfPage: url,
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      itemListElement: guide.items.map((it) => ({
+        '@type': 'ListItem',
+        position: it.position,
+        name: it.name,
+        url: `${url}#producto-${it.position}`,
+      })),
+    },
+  ]
+  if (guide.faq.length > 0) {
+    data.push({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: guide.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.aMd },
+      })),
+    })
+  }
+  return data
 }
 
 /** WebSite (with sitelinks search box) and Organization structured data for the home page. */

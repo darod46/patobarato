@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { formatPrice } from './format'
-import { OG_IMAGE, breadcrumbJsonLd, couponsMetadata, hashtagMetadata, homeMetadata, productJsonLd, productMetadata, siteJsonLd, storeMetadata, storesMetadata, jsonLdScript } from './seo'
-import type { Deal } from './types'
+import { OG_IMAGE, breadcrumbJsonLd, couponsMetadata, guideJsonLd, guideMetadata, guidesMetadata, hashtagMetadata, homeMetadata, productJsonLd, productMetadata, siteJsonLd, storeMetadata, storesMetadata, jsonLdScript } from './seo'
+import type { Deal, Guide } from './types'
 import { SITE_URL, productPath } from './urls'
 
 const deal: Deal = {
@@ -203,5 +203,69 @@ describe('storesMetadata', () => {
     expect(storesMetadata(2).robots).toBeUndefined()
     expect(storesMetadata(2).title).toBe('Tiendas · PatoBarato')
     expect(storesMetadata(2).alternates?.canonical).toBe('/tiendas')
+  })
+})
+
+const guide: Guide = {
+  slug: 'freidoras',
+  title: 'Las mejores freidoras',
+  subtitle: null,
+  category: 'Hogar',
+  author: 'Ana',
+  readingMinutes: 8,
+  publishedAt: '2026-11-01T10:00:00Z',
+  updatedAt: '2026-11-06T10:00:00Z',
+  pricesCheckedAt: null,
+  introMd: 'Elegir **bien** importa. Segunda frase.',
+  howToChooseMd: '',
+  faq: [
+    { q: '¿Una?', aMd: 'Sí **claro**' },
+    { q: '¿Dos?', aMd: 'No' },
+  ],
+  items: [
+    { id: 1, position: 1, name: 'Ninja', award: null, summaryMd: '', pros: [], cons: [], specs: [], imageUrl: null, stores: [] },
+    { id: 2, position: 2, name: 'Cosori', award: null, summaryMd: '', pros: [], cons: [], specs: [], imageUrl: null, stores: [] },
+  ],
+}
+
+describe('guideMetadata', () => {
+  it('builds title, description from the intro and canonical', () => {
+    const m = guideMetadata(guide, true)
+    expect(m.title).toBe('Las mejores freidoras · Guías PatoBarato')
+    expect(m.description).toBe('Elegir bien importa.')
+    expect(m.alternates?.canonical).toBe('/guias/freidoras')
+    expect(m.robots).toBeUndefined()
+  })
+  it('prefers the subtitle and is noindex when not indexable', () => {
+    const m = guideMetadata({ ...guide, subtitle: 'Sub' }, false)
+    expect(m.description).toBe('Sub')
+    expect(m.robots).toEqual({ index: false, follow: true })
+  })
+})
+
+describe('guidesMetadata', () => {
+  it('is noindex only when there are no guides', () => {
+    expect(guidesMetadata(0).robots).toEqual({ index: false, follow: true })
+    expect(guidesMetadata(2).robots).toBeUndefined()
+    expect(guidesMetadata(2).title).toBe('Guías de compra · PatoBarato')
+    expect(guidesMetadata(2).alternates?.canonical).toBe('/guias')
+  })
+})
+
+describe('guideJsonLd', () => {
+  it('returns Article, ItemList and FAQPage', () => {
+    const url = `${SITE_URL}/guias/freidoras`
+    const [article, list, faq] = guideJsonLd(guide, url) as Record<string, any>[]
+    expect(article['@type']).toBe('Article')
+    expect(article.author).toEqual({ '@type': 'Organization', name: 'PatoBarato' })
+    expect(article.mainEntityOfPage).toBe(url)
+    expect(list['@type']).toBe('ItemList')
+    expect(list.itemListElement[1]).toMatchObject({ '@type': 'ListItem', position: 2, name: 'Cosori', url: `${url}#producto-2` })
+    expect(faq['@type']).toBe('FAQPage')
+    expect(faq.mainEntity).toHaveLength(2)
+    expect(faq.mainEntity[0].acceptedAnswer.text).toBe('Sí **claro**')
+  })
+  it('omits FAQPage without questions', () => {
+    expect(guideJsonLd({ ...guide, faq: [] }, 'u')).toHaveLength(2)
   })
 })
