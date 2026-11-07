@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 from decimal import Decimal
 
+from pathlib import Path
 from urllib.parse import urlparse
 
 import httpx
@@ -10,6 +11,7 @@ from patobarato.models import SourceMessage
 from patobarato.parsing.extract import extract_offers
 from patobarato.parsing.links import UrlResolver
 from patobarato.stores.amazon import AmazonStore
+from patobarato.stores.awin import awin_store
 from patobarato.stores.base import BaseStore
 from patobarato.stores.registry import StoreRegistry
 
@@ -194,3 +196,16 @@ async def test_intermediate_aliexpress_page_keeps_resolving(resolver):
     url = "https://sho.rt/ali"
     offers = await extract_offers(_msg(f"Gadget 9€ {url}", [url]), resolver, registry)
     assert [(o.store, o.asin) for o in offers] == [("aliexpress", "1005006123456789")]
+
+
+CAZACHOLLAZOS_A = (Path(__file__).parent / "fixtures" / "cazachollazos_a.txt").read_text("utf-8")
+ECI_SEARCH = "https://www.elcorteingles.es/search-nwx/1?s=8428076001158"
+
+
+async def test_reference_store_search_link_is_not_an_offer(resolver):
+    registry = StoreRegistry(
+        [AmazonStore("patobarato-21", None), awin_store("elcorteingles", None, None, None)]
+    )
+    amazon = "https://www.amazon.es/dp/B084ZK9QVF?tag=cazachollazos-21"
+    offers = await extract_offers(_msg(CAZACHOLLAZOS_A, [ECI_SEARCH, amazon]), resolver, registry)
+    assert [(o.store, o.asin) for o in offers] == [("amazon", "B084ZK9QVF")]

@@ -121,3 +121,30 @@ async def test_awin_store_fetch_price_rejects_non_eur(caplog):
     with caplog.at_level(logging.WARNING):
         assert await make(http=http).fetch_price("x", URL) is None
     assert "USD" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://www.elcorteingles.es/search-nwx/1?s=8428076001158",
+        "https://www.elcorteingles.es/search/?s=lavadora",
+        "https://www.mediamarkt.es/es/search.html?query=tv",
+        "https://www.pccomponentes.com/buscar/?query=ssd",
+        "https://www.pccomponentes.com/busqueda/ssd",
+        "https://www.mediamarkt.es/es/search-results/tv",
+        "https://www.elcorteingles.es/s/lavadora",
+        "https://www.elcorteingles.es/SEARCH-NWX/abc",
+        "https://www.elcorteingles.es/electrodomesticos/12/",
+        "https://www.elcorteingles.es/7",
+    ],
+)
+def test_search_and_listing_pages_are_not_products(url):
+    s = awin_store("elcorteingles", None, None, None)
+    assert s.product_id(url) is None
+
+
+def test_real_eci_product_url_keeps_working():
+    s = awin_store("elcorteingles", None, None, None)
+    url = "https://www.elcorteingles.es/electrodomesticos/A47512345-lavadora-x/"
+    assert s.product_id(url) == "A47512345-lavadora-x"
+    assert s.product_id("https://www.elcorteingles.es/moda/1234/") == "1234"

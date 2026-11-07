@@ -23,6 +23,10 @@ AWIN_NAMES: dict[str, str] = {
     "elcorteingles": "El Corte Inglés",
 }
 _TRACKING = {"awc", "gclid", "fbclid"}
+# Path segments (lowercase, ".html" removed) of search/listing pages, which are not products.
+_LISTING_SEGMENTS = frozenset({"search", "search-nwx", "buscar", "busqueda", "search-results", "s"})
+# A last segment of only digits shorter than this is a page/category number, not a product.
+_MIN_NUMERIC_ID_LENGTH = 4
 
 
 def _is_tracking(name: str) -> bool:
@@ -38,6 +42,10 @@ def canonical_awin_url(url: str) -> str:
     if len(path) > 1:
         path = path.rstrip("/") or "/"
     return urlunparse((parts.scheme, parts.netloc, path, "", query, ""))
+
+
+def _strip_html(segment: str) -> str:
+    return segment[: -len(".html")] if segment.lower().endswith(".html") else segment
 
 
 class AwinStore(BaseStore):
@@ -65,13 +73,13 @@ class AwinStore(BaseStore):
         return any(host == h or host == f"www.{h}" for h in self.hosts)
 
     def product_id(self, url: str) -> str | None:
-        segments = [s for s in urlparse(url).path.split("/") if s]
-        if not segments:
+        """The last path segment, or None for the home page and search/listing pages."""
+        segments = [_strip_html(unquote(s)) for s in urlparse(url).path.split("/") if s]
+        if not segments or any(s.lower() in _LISTING_SEGMENTS for s in segments):
             return None
         last = segments[-1]
-        if last.lower().endswith(".html"):
-            last = last[: -len(".html")]
-        last = unquote(last)
+        if last.isdigit() and len(last) < _MIN_NUMERIC_ID_LENGTH:
+            return None
         return last or None
 
     def canonical_url(self, product_id: str, country: str) -> str:
