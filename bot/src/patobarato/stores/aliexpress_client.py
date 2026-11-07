@@ -1,9 +1,11 @@
 """Client for the AliExpress Portals (affiliate) API."""
 
 import hmac
+import logging
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal, InvalidOperation
 from hashlib import sha256
 from typing import Any
@@ -13,6 +15,8 @@ import httpx
 DEFAULT_ENDPOINT = "https://api-sg.aliexpress.com/sync"
 TARGET_CURRENCY = "EUR"
 TARGET_LANGUAGE = "ES"
+
+logger = logging.getLogger("patobarato.aliexpress")
 
 
 class AliExpressError(Exception):
@@ -32,6 +36,19 @@ class AliProduct:
     image_url: str | None
     url: str
     promotion_link: str | None
+
+
+@dataclass
+class AliPromo:
+    name: str
+    start: date | None
+    end: date | None
+
+
+@dataclass
+class AliPromoPage:
+    products: list[AliProduct]
+    has_more: bool
 
 
 def _decimal(value: Any) -> Decimal | None:
@@ -68,6 +85,32 @@ def _product(raw: dict[str, Any]) -> AliProduct:
 def _products(result: dict[str, Any]) -> list[AliProduct]:
     items = (result.get("result", {}).get("products") or {}).get("product") or []
     return [_product(item) for item in items]
+
+
+def _strict_products(result: dict[str, Any]) -> tuple[list[AliProduct], int]:
+    """Parse products, skipping (and counting) rows without id, positive price or link."""
+    items = (result.get("result", {}).get("products") or {}).get("product") or []
+    products: list[AliProduct] = []
+    skipped = 0
+    for item in items:
+        try:
+            if not item.get("product_id") or not item.get("promotion_link"):
+                raise ValueError("missing field")
+            product = _product(item)
+            if not product.price.is_finite() or product.price <= 0:
+                raise ValueError("bad price")
+        except (KeyError, ValueError, InvalidOperation, AttributeError):
+            skipped += 1
+            continue
+        products.append(product)
+    return products, skipped
+
+
+def _day(value: Any) -> date | None:
+    try:
+        return date.fromisoformat(str(value)[:10])
+    except ValueError:
+        return None
 
 
 class AliExpressClient:
@@ -163,3 +206,41 @@ class AliExpressClient:
             tracking_id=self._tracking_id,
         )
         return _products(self._payload(body, "aliexpress_affiliate_hotproduct_query_response"))
+
+    async def featured_promos(self) -> list[AliPromo]:
+        body = await self.call("aliexpress.affiliate.featuredpromo.get")
+        result = self._payload(body, "aliexpress_affiliate_featuredpromo_get_response")
+        items = (result.get("result", {}).get("promos") or {}).get("promo") or []
+        return [
+            AliPromo(
+                name=str(item["promo_name"]),
+                start=_day(item.get("start_time")),
+                end=_day(item.get("end_time")),
+            )
+            for item in items
+            if item.get("promo_name")
+        ]
+
+    async def featured_promo_products(
+        self, promo_name: str, page_no: int = 1, page_size: int = 50
+    ) -> AliPromoPage:
+        body = await self.call(
+            "aliexpress.affiliate.featuredpromo.products.get",
+            promo_name=promo_name,
+            page_no=page_no,
+            page_size=page_size,
+            target_currency=TARGET_CURRENCY,
+            target_language=TARGET_LANGUAGE,
+            tracking_id=self._tracking_id,
+        )
+        payload = self._payload(body, "aliexpress_affiliate_featuredpromo_products_get_response")
+        products, skipped = _strict_products(payload)
+        if skipped:
+            logger.info(
+                "featuredpromo %s: skipped %d products without price or link", promo_name, skipped
+            )
+        try:
+            total = int(payload.get("result", {}).get("total_record_count") or 0)
+        except (TypeError, ValueError):
+            total = 0
+        return AliPromoPage(products=products, has_more=page_no * page_size < total)

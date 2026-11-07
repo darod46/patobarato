@@ -1,0 +1,26 @@
+{
+ "aliexpress_affiliate_featuredpromo_get_response": {
+  "resp_result": {
+   "resp_code": 200,
+   "resp_msg": "call succeeded",
+   "result": {
+    "promos": {
+     "promo": [
+      {
+       "promo_name": "11.11 Big Sale",
+       "promo_desc": "Singles Day",
+       "product_num": 1200,
+       "start_time": "2026-11-11 00:00:00",
+       "end_time": "2026-11-13 23:59:59"
+      },
+      {
+       "promo_name": "Choice Day",
+       "promo_desc": "Choice offers",
+       "product_num": 300
+      }
+     ]
+    }
+   }
+  }
+ }
+}

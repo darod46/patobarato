@@ -1,0 +1,40 @@
+{
+ "aliexpress_affiliate_featuredpromo_products_get_response": {
+  "resp_result": {
+   "resp_code": 200,
+   "resp_msg": "call succeeded",
+   "result": {
+    "total_record_count": 120,
+    "current_page_no": 2,
+    "current_record_count": 3,
+    "products": {
+     "product": [
+      {
+       "product_id": 1001,
+       "product_title": "Auriculares",
+       "target_sale_price": "12.34",
+       "target_original_price": "21.28",
+       "discount": "42%",
+       "product_main_image_url": "https://ae01.alicdn.com/kf/a.jpg",
+       "product_detail_url": "https://www.aliexpress.com/item/1001.html",
+       "promotion_link": "https://s.click.aliexpress.com/e/_a"
+      },
+      {
+       "product_id": 1002,
+       "product_title": "Sin precio",
+       "target_sale_price": "0",
+       "product_detail_url": "https://www.aliexpress.com/item/1002.html",
+       "promotion_link": "https://s.click.aliexpress.com/e/_b"
+      },
+      {
+       "product_id": 1003,
+       "product_title": "Sin enlace",
+       "target_sale_price": "5.00",
+       "product_detail_url": "https://www.aliexpress.com/item/1003.html"
+      }
+     ]
+    }
+   }
+  }
+ }
+}

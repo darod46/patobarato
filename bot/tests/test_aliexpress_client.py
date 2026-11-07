@@ -1,5 +1,6 @@
 import hmac
 import json
+from datetime import date
 from decimal import Decimal
 from hashlib import sha256
 from pathlib import Path
@@ -139,3 +140,44 @@ async def test_hot_products():
     assert seen["category_ids"] == "1,2" and seen["keywords"] == "usb"
     assert seen["page_size"] == "20" and seen["page_no"] == "3"
     assert seen["target_currency"] == "EUR" and seen["tracking_id"] == "track"
+
+
+async def test_featured_promos_parses_names_and_dates():
+    client = make_client(lambda r: httpx.Response(200, json=fixture("aliexpress_featuredpromo_get.json")))
+    promos = await client.featured_promos()
+    assert [p.name for p in promos] == ["11.11 Big Sale", "Choice Day"]
+    assert promos[0].start == date(2026, 11, 11) and promos[0].end == date(2026, 11, 13)
+    assert promos[1].start is None and promos[1].end is None
+
+
+async def test_featured_promo_products_sends_params_and_skips_invalid():
+    seen = {}
+
+    def handler(r):
+        seen.update(form(r))
+        return httpx.Response(200, json=fixture("aliexpress_featuredpromo_products.json"))
+
+    page = await make_client(handler).featured_promo_products("11.11 Big Sale", page_no=2, page_size=50)
+    assert seen["method"] == "aliexpress.affiliate.featuredpromo.products.get"
+    assert seen["promo_name"] == "11.11 Big Sale" and seen["page_no"] == "2" and seen["page_size"] == "50"
+    assert seen["tracking_id"] == "track" and seen["target_currency"] == "EUR"
+    assert [p.product_id for p in page.products] == ["1001"]
+    assert page.has_more is True  # 2 * 50 < 120
+
+
+async def test_featured_promo_products_last_page():
+    body = fixture("aliexpress_featuredpromo_products.json")
+    body["aliexpress_affiliate_featuredpromo_products_get_response"]["resp_result"]["result"][
+        "total_record_count"
+    ] = 60
+    page = await make_client(lambda r: httpx.Response(200, json=body)).featured_promo_products("x", page_no=2)
+    assert page.has_more is False
+
+
+async def test_featured_promo_products_logs_skipped_count_only(caplog):
+    caplog.set_level("INFO", logger="patobarato.aliexpress")
+    client = make_client(lambda r: httpx.Response(200, json=fixture("aliexpress_featuredpromo_products.json")))
+    await client.featured_promo_products("11.11 Big Sale")
+    messages = [r.getMessage() for r in caplog.records]
+    assert "featuredpromo 11.11 Big Sale: skipped 2 products without price or link" in messages
+    assert not any("s.click" in m for m in messages)
