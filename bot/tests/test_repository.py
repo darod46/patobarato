@@ -2,7 +2,7 @@ import dataclasses
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
-from patobarato.models import CouponUpsert, OfferStatus, ParsedOffer
+from patobarato.models import CouponUpsert, GuideProduct, OfferStatus, ParsedOffer
 from patobarato.storage.repository import InMemoryRepository
 
 NOW = datetime(2026, 11, 4, 12, 0, tzinfo=UTC)
@@ -239,3 +239,37 @@ async def test_upsert_product_stores_url():
     assert await repo.get_products_without_image() == [
         (product_id, "B000000001", "ES", "amazon", "https://shop.example/p/1")
     ]
+
+
+async def test_list_guide_products_dedupes_and_skips_drafts():
+    repo = InMemoryRepository()
+    shared = GuideProduct("amazon", "B2", "https://a/B2", "Dos", None)
+    repo.add_guide_product(GuideProduct("amazon", "B3", "https://a/B3", "Tres", None))
+    repo.add_guide_product(shared)
+    repo.add_guide_product(shared)  # same item in a second published guide
+    repo.add_guide_product(GuideProduct("amazon", "[ASIN]", "https://a/x", "Draft", None), published=False)
+    products = await repo.list_guide_products()
+    assert [p.external_id for p in products] == ["B2", "B3"]
+
+
+async def test_upsert_product_price_keeps_price_on_error():
+    repo = InMemoryRepository()
+    await repo.upsert_product_price(
+        1, checked_at=NOW, price=Decimal("99.90"), previous_price=Decimal("120")
+    )
+    later = NOW + timedelta(hours=1)
+    await repo.upsert_product_price(1, checked_at=later, error="captcha")
+    row = repo.prices[1]
+    assert row["price"] == Decimal("99.90")
+    assert row["previous_price"] == Decimal("120")
+    assert row["error"] == "captcha"
+    assert row["checked_at"] == later
+
+
+async def test_upsert_product_price_clears_error_on_success():
+    repo = InMemoryRepository()
+    await repo.upsert_product_price(1, checked_at=NOW, error="captcha")
+    assert repo.prices[1]["price"] is None
+    await repo.upsert_product_price(1, checked_at=NOW, price=Decimal("5"))
+    assert repo.prices[1]["error"] is None
+    assert repo.prices[1]["price"] == Decimal("5")

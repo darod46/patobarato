@@ -89,3 +89,20 @@ class CouponUpsert:
     url: str
     starts_at: datetime | None
     expires_at: datetime | None
+
+
+@dataclass(frozen=True)
+class PriceQuote:
+    price: Decimal
+    previous_price: Decimal | None
+    currency: str = "EUR"
+    image_url: str | None = None
+
+
+@dataclass(frozen=True)
+class GuideProduct:
+    store: str
+    external_id: str
+    url: str
+    name: str
+    image_url: str | None

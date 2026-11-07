@@ -6,6 +6,7 @@ from typing import Protocol
 from patobarato.models import (
     ApiSource,
     CouponUpsert,
+    GuideProduct,
     LastPublication,
     OfferStatus,
     ParsedOffer,
@@ -86,6 +87,23 @@ class Repository(Protocol):
         """
         ...
 
+    async def list_guide_products(self) -> list[GuideProduct]:
+        """Products of PUBLISHED guides, deduplicated by (store, external_id), ordered by both."""
+        ...
+
+    async def upsert_product_price(
+        self,
+        product_id: int,
+        *,
+        checked_at: datetime,
+        price: Decimal | None = None,
+        previous_price: Decimal | None = None,
+        currency: str = "EUR",
+        error: str | None = None,
+    ) -> None:
+        """Stores the last-known price; with ``error`` set, an existing price is kept."""
+        ...
+
 
 class InMemoryRepository(Repository):
     """Test double that mirrors the database uniqueness rules."""
@@ -103,6 +121,8 @@ class InMemoryRepository(Repository):
         self._api_sources: list[tuple[ApiSource, bool]] = []
         self.source_runs: dict[int, tuple[datetime, str | None]] = {}
         self.coupons: dict[int, dict] = {}
+        self._guide_products: list[tuple[GuideProduct, bool]] = []
+        self.prices: dict[int, dict] = {}
         self._next_id = {
             "source": 1,
             "product": 1,
@@ -316,3 +336,36 @@ class InMemoryRepository(Repository):
                 row["active"] = False
                 count += 1
         return count
+
+    def add_guide_product(self, product: GuideProduct, published: bool = True) -> None:
+        self._guide_products.append((product, published))
+
+    async def list_guide_products(self) -> list[GuideProduct]:
+        unique: dict[tuple[str, str], GuideProduct] = {}
+        for product, published in self._guide_products:
+            if published:
+                unique.setdefault((product.store, product.external_id), product)
+        return [unique[key] for key in sorted(unique)]
+
+    async def upsert_product_price(
+        self,
+        product_id: int,
+        *,
+        checked_at: datetime,
+        price: Decimal | None = None,
+        previous_price: Decimal | None = None,
+        currency: str = "EUR",
+        error: str | None = None,
+    ) -> None:
+        existing = self.prices.get(product_id)
+        if error is not None and existing is not None:
+            price = existing["price"]
+            previous_price = existing["previous_price"]
+            currency = existing["currency"]
+        self.prices[product_id] = {
+            "price": price,
+            "previous_price": previous_price,
+            "currency": currency,
+            "checked_at": checked_at,
+            "error": error,
+        }

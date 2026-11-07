@@ -8,6 +8,7 @@ from supabase import Client
 from patobarato.models import (
     ApiSource,
     CouponUpsert,
+    GuideProduct,
     LastPublication,
     OfferStatus,
     ParsedOffer,
@@ -322,3 +323,70 @@ class SupabaseRepository:
 
         response = await asyncio.to_thread(run)
         return len(response.data)
+
+    async def list_guide_products(self) -> list[GuideProduct]:
+        def run():
+            return (
+                self._client.table("guide_item_stores")
+                .select(
+                    "store, external_id, url, guide_items!inner(name, image_url, guides!inner(status))"
+                )
+                .eq("guide_items.guides.status", "published")
+                .order("store")
+                .order("external_id")
+                .execute()
+            )
+
+        response = await asyncio.to_thread(run)
+        unique: dict[tuple[str, str], GuideProduct] = {}
+        for row in response.data:
+            item = row["guide_items"]
+            unique.setdefault(
+                (row["store"], row["external_id"]),
+                GuideProduct(
+                    store=row["store"],
+                    external_id=row["external_id"],
+                    url=row["url"],
+                    name=item["name"],
+                    image_url=item.get("image_url"),
+                ),
+            )
+        return [unique[key] for key in sorted(unique)]
+
+    async def upsert_product_price(
+        self,
+        product_id: int,
+        *,
+        checked_at: datetime,
+        price: Decimal | None = None,
+        previous_price: Decimal | None = None,
+        currency: str = "EUR",
+        error: str | None = None,
+    ) -> None:
+        def run():
+            row = {
+                "product_id": product_id,
+                "price": _money(price),
+                "previous_price": _money(previous_price),
+                "currency": currency,
+                "checked_at": checked_at.isoformat(),
+                "error": error,
+            }
+            if error is not None:
+                # Keep the last known price: resend the stored values with the error.
+                existing = (
+                    self._client.table("product_prices")
+                    .select("price, previous_price, currency")
+                    .eq("product_id", product_id)
+                    .limit(1)
+                    .execute()
+                )
+                if existing.data:
+                    row.update(existing.data[0])
+            return (
+                self._client.table("product_prices")
+                .upsert(row, on_conflict="product_id")
+                .execute()
+            )
+
+        await asyncio.to_thread(run)
