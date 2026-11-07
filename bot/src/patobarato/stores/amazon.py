@@ -19,6 +19,7 @@ from patobarato.sources.amazon_page import (
     ChainImageFinder,
     PrecioRealImageFinder,
     extract_image_url,
+    _page_title,
     extract_price,
     resize_image_url,
 )
@@ -71,7 +72,9 @@ class AmazonStore(BaseStore):
                 return None
             quote = extract_price(page)
             if quote is None:
-                return self._prices.fail(product_id, "no price in buy box")
+                return self._prices.fail(
+                    product_id, f"no price in buy box (title: {_page_title(page)!r})"
+                )
             image = extract_image_url(page)
             if image is not None:
                 quote = replace(quote, image_url=resize_image_url(image))

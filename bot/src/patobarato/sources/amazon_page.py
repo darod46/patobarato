@@ -83,19 +83,43 @@ _PRICE_SPAN_RE = re.compile(
 _PRICE_TEXT_RE = re.compile(r"^\d{1,3}(?:\.\d{3})*(?:,\d{1,2})?$|^\d+(?:,\d{1,2})?$")
 
 
+_SCRIPT_RE = re.compile(r"<script\b.*?</script\s*>|<!--.*?-->", re.IGNORECASE | re.DOTALL)
+_SNS_BLOCK_RE = re.compile(r'<div\b[^>]*(?<![\w-])id="sns[^"]*"[^>]*>', re.IGNORECASE)
+_SPAN_TAG_RE = re.compile(r"<(/?)span\b", re.IGNORECASE)
+_UNIT_SUFFIX_RE = re.compile(r"(?:/|por\b)", re.IGNORECASE)
+
+
+def _balanced_end(text: str, start: int, tag_re: re.Pattern[str]) -> int | None:
+    """Index just after the tag that closes the one opening at `start`, or None."""
+    depth = 0
+    for tag in tag_re.finditer(text, start):
+        depth += -1 if tag.group(1) else 1
+        if depth == 0:
+            end = text.find(">", tag.end())
+            return end + 1 if end != -1 else None
+    return None
+
+
 def _buybox(page: str) -> str | None:
-    """The buy box's HTML, found by container id (the first one present wins)."""
+    """The buy box's HTML, found by container id (the first one present wins).
+
+    None when the container is missing or its markup does not balance.
+    """
     for container_id in _BUYBOX_IDS:
-        opening = re.search(rf'<div\b[^>]*\bid="{container_id}"[^>]*>', page)
+        opening = re.search(rf'<div\b[^>]*(?<![\w-])id="{container_id}"[^>]*>', page)
         if opening is None:
             continue
-        depth = 0
-        for tag in _DIV_TAG_RE.finditer(page, opening.start()):
-            depth += -1 if tag.group(1) else 1
-            if depth == 0:
-                return page[opening.start() : tag.end()]
-        return page[opening.start() :]
+        end = _balanced_end(page, opening.start(), _DIV_TAG_RE)
+        return None if end is None else page[opening.start() : end]
     return None
+
+
+def _without_subscribe_blocks(box: str) -> str:
+    """Drops Subscribe & Save sub-blocks (ids starting with sns), which carry other prices."""
+    while match := _SNS_BLOCK_RE.search(box):
+        end = _balanced_end(box, match.start(), _DIV_TAG_RE)
+        box = box[: match.start()] + (box[end:] if end is not None else "")
+    return box
 
 
 def _parse_price(text: str) -> Decimal | None:
@@ -111,24 +135,37 @@ def _parse_price(text: str) -> Decimal | None:
 def extract_price(page: str) -> PriceQuote | None:
     """The current price (and the struck list price, if higher) of the buy box.
 
-    Prices elsewhere on the page (related products, carousels) are ignored.
+    Prices elsewhere on the page (related products, carousels), price ranges,
+    per-unit prices and Subscribe & Save prices are never taken.
     """
+    page = _SCRIPT_RE.sub("", page)
     box = _buybox(page)
-    if box is None:
+    if box is None or "a-price-range" in box:
         return None
-    price: Decimal | None = None
-    struck: Decimal | None = None
-    for tag, text in _PRICE_SPAN_RE.findall(box):
+    box = _without_subscribe_blocks(box)
+    main: Decimal | None = None
+    generic: Decimal | None = None
+    struck: list[Decimal] = []
+    for match in _PRICE_SPAN_RE.finditer(box):
+        tag, text = match.groups()
         value = _parse_price(text)
         if value is None:
             continue
-        if 'data-a-strike="true"' in tag or "a-text-price" in tag:
-            struck = struck if struck is not None else value
-        elif price is None:
-            price = value
+        end = _balanced_end(box, match.start(), _SPAN_TAG_RE)
+        if end is not None and _UNIT_SUFFIX_RE.match(box[end : end + 10].lstrip()):
+            continue  # per-unit price such as "3,96 €/kg"
+        if 'data-a-strike="true"' in tag:
+            struck.append(value)
+        elif "a-text-price" in tag:
+            continue
+        elif re.search(r"\b(?:apexPriceToPay|priceToPay)\b", tag):
+            main = main if main is not None else value
+        elif generic is None:
+            generic = value
+    price = main if main is not None else generic
     if price is None:
         return None
-    previous = struck if struck is not None and struck > price else None
+    previous = next((value for value in struck if value > price), None)
     return PriceQuote(price=price, previous_price=previous)
 
 

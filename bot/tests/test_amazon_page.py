@@ -233,3 +233,92 @@ async def test_fetcher_returns_page_and_none_on_captcha():
         lambda r: httpx.Response(200, text=load_fixture("amazon_captcha.html")))))
     assert await captcha.fetch("B0GS1K5XQ8", "ES") is None
     assert captcha.failed == 1
+
+
+# --- Price reader hardening ---------------------------------------------------------
+
+
+def _price_span(text: str, cls: str = "a-price") -> str:
+    return f'<span class="{cls}"><span class="a-offscreen">{text}</span><span aria-hidden="true">x</span></span>'
+
+
+def _box(inner: str, box_id: str = "corePriceDisplay_desktop_feature_div") -> str:
+    return f'<div id="{box_id}">{inner}</div>'
+
+
+_STRIKE = 'a-price a-text-price" data-a-strike="true'
+_UNIT = 'a-price a-text-price" data-a-size="mini'
+
+
+def test_extract_price_unclosed_buybox_is_none():
+    page = (
+        '<div id="corePrice_feature_div"><div>' + _price_span(" ")
+        + '<div id="sims">' + _price_span("3,33 €") + "</div></body>"
+    )
+    assert extract_price(page) is None
+
+
+def test_extract_price_div_in_script_or_comment_does_not_break_balancing():
+    page = (
+        _box('<script>var s="<div>";</script><!-- <div> -->' + _price_span("8,00 €"))
+        + '<div id="sims">' + _price_span("3,33 €") + "</div>"
+    )
+    quote = extract_price(page)
+    assert quote is not None and quote.price == Decimal("8.00")
+
+
+def test_extract_price_unit_price_after_main_is_not_previous():
+    box = _box(_price_span("0,99 €") + " (" + _price_span("3,96 €", _UNIT) + "/kg)")
+    quote = extract_price(box)
+    assert quote is not None and quote.price == Decimal("0.99") and quote.previous_price is None
+
+
+def test_extract_price_unit_price_before_list_price():
+    box = _box(
+        _price_span("12,00 €") + " (" + _price_span("0,12 €", _UNIT) + "/unidad) "
+        + _price_span("15,00 €", _STRIKE)
+    )
+    quote = extract_price(box)
+    assert quote is not None and quote.price == Decimal("12.00")
+    assert quote.previous_price == Decimal("15.00")
+
+
+def test_extract_price_first_struck_greater_than_price_wins():
+    box = _box(_price_span("10,00 €") + _price_span("9,00 €", _STRIKE) + _price_span("14,00 €", _STRIKE))
+    quote = extract_price(box)
+    assert quote is not None and quote.previous_price == Decimal("14.00")
+
+
+def test_extract_price_range_is_none():
+    box = _box(
+        '<span class="a-price-range">' + _price_span("10,00 €") + " - " + _price_span("20,00 €") + "</span>"
+    )
+    assert extract_price(box) is None
+
+
+def test_extract_price_prefers_price_to_pay_over_subscribe_and_save():
+    box = _box(
+        '<div id="snsDetailPagePrice">' + _price_span("9,50 €") + "</div>"
+        + _price_span("11,00 €", "a-price priceToPay") + _price_span("12,00 €", _STRIKE)
+    )
+    quote = extract_price(box)
+    assert quote is not None and quote.price == Decimal("11.00")
+    assert quote.previous_price == Decimal("12.00")
+
+
+def test_extract_price_price_to_pay_beats_earlier_generic_price():
+    box = _box(_price_span("7,00 €") + _price_span("11,00 €", "a-price apexPriceToPay"))
+    quote = extract_price(box)
+    assert quote is not None and quote.price == Decimal("11.00")
+
+
+def test_extract_price_container_id_not_matched_inside_other_attribute():
+    page = '<div data-csa-c-id="corePrice_feature_div">' + _price_span("4,44 €") + "</div>"
+    assert extract_price(page) is None
+
+
+async def test_amazon_image_found_log_message_is_pinned(caplog):
+    page = f'<img id="landingImage" data-old-hires="{HIRES}">'
+    with caplog.at_level(logging.INFO, logger="patobarato.amazon"):
+        await _finder(lambda request: httpx.Response(200, text=page)).find("B0GS1K5XQ8", "ES")
+    assert "Amazon image for B0GS1K5XQ8 found (ok=1, failed=0)" in [r.getMessage() for r in caplog.records]

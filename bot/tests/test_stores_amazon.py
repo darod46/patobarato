@@ -109,3 +109,12 @@ async def test_amazon_store_fetch_price_without_buybox_or_http_is_none(amazon):
     async with _serve("amazon_no_price.html") as client:
         assert await AmazonStore("patobarato-21", client).fetch_price("B09XS7JWHH", URL) is None
     assert await amazon.fetch_price("B09XS7JWHH", URL) is None
+
+
+async def test_fetch_price_no_buybox_log_includes_page_title(caplog):
+    import logging
+
+    async with _serve("amazon_no_price.html") as client:
+        with caplog.at_level(logging.WARNING, logger="patobarato.amazon"):
+            await AmazonStore("patobarato-21", client).fetch_price("B09XS7JWHH", URL)
+    assert any("Producto agotado" in r.getMessage() for r in caplog.records)
