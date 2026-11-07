@@ -272,7 +272,30 @@ def test_build_runners_includes_aliexpress_with_credentials():
 
     runners = main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None)
 
-    assert [r.type for r in runners] == ["aliexpress_api", "guide_prices"]
+    assert [r.type for r in runners] == ["aliexpress_api", "event_promos", "guide_prices"]
+
+
+def test_no_runner_without_aliexpress_credentials():
+    import httpx
+
+    from patobarato.storage.repository import InMemoryRepository
+    from patobarato.stores.registry import build_registry
+
+    http = httpx.AsyncClient()
+    without = _ali_settings()
+    with_creds = _ali_settings(
+        aliexpress_app_key="k", aliexpress_app_secret="s", aliexpress_tracking_id="t"
+    )
+
+    def types(settings):
+        registry = build_registry(settings, http, http)
+        return [
+            r.type
+            for r in main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None)
+        ]
+
+    assert "event_promos" not in types(without)
+    assert "event_promos" in types(with_creds)
 
 
 def test_build_runners_is_empty_without_credentials():

@@ -25,6 +25,7 @@ from patobarato.sources.aliexpress_source import AliExpressSource
 from patobarato.sources.api_scheduler import ApiScheduler, ApiSourceRunner
 from patobarato.sources.awin_feeds import AwinFeedsSource
 from patobarato.sources.awin_source import AwinClient, AwinPromotionsSource
+from patobarato.sources.event_promos import EventPromosSource
 from patobarato.sources.guide_prices import GuidePriceRefresher
 from patobarato.sources.telegram_listener import TelegramListener, make_photo_provider
 from patobarato.storage.repository import Repository
@@ -115,6 +116,7 @@ def build_runners(
     ali_store = registry.get("aliexpress")
     if isinstance(ali_store, AliExpressStore):
         runners.append(AliExpressSource(ali_store.client, repo, settings, clock))
+        runners.append(EventPromosSource(ali_store.client, repo, clock))
     # Merchant ids may come from settings or from each source row's config.merchants;
     # the source itself warns and does nothing when it ends up with none.
     if settings.awin_publisher_id and settings.awin_api_token:
