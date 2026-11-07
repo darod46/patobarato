@@ -7,7 +7,7 @@ export function offer(over: Partial<GuideStoreOffer> = {}): GuideStoreOffer {
     store: 'pccomponentes',
     externalId: 'freidora-x',
     url: 'https://www.pccomponentes.com/freidora-x',
-    affiliateUrl: null,
+    affiliateUrl: 'https://aff.example/freidora-x',
     note: null,
     productId: null,
     price: 99.9,

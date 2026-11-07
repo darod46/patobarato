@@ -18,6 +18,11 @@ export function finalPrice(price: number | null, coupon: GuideCoupon | null, now
   return result > 0 ? result : null
 }
 
+/** Amazon always monetises through /go/ (tag added); any other store needs an affiliate link to be shown at all. */
+export function hasAffiliate(offer: GuideStoreOffer): boolean {
+  return offer.store === 'amazon' || Boolean(offer.affiliateUrl)
+}
+
 /** Checked within 48 h, no price error and a known price. */
 export function isRecent(offer: GuideStoreOffer, now: Date): boolean {
   return (
@@ -35,7 +40,7 @@ export function bestOffer(
 ): { store: string; price: number; withCoupon: boolean; offer: GuideStoreOffer } | null {
   let best: { store: string; price: number; withCoupon: boolean; offer: GuideStoreOffer } | null = null
   for (const s of stores) {
-    if (!isRecent(s, now) || s.price === null) continue
+    if (!hasAffiliate(s) || !isRecent(s, now) || s.price === null) continue
     const withCoupon = finalPrice(s.price, s.coupon, now)
     const price = withCoupon ?? s.price
     if (best === null || price < best.price) best = { store: s.store, price, withCoupon: withCoupon !== null, offer: s }

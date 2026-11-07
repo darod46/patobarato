@@ -1,5 +1,5 @@
 import { formatPrice } from '../../lib/format'
-import { finalPrice, isRecent } from '../../lib/guides'
+import { finalPrice, hasAffiliate, isRecent } from '../../lib/guides'
 import { storeInfo } from '../../lib/stores'
 import type { GuideCoupon, GuideStoreOffer } from '../../lib/types'
 import { BuyButton } from '../BuyButton'
@@ -16,9 +16,9 @@ function couponValueText(coupon: GuideCoupon): string {
   return ''
 }
 
-/** Amazon goes through the /go/ redirect (affiliate tag); other stores use their affiliate link, else the canonical URL. */
+/** Amazon goes through the /go/ redirect (affiliate tag); other stores use their affiliate link (rows without one are not rendered). */
 function buyUrl(offer: GuideStoreOffer): string {
-  return offer.store === 'amazon' ? `/go/${offer.externalId}` : (offer.affiliateUrl ?? offer.url)
+  return offer.store === 'amazon' ? `/go/${offer.externalId}` : (offer.affiliateUrl ?? '')
 }
 
 function StoreName({ offer }: { offer: GuideStoreOffer }) {
@@ -31,6 +31,7 @@ function StoreName({ offer }: { offer: GuideStoreOffer }) {
 }
 
 export function StoreRow({ offer, now }: { offer: GuideStoreOffer; now: Date }) {
+  if (!hasAffiliate(offer)) return null
   const store = storeInfo(offer.store)
   if (!isRecent(offer, now) || offer.price === null) {
     return (

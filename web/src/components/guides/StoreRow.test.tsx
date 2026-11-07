@@ -55,7 +55,7 @@ describe('StoreRow', () => {
 
   it('renders only the store and a link when the offer is stale', () => {
     render(<StoreRow offer={offer({ checkedAt: '2026-11-01T00:00:00Z', note: 'Envío rápido' })} now={NOW} />)
-    expect(screen.getByRole('link', { name: 'Ver en PcComponentes' })).toHaveAttribute('href', 'https://www.pccomponentes.com/freidora-x')
+    expect(screen.getByRole('link', { name: 'Ver en PcComponentes' })).toHaveAttribute('href', 'https://aff.example/freidora-x')
     expect(screen.getByText('Envío rápido')).toBeInTheDocument()
     expect(screen.queryByText(/99,90/)).not.toBeInTheDocument()
   })
@@ -75,5 +75,20 @@ describe('StoreRow', () => {
     expect(screen.getByRole('link', { name: 'Ver en Amazon' })).toHaveAttribute('href', '/go/B0ABCDEF12')
     rerender(<StoreRow offer={offer({ previousPrice: 129.9 })} now={NOW} />)
     expect(document.querySelector('s')).toHaveTextContent('129,90 €')
+  })
+
+  it('renders nothing for a non-Amazon store without an affiliate link (fresh, stale or priceless)', () => {
+    const none = { affiliateUrl: null }
+    const fresh = render(<StoreRow offer={offer(none)} now={NOW} />)
+    expect(fresh.container).toBeEmptyDOMElement()
+    const stale = render(<StoreRow offer={offer({ ...none, checkedAt: '2026-11-01T00:00:00Z' })} now={NOW} />)
+    expect(stale.container).toBeEmptyDOMElement()
+    const priceless = render(<StoreRow offer={offer({ ...none, price: null })} now={NOW} />)
+    expect(priceless.container).toBeEmptyDOMElement()
+  })
+
+  it('keeps an Amazon row without affiliateUrl, since /go/ always adds the tag', () => {
+    render(<StoreRow offer={offer({ store: 'amazon', externalId: 'B0X', affiliateUrl: null })} now={NOW} />)
+    expect(screen.getByRole('link', { name: 'Ver en Amazon' })).toHaveAttribute('href', '/go/B0X')
   })
 })

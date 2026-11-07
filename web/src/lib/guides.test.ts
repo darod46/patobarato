@@ -19,7 +19,7 @@ const offer = (over: Partial<GuideStoreOffer> = {}): GuideStoreOffer => ({
   store: 'amazon',
   externalId: 'e',
   url: 'https://x',
-  affiliateUrl: null,
+  affiliateUrl: 'https://aff.example/x',
   note: null,
   productId: 1,
   price: 100,
@@ -71,6 +71,14 @@ describe('isRecent', () => {
 })
 
 describe('bestOffer', () => {
+  it('never picks a non-Amazon offer without an affiliate link', () => {
+    const cheap = offer({ store: 'pccomponentes', price: 50, affiliateUrl: null })
+    const dear = offer({ store: 'mediamarkt', price: 80, affiliateUrl: 'https://aff/mm' })
+    expect(bestOffer([cheap, dear], now)?.store).toBe('mediamarkt')
+    expect(bestOffer([cheap], now)).toBeNull()
+    expect(bestOffer([offer({ store: 'amazon', price: 90, affiliateUrl: null }), cheap], now)?.store).toBe('amazon')
+  })
+
   it('returns null when nothing is usable', () => {
     expect(bestOffer([], now)).toBeNull()
     expect(bestOffer([offer({ priceError: true })], now)).toBeNull()
