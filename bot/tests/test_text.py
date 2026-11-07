@@ -290,3 +290,16 @@ def test_own_store_reference_is_the_deal_price():
 def test_other_store_price_ignored_with_own_store():
     assert parse_prices(_cazachollazos("a"), own_store="amazon").price is None
     assert parse_prices("Precio en Fnac: 30€\nCascos 25€", own_store="amazon").price == Decimal("25")
+
+
+@pytest.mark.parametrize(
+    ("text", "title"),
+    [
+        ("Auriculares Sony WH-1000XM5\n▫️ Precio: 199€\n▫️ Envío gratis", "Auriculares Sony WH-1000XM5"),
+        ("Cascos Sony 50€\n▫️ Envío gratis", "Cascos Sony"),
+        ("Cascos Sony 50€\n🔥 ▫️ Envío gratis", "Cascos Sony"),
+        ("Cascos Sony 50€\nEnvío gratis ▫️", "Cascos Sony"),
+    ],
+)
+def test_brand_separator_used_as_bullet_is_not_a_title(text, title):
+    assert parse_title(text) == title

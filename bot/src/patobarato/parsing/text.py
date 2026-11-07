@@ -242,11 +242,17 @@ def _clean_title_line(line: str) -> str:
     return line[:TITLE_MAX_LENGTH].rstrip()
 
 
+def _is_brand_line(line: str) -> bool:
+    """A "Brand ▫️ Product" line has text on both sides; a leading/trailing ▫️ is a bullet."""
+    parts = BRAND_SEPARATOR_RE.split(line, maxsplit=1)
+    return len(parts) == 2 and all(re.search(r"\w", _strip_emojis(p)) for p in parts)
+
+
 def parse_title(text: str) -> str:
     lines = text.splitlines()
     # "Brand ▫️ Product" names the product, whatever headline comes before it.
     for line in lines:
-        if BRAND_SEPARATOR_RE.search(line):
+        if _is_brand_line(line):
             title = _clean_title_line(BRAND_SEPARATOR_RE.sub(" ", line))
             if title:
                 return title
