@@ -134,3 +134,102 @@ async def test_find_product_id_selects_by_key_and_returns_none_when_missing():
         assert ("eq", (column, value), {}) in client.log
     assert ("limit", (1,), {}) in client.log
     assert await SupabaseRepository(_Client([])).find_product_id("awin", "ES", "p1") is None
+
+
+class _ScriptedClient:
+    """Recording client whose select/update responses are scripted per table call order."""
+
+    def __init__(self, selects=(), update_size=lambda chunk: len(chunk)):
+        self.log: list = []
+        self._selects = list(selects)
+        self._update_size = update_size
+
+    def table(self, name: str):
+        client = self
+        log = self.log
+        log.append(("table", (name,), {}))
+
+        class Q:
+            kind = "select"
+
+            def __getattr__(self, method):
+                def call(*args, **kwargs):
+                    log.append((method, args, kwargs))
+                    if method == "update":
+                        self.kind = "update"
+                    if method == "in_":
+                        self.chunk = args[1]
+                    return self
+
+                return call
+
+            def execute(self):
+                class R:
+                    pass
+
+                r = R()
+                if self.kind == "update":
+                    r.data = [{"id": i} for i in range(client._update_size(self.chunk))]
+                else:
+                    r.data = client._selects.pop(0) if client._selects else []
+                return r
+
+        return Q()
+
+
+def _catalog_row():
+    from patobarato.models import CatalogRow
+
+    return CatalogRow(
+        store="mediamarkt", external_id="e1", title="t", description=None, brand=None, gtin=None,
+        category=None, price=Decimal("12.50"), sale_price=Decimal("9.99"), currency="EUR", in_stock=True,
+        image_url=None, url="https://shop/e1", affiliate_url="https://aff/e1", feed_updated_at=NOW,
+    )
+
+
+async def test_upsert_catalog_products_row_shape():
+    client = _Client([])
+    await SupabaseRepository(client).upsert_catalog_products([_catalog_row()])
+    name, args, kwargs = next(e for e in client.log if e[0] == "upsert")
+    assert kwargs == {"on_conflict": "store,external_id"}
+    row = args[0][0]
+    assert row["price"] == "12.50" and row["sale_price"] == "9.99"
+    assert row["feed_updated_at"] == NOW.isoformat()
+    assert row["updated_at"]
+    assert ("table", ("catalog_products",), {}) in client.log
+
+
+async def test_record_feed_run_row_shape():
+    client = _Client([])
+    await SupabaseRepository(client).record_feed_run("mediamarkt", 5678, NOW, 3, "x")
+    _, args, kwargs = next(e for e in client.log if e[0] == "upsert")
+    assert kwargs == {"on_conflict": "store,advertiser_id"}
+    assert args[0] == {
+        "store": "mediamarkt", "advertiser_id": 5678, "last_run_at": NOW.isoformat(),
+        "products": 3, "last_error": "x",
+    }
+
+
+async def test_mark_catalog_out_of_stock_updates_the_complement_in_chunks():
+    stored = [{"external_id": f"id{i:04d}"} for i in range(2500)]
+    pages = [stored[:1000], stored[1000:2000], stored[2000:]]
+    seen = {f"id{i:04d}" for i in range(100)}  # 2400 missing -> chunks of 1000/1000/400
+    client = _ScriptedClient(pages)
+    count = await SupabaseRepository(client).mark_catalog_out_of_stock("mediamarkt", seen)
+    assert count == 2400
+    ranges = [a for n, a, _ in client.log if n == "range"]
+    assert ranges == [(0, 999), (1000, 1999), (2000, 2999)]
+    chunks = [a[1] for n, a, _ in client.log if n == "in_"]
+    assert [len(c) for c in chunks] == [1000, 1000, 400]
+    assert not set(chunks[0]) & seen
+    assert ("update", ({"in_stock": False},), {}) in client.log
+    assert ("eq", ("store", "mediamarkt"), {}) in client.log
+
+
+async def test_mark_catalog_out_of_stock_nothing_missing_or_empty_seen():
+    client = _ScriptedClient([[{"external_id": "a"}]])
+    assert await SupabaseRepository(client).mark_catalog_out_of_stock("s", {"a"}) == 0
+    assert not any(n == "update" for n, _, _ in client.log)
+    client = _ScriptedClient()
+    assert await SupabaseRepository(client).mark_catalog_out_of_stock("s", set()) == 0
+    assert client.log == []

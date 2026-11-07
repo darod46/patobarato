@@ -1,10 +1,12 @@
 import dataclasses
-from datetime import datetime
+import logging
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Protocol
 
 from patobarato.models import (
     ApiSource,
+    CatalogRow,
     CouponUpsert,
     GuideProduct,
     LastPublication,
@@ -15,6 +17,8 @@ from patobarato.models import (
     Source,
 )
 from patobarato.publishing.format import normalize_hashtag
+
+logger = logging.getLogger("patobarato.repository")
 
 
 def clean_hashtags(tags: list[str]) -> list[str]:
@@ -109,6 +113,29 @@ class Repository(Protocol):
         """Stores the last-known price; with ``error`` set, an existing price is kept."""
         ...
 
+    async def upsert_catalog_products(self, rows: list[CatalogRow]) -> None:
+        """Inserts or updates by ``(store, external_id)``; ``updated_at`` is set to now."""
+        ...
+
+    async def mark_catalog_out_of_stock(self, store: str, seen_ids: set[str]) -> int:
+        """Marks the store's in-stock products missing from ``seen_ids``; returns how many.
+
+        An EMPTY ``seen_ids`` touches nothing (returns 0 with a warning): an empty feed is
+        never proof that the whole catalogue is gone.
+        """
+        ...
+
+    async def record_feed_run(
+        self,
+        store: str,
+        advertiser_id: int,
+        ran_at: datetime,
+        products: int,
+        error: str | None,
+    ) -> None: ...
+
+    async def find_catalog_product(self, store: str, url: str) -> CatalogRow | None: ...
+
 
 class InMemoryRepository(Repository):
     """Test double that mirrors the database uniqueness rules."""
@@ -128,6 +155,8 @@ class InMemoryRepository(Repository):
         self.coupons: dict[int, dict] = {}
         self._guide_products: list[tuple[GuideProduct, bool]] = []
         self.prices: dict[int, dict] = {}
+        self.catalog: dict[tuple[str, str], CatalogRow] = {}
+        self.feed_runs: dict[tuple[str, int], dict] = {}
         self._next_id = {
             "source": 1,
             "product": 1,
@@ -379,3 +408,39 @@ class InMemoryRepository(Repository):
             "error": error,
             "affiliate_url": affiliate_url,
         }
+
+    async def upsert_catalog_products(self, rows: list[CatalogRow]) -> None:
+        now = datetime.now(UTC)
+        for row in rows:
+            self.catalog[(row.store, row.external_id)] = dataclasses.replace(row, updated_at=now)
+
+    async def mark_catalog_out_of_stock(self, store: str, seen_ids: set[str]) -> int:
+        if not seen_ids:
+            logger.warning("Catalog: empty feed for %s; nothing marked out of stock", store)
+            return 0
+        count = 0
+        for key, row in list(self.catalog.items()):
+            if key[0] == store and row.in_stock and key[1] not in seen_ids:
+                self.catalog[key] = dataclasses.replace(row, in_stock=False)
+                count += 1
+        return count
+
+    async def record_feed_run(
+        self,
+        store: str,
+        advertiser_id: int,
+        ran_at: datetime,
+        products: int,
+        error: str | None,
+    ) -> None:
+        self.feed_runs[(store, advertiser_id)] = {
+            "last_run_at": ran_at,
+            "products": products,
+            "last_error": error,
+        }
+
+    async def find_catalog_product(self, store: str, url: str) -> CatalogRow | None:
+        for (row_store, _), row in self.catalog.items():
+            if row_store == store and row.url == url:
+                return row
+        return None

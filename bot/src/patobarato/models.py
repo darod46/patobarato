@@ -122,3 +122,25 @@ class AwinFeedProduct:
     image_url: str | None
     url: str
     affiliate_url: str
+
+
+@dataclass(frozen=True)
+class CatalogRow:
+    """One store-catalogue product (``catalog_products``)."""
+
+    store: str
+    external_id: str
+    title: str
+    description: str | None
+    brand: str | None
+    gtin: str | None
+    category: str | None
+    price: Decimal
+    sale_price: Decimal | None
+    currency: str
+    in_stock: bool
+    image_url: str | None
+    url: str
+    affiliate_url: str
+    feed_updated_at: datetime | None
+    updated_at: datetime | None = None

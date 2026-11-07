@@ -282,3 +282,53 @@ async def test_find_product_id_returns_id_or_none():
     product_id = await repo.upsert_product(make_offer())
     assert await repo.find_product_id("amazon", "ES", "B000000001") == product_id
     assert await repo.find_product_id("amazon", "PT", "B000000001") is None
+
+
+def _catalog_row(store="pccomponentes", ext="a", in_stock=True, url=None):
+    from patobarato.models import CatalogRow
+
+    return CatalogRow(
+        store=store, external_id=ext, title="t", description=None, brand=None, gtin=None,
+        category=None, price=Decimal("1"), sale_price=None, currency="EUR", in_stock=in_stock,
+        image_url=None, url=url or f"https://shop/{ext}", affiliate_url="https://aff", feed_updated_at=NOW,
+    )
+
+
+async def test_upsert_catalog_products_is_idempotent_and_stamps_updated_at():
+    repo = InMemoryRepository()
+    await repo.upsert_catalog_products([_catalog_row()])
+    await repo.upsert_catalog_products([dataclasses.replace(_catalog_row(), title="new")])
+    assert len(repo.catalog) == 1
+    row = repo.catalog[("pccomponentes", "a")]
+    assert row.title == "new"
+    assert row.updated_at is not None
+
+
+async def test_mark_catalog_out_of_stock_only_touches_the_store_and_missing_ids():
+    repo = InMemoryRepository()
+    await repo.upsert_catalog_products(
+        [_catalog_row(ext=x) for x in "abc"] + [_catalog_row(store="mediamarkt", ext="z")]
+    )
+    assert await repo.mark_catalog_out_of_stock("pccomponentes", {"a", "b"}) == 1
+    assert repo.catalog[("pccomponentes", "c")].in_stock is False
+    assert repo.catalog[("mediamarkt", "z")].in_stock is True
+    assert await repo.mark_catalog_out_of_stock("pccomponentes", {"a", "b"}) == 0
+
+
+async def test_mark_catalog_out_of_stock_empty_set_touches_nothing(caplog):
+    repo = InMemoryRepository()
+    await repo.upsert_catalog_products([_catalog_row()])
+    assert await repo.mark_catalog_out_of_stock("pccomponentes", set()) == 0
+    assert repo.catalog[("pccomponentes", "a")].in_stock is True
+    assert "empty feed" in caplog.text
+
+
+async def test_record_feed_run_overwrites_and_find_catalog_product_by_url():
+    repo = InMemoryRepository()
+    await repo.record_feed_run("pccomponentes", 1, NOW, 5, "boom")
+    await repo.record_feed_run("pccomponentes", 1, NOW, 7, None)
+    assert repo.feed_runs[("pccomponentes", 1)] == {"last_run_at": NOW, "products": 7, "last_error": None}
+    await repo.upsert_catalog_products([_catalog_row(url="https://shop/x")])
+    assert (await repo.find_catalog_product("pccomponentes", "https://shop/x")).external_id == "a"
+    assert await repo.find_catalog_product("mediamarkt", "https://shop/x") is None
+    assert await repo.find_catalog_product("pccomponentes", "https://shop/none") is None

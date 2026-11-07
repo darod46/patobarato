@@ -150,6 +150,15 @@ No hace falta reiniciar el bot: el planificador lee la tabla en cada ciclo. Para
 
 Los cupones de Awin se guardan en la tabla `coupons`; cuando un cupón deja de aparecer en la API se desactiva. Si la API falla, no se desactiva nada.
 
+### Catálogo de tiendas (feeds de Awin)
+
+El ejecutor `awin_feeds` descarga el feed de productos de cada anunciante de Awin (los mismos `AWIN_MERCHANTS` o `config.merchants`, con las mismas credenciales) y rellena la tabla `catalog_products`, que usa el buscador global de la web. La fila de `sources` ya la crea la migración (`awin-feeds`, cada 1440 minutos, es decir, una vez al día).
+
+- Los productos se guardan por lotes de 500 (clave `store, external_id`). Al terminar un feed completo, los productos de esa tienda que ya no aparecen se marcan sin stock. Si el feed falla a mitad, se conservan los productos ya guardados, no se toca el stock y el error queda en `catalog_feeds.last_error`.
+- Awin limita las descargas de feeds a **5 peticiones por minuto**: el ejecutor procesa un anunciante tras otro y espera 15 segundos entre uno y otro.
+- Un anunciante que falla no impide los demás. El resumen de cada ejecución (`last_run_at`, `products`, `last_error`) queda en `catalog_feeds`.
+- Para **forzar una ejecución** sin esperar al intervalo: `update sources set last_run_at = null where type = 'awin_feeds';`. El planificador la lanzará en su siguiente ciclo.
+
 ### Sin credenciales
 
 El ejecutor de cupones de Awin solo existe si están `AWIN_PUBLISHER_ID` y `AWIN_API_TOKEN`; los merchant ids salen de `AWIN_MERCHANTS` o, por fuente, de `config.merchants` (que tiene prioridad). Si faltan las credenciales de una tienda, esa tienda se omite con un aviso en el log y el bot sigue funcionando con el resto. Una fila de `sources` de un tipo sin credenciales simplemente no se ejecuta. Si una fuente `awin_promotions` acaba sin ningún merchant id (ni en `config` ni en `AWIN_MERCHANTS`), registra un aviso y no hace nada.

@@ -303,7 +303,24 @@ def test_build_runners_includes_awin_with_publisher_and_token():
 
     runners = main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None, http)
 
-    assert [r.type for r in runners] == ["awin_promotions", "guide_prices"]
+    assert [r.type for r in runners] == ["awin_promotions", "awin_feeds", "guide_prices"]
+
+
+def test_build_runners_includes_awin_feeds_with_credentials():
+    import httpx
+
+    from patobarato.storage.repository import InMemoryRepository
+    from patobarato.stores.registry import build_registry
+
+    settings = _ali_settings(awin_publisher_id="999", awin_api_token="tok")
+    http = httpx.AsyncClient()
+    runners = main_module.build_runners(
+        build_registry(settings, http, http), InMemoryRepository(), settings, lambda: None, http
+    )
+
+    promotions, feeds = runners[0], runners[1]
+    assert feeds.type == "awin_feeds"
+    assert feeds._client is promotions._client
 
 
 def test_build_runners_skips_awin_without_token_or_publisher():
