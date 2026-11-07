@@ -159,6 +159,16 @@ El ejecutor `awin_feeds` descarga el feed de productos de cada anunciante de Awi
 - Un anunciante que falla no impide los demás. El resumen de cada ejecución (`last_run_at`, `products`, `last_error`) queda en `catalog_feeds`.
 - Para **forzar una ejecución** sin esperar al intervalo: `update sources set last_run_at = null where type = 'awin_feeds';`. El planificador la lanzará en su siguiente ciclo.
 
+### Campañas de AliExpress (`event_promos`)
+
+El ejecutor `event_promos` (solo existe con las tres credenciales de AliExpress) sincroniza los productos de la campaña de AliExpress asociada a cada evento. Para enlazarlos:
+
+1. Lista las campañas vigentes: `python -m patobarato promos` (con Docker: `docker compose run --rm bot promos`). Imprime nombre, inicio y fin de cada una.
+2. Copia el nombre **exacto** de la campaña en la columna `events.aliexpress_promo` del evento (por SQL o desde Supabase Studio).
+3. Fuerza una sincronización: `update sources set last_run_at = null where type = 'event_promos';`. Si no lo haces, el ejecutor corre cada 24 h.
+
+Las filas de `event_promos` de un evento solo se reemplazan cuando toda la descarga termina bien; si la API falla, se conservan las anteriores.
+
 ### Sin credenciales
 
 El ejecutor de cupones de Awin solo existe si están `AWIN_PUBLISHER_ID` y `AWIN_API_TOKEN`; los merchant ids salen de `AWIN_MERCHANTS` o, por fuente, de `config.merchants` (que tiene prioridad). Si faltan las credenciales de una tienda, esa tienda se omite con un aviso en el log y el bot sigue funcionando con el resto. Una fila de `sources` de un tipo sin credenciales simplemente no se ejecuta. Si una fuente `awin_promotions` acaba sin ningún merchant id (ni en `config` ni en `AWIN_MERCHANTS`), registra un aviso y no hace nada.

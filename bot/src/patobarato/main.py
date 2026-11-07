@@ -1,4 +1,4 @@
-"""Command-line entrypoint: ``python -m patobarato login|run|backfill-images``."""
+"""Command-line entrypoint: ``python -m patobarato login|run|backfill-images|promos``."""
 
 import argparse
 import asyncio
@@ -31,6 +31,7 @@ from patobarato.sources.telegram_listener import TelegramListener, make_photo_pr
 from patobarato.storage.repository import Repository
 from patobarato.storage.supabase_repo import SupabaseRepository
 from patobarato.stores.aliexpress import AliExpressStore
+from patobarato.stores.aliexpress_client import AliExpressClient, AliExpressError
 from patobarato.stores.registry import StoreRegistry, build_registry
 
 logger = logging.getLogger("patobarato.main")
@@ -206,6 +207,45 @@ async def backfill(settings: Settings) -> int:
     return 0
 
 
+PROMOS_HEADER = "Campaña                                  Inicio      Fin"
+ALIEXPRESS_CREDENTIALS_MESSAGE = (
+    "Faltan las credenciales de AliExpress "
+    "(ALIEXPRESS_APP_KEY, ALIEXPRESS_APP_SECRET, ALIEXPRESS_TRACKING_ID)."
+)
+
+
+async def promos(settings: Settings) -> int:
+    """Lists the featured AliExpress campaigns so their exact names can be copied."""
+    if not (
+        settings.aliexpress_app_key
+        and settings.aliexpress_app_secret
+        and settings.aliexpress_tracking_id
+    ):
+        print(ALIEXPRESS_CREDENTIALS_MESSAGE, file=sys.stderr)
+        return 1
+    async with httpx.AsyncClient(timeout=settings.http_timeout_seconds) as http:
+        client = AliExpressClient(
+            http,
+            settings.aliexpress_app_key,
+            settings.aliexpress_app_secret,
+            settings.aliexpress_tracking_id,
+        )
+        try:
+            found = await client.featured_promos()
+        except (AliExpressError, httpx.HTTPError) as e:
+            print(
+                f"No se pudieron listar las campañas: {type(e).__name__}: {e}",
+                file=sys.stderr,
+            )
+            return 1
+    print(PROMOS_HEADER)
+    for p in found:
+        start = p.start.isoformat() if p.start else None
+        end = p.end.isoformat() if p.end else None
+        print(f"{p.name:<40} {start or '—':>10}  {end or '—':>10}")
+    return 0
+
+
 def _config_error_message(error: ValidationError) -> str:
     missing = [
         ".".join(str(part) for part in err["loc"]).upper()
@@ -227,7 +267,7 @@ def _config_error_message(error: ValidationError) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="patobarato")
-    parser.add_argument("command", choices=["login", "run", "backfill-images"])
+    parser.add_argument("command", choices=["login", "run", "backfill-images", "promos"])
     args = parser.parse_args(argv)
 
     logging.basicConfig(
@@ -253,6 +293,8 @@ def main(argv: list[str] | None = None) -> int:
         return asyncio.run(login(settings))
     if args.command == "backfill-images":
         return asyncio.run(backfill(settings))
+    if args.command == "promos":
+        return asyncio.run(promos(settings))
     try:
         return asyncio.run(run(settings))
     except KeyboardInterrupt:

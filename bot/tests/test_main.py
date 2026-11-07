@@ -1,14 +1,17 @@
 import asyncio
 import logging
+from datetime import date
 from types import SimpleNamespace
 
+import httpx
 import pytest
 from telethon.errors import AccessTokenInvalidError, PhoneCodeInvalidError
 
 import patobarato.main as main_module
 
 from patobarato.config import Settings, get_settings
-from patobarato.main import EXIT_CONFIG_ERROR, _supervise, login, main, run
+from patobarato.main import EXIT_CONFIG_ERROR, _supervise, login, main, promos, run
+from patobarato.stores.aliexpress_client import AliExpressError, AliPromo
 
 REQUIRED = [
     "TELEGRAM_API_ID",
@@ -379,3 +382,87 @@ def test_build_runners_passes_guide_price_delay():
 
     assert runner.type == "guide_prices"
     assert runner._delay == 0.25
+
+
+# --- promos command ---------------------------------------------------------
+
+
+def _promo_settings(**overrides):
+    values = {
+        "aliexpress_app_key": "k",
+        "aliexpress_app_secret": "s",
+        "aliexpress_tracking_id": "t",
+        "http_timeout_seconds": 5,
+    }
+    values.update(overrides)
+    return SimpleNamespace(**values)
+
+
+def _fake_client(result=None, error: Exception | None = None):
+    class _Client:
+        def __init__(self, http, app_key, app_secret, tracking_id) -> None:
+            pass
+
+        async def featured_promos(self):
+            if error is not None:
+                raise error
+            return result
+
+    return _Client
+
+
+async def test_promos_lists_campaigns(monkeypatch, capsys):
+    promos_found = [
+        AliPromo("11.11 Big Sale", date(2026, 11, 1), date(2026, 11, 11)),
+        AliPromo("Sin fechas", None, None),
+    ]
+    monkeypatch.setattr(main_module, "AliExpressClient", _fake_client(promos_found))
+
+    code = await promos(_promo_settings())
+
+    assert code == 0
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[0] == "Campaña                                  Inicio      Fin"
+    assert lines[1] == f"{'11.11 Big Sale':<40} {'2026-11-01':>10}  {'2026-11-11':>10}"
+    assert lines[2] == f"{'Sin fechas':<40} {'—':>10}  {'—':>10}"
+
+
+async def test_promos_without_credentials_exits_1(capsys):
+    code = await promos(_promo_settings(aliexpress_tracking_id=None))
+
+    assert code == 1
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err.strip() == (
+        "Faltan las credenciales de AliExpress "
+        "(ALIEXPRESS_APP_KEY, ALIEXPRESS_APP_SECRET, ALIEXPRESS_TRACKING_ID)."
+    )
+
+
+@pytest.mark.parametrize(
+    "error",
+    [AliExpressError("7", "boom"), httpx.ConnectError("down")],
+)
+async def test_promos_api_error_exits_1(monkeypatch, capsys, error):
+    monkeypatch.setattr(main_module, "AliExpressClient", _fake_client(error=error))
+
+    code = await promos(_promo_settings())
+
+    assert code == 1
+    err = capsys.readouterr().err
+    assert err.startswith(f"No se pudieron listar las campañas: {type(error).__name__}: ")
+    assert "Traceback" not in err
+
+
+def test_main_dispatches_promos(monkeypatch):
+    seen = []
+
+    async def fake_promos(settings):
+        seen.append(settings)
+        return 0
+
+    monkeypatch.setattr(main_module, "get_settings", lambda: "settings")
+    monkeypatch.setattr(main_module, "promos", fake_promos)
+
+    assert main(["promos"]) == 0
+    assert seen == ["settings"]
