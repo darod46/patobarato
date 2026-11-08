@@ -4,7 +4,7 @@ import { cache } from 'react'
 import { EventView, MAX_EVENT_DEALS } from '../../../components/events/EventView'
 import { fetchCoupons } from '../../../lib/coupons'
 import { fetchDeals } from '../../../lib/deals'
-import { eventPath, eventPhase, nextEvent } from '../../../lib/events'
+import { eventPath, eventPhase, madridDay, nextEvent } from '../../../lib/events'
 import { fetchEvent, fetchEventPromos, fetchEvents } from '../../../lib/events-data'
 import { optional } from '../../../lib/optional'
 import { breadcrumbJsonLd, eventJsonLd, eventMetadata, faqJsonLd, jsonLdScript } from '../../../lib/seo'
@@ -46,12 +46,16 @@ export default async function EventPage({ params }: Props) {
   const now = new Date()
   const phase = eventPhase(event, now)
   const label = `evento/${slug}`
+  // Before the event the dates are in the future: show the stores' deals from the last 7 days instead.
+  const recent = phase === 'before' && event.stores.length > 0
+  const from = recent ? madridDay(now, -7) : event.startsOn
+  const to = recent ? madridDay(now) : event.endsOn
   // Each block degrades on its own: a failed loader omits its section, the editorial page still renders.
   const [page, coupons, promos, stores, events] = await Promise.all([
     optional(`${label}/chollos`, () =>
       fetchDeals(getSupabase(), {
         page: 0,
-        event: { hashtags: event.hashtags, stores: event.stores, from: event.startsOn, to: event.endsOn },
+        event: { hashtags: event.hashtags, stores: event.stores, from, to },
       }),
     ),
     optional(`${label}/cupones`, () => fetchCoupons(getSupabase(), undefined, undefined, event.id)),

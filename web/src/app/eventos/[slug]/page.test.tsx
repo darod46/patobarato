@@ -87,13 +87,29 @@ describe('EventPage', () => {
     const { container } = render(await EventPage(params('black-friday')))
     expect(ldTypes(container)).toEqual(['BreadcrumbList', 'Event', 'FAQPage'])
     expect(fetchDeals).toHaveBeenCalledWith(expect.anything(), {
-      page: 0, event: { hashtags: ['blackfriday'], stores: ['amazon', 'pccomponentes'], from: '2026-11-27', to: '2026-11-29' },
+      page: 0, event: { hashtags: ['blackfriday'], stores: ['amazon', 'pccomponentes'], from: '2026-11-01', to: '2026-11-08' },
     })
     expect(fetchCoupons).toHaveBeenCalledWith(expect.anything(), undefined, undefined, 7)
     expect(fetchEventPromos).toHaveBeenCalledWith(expect.anything(), 'black-friday')
     expect(screen.getAllByText(/^Chollo \d+$/)).toHaveLength(12)
     expect(screen.getByRole('heading', { level: 2, name: 'Chollos relacionados' })).toBeInTheDocument()
     expect(fetchEvents).not.toHaveBeenCalled()
+  })
+
+  it('before the event, loads the stores\' deals of the last 7 days (Madrid) with the event hashtags', async () => {
+    vi.setSystemTime(new Date('2026-11-08T23:30:00Z'))
+    render(await EventPage(params('black-friday')))
+    expect(fetchDeals).toHaveBeenCalledWith(expect.anything(), {
+      page: 0, event: { hashtags: ['blackfriday'], stores: ['amazon', 'pccomponentes'], from: '2026-11-02', to: '2026-11-09' },
+    })
+  })
+
+  it('during the event, keeps the event\'s own dates', async () => {
+    vi.setSystemTime(new Date('2026-11-28T10:00:00Z'))
+    render(await EventPage(params('black-friday')))
+    expect(fetchDeals).toHaveBeenCalledWith(expect.anything(), {
+      page: 0, event: { hashtags: ['blackfriday'], stores: ['amazon', 'pccomponentes'], from: '2026-11-27', to: '2026-11-29' },
+    })
   })
 
   it('omits the Event JSON-LD when the dates are approximate', async () => {

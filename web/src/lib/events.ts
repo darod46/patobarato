@@ -12,6 +12,12 @@ function localDate(now: Date): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: TIME_ZONE }).format(now)
 }
 
+/** The Madrid calendar day (YYYY-MM-DD) of `now`, shifted by `offsetDays` whole calendar days (negative = past). */
+export function madridDay(now: Date, offsetDays = 0): string {
+  const [y, m, d] = localDate(now).split('-').map(Number)
+  return new Date(Date.UTC(y, m - 1, d + offsetDays)).toISOString().slice(0, 10)
+}
+
 /** Madrid UTC offset (ms) at the given instant, derived from Intl so DST is handled. */
 function madridOffsetMs(instant: number): number {
   const p = Object.fromEntries(

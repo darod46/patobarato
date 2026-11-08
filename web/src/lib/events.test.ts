@@ -9,6 +9,7 @@ import {
   eventPhase,
   eventRangeLabel,
   eventYear,
+  madridDay,
   madridDayBounds,
   nextEvent,
   upcomingEvents,
@@ -136,6 +137,14 @@ describe('event helpers', () => {
     expect(eventPath('black-friday')).toBe('/eventos/black-friday')
     expect(eventYear(bf)).toBe(2026)
     expect(eventYear(rebajas)).toBe(2027)
+  })
+})
+
+describe('madridDay', () => {
+  it('returns the Madrid calendar day, optionally shifted', () => {
+    const t = new Date('2026-11-08T23:30:00Z')
+    expect(madridDay(t)).toBe('2026-11-09')
+    expect(madridDay(t, -7)).toBe('2026-11-02')
   })
 })
 
