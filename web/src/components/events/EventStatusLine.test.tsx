@@ -1,7 +1,14 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+import { eventPhase } from '../../lib/events'
+import type { SiteEvent } from '../../lib/types'
 import { siteEvent } from '../../test-utils/siteEvent'
-import { EventStatusLine } from './EventStatusLine'
+import { EventStatusLine as Line } from './EventStatusLine'
+
+// The page computes the phase once; mirror that here.
+const EventStatusLine = ({ event, next, now }: { event: SiteEvent; next: SiteEvent | null; now: Date }) => (
+  <Line event={event} phase={eventPhase(event, now)} next={next} now={now} />
+)
 
 const now = new Date('2026-11-08T10:00:00Z')
 const bf = siteEvent({ slug: 'black-friday', name: 'Black Friday', startsOn: '2026-11-27', endsOn: '2026-11-29' })

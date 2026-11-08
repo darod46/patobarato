@@ -100,15 +100,15 @@ export function EventView({ event, phase, next, deals, coupons, promos, now, sto
           <nav aria-label="Ruta de navegación" className="text-sm text-muted">
             <ol className="flex min-w-0 flex-wrap items-center gap-1.5">
               <li>
-                <a href="/" className={`inline-flex min-h-11 items-center hover:underline ${FOCUS}`}>
+                <Link href="/" className={`inline-flex min-h-11 items-center hover:underline ${FOCUS}`}>
                   Inicio
-                </a>
+                </Link>
               </li>
               <li className="flex items-center gap-1.5">
                 <ChevronRight size={14} aria-hidden="true" />
-                <a href="/eventos" className={`inline-flex min-h-11 items-center hover:underline ${FOCUS}`}>
+                <Link href="/eventos" className={`inline-flex min-h-11 items-center hover:underline ${FOCUS}`}>
                   Eventos
-                </a>
+                </Link>
               </li>
               <li className="flex min-w-0 items-center gap-1.5">
                 <ChevronRight size={14} aria-hidden="true" />
@@ -118,7 +118,7 @@ export function EventView({ event, phase, next, deals, coupons, promos, now, sto
           </nav>
           <header className="mt-4 max-w-[720px]">
             <h1 className="font-display text-4xl leading-tight font-bold tracking-[-0.03em] md:text-5xl">{event.name}</h1>
-            <EventStatusLine event={event} next={next} now={now} />
+            <EventStatusLine event={event} phase={phase} next={next} now={now} />
           </header>
           {hasIntro && <Markdown source={event.introMd} className="mt-8 max-w-[720px]" />}
         </div>

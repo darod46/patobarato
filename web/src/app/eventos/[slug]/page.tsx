@@ -30,7 +30,8 @@ export async function generateStaticParams() {
 type Props = { params: Promise<{ slug: string }> }
 
 // Shared by generateMetadata and the page within one request. Null means 404 (unknown or unpublished slug).
-const loadEvent = cache(async (slug: string) => (await optional('evento', () => fetchEvent(getSupabase(), slug))) ?? null)
+// A failed lookup is NOT a 404: it propagates so Next keeps serving the last good ISR version (spec §6.4).
+const loadEvent = cache(async (slug: string) => fetchEvent(getSupabase(), slug))
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const event = await loadEvent((await params).slug)

@@ -5,6 +5,7 @@ import { fetchCoupons } from '../../../lib/coupons'
 import { fetchDeals } from '../../../lib/deals'
 import { fetchEvent, fetchEventPromos, fetchEvents } from '../../../lib/events-data'
 import { fetchStores } from '../../../lib/stores-data'
+import { getSupabase } from '../../../lib/supabase'
 import type { Deal } from '../../../lib/types'
 import { siteEvent } from '../../../test-utils/siteEvent'
 import EventPage, { dynamicParams, generateMetadata, generateStaticParams, revalidate } from './page'
@@ -33,6 +34,7 @@ const ldTypes = (container: HTMLElement) =>
 const fail = async () => { throw new Error('down') }
 
 beforeEach(() => {
+  vi.mocked(getSupabase).mockReset().mockReturnValue({} as never)
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(new Date('2026-11-08T10:00:00Z'))
   vi.mocked(fetchEvent).mockReset().mockImplementation(async (_c, slug) => [bf, prime, cyber].find((e) => e.slug === slug) ?? null)
@@ -64,6 +66,15 @@ describe('EventPage', () => {
     expect((page as { digest?: string }).digest).toBe('NEXT_HTTP_ERROR_FALLBACK;404')
     const meta = await generateMetadata(params('nada')).catch((e: unknown) => e)
     expect((meta as { digest?: string }).digest).toBe('NEXT_HTTP_ERROR_FALLBACK;404')
+  })
+
+  it.each([
+    ['fetchEvent rejects', () => vi.mocked(fetchEvent).mockImplementation(fail)],
+    ['getSupabase throws', () => vi.mocked(getSupabase).mockImplementation(() => { throw new Error('down') })],
+  ])('propagates the error instead of a 404 when %s, so the last ISR version is kept', async (_n, setup) => {
+    setup()
+    await expect(EventPage(params('black-friday'))).rejects.toThrow('down')
+    await expect(generateMetadata(params('black-friday'))).rejects.toThrow('down')
   })
 
   it('builds the metadata from the event', async () => {

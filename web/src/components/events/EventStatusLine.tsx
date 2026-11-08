@@ -1,19 +1,20 @@
 import Link from 'next/link'
-import { eventLongDateLabel, eventPath, eventPhase, eventYear, whenLabel } from '../../lib/events'
-import type { SiteEvent } from '../../lib/types'
+import { eventLongDateLabel, eventPath, eventYear, whenLabel } from '../../lib/events'
+import type { EventPhase, SiteEvent } from '../../lib/types'
 
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
 type Props = {
   event: SiteEvent
+  /** Computed once by the page from the same `now`. */
+  phase: EventPhase
   /** The following event, only used once this one is over. */
   next: SiteEvent | null
   now: Date
 }
 
 /** One line under the event title saying when it starts, until when it runs, or that it ended and what comes next. */
-export function EventStatusLine({ event, next, now }: Props) {
-  const phase = eventPhase(event, now)
+export function EventStatusLine({ event, phase, next, now }: Props) {
   const start = eventLongDateLabel(event, 'start')
   const end = eventLongDateLabel(event, 'end')
   let content: React.ReactNode
