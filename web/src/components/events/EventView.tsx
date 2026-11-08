@@ -3,6 +3,7 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import type { CatalogProduct } from '../../lib/catalog'
 import type { Coupon, Deal, EventPhase, SiteEvent } from '../../lib/types'
+import { tagPath } from '../../lib/urls'
 import { CouponsBlock } from '../CouponsBlock'
 import { DealCard } from '../DealCard'
 import { Footer } from '../Footer'
@@ -51,7 +52,7 @@ export function EventView({ event, phase, next, deals, coupons, promos, now, sto
       </div>
       {tag && (
         <Link
-          href={`/chollos?tag=${encodeURIComponent(tag)}`}
+          href={tagPath(tag)}
           className={`inline-flex min-h-11 items-center gap-1.5 self-start font-semibold text-primary hover:text-primary-hover ${FOCUS}`}
         >
           Ver todos los chollos

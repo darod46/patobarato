@@ -54,7 +54,7 @@ describe('EventView', () => {
       'Recibe los chollos al momento en Telegram',
     ])
     expect(screen.getByText('Precios del catálogo de AliExpress con enlace de afiliado; no son chollos verificados por PatoBarato.')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Ver todos los chollos' })).toHaveAttribute('href', '/chollos?tag=blackfriday')
+    expect(screen.getByRole('link', { name: 'Ver todos los chollos' })).toHaveAttribute('href', '/chollos/blackfriday')
   })
 
   it('before: tips and FAQ come before the deals, titled as related', () => {
