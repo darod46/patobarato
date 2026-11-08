@@ -73,5 +73,8 @@ class AliExpressStore(BaseStore):
         original = product.original_price
         previous = original if original is not None and original > product.price else None
         return PriceQuote(
-            price=product.price, previous_price=previous, image_url=product.image_url
+            price=product.price,
+            previous_price=previous,
+            image_url=product.image_url,
+            title=product.title or None,
         )

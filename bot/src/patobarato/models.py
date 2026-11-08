@@ -100,6 +100,8 @@ class PriceQuote:
     previous_price: Decimal | None
     currency: str = "EUR"
     image_url: str | None = None
+    # The store's own product title, when it reports one (checked against the message's).
+    title: str | None = None
 
 
 @dataclass(frozen=True)

@@ -110,6 +110,7 @@ async def test_fetch_price_maps_product_detail():
         price=Decimal("89.99"),
         previous_price=Decimal("119.99"),
         image_url="https://ae01.alicdn.com/kf/Sabc.jpg",
+        title="Auriculares",
     )
 
 
