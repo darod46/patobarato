@@ -11,7 +11,7 @@ export function TelegramPreview({ deal }: { deal: Deal }) {
           {deal.title}
         </p>
         <p data-line>
-          ✅ Precio: <b>{formatPrice(deal.price)}</b>
+          ✅ {deal.priceBeforeCoupon ? 'Precio sin cupón' : 'Precio'}: <b>{formatPrice(deal.price)}</b>
         </p>
         {deal.previousPrice !== null && (
           <p data-line>

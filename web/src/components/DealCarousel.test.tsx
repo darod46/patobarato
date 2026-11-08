@@ -24,6 +24,7 @@ const deal = (id: number): Deal => ({
   discountPct: null,
   previousMinPrice: null,
   isLowest: false,
+  priceBeforeCoupon: false,
 })
 const list = (n: number) => Array.from({ length: n }, (_, i) => deal(i + 1))
 

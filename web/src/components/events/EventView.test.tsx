@@ -12,7 +12,7 @@ const now = new Date('2026-11-28T10:00:00Z')
 const deal = (id: number): Deal => ({
   publicationId: id, publishedAt: '2026-11-28T09:00:00Z', price: 10, previousPrice: null, coupon: null,
   hashtags: ['blackfriday'], affiliateUrl: 'https://amzn.to/x', title: `Chollo ${id}`, imageUrl: null,
-  asin: `A${id}`, country: 'es', store: 'amazon', productId: id, discountPct: null, previousMinPrice: null, isLowest: false,
+  asin: `A${id}`, country: 'es', store: 'amazon', productId: id, discountPct: null, previousMinPrice: null, isLowest: false, priceBeforeCoupon: false,
 })
 const coupon = (id: number): Coupon => ({
   id, store: 'aliexpress', code: `C${id}`, title: `Cupón ${id}`, conditions: null, url: null, startsAt: '2026-11-01T00:00:00Z',

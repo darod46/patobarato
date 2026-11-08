@@ -95,6 +95,11 @@ export function ProductView({ deal, related, now, guides = [] }: Props) {
           <h1 className="font-display text-2xl leading-tight font-bold tracking-[-0.02em] md:text-3xl">{deal.title}</h1>
           <div className="flex flex-wrap items-baseline justify-center gap-3 md:justify-start">
             <span className="price font-display text-4xl font-bold tracking-[-0.02em]">{formatPrice(deal.price)}</span>
+            {deal.priceBeforeCoupon && (
+              <span data-testid="price-before-coupon" className="text-sm text-muted">
+                sin cupón
+              </span>
+            )}
             {discount !== null && (
               <s className="price text-lg text-muted">{formatPrice(deal.previousPrice!)}</s>
             )}

@@ -21,6 +21,7 @@ const deal = (id: number): Deal => ({
   discountPct: null,
   previousMinPrice: null,
   isLowest: false,
+  priceBeforeCoupon: false,
 })
 
 const coupon: Coupon = {

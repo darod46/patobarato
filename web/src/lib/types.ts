@@ -18,6 +18,8 @@ export type Deal = {
   previousMinPrice: number | null
   /** True only when there is history and the current price is at or below its minimum. */
   isLowest: boolean
+  /** The store's price before the coupon the post advertises (AliExpress API prices). */
+  priceBeforeCoupon: boolean
 }
 
 export type HashtagCount = { tag: string; count: number }

@@ -26,7 +26,7 @@ const cyber = siteEvent({ slug: 'cyber-monday', name: 'Cyber Monday', startsOn: 
 const deal = (id: number): Deal => ({
   publicationId: id, publishedAt: '2026-11-07T09:00:00Z', price: 10, previousPrice: null, coupon: null, hashtags: [],
   affiliateUrl: 'https://amzn.to/x', title: `Chollo ${id}`, imageUrl: null, asin: `A${id}`, country: 'es', store: 'amazon',
-  productId: id, discountPct: null, previousMinPrice: null, isLowest: false,
+  productId: id, discountPct: null, previousMinPrice: null, isLowest: false, priceBeforeCoupon: false,
 })
 
 const params = (slug: string) => ({ params: Promise.resolve({ slug }) })

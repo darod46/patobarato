@@ -105,6 +105,7 @@ describe('fetchDeals', () => {
       discountPct: 40,
       previousMinPrice: 34.99,
       isLowest: true,
+      priceBeforeCoupon: false,
     })
   })
 
@@ -151,6 +152,15 @@ describe('fetchDeals', () => {
     })
     const { deals } = await fetchDeals(client, { page: 0 })
     expect(deals[0]).toMatchObject({ discountPct: null, previousMinPrice: null, isLowest: false })
+  })
+
+  it('maps price_before_coupon, false when absent', async () => {
+    const { client } = fakeClient({
+      data: [{ ...row(1), price_before_coupon: true }, row(2), { ...row(3), price_before_coupon: null }],
+      error: null,
+    })
+    const { deals } = await fetchDeals(client, { page: 0 })
+    expect(deals.map((d) => d.priceBeforeCoupon)).toEqual([true, false, false])
   })
 
   it('orders by discount for sort=descuento', async () => {
@@ -231,7 +241,7 @@ describe('fetchRelatedDeals', () => {
   function toDealLike() {
     return {
       publicationId: 5, publishedAt: '', price: 1, previousPrice: null, coupon: null, hashtags: [] as string[],
-      affiliateUrl: '', title: 't', imageUrl: null, asin: 'B000000000', country: 'ES', store: 'amazon', productId: 5, discountPct: null, previousMinPrice: null, isLowest: false,
+      affiliateUrl: '', title: 't', imageUrl: null, asin: 'B000000000', country: 'ES', store: 'amazon', productId: 5, discountPct: null, previousMinPrice: null, isLowest: false, priceBeforeCoupon: false,
     }
   }
   it('filters by first hashtag and excludes itself', async () => {
