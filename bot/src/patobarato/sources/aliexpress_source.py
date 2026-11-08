@@ -193,6 +193,8 @@ class AliExpressSource:
                     affiliate,
                     now,
                     channel="web",
+                    # The API sale price is before any coupon AliExpress offers.
+                    price_before_coupon=True,
                 )
             except Exception:
                 await self._repo.set_offer_status(offer_id, OfferStatus.PUBLISH_FAILED)

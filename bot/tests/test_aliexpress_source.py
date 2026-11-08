@@ -329,3 +329,9 @@ async def test_api_original_price_is_never_stored_as_previous_price():
 
     assert repo.offer_statuses() == [OfferStatus.PUBLISHED_WEB]
     assert [o["previous_price"] for o in repo._offers.values()] == [None]
+
+
+async def test_api_publications_are_marked_price_before_coupon():
+    repo, source, _, runner = _setup([_product("1", 50)])
+    await runner.run(source)
+    assert [p["price_before_coupon"] for p in repo.publications()] == [True]
