@@ -378,3 +378,50 @@ def test_price_and_coupon_amount_on_one_line_keeps_the_price():
 
 def test_coupon_amount_never_reaches_the_next_line():
     assert parse_prices("Mini PC cupón\n19,99€").price == Decimal("19.99")
+
+
+# --- Fix round 2: coupon value vs price after coupon ------------------------------
+
+
+@pytest.mark.parametrize(
+    "text, own_store, price, previous",
+    [
+        ("Con cupón 19,99€", None, "19.99", None),
+        ("💰 Con cupón 19,99€ ~~25€~~", None, "19.99", "25"),
+        ("Precio Amazon con cupón 19,99€", "amazon", "19.99", None),
+        ("Precio mínimo con cupón 19,99€", None, "19.99", None),
+        ("Precio: cupón 19,99€", None, "19.99", None),
+        ("Precio con cupón 19,99€", None, "19.99", None),
+        ("Precio aplicando cupón 12€", None, "12", None),
+        ("Precio final con cupón de 5€: 20€", None, "20", None),
+        ("Ahora con cupón de 3€: 22€", None, "22", None),
+        ("Precio con cupón -3€: 22€", None, "22", None),
+        ("Precio: 25€ · cupón de 3€", None, "25", None),
+    ],
+)
+def test_price_after_coupon_and_coupon_values(text, own_store, price, previous):
+    info = parse_prices(text, own_store)
+    assert info.price == Decimal(price)
+    assert info.previous_price == (Decimal(previous) if previous else None)
+
+
+@pytest.mark.parametrize(
+    "text",
+    ["Aplicar cupón de 8€: AEES08", "Oferta: aplicar cupón de 8€", "Aplicar cupón 8€", "Cupón 5€: AHORRA5"],
+)
+def test_coupon_values_are_never_the_price(text):
+    assert parse_prices(text, "aliexpress").price is None
+
+
+@pytest.mark.parametrize(
+    "text, coupon",
+    [
+        ("Precio: 25€ · cupón de 3€", "3 €"),
+        ("Precio final con cupón de 5€: 20€", "5 €"),
+        ("Precio con cupón -3€: 22€", "3 €"),
+        ("Cupón de 2,50 €", "2,50 €"),
+        ("Aplicar cupón de 8€: AEES08", "AEES08"),
+    ],
+)
+def test_coupon_amount_text_is_the_amount_or_the_code(text, coupon):
+    assert parse_prices(text).coupon == coupon
