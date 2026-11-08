@@ -25,7 +25,7 @@ const rest = async (path) => {
 const problems = []
 const deals = await rest('web_deals?select=*&limit=1')
 if (deals.status !== 200) problems.push(`web_deals: HTTP ${deals.status}`)
-for (const col of ['discount_pct', 'previous_min_price', 'is_lowest']) {
+for (const col of ['discount_pct', 'previous_min_price', 'is_lowest', 'price_before_coupon']) {
   if (deals.body?.[0] && !(col in deals.body[0])) problems.push(`web_deals: missing column ${col}`)
 }
 const coupons = await rest('web_coupons?select=*&limit=1')
