@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from patobarato.models import ParsedOffer, SourceMessage
 from patobarato.parsing.links import UrlResolver, country_from_url
-from patobarato.parsing.text import parse_hashtags, parse_prices, parse_title
+from patobarato.parsing.text import is_ad_marker, parse_hashtags, parse_prices, parse_title
 from patobarato.stores.base import Store
 from patobarato.stores.registry import StoreRegistry
 
@@ -52,7 +52,8 @@ async def _store_links(
 
 def _build_offer(link: _Link, text: str, source_hashtags: list[str]) -> ParsedOffer:
     prices = parse_prices(text, link.store.id)
-    hashtags = list(dict.fromkeys([*source_hashtags, *parse_hashtags(text)]))
+    tags = [*source_hashtags, *parse_hashtags(text)]
+    hashtags = list(dict.fromkeys(t for t in tags if not is_ad_marker(t)))
     return ParsedOffer(
         asin=link.product_id,
         country=link.country,

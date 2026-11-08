@@ -56,14 +56,18 @@ COUPON_MAX_LENGTH = 60
 # Text (accent-free, lowercase) right before an amount that is the coupon's value, not a
 # price: "cupón de 8€", "cupón 5€", "descuento de 10€ con el código…", "código PROMO10 -10€".
 # "Precio con cupón 19,99€" is the price after the coupon: see COUPON_PRICE_LEAD_RE.
+# Spaces only ([ \t]), never newlines: the amount must be on the coupon's own line.
 COUPON_AMOUNT_PREFIX_RE = re.compile(
-    r"\bcupon\s+(?:de\s+)?(?:descuento\s+(?:de\s+)?)?-?\s*(?=[€\d])"
-    r"|\bdescuento\s+(?:de\s+)?-?\s*(?=[€\d][^\n]*?\bcon\s+(?:el\s+)?(?:codigo|cupon)\b)"
-    r"|\b(?:codigo|cupon)\s*:?\s*[a-z0-9]{4,}\s*[:(]?\s*-\s*(?=[€\d])"
+    r"\bcupon[ \t]+(?:de[ \t]+)?(?:descuento[ \t]+(?:de[ \t]+)?)?-?[ \t]*(?=[€\d])"
+    r"|\bdescuento[ \t]+(?:de[ \t]+)?-?[ \t]*(?=[€\d][^\n]*?\bcon[ \t]+(?:el[ \t]+)?(?:codigo|cupon)\b)"
+    r"|\b(?:codigo|cupon)[ \t]*:?[ \t]*[a-z0-9]{4,}[ \t]*[:(]?[ \t]*-[ \t]*(?=[€\d])"
 )
-# Earlier on the same line, these make the amount the price paid with the coupon
-# ("Precio aplicando cupón 12€", "Ahora con cupón 9,99€").
-COUPON_PRICE_LEAD_RE = re.compile(r"\b(?:precio|ahora|oferta|con)\b")
+# Right before "cupón", a price word joined to it makes the amount the price paid WITH the
+# coupon ("Precio aplicando cupón 12€", "Ahora con cupón 9,99€"). Anywhere else on the line a
+# price word changes nothing: "Oferta: aplicar cupón de 8€" is an 8 € coupon.
+COUPON_PRICE_LEAD_RE = re.compile(
+    r"\b(?:precio|ahora|oferta)(?:\s+final)?\s+(?:con|aplicando|usando)\s+(?:el\s+)?$"
+)
 
 # Common TLDs of deal links; a bare "name.tld" with one of these is a link.
 _LINK_TLDS = r"es|com|net|org|eu|to|ly|co|io|me|gl|link|info|shop|store|de|fr|it|uk"
@@ -102,6 +106,11 @@ TITLE_MAX_LENGTH = 200
 BRAND_SEPARATOR_RE = re.compile("\\s*\u25ab\ufe0f?\\s*")
 
 HASHTAG_RE = re.compile(r"(?<!\w)#(\w+)")
+# Tags channels use to mark a post as an ad ("📢 #pub"): never our hashtags.
+AD_MARKER_TAGS = frozenset(
+    {"pub", "publi", "publicidad", "ad", "ads", "anuncio", "patrocinado", "sponsored"}
+)
+_NON_ALNUM_RE = re.compile(r"[^a-z0-9]")
 
 
 @dataclass(frozen=True)
@@ -165,7 +174,7 @@ def _coupon_amount_spans(folded: str) -> list[Span]:
     spans: list[Span] = []
     for m in COUPON_AMOUNT_PREFIX_RE.finditer(folded):
         line_start = folded.rfind("\n", 0, m.start()) + 1
-        if COUPON_PRICE_LEAD_RE.search(folded, line_start, m.start()):
+        if COUPON_PRICE_LEAD_RE.search(folded[line_start : m.start()]):
             continue
         found = MONEY_RE.match(folded, m.end())
         if found:
@@ -297,3 +306,8 @@ def parse_hashtags(text: str) -> list[str]:
     for tag in HASHTAG_RE.findall(text):
         seen.setdefault(tag.lower(), None)
     return list(seen)
+
+
+def is_ad_marker(tag: str) -> bool:
+    """A source's ad marker such as "#pub" (case, accents and punctuation ignored)."""
+    return _NON_ALNUM_RE.sub("", _fold(tag)) in AD_MARKER_TAGS

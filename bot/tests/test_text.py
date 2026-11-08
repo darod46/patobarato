@@ -360,3 +360,21 @@ def test_coupon_amount_line_before_the_price_keeps_the_real_price():
 @pytest.mark.parametrize("text", ["Precio con cupón 19,99€", "Precio con cupón: 19,99€"])
 def test_price_with_coupon_is_still_the_price(text):
     assert parse_prices(text).price == Decimal("19.99")
+
+
+@pytest.mark.parametrize(
+    "text",
+    ["Oferta: aplicar cupón de 8€: AEES08", "Precio: aplica el cupón de 8€", "Ahora cupón de 8€"],
+)
+def test_coupon_amount_wins_over_a_price_word_on_the_line(text):
+    assert parse_prices(text, "aliexpress").price is None
+
+
+def test_price_and_coupon_amount_on_one_line_keeps_the_price():
+    info = parse_prices("Precio: 25€ · cupón de 3€", "aliexpress")
+    assert info.price == Decimal("25")
+    assert info.previous_price is None
+
+
+def test_coupon_amount_never_reaches_the_next_line():
+    assert parse_prices("Mini PC cupón\n19,99€").price == Decimal("19.99")
