@@ -81,12 +81,20 @@ export async function fetchEvent(client: SupabaseClient, slug: string): Promise<
   return row ? toEvent(row) : null
 }
 
+/** Promo rows not refreshed by the bot for this long are stale (campaign over or sync broken) and hidden. */
+const PROMO_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
+
 /** The AliExpress products synced for an event, in campaign order; rows without a usable price are dropped. */
-export async function fetchEventPromos(client: SupabaseClient, slug: string): Promise<CatalogProduct[]> {
+export async function fetchEventPromos(
+  client: SupabaseClient,
+  slug: string,
+  now: Date = new Date(),
+): Promise<CatalogProduct[]> {
   const { data, error } = await client
     .from('web_event_promos')
     .select('*')
     .eq('slug', slug)
+    .gte('synced_at', new Date(now.getTime() - PROMO_MAX_AGE_MS).toISOString())
     .order('position', { ascending: true })
   if (error) throw new Error(error.message)
   return ((data ?? []) as EventPromoRow[]).map(toPromo).filter((p): p is CatalogProduct => p !== null)

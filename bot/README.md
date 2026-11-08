@@ -167,7 +167,7 @@ El ejecutor `event_promos` (solo existe con las tres credenciales de AliExpress)
 2. Copia el nombre **exacto** de la campaña en la columna `events.aliexpress_promo` del evento (por SQL o desde Supabase Studio).
 3. Fuerza una sincronización: `update sources set last_run_at = null where type = 'event_promos';`. Si no lo haces, el ejecutor corre cada 24 h.
 
-Las filas de `event_promos` de un evento solo se reemplazan cuando toda la descarga termina bien; si la API falla, se conservan las anteriores.
+Las filas de `event_promos` de un evento solo se reemplazan cuando toda la descarga termina bien; si la API falla, se conservan las anteriores. La web oculta las filas con `synced_at` de hace más de 7 días, así que si la sincronización deja de funcionar el bloque desaparece en lugar de mostrar productos caducados.
 
 ### Sin credenciales
 

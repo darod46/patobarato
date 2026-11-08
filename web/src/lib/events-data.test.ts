@@ -94,7 +94,7 @@ describe('fetchEvent', () => {
 describe('fetchEventPromos', () => {
   it('maps promos to CatalogProduct with origin aliexpress, ordered by position', async () => {
     const { client, calls } = fakeClient({ data: [promoRow], error: null })
-    expect(await fetchEventPromos(client, 'aliexpress-1111')).toEqual([
+    expect(await fetchEventPromos(client, 'aliexpress-1111', new Date('2026-11-11T12:00:00Z'))).toEqual([
       {
         origin: 'aliexpress',
         store: 'aliexpress',
@@ -112,6 +112,7 @@ describe('fetchEventPromos', () => {
       ['from', ['web_event_promos']],
       ['select', ['*']],
       ['eq', ['slug', 'aliexpress-1111']],
+      ['gte', ['synced_at', '2026-11-04T12:00:00.000Z']],
       ['order', ['position', { ascending: true }]],
     ])
   })
