@@ -53,6 +53,17 @@ DISCOUNT_SUFFIX_RE = re.compile(r"\s*(?:de\s+)?(?:descuento|dto)\b")
 COUPON_KEYWORD_RE = re.compile(r"\bcupon\b")
 COUPON_CODE_RE = re.compile(r"^(?:\s*`(?P<tick>[A-Z0-9]{4,})`|[^:`]{0,25}:\s*`?(?P<code>[A-Z0-9]{4,})\b)")
 COUPON_MAX_LENGTH = 60
+# Text (accent-free, lowercase) right before an amount that is the coupon's value, not a
+# price: "cupón de 8€", "cupón 5€", "descuento de 10€ con el código…", "código PROMO10 -10€".
+# "Precio con cupón 19,99€" is the price after the coupon: see COUPON_PRICE_LEAD_RE.
+COUPON_AMOUNT_PREFIX_RE = re.compile(
+    r"\bcupon\s+(?:de\s+)?(?:descuento\s+(?:de\s+)?)?-?\s*(?=[€\d])"
+    r"|\bdescuento\s+(?:de\s+)?-?\s*(?=[€\d][^\n]*?\bcon\s+(?:el\s+)?(?:codigo|cupon)\b)"
+    r"|\b(?:codigo|cupon)\s*:?\s*[a-z0-9]{4,}\s*[:(]?\s*-\s*(?=[€\d])"
+)
+# Earlier on the same line, these make the amount the price paid with the coupon
+# ("Precio aplicando cupón 12€", "Ahora con cupón 9,99€").
+COUPON_PRICE_LEAD_RE = re.compile(r"\b(?:precio|ahora|oferta|con)\b")
 
 # Common TLDs of deal links; a bare "name.tld" with one of these is a link.
 _LINK_TLDS = r"es|com|net|org|eu|to|ly|co|io|me|gl|link|info|shop|store|de|fr|it|uk"
@@ -149,6 +160,19 @@ def _reference_spans(folded: str, own_store: str | None) -> list[Span]:
     return spans
 
 
+def _coupon_amount_spans(folded: str) -> list[Span]:
+    """Spans of amounts that are a coupon's value ("Aplicar cupón de 8€: AEES08")."""
+    spans: list[Span] = []
+    for m in COUPON_AMOUNT_PREFIX_RE.finditer(folded):
+        line_start = folded.rfind("\n", 0, m.start()) + 1
+        if COUPON_PRICE_LEAD_RE.search(folded, line_start, m.start()):
+            continue
+        found = MONEY_RE.match(folded, m.end())
+        if found:
+            spans.append((found.start(), found.end()))
+    return spans
+
+
 def _find_previous(folded: str, excluded: list[Span]) -> tuple[Decimal | None, Span | None]:
     """Return the previous price and the span of its text, if any (not in ``excluded``)."""
     for m in STRIKETHROUGH_RE.finditer(folded):
@@ -203,7 +227,7 @@ def _find_coupon(text: str, folded: str) -> str | None:
 def parse_prices(text: str, own_store: str | None = None) -> PriceInfo:
     """Prices in a post; ``own_store`` (a store id) is the store the deal is for."""
     folded = _fold(text)
-    references = _reference_spans(folded, own_store)
+    references = _reference_spans(folded, own_store) + _coupon_amount_spans(folded)
     previous, span = _find_previous(folded, references)
     price = _find_price(folded, references + ([span] if span else []))
     if price is None or (previous is not None and previous <= price):

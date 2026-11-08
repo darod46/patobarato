@@ -303,3 +303,60 @@ def test_other_store_price_ignored_with_own_store():
 )
 def test_brand_separator_used_as_bullet_is_not_a_title(text, title):
     assert parse_title(text) == title
+
+
+def test_aliexpress_apply_coupon_line():
+    text = (
+        "🔥 PRECIAZO!\n❗️Aplicar cupón: AEES03\n🚚 Envío gratis\n\n"
+        "SYMINO ▫️ Raqueta de Pádel\n\n🔗 Link: https://s.click.aliexpress.com/e/_c3ifBofV\n\n📢 #pub"
+    )
+    info = parse_prices(text, "aliexpress")
+    assert info.coupon == "AEES03"
+    assert info.price is None
+
+
+MINI_PC = (
+    "🔥 PRECIAZO!\n❗️Aplicar cupón de 8€: AEES08\n🚚 Envío gratis\n\n"
+    "EU Computer ▫️ Mini PC Intel N150, 16GB RAM, 256GB SSD, Windows 11 Pro, Wifi6, BT5.2\n\n"
+    "🔗 Link: https://s.click.aliexpress.com/e/_c3n479AB\n\n📢 #pub"
+)
+
+
+def test_coupon_amount_is_not_the_price():
+    info = parse_prices(MINI_PC, "aliexpress")
+    assert info.price is None
+    assert info.previous_price is None
+    assert info.coupon == "AEES08"
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "Aplicar cupón de 8€: AEES08",
+        "Cupón 5€: AHORRA5",
+        "Descuento de 10€ con el código PROMO10",
+        "Código PROMO10 -10€",
+    ],
+)
+def test_amounts_on_coupon_lines_are_ignored(line):
+    info = parse_prices(f"Mini PC\n{line}", "aliexpress")
+    assert info.price is None
+    assert info.previous_price is None
+
+
+def test_real_price_kept_next_to_a_coupon_amount_line():
+    text = "Mini PC 129,99€\nAntes: 199,99€\nAplicar cupón de 8€: AEES08"
+    info = parse_prices(text, "aliexpress")
+    assert info.price == Decimal("129.99")
+    assert info.previous_price == Decimal("199.99")
+    assert info.coupon == "AEES08"
+
+
+def test_coupon_amount_line_before_the_price_keeps_the_real_price():
+    text = "Cupón de 8€: AEES08\nPrecio: 121,99€"
+    assert parse_prices(text, "aliexpress").price == Decimal("121.99")
+
+
+@pytest.mark.parametrize("text", ["Precio con cupón 19,99€", "Precio con cupón: 19,99€"])
+def test_price_with_coupon_is_still_the_price(text):
+    assert parse_prices(text).price == Decimal("19.99")
