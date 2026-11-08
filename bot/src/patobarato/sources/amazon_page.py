@@ -132,6 +132,20 @@ def _parse_price(text: str) -> Decimal | None:
         return None
 
 
+_WHOLE_RE = re.compile(r'class="a-price-whole">\s*([\d.]+)', re.IGNORECASE)
+_FRACTION_RE = re.compile(r'class="a-price-fraction">\s*(\d{1,2})\s*<', re.IGNORECASE)
+
+
+def _visible_price(span: str) -> Decimal | None:
+    """The price from the visible whole/fraction parts (Amazon may leave a-offscreen blank)."""
+    whole = _WHOLE_RE.search(span)
+    if whole is None:
+        return None
+    fraction = _FRACTION_RE.search(span)
+    text = whole.group(1) + ("," + fraction.group(1) if fraction else "")
+    return _parse_price(text)
+
+
 def extract_price(page: str) -> PriceQuote | None:
     """The current price (and the struck list price, if higher) of the buy box.
 
@@ -148,10 +162,12 @@ def extract_price(page: str) -> PriceQuote | None:
     struck: list[Decimal] = []
     for match in _PRICE_SPAN_RE.finditer(box):
         tag, text = match.groups()
+        end = _balanced_end(box, match.start(), _SPAN_TAG_RE)
         value = _parse_price(text)
+        if value is None and not text.strip() and end is not None:
+            value = _visible_price(box[match.start() : end])
         if value is None:
             continue
-        end = _balanced_end(box, match.start(), _SPAN_TAG_RE)
         if end is not None and _UNIT_SUFFIX_RE.match(box[end : end + 10].lstrip()):
             continue  # per-unit price such as "3,96 €/kg"
         if 'data-a-strike="true"' in tag:

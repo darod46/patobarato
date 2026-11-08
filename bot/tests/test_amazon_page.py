@@ -322,3 +322,27 @@ async def test_amazon_image_found_log_message_is_pinned(caplog):
     with caplog.at_level(logging.INFO, logger="patobarato.amazon"):
         await _finder(lambda request: httpx.Response(200, text=page)).find("B0GS1K5XQ8", "ES")
     assert "Amazon image for B0GS1K5XQ8 found (ok=1, failed=0)" in [r.getMessage() for r in caplog.records]
+
+
+# Amazon 2026-11: the a-offscreen text inside the price span is blank; the price
+# is only in the visible a-price-whole / a-price-fraction parts.
+NEW_MARKUP_BUYBOX = (
+    '<div id="corePriceDisplay_desktop_feature_div">'
+    '<span class="aok-offscreen"> 26,13 € </span>'
+    '<span class="a-price aok-align-center reinventPricePriceToPayMargin priceToPay apex-pricetopay-value"'
+    ' data-a-size="xl" data-a-color="base"><span class="a-offscreen"> </span>'
+    '<span aria-hidden="true"><span class="a-price-whole">26<span class="a-price-decimal">,</span></span>'
+    '<span class="a-price-fraction">13</span><span class="a-price-symbol">€</span></span></span>'
+    '<span class="a-price a-text-price" data-a-size="s" data-a-strike="true" data-a-color="secondary">'
+    '<span class="a-offscreen"> </span><span aria-hidden="true">'
+    '<span class="a-price-whole">1.039<span class="a-price-decimal">,</span></span>'
+    '<span class="a-price-fraction">90</span><span class="a-price-symbol">€</span></span></span>'
+    "</div>"
+)
+
+
+def test_extract_price_reads_visible_parts_when_offscreen_text_is_blank():
+    quote = extract_price(f"<html>{NEW_MARKUP_BUYBOX}</html>")
+    assert quote is not None
+    assert quote.price == Decimal("26.13")
+    assert quote.previous_price == Decimal("1039.90")
