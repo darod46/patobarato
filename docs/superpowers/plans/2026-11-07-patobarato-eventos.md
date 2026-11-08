@@ -34,7 +34,7 @@
 ### Task 1: Migration, views, seed and anon check
 
 **Files:**
-- Create: `supabase/migrations/20261110000000_events.sql`
+- Create: `supabase/migrations/20261110010000_events.sql`
 - Modify: `web/scripts/check-views.mjs`
 
 **Interfaces:**
@@ -90,14 +90,14 @@ Add: `web_events` and `web_event_promos` must answer 200 with an array; `events`
 - [ ] **Step 3: Verify the SQL parses**
 
 Run: `cd /home/claude/patobarato && psql --version >/dev/null 2>&1 && echo has-psql || python3 - <<'EOF'
-import re,sys;s=open('supabase/migrations/20261110000000_events.sql').read();assert s.count('$$')%2==0 and 'notify pgrst' in s;print('ok')
+import re,sys;s=open('supabase/migrations/20261110010000_events.sql').read();assert s.count('$$')%2==0 and 'notify pgrst' in s;print('ok')
 EOF`
 Expected: `ok` (syntax is applied for real in Task 11).
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add supabase/migrations/20261110000000_events.sql web/scripts/check-views.mjs
+git add supabase/migrations/20261110010000_events.sql web/scripts/check-views.mjs
 git commit -m "feat(db): events and event_promos tables, views and seed"
 ```
 
@@ -456,7 +456,7 @@ it('fetchCoupons filters by event id and maps eventId', ...)
 **Files:**
 - Modify: `web/README.md` (events section: table, phases, how to publish), `docs/` none.
 
-- [ ] **Step 1: Apply `20261110000000_events.sql` in production through the Management API (controller does this from the built-in browser tab `seed`, registering the version in `supabase_migrations.schema_migrations`), then `notify pgrst, 'reload schema'`.** Stop condition per SDD: this is a side effect outside the worktree — the controller performs it, not an implementer.
+- [ ] **Step 1: Apply `20261110010000_events.sql` in production through the Management API (controller does this from the built-in browser tab `seed`, registering the version in `supabase_migrations.schema_migrations`), then `notify pgrst, 'reload schema'`.** Stop condition per SDD: this is a side effect outside the worktree — the controller performs it, not an implementer.
 - [ ] **Step 2: `cd web && node scripts/check-views.mjs`** → prints no problems.
 - [ ] **Step 3: Start `next start` on a free port and screenshot `/eventos`, `/eventos/black-friday`, `/eventos/aliexpress-1111` at 390 px and 1280 px with Playwright (deviceScaleFactor 1), check copy and that no empty block title appears.**
 - [ ] **Step 4: Document in `web/README.md`; commit** — `git commit -m "docs(web): event pages"`.

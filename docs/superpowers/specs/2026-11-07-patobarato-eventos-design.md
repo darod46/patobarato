@@ -39,7 +39,7 @@ Hechos que condicionan el diseño: Google tarda días o semanas en indexar y pos
 
 ## 4. Modelo de datos
 
-Migración `supabase/migrations/20261110000000_events.sql`.
+Migración `supabase/migrations/20261110010000_events.sql`.
 
 ```sql
 create table events (
