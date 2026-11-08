@@ -4,6 +4,7 @@ export type NavLink = { label: string; href: string }
 export const NAV_LINKS: NavLink[] = [
   { label: 'Chollos', href: '/chollos' },
   { label: 'Cupones', href: '/cupones' },
+  { label: 'Eventos', href: '/eventos' },
   { label: 'Tiendas', href: '/tiendas' },
   { label: 'Guías', href: '/guias' },
 ]

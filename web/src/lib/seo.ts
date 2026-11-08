@@ -1,13 +1,14 @@
 import type { Metadata } from 'next'
 import { discountPercent, formatPrice } from './format'
+import { eventPath, eventYear } from './events'
 import { guidePath } from './guides'
 import { storeInfo } from './stores'
 import { stripMarkdown } from './text'
 import type { StoreStats } from './stores-data'
-import type { Deal, Guide } from './types'
+import type { Deal, Guide, SiteEvent } from './types'
 import { SITE_URL, parseTagParam, productPath, tagPath } from './urls'
 
-const MAX_DESCRIPTION = 160
+export const MAX_DESCRIPTION = 160
 /** Hashtag pages with fewer deals than this are kept out of the index. */
 export const MIN_INDEXABLE_DEALS = 3
 
@@ -20,7 +21,7 @@ function dealDiscount(deal: Deal): number | null {
   return deal.previousPrice !== null ? discountPercent(deal.price, deal.previousPrice) : null
 }
 
-function truncate(text: string, max: number): string {
+export function truncate(text: string, max: number): string {
   if (text.length <= max) return text
   return `${text.slice(0, Math.max(0, max - 1)).trimEnd()}…`
 }
@@ -220,7 +221,7 @@ export function couponsMetadata(count: number): Metadata {
   }
 }
 
-function firstSentence(md: string): string {
+export function firstSentence(md: string): string {
   const plain = stripMarkdown(md)
   const m = /^.*?[.!?](?=\s|$)/.exec(plain)
   return truncate(m ? m[0] : plain, MAX_DESCRIPTION)
@@ -253,6 +254,19 @@ export function guidesMetadata(count: number): Metadata {
   }
 }
 
+/** FAQPage structured data; answers are plain text. */
+export function faqJsonLd(faq: { q: string; aMd: string }[]): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faq.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: stripMarkdown(f.aMd) },
+    })),
+  }
+}
+
 /** Article, ItemList and (when there are questions) FAQPage structured data for a guide page. */
 export function guideJsonLd(guide: Guide, url: string): Record<string, unknown>[] {
   const data: Record<string, unknown>[] = [
@@ -277,17 +291,55 @@ export function guideJsonLd(guide: Guide, url: string): Record<string, unknown>[
     },
   ]
   if (guide.faq.length > 0) {
-    data.push({
-      '@context': 'https://schema.org',
-      '@type': 'FAQPage',
-      mainEntity: guide.faq.map((f) => ({
-        '@type': 'Question',
-        name: f.q,
-        acceptedAnswer: { '@type': 'Answer', text: stripMarkdown(f.aMd) },
-      })),
-    })
+    data.push(faqJsonLd(guide.faq))
   }
   return data
+}
+
+function eventDescription(event: SiteEvent): string {
+  return truncate(firstSentence(event.introMd), MAX_DESCRIPTION)
+}
+
+export function eventMetadata(event: SiteEvent): Metadata {
+  const title = `${event.name} ${eventYear(event)}: chollos, cupones y consejos | PatoBarato`
+  const description = eventDescription(event)
+  const path = eventPath(event.slug)
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: { type: 'website', siteName: 'PatoBarato', locale: 'es_ES', url: path, title, description, images: [OG_IMAGE] },
+    twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
+  }
+}
+
+export function eventsMetadata(): Metadata {
+  const title = 'Eventos de compras: Black Friday, 11.11, Cyber Monday | PatoBarato'
+  const description = 'El calendario de eventos de compras del año, con sus fechas, los chollos y los cupones de cada uno.'
+  return {
+    title,
+    description,
+    alternates: { canonical: '/eventos' },
+    openGraph: { type: 'website', siteName: 'PatoBarato', locale: 'es_ES', url: '/eventos', title, description, images: [OG_IMAGE] },
+    twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
+  }
+}
+
+/** Event structured data; null when the dates are approximate (never claim dates we are unsure of). */
+export function eventJsonLd(event: SiteEvent, url: string): Record<string, unknown> | null {
+  if (event.approximate) return null
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Event',
+    name: `${event.name} ${eventYear(event)}`,
+    startDate: event.startsOn,
+    endDate: event.endsOn,
+    eventStatus: 'https://schema.org/EventScheduled',
+    eventAttendanceMode: 'https://schema.org/OnlineEventAttendanceMode',
+    location: { '@type': 'VirtualLocation', url },
+    organizer: { '@type': 'Organization', name: 'PatoBarato', url: SITE_URL },
+    description: eventDescription(event),
+  }
 }
 
 /** WebSite (with sitelinks search box) and Organization structured data for the home page. */

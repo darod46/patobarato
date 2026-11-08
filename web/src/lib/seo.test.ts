@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { formatPrice } from './format'
-import { OG_IMAGE, breadcrumbJsonLd, couponsMetadata, guideJsonLd, guideMetadata, guidesMetadata, dealsMetadata, searchMetadata, hashtagMetadata, homeMetadata, productJsonLd, productMetadata, siteJsonLd, storeMetadata, storesMetadata, jsonLdScript } from './seo'
+import { siteEvent } from '../test-utils/siteEvent'
+import { OG_IMAGE, breadcrumbJsonLd, eventJsonLd, eventMetadata, eventsMetadata, faqJsonLd, couponsMetadata, guideJsonLd, guideMetadata, guidesMetadata, dealsMetadata, searchMetadata, hashtagMetadata, homeMetadata, productJsonLd, productMetadata, siteJsonLd, storeMetadata, storesMetadata, jsonLdScript } from './seo'
 import type { Deal, Guide } from './types'
 import { SITE_URL, productPath } from './urls'
 
@@ -304,5 +305,57 @@ describe('searchMetadata', () => {
   it('is noindex with a query', () => {
     expect(searchMetadata('freidora').robots).toEqual({ index: false, follow: true })
     expect(searchMetadata('  ').robots).toBeUndefined()
+  })
+})
+
+describe('event SEO', () => {
+  const bf = siteEvent({
+    slug: 'black-friday', name: 'Black Friday', startsOn: '2026-11-27', endsOn: '2026-11-29',
+    introMd: 'El **Black Friday** llega con rebajas. Segunda frase.',
+  })
+  const prime = siteEvent({ slug: 'prime-day', name: 'Prime Day', startsOn: '2026-07-01', approximate: true })
+
+  it('builds the event metadata', () => {
+    const m = eventMetadata(bf)
+    expect(m.title).toBe('Black Friday 2026: chollos, cupones y consejos | PatoBarato')
+    expect(m.description).toBe('El Black Friday llega con rebajas.')
+    expect(m.alternates).toEqual({ canonical: '/eventos/black-friday' })
+    expect(m.openGraph).toMatchObject({ type: 'website', images: [OG_IMAGE] })
+    expect(m.robots).toBeUndefined()
+  })
+
+  it('builds the events index metadata', () => {
+    const m = eventsMetadata()
+    expect(m.title).toBe('Eventos de compras: Black Friday, 11.11, Cyber Monday | PatoBarato')
+    expect(m.alternates).toEqual({ canonical: '/eventos' })
+    expect(m.robots).toBeUndefined()
+  })
+
+  it('has no Event JSON-LD for approximate dates', () => {
+    expect(eventJsonLd(prime, `${SITE_URL}/eventos/prime-day`)).toBeNull()
+  })
+
+  it('builds Event JSON-LD with exact dates', () => {
+    const url = `${SITE_URL}/eventos/black-friday`
+    expect(eventJsonLd(bf, url)).toEqual({
+      '@context': 'https://schema.org',
+      '@type': 'Event',
+      name: 'Black Friday 2026',
+      startDate: '2026-11-27',
+      endDate: '2026-11-29',
+      eventStatus: 'https://schema.org/EventScheduled',
+      eventAttendanceMode: 'https://schema.org/OnlineEventAttendanceMode',
+      location: { '@type': 'VirtualLocation', url },
+      organizer: { '@type': 'Organization', name: 'PatoBarato', url: SITE_URL },
+      description: 'El Black Friday llega con rebajas.',
+    })
+  })
+
+  it('builds FAQPage JSON-LD', () => {
+    expect(faqJsonLd([{ q: '¿Cuándo?', aMd: 'El **viernes**.' }])).toEqual({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: [{ '@type': 'Question', name: '¿Cuándo?', acceptedAnswer: { '@type': 'Answer', text: 'El viernes.' } }],
+    })
   })
 })

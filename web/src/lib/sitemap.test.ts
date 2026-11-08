@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildRobots, buildSitemap } from './sitemap'
+import { siteEvent } from '../test-utils/siteEvent'
 import type { GuideSummary } from './types'
 import { SITE_URL } from './urls'
 
@@ -136,5 +137,26 @@ describe('buildRobots', () => {
     const robots = buildRobots(SITE_URL)
     expect(robots.rules).toEqual({ userAgent: '*', allow: '/', disallow: ['/go/'] })
     expect(robots.sitemap).toBe('https://www.patobarato.com/sitemap.xml')
+  })
+})
+
+describe('buildSitemap events', () => {
+  const now = new Date('2026-11-08T10:00:00Z')
+  const soon = siteEvent({ slug: 'black-friday', name: 'Black Friday', startsOn: '2026-11-27', updatedAt: '2026-11-02T00:00:00Z' })
+  const far = siteEvent({ slug: 'navidad', name: 'Navidad', startsOn: '2027-03-01' })
+  const during = siteEvent({ slug: 'once', name: '11.11', startsOn: '2026-11-07', endsOn: '2026-11-09' })
+
+  it('lists /eventos and each event with its priority', () => {
+    const entries = buildSitemap([], [], SITE_URL, { coupons: false, events: [soon, far, during], now })
+    const by = (u: string) => entries.find((e) => e.url === SITE_URL + u)
+    expect(by('/eventos')).toMatchObject({ changeFrequency: 'weekly', priority: 0.7 })
+    expect(by('/eventos/black-friday')).toMatchObject({ priority: 0.9, changeFrequency: 'weekly', lastModified: new Date('2026-11-02T00:00:00Z') })
+    expect(by('/eventos/navidad')?.priority).toBe(0.6)
+    expect(by('/eventos/once')?.priority).toBe(0.9)
+  })
+
+  it('omits /eventos without events', () => {
+    const entries = buildSitemap([], [], SITE_URL, { coupons: false, events: [], now })
+    expect(entries.some((e) => e.url.includes('/eventos'))).toBe(false)
   })
 })
