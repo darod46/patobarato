@@ -33,9 +33,10 @@ def _build(
     offer: ParsedOffer, title: str, coupon: str | None, link: str, store_name: str
 ) -> str:
     assert offer.price is not None, "format_caption requires a price"
+    label = "Precio sin cupón" if offer.price_before_coupon else "Precio"
     lines = [
         f"<b>{html.escape(title)}</b>",
-        f"✅ Precio: <b>{format_price(offer.price)} €</b>",
+        f"✅ {label}: <b>{format_price(offer.price)} €</b>",
     ]
     if offer.previous_price is not None:
         lines.append(

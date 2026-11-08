@@ -74,6 +74,7 @@ class Repository(Protocol):
         affiliate_url: str,
         published_at: datetime,
         channel: PublicationChannel = "telegram",
+        price_before_coupon: bool = False,
     ) -> int: ...
 
     async def list_api_sources(self) -> list[ApiSource]:
@@ -328,6 +329,7 @@ class InMemoryRepository(Repository):
         affiliate_url: str,
         published_at: datetime,
         channel: PublicationChannel = "telegram",
+        price_before_coupon: bool = False,
     ) -> int:
         publication_id = self._new_id("publication")
         self._publications.append(
@@ -340,6 +342,7 @@ class InMemoryRepository(Repository):
                 "chat_id": chat_id,
                 "message_id": message_id,
                 "published_price": published_price,
+                "price_before_coupon": price_before_coupon,
                 "affiliate_url": affiliate_url,
                 "status": PublicationStatus.ACTIVE,
                 "published_at": published_at,

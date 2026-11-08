@@ -13,6 +13,7 @@ from patobarato.core.decision import decide
 from patobarato.models import OfferStatus, ParsedOffer, SourceMessage
 from patobarato.parsing.extract import extract_offers
 from patobarato.parsing.links import UrlResolver
+from patobarato.parsing.title_match import titles_mismatch
 from patobarato.publishing.format import format_caption
 from patobarato.publishing.telegram_publisher import can_retry_without_photo
 from patobarato.storage.repository import Repository
@@ -25,6 +26,9 @@ logger = logging.getLogger("patobarato.pipeline")
 MIN_PUBLISH_INTERVAL_SECONDS = 3.0
 # Cap on a store price fetch (offers without a text price): the worker is single.
 PRICE_FETCH_TIMEOUT_SECONDS = 5.0
+# Stores whose API price is before the coupons a message advertises, and whose API
+# "original price" is an inflated list price (never shown as the previous price).
+STORES_PRICED_BEFORE_COUPON = frozenset({"aliexpress"})
 
 
 class Publisher(Protocol):
@@ -113,8 +117,9 @@ class Pipeline:
     async def _process_offer(
         self, msg: SourceMessage, offer: ParsedOffer
     ) -> OfferStatus | None:
+        store_title: str | None = None
         if offer.price is None and not self._is_stale(msg):
-            offer = await self._with_store_price(offer)
+            offer, store_title = await self._with_store_price(offer)
         product_id = await self._repo.upsert_product(offer)
         offer_id = await self._repo.insert_offer(
             product_id,
@@ -126,6 +131,17 @@ class Pipeline:
         )
         if offer_id is None:
             return None
+        if store_title is not None and titles_mismatch(offer.title, store_title):
+            # The link points at another product (a channel error): its price is not this one.
+            logger.warning(
+                "Title mismatch store=%s product=%s message=%r store=%r — not published",
+                offer.store,
+                offer.asin,
+                offer.title,
+                store_title,
+            )
+            await self._repo.set_offer_status(offer_id, OfferStatus.SKIPPED_MISMATCH)
+            return OfferStatus.SKIPPED_MISMATCH
 
         last = await self._repo.get_last_publication(
             product_id, offer.country, channel="telegram"
@@ -204,6 +220,7 @@ class Pipeline:
                 offer.price,
                 affiliate_url,
                 self._clock(),
+                price_before_coupon=offer.price_before_coupon,
             ),
             f"Mensaje publicado pero no registrado (publications): {what}",
         )
@@ -240,11 +257,14 @@ class Pipeline:
         stale_after = timedelta(minutes=self._settings.stale_after_minutes)
         return self._clock() - msg.received_at > stale_after
 
-    async def _with_store_price(self, offer: ParsedOffer) -> ParsedOffer:
-        """Fills a price the text lacks (channels that put it in the photo) from the store."""
+    async def _with_store_price(self, offer: ParsedOffer) -> tuple[ParsedOffer, str | None]:
+        """Fills a price the text lacks (channels that put it in the photo) from the store.
+
+        Also returns the store's own product title, when it reports one.
+        """
         store = self._registry.get(offer.store)
         if store is None:
-            return offer
+            return offer, None
         try:
             quote = await asyncio.wait_for(
                 store.fetch_price(offer.asin, offer.canonical_url), self._price_fetch_timeout
@@ -256,22 +276,27 @@ class Pipeline:
                 offer.asin,
                 self._price_fetch_timeout,
             )
-            return offer
+            return offer, None
         except Exception as exc:
             logger.warning(
                 "Store price for %s %s failed: %s: %s", offer.store, offer.asin, type(exc).__name__, exc
             )
-            return offer
+            return offer, None
         if quote is None or quote.price is None:
-            return offer
+            return offer, None
         logger.info("Price for %s %s taken from the store: %s", offer.store, offer.asin, quote.price)
-        previous = offer.previous_price or quote.previous_price
-        return replace(
+        before_coupon = offer.store in STORES_PRICED_BEFORE_COUPON
+        previous = offer.previous_price
+        if previous is None and not before_coupon:
+            previous = quote.previous_price
+        offer = replace(
             offer,
             price=quote.price,
             previous_price=previous if previous is not None and previous > quote.price else None,
             image_url=offer.image_url or quote.image_url,
+            price_before_coupon=before_coupon,
         )
+        return offer, quote.title
 
     async def _affiliate_url(self, offer: ParsedOffer, store: Store) -> str | None:
         """The offer's monetised link, or None when it has none (never the plain store URL)."""
