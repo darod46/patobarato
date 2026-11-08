@@ -78,7 +78,7 @@ values (
 
 En PatoBarato seguimos las ofertas de AliExpress todo el año. Durante el 11.11 las que detecta el bot aparecen en nuestro canal de Telegram y en esta misma página, según las va encontrando.
 
-AliExpress suele abrir sus campañas y cupones algunos días antes de la fecha, así que conviene mirar con antelación. Los precios y las condiciones los fija la tienda y pueden cambiar durante el día.
+Las condiciones de cada oferta las fija la tienda y pueden cambiar durante el día, así que conviene revisar precio y cupones antes de pagar.
 
 Cada chollo que publicamos muestra el historial de precios que tenemos registrado, para que puedas comparar el precio de hoy con el de otras fechas.$md$,
   $md$- Mira el historial de precios de cada chollo antes de comprar: te dice si el precio de hoy es realmente bajo.
@@ -87,9 +87,9 @@ Cada chollo que publicamos muestra el historial de precios que tenemos registrad
 - Fíjate en el vendedor y en las valoraciones del producto, no solo en el precio.
 - Activa las notificaciones de nuestro canal de Telegram para ver los chollos según aparecen.$md$,
   $json$[
-    {"q": "¿Cuándo es el 11.11 de AliExpress?", "a_md": "El 11 de noviembre. En 2026 es miércoles. AliExpress puede adelantar cupones y ofertas a los días previos."},
+    {"q": "¿Cuándo es el 11.11 de AliExpress?", "a_md": "El 11 de noviembre. En 2026 es miércoles."},
     {"q": "¿Dónde veo los chollos del 11.11 de PatoBarato?", "a_md": "En nuestro [canal de Telegram](https://t.me/patobarato) y en esta página, a medida que el bot los encuentra."},
-    {"q": "¿Cómo sé si un precio es bueno?", "a_md": "Cada chollo muestra el historial de precios que PatoBarato tiene registrado. Si el producto aún no tiene historial, lo indicamos en lugar de inventar una comparación."}
+    {"q": "¿Cómo sé si un precio es bueno?", "a_md": "Cada chollo muestra el historial de precios que PatoBarato tiene registrado. Si el producto aún no tiene historial, verás solo el precio actual."}
   ]$json$::jsonb
 ),
 (
@@ -112,7 +112,7 @@ Cada chollo muestra el historial de precios registrado en PatoBarato, para que p
   $json$[
     {"q": "¿Cuándo es el Black Friday 2026?", "a_md": "El viernes 27 de noviembre. En PatoBarato seguimos las ofertas hasta el domingo 29, aunque cada tienda decide sus propias fechas."},
     {"q": "¿Qué tiendas sigue PatoBarato en el Black Friday?", "a_md": "Amazon, PCComponentes y MediaMarkt. Los chollos se publican en el [canal de Telegram](https://t.me/patobarato) y en esta página cuando el bot los encuentra."},
-    {"q": "¿Cómo compruebo si una oferta es buena?", "a_md": "Mira el historial de precios que aparece en cada chollo y compáralo con el precio actual. Si no hay historial suficiente, lo indicamos."}
+    {"q": "¿Cómo compruebo si una oferta es buena?", "a_md": "Mira el historial de precios que aparece en cada chollo y compáralo con el precio actual. Si no hay historial, verás solo el precio actual."}
   ]$json$::jsonb
 );
 
