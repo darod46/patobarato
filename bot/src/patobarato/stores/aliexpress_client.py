@@ -207,6 +207,28 @@ class AliExpressClient:
         )
         return _products(self._payload(body, "aliexpress_affiliate_hotproduct_query_response"))
 
+    async def product_query(
+        self,
+        keywords: str | None,
+        category_ids: list[str],
+        page_size: int,
+        page_no: int,
+        sort: str = "LAST_VOLUME_DESC",
+    ) -> list[AliProduct]:
+        body = await self.call(
+            "aliexpress.affiliate.product.query",
+            keywords=keywords or None,
+            category_ids=",".join(category_ids) if category_ids else None,
+            page_size=page_size,
+            page_no=page_no,
+            sort=sort,
+            ship_to_country="ES",
+            target_currency=TARGET_CURRENCY,
+            target_language=TARGET_LANGUAGE,
+            tracking_id=self._tracking_id,
+        )
+        return _products(self._payload(body, "aliexpress_affiliate_product_query_response"))
+
     async def featured_promos(self) -> list[AliPromo]:
         body = await self.call("aliexpress.affiliate.featuredpromo.get")
         result = self._payload(body, "aliexpress_affiliate_featuredpromo_get_response")

@@ -37,8 +37,10 @@ def _product(pid, discount, price="10.00", original=None, image="http://img/x.jp
 
 
 class _Client:
-    def __init__(self, products, link=None):
+    def __init__(self, products, link=None, hot_error=None):
         self.products = products
+        self.hot_error = hot_error
+        self.search_calls: list[dict] = []
         self.link = link  # str: link_generate result; Exception: raised; None: raises no_link
         self.calls: list[dict] = []
         self.link_calls: list[str] = []
@@ -49,19 +51,27 @@ class _Client:
             return self.link
         raise self.link or AliExpressError("no_link", "No promotion link returned")
 
+    async def product_query(self, keywords, category_ids, page_size, page_no, sort="LAST_VOLUME_DESC"):
+        self.search_calls.append(
+            dict(keywords=keywords, category_ids=category_ids, page_size=page_size, page_no=page_no)
+        )
+        return self.products
+
     async def hot_products(self, category_ids, keywords, page_size, page_no):
+        if self.hot_error:
+            raise self.hot_error
         self.calls.append(
             dict(category_ids=category_ids, keywords=keywords, page_size=page_size, page_no=page_no)
         )
         return self.products
 
 
-def _setup(products, config=None, hashtags=None, country="ES", clock=None):
+def _setup(products, config=None, hashtags=None, country="ES", clock=None, hot_error=None):
     repo = InMemoryRepository()
     source = repo.add_api_source(
         "aliexpress_api", "hot", country=country, config=config or {}, hashtags=hashtags or []
     )
-    client = _Client(products)
+    client = _Client(products, hot_error=hot_error)
     return repo, source, client, AliExpressSource(client, repo, _settings(), clock or (lambda: NOW))
 
 
@@ -105,15 +115,65 @@ async def test_max_results_limits_to_first():
     assert client.calls[0]["page_size"] >= 1
 
 
-async def test_config_is_passed_to_client_and_search_uses_keywords():
+async def test_config_is_passed_to_client_and_search_uses_product_query():
     _, source, client, runner = _setup(
         [], config={"query": "search", "keywords": "auriculares", "category_ids": ["15", 7]}
     )
 
     await runner.run(source)
 
-    assert client.calls[0]["keywords"] == "auriculares"
-    assert client.calls[0]["category_ids"] == ["15", "7"]
+    assert client.calls == []
+    assert client.search_calls[0]["keywords"] == "auriculares"
+    assert client.search_calls[0]["category_ids"] == ["15", "7"]
+
+
+async def test_search_without_keywords_or_categories_warns_and_returns(caplog):
+    repo, source, client, runner = _setup(PRODUCTS, config={"query": "search"})
+    with caplog.at_level(logging.WARNING):
+        await runner.run(source)
+    assert client.calls == [] and client.search_calls == []
+    assert repo.publications() == []
+    assert f"AliExpress source {source.id}: query=search needs keywords or category_ids" in caplog.text
+
+
+async def test_search_publishes_products():
+    repo, source, _, runner = _setup(PRODUCTS, config={"query": "search", "keywords": "11.11"})
+    await runner.run(source)
+    assert len(repo.publications()) == 2
+
+
+async def test_hot_falls_back_to_product_query_on_insufficient_permission(caplog):
+    err = AliExpressError("InsufficientPermission", "App does not have permission")
+    repo, source, client, runner = _setup(
+        PRODUCTS, config={"keywords": "11.11", "category_ids": "15"}, hot_error=err
+    )
+    with caplog.at_level(logging.WARNING):
+        await runner.run(source)
+    assert client.search_calls[0]["keywords"] == "11.11"
+    assert client.search_calls[0]["category_ids"] == ["15"]
+    assert len(repo.publications()) == 2
+    assert "hotproduct.query not permitted for this app; falling back to product.query" in caplog.text
+
+
+async def test_hot_insufficient_permission_without_keywords_logs_error_and_publishes_nothing(caplog):
+    err = AliExpressError("InsufficientPermission", "App does not have permission")
+    repo, source, client, runner = _setup(PRODUCTS, hot_error=err)
+    with caplog.at_level(logging.WARNING):
+        await runner.run(source)
+    assert client.search_calls == []
+    assert repo.publications() == []
+    errors = [r.getMessage() for r in caplog.records if r.levelno == logging.ERROR]
+    assert any("keywords or category_ids" in m for m in errors)
+
+
+async def test_hot_other_errors_still_propagate():
+    import pytest
+
+    err = AliExpressError("IllegalRequest", "bad")
+    _, source, client, runner = _setup(PRODUCTS, config={"keywords": "x"}, hot_error=err)
+    with pytest.raises(AliExpressError):
+        await runner.run(source)
+    assert client.search_calls == []
 
 
 async def test_discount_computed_from_original_price_and_missing_is_filtered():

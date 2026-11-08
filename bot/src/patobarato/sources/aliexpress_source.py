@@ -13,7 +13,7 @@ from patobarato.config import Settings
 from patobarato.core.decision import decide
 from patobarato.models import ApiSource, OfferStatus, ParsedOffer
 from patobarato.storage.repository import Repository
-from patobarato.stores.aliexpress_client import AliProduct
+from patobarato.stores.aliexpress_client import AliExpressError, AliProduct
 
 logger = logging.getLogger("patobarato.aliexpress_source")
 
@@ -30,6 +30,15 @@ class _HotProductsClient(Protocol):
         keywords: str | None,
         page_size: int,
         page_no: int,
+    ) -> list[AliProduct]: ...
+
+    async def product_query(
+        self,
+        keywords: str | None,
+        category_ids: list[str],
+        page_size: int,
+        page_no: int,
+        sort: str = "LAST_VOLUME_DESC",
     ) -> list[AliProduct]: ...
 
     async def link_generate(self, url: str) -> str: ...
@@ -71,15 +80,38 @@ class AliExpressSource:
         min_discount = int(cfg.get("min_discount", DEFAULT_MIN_DISCOUNT))
         min_price = _decimal(cfg.get("min_price"))
         max_price = _decimal(cfg.get("max_price"))
-        # There is no search endpoint wrapped yet: query='search' reuses hot_products
-        # with the configured keywords.
-        keywords = cfg.get("keywords") if cfg.get("query", "hot") in ("hot", "search") else None
-        products = await self._client.hot_products(
-            _category_ids(cfg.get("category_ids")),
-            keywords or None,
-            min(max(max_results * 3, 20), MAX_PAGE_SIZE),
-            1,
-        )
+        keywords = cfg.get("keywords") or None
+        category_ids = _category_ids(cfg.get("category_ids"))
+        page_size = min(max(max_results * 3, 20), MAX_PAGE_SIZE)
+        query = cfg.get("query", "hot")
+        if query == "search":
+            if not keywords and not category_ids:
+                logger.warning(
+                    "AliExpress source %s: query=search needs keywords or category_ids",
+                    source.id,
+                )
+                return
+            products = await self._client.product_query(keywords, category_ids, page_size, 1)
+        else:
+            try:
+                products = await self._client.hot_products(category_ids, keywords, page_size, 1)
+            except AliExpressError as e:
+                if e.code != "InsufficientPermission":
+                    raise
+                if not keywords and not category_ids:
+                    logger.error(
+                        "AliExpress source %s: hotproduct.query not permitted for this app; "
+                        "set keywords or category_ids in config (or request the hotproduct "
+                        "permission)",
+                        source.id,
+                    )
+                    return
+                logger.warning(
+                    "AliExpress source %s: hotproduct.query not permitted for this app; "
+                    "falling back to product.query",
+                    source.id,
+                )
+                products = await self._client.product_query(keywords, category_ids, page_size, 1)
         wanted = [
             p
             for p in products

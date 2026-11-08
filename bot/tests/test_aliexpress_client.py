@@ -142,6 +142,39 @@ async def test_hot_products():
     assert seen["target_currency"] == "EUR" and seen["tracking_id"] == "track"
 
 
+async def test_product_query_sends_method_and_params():
+    seen = {}
+    body = fixture("aliexpress_hotproduct.json")
+    body = {"aliexpress_affiliate_product_query_response": body["aliexpress_affiliate_hotproduct_query_response"]}
+
+    def handler(request):
+        seen.update(form(request))
+        return httpx.Response(200, json=body)
+
+    products = await make_client(handler).product_query("11.11", ["1", "2"], 30, 2)
+    assert [p.product_id for p in products] == ["1005006123456789", "1005007000000001"]
+    assert seen["method"] == "aliexpress.affiliate.product.query"
+    assert seen["keywords"] == "11.11" and seen["category_ids"] == "1,2"
+    assert seen["page_size"] == "30" and seen["page_no"] == "2"
+    assert seen["sort"] == "LAST_VOLUME_DESC" and seen["ship_to_country"] == "ES"
+    assert seen["target_currency"] == "EUR" and seen["target_language"] == "ES"
+    assert seen["tracking_id"] == "track"
+
+
+async def test_product_query_omits_empty_keywords_and_categories():
+    seen = {}
+    body = {"aliexpress_affiliate_product_query_response": {"resp_result": {
+        "resp_code": 200, "result": {"products": {"product": []}}}}}
+
+    def handler(request):
+        seen.update(form(request))
+        return httpx.Response(200, json=body)
+
+    assert await make_client(handler).product_query(None, [], 20, 1, sort="SALE_PRICE_ASC") == []
+    assert "keywords" not in seen and "category_ids" not in seen
+    assert seen["sort"] == "SALE_PRICE_ASC"
+
+
 async def test_featured_promos_parses_names_and_dates():
     client = make_client(lambda r: httpx.Response(200, json=fixture("aliexpress_featuredpromo_get.json")))
     promos = await client.featured_promos()

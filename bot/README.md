@@ -146,6 +146,19 @@ values ('awin_promotions', 'awin-es', 'ES', true,
         '{"merchants": {"pccomponentes": 1234, "mediamarkt": 5678}}', 360, '{}');
 ```
 
+Opciones de `config` de `aliexpress_api`:
+
+- `query`: `"hot"` (por defecto, productos calientes vía `hotproduct.query`) o `"search"` (búsqueda por palabra clave vía `product.query`, ordenada por ventas recientes). `search` necesita `keywords` y/o `category_ids`; si no hay ninguno, la fuente avisa en el log y no hace nada.
+- `keywords`, `category_ids`: filtros de la búsqueda (`category_ids` admite un id o una lista).
+- Fallback automático: si en `hot` la app no tiene permiso para `hotproduct.query` (error `InsufficientPermission`), la fuente usa `product.query` con los mismos `keywords`/`category_ids`. Sin ninguno de los dos, registra un error pidiendo configurarlos (o solicitar el permiso a AliExpress) y no publica nada.
+
+```sql
+-- Búsqueda del 11.11 (no requiere el permiso hotproduct)
+insert into sources (type, identifier, country, active, config, every_minutes, hashtags)
+values ('aliexpress_api', 'aliexpress-1111', 'ES', true,
+        '{"query": "search", "keywords": "11.11", "min_discount": 30, "max_results": 20}', 60, '{1111}');
+```
+
 No hace falta reiniciar el bot: el planificador lee la tabla en cada ciclo. Para pausar una fuente, `active = false`. El resultado de la última ejecución queda en `last_run_at` y `last_error`.
 
 Los cupones de Awin se guardan en la tabla `coupons`; cuando un cupón deja de aparecer en la API se desactiva. Si la API falla, no se desactiva nada.
