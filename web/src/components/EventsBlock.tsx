@@ -23,7 +23,9 @@ export function EventsBlock({ next, upcoming, now }: Props) {
       <div className={`mx-auto grid max-w-[1200px] gap-10 px-4 md:px-8 ${next ? 'md:grid-cols-2' : ''}`}>
         {next && (
           <div className="flex flex-col justify-center gap-4">
-            <span className="text-[13px] font-semibold uppercase tracking-[0.06em] text-accent">Próximo gran evento</span>
+            <span className="text-[13px] font-semibold uppercase tracking-[0.06em] text-accent">
+              {eventPhase(next, now) === 'during' ? 'Evento en marcha' : 'Próximo gran evento'}
+            </span>
             <h2 className="font-display text-3xl font-bold tracking-[-0.02em] md:text-[40px]">
               <Link href={eventPath(next.slug)} className="inline-flex min-h-11 items-center hover:underline">
                 {next.name}

@@ -65,7 +65,7 @@ export function EventView({ event, phase, next, deals, coupons, promos, now, sto
   const promosBlock: ReactNode = promos.length > 0 && (
     <div key="promos" className={`${CONTAINER} w-full`}>
       <CatalogBlock
-        title={`Selección de AliExpress para el ${event.name}`}
+        title={/aliexpress/i.test(event.name) ? 'Selección de AliExpress' : `Selección de AliExpress para el ${event.name}`}
         note={PROMOS_NOTE}
         state={{ status: 'ready', products: promos }}
         onlyWhenResults

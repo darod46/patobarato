@@ -69,6 +69,12 @@ describe('EventView', () => {
     ])
   })
 
+  it('does not repeat AliExpress in the promos heading when the event name already says it', () => {
+    view({ event: { ...full, name: '11.11 de AliExpress' } })
+    expect(screen.getByRole('heading', { level: 2, name: 'Selección de AliExpress' })).toBeInTheDocument()
+    expect(screen.queryByText(/para el 11\.11/)).toBeNull()
+  })
+
   it('shows at most 12 deals', () => {
     view({ deals: Array.from({ length: 15 }, (_, i) => deal(i + 1)) })
     const section = screen.getByRole('heading', { level: 2, name: 'Chollos del Black Friday' }).closest('section')!

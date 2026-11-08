@@ -13,6 +13,8 @@ describe('EventsBlock', () => {
     render(<EventsBlock next={e1} upcoming={[e1, e2, e3]} now={now} />)
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('11.11 de AliExpress')
     expect(screen.getByText('Faltan 5 días')).toBeInTheDocument()
+    expect(screen.getByText('Próximo gran evento')).toBeInTheDocument()
+    expect(screen.queryByText('Evento en marcha')).toBeNull()
     expect(screen.getByText('27 nov')).toBeInTheDocument()
     expect(screen.getByText('julio')).toBeInTheDocument()
     expect(screen.getByText('Amazon, PcComponentes')).toBeInTheDocument()
@@ -47,6 +49,8 @@ describe('EventsBlock during an event', () => {
   it('says until when a multi-day event runs, never a negative count', () => {
     render(<EventsBlock next={e2} upcoming={[e2]} now={new Date('2026-11-28T12:00:00Z')} />)
     expect(screen.getByText('En marcha hasta el 29 de noviembre')).toBeInTheDocument()
+    expect(screen.getByText('Evento en marcha')).toBeInTheDocument()
+    expect(screen.queryByText('Próximo gran evento')).toBeNull()
     expect(screen.queryByText(/Faltan/)).toBeNull()
   })
   it('says it is today on the day of a one-day event', () => {

@@ -101,7 +101,7 @@ Los precios los actualiza el bot con la fuente `guide_prices` (cada 6 h, `every_
 
 ## Calendario de eventos
 
-`src/content/events.ts` es la lista estática de eventos (11.11, Black Friday, rebajas…). La barra de anuncio muestra el siguiente; el bloque de eventos, los cuatro siguientes.
+Los eventos salen de la vista `web_events` (ver «Eventos»). La barra de anuncio muestra el siguiente; el bloque de eventos, los cuatro siguientes.
 
 ## Eventos
 
@@ -111,17 +111,17 @@ Páginas editoriales de eventos de compras (`/eventos` y `/eventos/{slug}`). Los
 - `status`: `draft` (no sale en ninguna vista, ni en el sitemap) o `published`.
 - Tres fases según la fecha de hoy: antes («Empieza el…»), en marcha («En marcha hasta el…») y terminado. La página es la misma; cambian el estado de la cabecera y qué bloques tienen sentido.
 - Bloques (los vacíos se omiten, nunca se pinta «0 resultados»):
-  - Chollos: los que llevan alguno de los `hashtags` del evento o se publicaron dentro del rango de fechas (si el evento no tiene hashtags, solo el rango). «Ver todos los chollos» lleva a `/chollos/{hashtag}`.
+  - Chollos: los que llevan alguno de los `hashtags` del evento o se publicaron dentro del rango de fechas en una de sus `stores` (sin `stores`, en cualquier tienda; si el evento no tiene hashtags, solo el rango). «Ver todos los chollos» lleva a `/chollos/{hashtag}`.
   - Cupones: los de `web_coupons` con `coupons.event_id` igual al evento.
   - Productos de AliExpress: filas de `event_promos` (vista `web_event_promos`) que sincroniza el ejecutor `event_promos` del bot a partir de `aliexpress_promo`. Se muestran con una nota que aclara que son precios del catálogo de AliExpress y no chollos verificados. Ver `bot/README.md`, «Campañas de AliExpress».
 - Portada: mientras hay un evento en marcha, el botón principal del hero pasa a «Chollos del {evento}» y apunta a `/eventos/{slug}`.
-- SEO: `/eventos` (índice, prioridad 0,7 en el sitemap) y `/eventos/{slug}` (0,9; 0,6 si es aproximado). JSON-LD `Event` solo con fechas confirmadas (`approximate = false`). Los borradores no entran en el sitemap.
+- SEO: `/eventos` (índice, prioridad 0,7 en el sitemap) y `/eventos/{slug}` (0,9 mientras el evento está en marcha o empieza en los próximos 60 días; 0,6 en otro caso). JSON-LD `Event` solo con fechas confirmadas (`approximate = false`). Los borradores no entran en el sitemap.
 - Publicar un evento: rellena el contenido y cambia `status` a `published` (`update events set status = 'published' where slug = '...';`). Las páginas se regeneran cada hora (`revalidate = 3600`), así que el cambio tarda hasta 1 h en verse.
 - El seed de `supabase/migrations/20261110010000_events.sql` publica 11.11 y Black Friday; Cyber Monday, Rebajas de enero y Prime Day quedan como borrador con textos entre corchetes por rellenar.
 
 ## Seguridad
 
-La web solo usa la clave pública (anon) de Supabase y solo lee las vistas `web_deals`, `web_hashtags`, `web_coupons`, `web_stores`, `web_guides`, `web_guide_items` y `web_guides_by_product`. Nunca pongas la clave `service_role` en la web ni en Vercel. `node scripts/check-views.mjs` comprueba con la clave anon que esas vistas se leen y que la tabla `coupons` no; también cubre las vistas y tablas de guías (`web_guides*` legibles; `guides`, `guide_items`, `guide_item_stores` y `product_prices` no).
+La web solo usa la clave pública (anon) de Supabase y solo lee las vistas `web_deals`, `web_hashtags`, `web_coupons`, `web_stores`, `web_guides`, `web_guide_items`, `web_guides_by_product`, `web_events` y `web_event_promos`. Nunca pongas la clave `service_role` en la web ni en Vercel. `node scripts/check-views.mjs` comprueba con la clave anon que esas vistas se leen y que la tabla `coupons` no; también cubre las vistas y tablas de guías (`web_guides*` legibles; `guides`, `guide_items`, `guide_item_stores` y `product_prices` no) y de eventos (`web_events` y `web_event_promos` legibles; `events` y `event_promos` no).
 
 ## Despliegue en Vercel
 
