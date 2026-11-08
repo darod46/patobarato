@@ -9,6 +9,7 @@ import {
   eventPhase,
   eventRangeLabel,
   eventYear,
+  madridDayBounds,
   nextEvent,
   upcomingEvents,
   whenLabel,
@@ -118,6 +119,10 @@ describe('activeEvent', () => {
     expect(activeEvent(now, EVENTS)).toBeNull()
     expect(activeEvent(now, [])).toBeNull()
   })
+  it('approximate event never becomes the active event', () => {
+    const approx = ev({ slug: 'approx', name: 'Approx', startsOn: '2026-11-01', endsOn: '2026-11-30', approximate: true })
+    expect(activeEvent(new Date('2026-11-15T12:00:00Z'), [approx])).toBeNull()
+  })
 })
 
 describe('event helpers', () => {
@@ -131,5 +136,21 @@ describe('event helpers', () => {
     expect(eventPath('black-friday')).toBe('/eventos/black-friday')
     expect(eventYear(bf)).toBe(2026)
     expect(eventYear(rebajas)).toBe(2027)
+  })
+})
+
+describe('madridDayBounds', () => {
+  it('madridDayBounds handles CET and CEST', () => {
+    expect(madridDayBounds('2026-11-27', '2026-11-29')).toEqual({
+      start: '2026-11-26T23:00:00.000Z',
+      end: '2026-11-29T22:59:59.000Z',
+    })
+    expect(madridDayBounds('2027-07-01', '2027-07-01').start).toBe('2027-06-30T22:00:00.000Z')
+  })
+  it('handles the DST change days', () => {
+    expect(madridDayBounds('2027-03-28', '2027-03-28')).toEqual({
+      start: '2027-03-27T23:00:00.000Z',
+      end: '2027-03-28T21:59:59.000Z',
+    })
   })
 })

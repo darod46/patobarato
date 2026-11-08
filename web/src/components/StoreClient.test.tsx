@@ -32,7 +32,7 @@ const coupon: Coupon = {
   url: null,
   startsAt: '2026-11-01T00:00:00Z',
   expiresAt: null,
-  discountAmount: null, discountPct: null, minPurchase: null,
+  discountAmount: null, discountPct: null, minPurchase: null, eventId: null,
 }
 
 const stores = [

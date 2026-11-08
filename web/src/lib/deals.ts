@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { madridDayBounds } from './events'
 import { escapeIlike } from './format'
 import type { Deal, HashtagCount } from './types'
 
@@ -54,7 +55,14 @@ function toDeal(row: DealRow): Deal {
 
 export async function fetchDeals(
   client: SupabaseClient,
-  params: { q?: string; tag?: string; store?: string; sort?: DealSort; page: number },
+  params: {
+    q?: string
+    tag?: string
+    store?: string
+    sort?: DealSort
+    page: number
+    event?: { hashtags: string[]; from: string; to: string }
+  },
 ): Promise<{ deals: Deal[]; hasMore: boolean }> {
   const from = params.page * PAGE_SIZE
   const sort = params.sort ?? 'recientes'
@@ -69,6 +77,13 @@ export async function fetchDeals(
   if (q) query = query.ilike('title', `%${escapeIlike(q)}%`)
   if (params.tag) query = query.contains('hashtags', [params.tag])
   if (params.store) query = query.eq('store', params.store)
+  if (params.event) {
+    const { start, end } = madridDayBounds(params.event.from, params.event.to)
+    const tags = params.event.hashtags
+    query = tags.length
+      ? query.or(`hashtags.ov.{${tags.join(',')}},and(published_at.gte.${start},published_at.lte.${end})`)
+      : query.gte('published_at', start).lte('published_at', end)
+  }
   const { data, error } = await query
   if (error) throw new Error(error.message)
   const rows = (data ?? []) as DealRow[]

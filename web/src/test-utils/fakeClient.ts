@@ -7,7 +7,7 @@ export type FakeResult = { data: unknown; error: { message: string } | null }
 export function fakeClient(result: FakeResult) {
   const calls: [string, unknown[]][] = []
   const builder: Record<string, unknown> = {}
-  for (const name of ['select', 'order', 'range', 'ilike', 'contains', 'limit', 'eq', 'neq']) {
+  for (const name of ['select', 'order', 'range', 'ilike', 'contains', 'limit', 'eq', 'neq', 'or', 'gte', 'lte']) {
     builder[name] = vi.fn((...args: unknown[]) => {
       calls.push([name, args])
       return builder

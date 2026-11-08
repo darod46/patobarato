@@ -12,6 +12,32 @@ function localDate(now: Date): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: TIME_ZONE }).format(now)
 }
 
+/** Madrid UTC offset (ms) at the given instant, derived from Intl so DST is handled. */
+function madridOffsetMs(instant: number): number {
+  const p = Object.fromEntries(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: TIME_ZONE, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric',
+      hour: 'numeric', minute: 'numeric', second: 'numeric',
+    }).formatToParts(new Date(instant)).map((x) => [x.type, Number(x.value)]),
+  )
+  return Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) - Math.floor(instant / 1000) * 1000
+}
+
+/** UTC instant (ms) of the given wall-clock time in Europe/Madrid. */
+function madridWallToUtc(ymd: string, time: string): number {
+  const wall = Date.parse(`${ymd}T${time}Z`)
+  const first = wall - madridOffsetMs(wall)
+  return wall - madridOffsetMs(first)
+}
+
+/** ISO UTC bounds of the inclusive Madrid calendar-day range `from`..`to` (YYYY-MM-DD). */
+export function madridDayBounds(from: string, to: string): { start: string; end: string } {
+  return {
+    start: new Date(madridWallToUtc(from, '00:00:00')).toISOString(),
+    end: new Date(madridWallToUtc(to, '23:59:59')).toISOString(),
+  }
+}
+
 const dayNumber = (ymd: string) => Math.round(Date.parse(`${ymd}T00:00:00Z`) / 86_400_000)
 const parts = (ymd: string) => ymd.split('-').map(Number) as [number, number, number]
 
@@ -47,11 +73,11 @@ export function nextEvent(now: Date, events: SiteEvent[], withinDays?: number): 
   return withinDays !== undefined && daysUntil(next, now) > withinDays ? null : next
 }
 
-/** The event in progress today; when several overlap, the one that started last. */
+/** The event in progress today (approximate-date events never count); when several overlap, the one that started last. */
 export function activeEvent(now: Date, events: SiteEvent[]): SiteEvent | null {
   let best: SiteEvent | null = null
   for (const e of events) {
-    if (eventPhase(e, now) === 'during' && (!best || e.startsOn > best.startsOn)) best = e
+    if (!e.approximate && eventPhase(e, now) === 'during' && (!best || e.startsOn > best.startsOn)) best = e
   }
   return best
 }

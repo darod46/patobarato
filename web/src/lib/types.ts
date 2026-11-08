@@ -37,6 +37,8 @@ export type Coupon = {
   discountPct: number | null
   /** Minimum cart value required; null when none. */
   minPurchase: number | null
+  /** The event this coupon belongs to; null for general coupons. */
+  eventId: number | null
 }
 
 export type GuideSummary = {

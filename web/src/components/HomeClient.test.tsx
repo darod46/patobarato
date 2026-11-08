@@ -110,7 +110,7 @@ it('mounts the v3 sections in order and omits coupons when there are none', () =
     <HomeClient
       now="2026-11-06T10:00:00Z"
       fetchLatestDeal={vi.fn().mockResolvedValue(null)}
-      coupons={[{ id: 1, store: 'aliexpress', code: 'PATO6', title: '−6 € en 40 €', conditions: null, url: null, startsAt: '2026-11-01T00:00:00Z', expiresAt: null, discountAmount: null, discountPct: null, minPurchase: null }]}
+      coupons={[{ id: 1, store: 'aliexpress', code: 'PATO6', title: '−6 € en 40 €', conditions: null, url: null, startsAt: '2026-11-01T00:00:00Z', expiresAt: null, discountAmount: null, discountPct: null, minPurchase: null, eventId: null }]}
       stores={[{ store: 'aliexpress', deals: 2, coupons: 1 }]}
       event={null}
       upcoming={[]}

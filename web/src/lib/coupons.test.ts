@@ -40,6 +40,7 @@ describe('fetchCoupons', () => {
       discountAmount: 6,
       discountPct: null,
       minPurchase: 40,
+      eventId: null,
     })
   })
 
@@ -60,6 +61,13 @@ describe('fetchCoupons', () => {
     await fetchCoupons(client, 50, 'aliexpress')
     expect(calls).toContainEqual(['eq', ['store', 'aliexpress']])
     expect(calls).toContainEqual(['limit', [50]])
+  })
+
+  it('fetchCoupons filters by event id and maps eventId', async () => {
+    const { client, calls } = fakeClient({ data: [{ ...row, event_id: '3' }], error: null })
+    const [c] = await fetchCoupons(client, undefined, undefined, 3)
+    expect(calls).toContainEqual(['eq', ['event_id', 3]])
+    expect(c.eventId).toBe(3)
   })
 
   it('rejects on error', async () => {

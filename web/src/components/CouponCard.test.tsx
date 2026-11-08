@@ -13,7 +13,7 @@ const coupon: Coupon = {
   url: 'https://s.click.aliexpress.com/x',
   startsAt: '2026-11-01T00:00:00Z',
   expiresAt: '2026-11-11T22:59:00Z',
-  discountAmount: null, discountPct: null, minPurchase: null,
+  discountAmount: null, discountPct: null, minPurchase: null, eventId: null,
 }
 
 afterEach(() => vi.unstubAllGlobals())

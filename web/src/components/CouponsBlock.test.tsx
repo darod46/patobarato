@@ -4,7 +4,7 @@ import type { Coupon } from '../lib/types'
 import { CouponsBlock } from './CouponsBlock'
 
 const c = (id: number, store: string): Coupon => ({
-  id, store, code: `C${id}`, title: `Cupón ${id}`, conditions: null, url: null, startsAt: '2026-11-01T00:00:00Z', expiresAt: null, discountAmount: null, discountPct: null, minPurchase: null,
+  id, store, code: `C${id}`, title: `Cupón ${id}`, conditions: null, url: null, startsAt: '2026-11-01T00:00:00Z', expiresAt: null, discountAmount: null, discountPct: null, minPurchase: null, eventId: null,
 })
 
 describe('CouponsBlock', () => {
