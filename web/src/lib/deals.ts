@@ -61,7 +61,7 @@ export async function fetchDeals(
     store?: string
     sort?: DealSort
     page: number
-    event?: { hashtags: string[]; from: string; to: string }
+    event?: { hashtags: string[]; stores: string[]; from: string; to: string }
   },
 ): Promise<{ deals: Deal[]; hasMore: boolean }> {
   const from = params.page * PAGE_SIZE
@@ -79,10 +79,15 @@ export async function fetchDeals(
   if (params.store) query = query.eq('store', params.store)
   if (params.event) {
     const { start, end } = madridDayBounds(params.event.from, params.event.to)
-    const tags = params.event.hashtags
-    query = tags.length
-      ? query.or(`hashtags.ov.{${tags.join(',')}},and(published_at.gte.${start},published_at.lte.${end})`)
-      : query.gte('published_at', start).lte('published_at', end)
+    const { hashtags: tags, stores } = params.event
+    // Deals tagged for the event always count; date-range deals only from the event's stores (when it has any).
+    if (tags.length) {
+      const storeCond = stores.length ? `,store.in.(${stores.join(',')})` : ''
+      query = query.or(`hashtags.ov.{${tags.join(',')}},and(published_at.gte.${start},published_at.lte.${end}${storeCond})`)
+    } else {
+      query = query.gte('published_at', start).lte('published_at', end)
+      if (stores.length) query = query.in('store', stores)
+    }
   }
   const { data, error } = await query
   if (error) throw new Error(error.message)

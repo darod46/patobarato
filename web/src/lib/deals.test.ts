@@ -35,18 +35,44 @@ const row = (i: number) => ({
 describe('fetchDeals', () => {
   it('filters by hashtags or date range', async () => {
     const { client, calls } = fakeClient({ data: [], error: null })
-    await fetchDeals(client, { page: 0, event: { hashtags: ['blackfriday', 'bf'], from: '2026-11-27', to: '2026-11-29' } })
+    await fetchDeals(client, { page: 0, event: { hashtags: ['blackfriday', 'bf'], stores: [], from: '2026-11-27', to: '2026-11-29' } })
     expect(calls).toContainEqual([
       'or',
       ['hashtags.ov.{blackfriday,bf},and(published_at.gte.2026-11-26T23:00:00.000Z,published_at.lte.2026-11-29T22:59:59.000Z)'],
     ])
+    expect(calls.map((c) => c[0])).not.toContain('in')
+  })
+
+  it('limits the date range to the event stores when hashtags are set', async () => {
+    const { client, calls } = fakeClient({ data: [], error: null })
+    await fetchDeals(client, {
+      page: 0,
+      event: { hashtags: ['blackfriday'], stores: ['amazon', 'pccomponentes'], from: '2026-11-27', to: '2026-11-29' },
+    })
+    expect(calls).toContainEqual([
+      'or',
+      [
+        'hashtags.ov.{blackfriday},and(published_at.gte.2026-11-26T23:00:00.000Z,published_at.lte.2026-11-29T22:59:59.000Z,store.in.(amazon,pccomponentes))',
+      ],
+    ])
+    expect(calls.map((c) => c[0])).not.toContain('in')
   })
 
   it('filters by range only when hashtags are empty', async () => {
     const { client, calls } = fakeClient({ data: [], error: null })
-    await fetchDeals(client, { page: 0, event: { hashtags: [], from: '2026-11-27', to: '2026-11-29' } })
+    await fetchDeals(client, { page: 0, event: { hashtags: [], stores: [], from: '2026-11-27', to: '2026-11-29' } })
     expect(calls).toContainEqual(['gte', ['published_at', '2026-11-26T23:00:00.000Z']])
     expect(calls).toContainEqual(['lte', ['published_at', '2026-11-29T22:59:59.000Z']])
+    expect(calls.map((c) => c[0])).not.toContain('or')
+    expect(calls.map((c) => c[0])).not.toContain('in')
+  })
+
+  it('filters by range and event stores when hashtags are empty', async () => {
+    const { client, calls } = fakeClient({ data: [], error: null })
+    await fetchDeals(client, { page: 0, event: { hashtags: [], stores: ['amazon'], from: '2026-11-27', to: '2026-11-29' } })
+    expect(calls).toContainEqual(['gte', ['published_at', '2026-11-26T23:00:00.000Z']])
+    expect(calls).toContainEqual(['lte', ['published_at', '2026-11-29T22:59:59.000Z']])
+    expect(calls).toContainEqual(['in', ['store', ['amazon']]])
     expect(calls.map((c) => c[0])).not.toContain('or')
   })
 

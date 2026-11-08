@@ -49,7 +49,10 @@ export default async function EventPage({ params }: Props) {
   // Each block degrades on its own: a failed loader omits its section, the editorial page still renders.
   const [page, coupons, promos, stores, events] = await Promise.all([
     optional(`${label}/chollos`, () =>
-      fetchDeals(getSupabase(), { page: 0, event: { hashtags: event.hashtags, from: event.startsOn, to: event.endsOn } }),
+      fetchDeals(getSupabase(), {
+        page: 0,
+        event: { hashtags: event.hashtags, stores: event.stores, from: event.startsOn, to: event.endsOn },
+      }),
     ),
     optional(`${label}/cupones`, () => fetchCoupons(getSupabase(), undefined, undefined, event.id)),
     optional(`${label}/promos`, () => fetchEventPromos(getSupabase(), slug)),

@@ -18,6 +18,7 @@ vi.mock('../../../lib/stores-data', () => ({ fetchStores: vi.fn() }))
 
 const bf = siteEvent({
   id: 7, slug: 'black-friday', name: 'Black Friday', startsOn: '2026-11-27', endsOn: '2026-11-29', hashtags: ['blackfriday'],
+  stores: ['amazon', 'pccomponentes'],
   introMd: 'El Black Friday es el viernes de descuentos.', faq: [{ q: '¿Cuándo es?', aMd: 'El último viernes.' }],
 })
 const prime = siteEvent({ slug: 'prime-day', name: 'Prime Day', startsOn: '2027-07-01', approximate: true, introMd: 'Prime Day.' })
@@ -86,7 +87,7 @@ describe('EventPage', () => {
     const { container } = render(await EventPage(params('black-friday')))
     expect(ldTypes(container)).toEqual(['BreadcrumbList', 'Event', 'FAQPage'])
     expect(fetchDeals).toHaveBeenCalledWith(expect.anything(), {
-      page: 0, event: { hashtags: ['blackfriday'], from: '2026-11-27', to: '2026-11-29' },
+      page: 0, event: { hashtags: ['blackfriday'], stores: ['amazon', 'pccomponentes'], from: '2026-11-27', to: '2026-11-29' },
     })
     expect(fetchCoupons).toHaveBeenCalledWith(expect.anything(), undefined, undefined, 7)
     expect(fetchEventPromos).toHaveBeenCalledWith(expect.anything(), 'black-friday')
