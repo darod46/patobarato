@@ -185,3 +185,59 @@ async def test_pause_between_calls_across_events():
     await _make(client, repo, sleeps, pause_seconds=2.0).run(_source())
 
     assert sleeps.calls == [2.0]
+
+
+async def test_product_repeated_across_pages_is_kept_once_with_dense_positions():
+    repo = InMemoryRepository()
+    event_id = repo.add_event("a", "pa")
+    client = FakePromoClient({
+        1: AliPromoPage([_product(1), _product(2)], True),
+        2: AliPromoPage([_product(2), _product(3)], False),
+    })
+
+    await _make(client, repo).run(_source())
+
+    rows = repo.event_promos[event_id]
+    assert [(r.external_id, r.position) for r in rows] == [("1", 1), ("2", 2), ("3", 3)]
+
+
+class FailingReplaceRepository(InMemoryRepository):
+    """Raises on replace for the given event ids."""
+
+    def __init__(self, failing: set[int] | None = None):
+        super().__init__()
+        self.failing = failing if failing is not None else set()
+
+    async def replace_event_promos(self, event_id, rows):
+        if event_id in self.failing:
+            raise ConnectionError("db down")
+        await super().replace_event_promos(event_id, rows)
+
+
+async def test_storage_failure_counts_as_event_failure_and_next_event_syncs(caplog):
+    repo = FailingReplaceRepository()
+    a = repo.add_event("a", "pa")
+    b = repo.add_event("b", "pb")
+    repo.failing.add(a)
+    repo.event_promos[a] = ["old"]
+    client = FakePromoClient({"pa": {1: _page(0, 2, False)}, "pb": {1: _page(0, 3, False)}})
+
+    with caplog.at_level(logging.ERROR, logger="patobarato.event_promos"):
+        await _make(client, repo).run(_source())
+
+    assert repo.event_promos[a] == ["old"]
+    assert len(repo.event_promos[b]) == 3
+    assert "event_promos: a replace failed" in caplog.text
+    assert "ConnectionError: db down" in caplog.text
+    assert "Traceback" not in caplog.text
+
+
+async def test_all_events_failing_on_storage_raises():
+    repo = FailingReplaceRepository()
+    a = repo.add_event("a", "pa")
+    b = repo.add_event("b", "pb")
+    repo.failing.update({a, b})
+    client = FakePromoClient({"pa": {1: _page(0, 1, False)}, "pb": {1: _page(0, 1, False)}})
+
+    with pytest.raises(RuntimeError, match="event_promos: all 2 events failed"):
+        await _make(client, repo).run(_source())

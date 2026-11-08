@@ -61,6 +61,7 @@ class EventPromosSource:
     async def _sync_event(self, event: EventRef) -> bool:
         """True when the event's rows were replaced; False when previous rows were kept."""
         rows: list[EventPromoRow] = []
+        seen: set[str] = set()  # a product repeated across pages keeps its first position
         try:
             for page_no in range(1, self._max_pages + 1):
                 if self._called:
@@ -72,6 +73,9 @@ class EventPromosSource:
                 for product in page.products:
                     if product.promotion_link is None:
                         continue  # affiliate_url is required
+                    if product.product_id in seen:
+                        continue  # (event_id, external_id) is the primary key
+                    seen.add(product.product_id)
                     original = product.original_price
                     rows.append(
                         EventPromoRow(
@@ -94,5 +98,14 @@ class EventPromosSource:
         if not rows:
             logger.error("event_promos: %s returned no products; kept previous rows", event.slug)
             return False
-        await self._repo.replace_event_promos(event.id, rows)
+        try:
+            await self._repo.replace_event_promos(event.id, rows)
+        except Exception as e:
+            # The Supabase replace is a delete followed by an insert (not one transaction): if only the
+            # insert failed the old rows are already gone, so the log does not claim they were kept.
+            logger.error(
+                "event_promos: %s replace failed, previous rows kept unless the delete went through — %s: %s",
+                event.slug, type(e).__name__, e,
+            )
+            return False
         return True
