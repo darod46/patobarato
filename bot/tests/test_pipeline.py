@@ -893,3 +893,106 @@ async def test_slow_store_price_times_out_as_no_price(make_pipeline, publisher, 
 
 def test_price_fetch_timeout_default_is_short():
     assert PRICE_FETCH_TIMEOUT_SECONDS == 5.0
+
+
+class FakeAliExpress(PricedStore):
+    """A priced store with the AliExpress id: its API price is before coupons."""
+
+    id = "aliexpress"
+    name = "AliExpress"
+
+
+SYMINO_TEXT = (
+    "🔥 PRECIAZO!\n❗️Aplicar cupón: AEES03\n🚚 Envío gratis\n\n"
+    "SYMINO ▫️ Raqueta de Pádel de fibra de carbono\n\n"
+    "🔗 Link: https://fake.example/p/P1\n\n📢 #pub"
+)
+
+
+def _symino_msg() -> SourceMessage:
+    url = "https://fake.example/p/P1"
+    return SourceMessage(1, 1, SYMINO_TEXT, [url], ["pub"], NOW)
+
+
+async def test_aliexpress_store_price_is_published_as_price_before_coupon(
+    make_pipeline, repo, publisher
+):
+    store = FakeAliExpress(
+        PriceQuote(Decimal("114.32"), Decimal("228.64"), title="SYMINO Padel Racket Carbon")
+    )
+
+    statuses = await make_pipeline(registry=StoreRegistry([store])).process(_symino_msg())
+
+    assert statuses == [OfferStatus.PUBLISHED]
+    caption = publisher.calls[0][0]
+    assert "✅ Precio sin cupón: <b>114,32 €</b>" in caption
+    assert "🎟️ Cupón: <code>AEES03</code>" in caption
+    # The API's list price (often an inflated 2x) is never shown as the previous price.
+    assert "228" not in caption
+    assert "Antes" not in caption
+    [publication] = repo.publications()
+    assert publication["price_before_coupon"] is True
+
+
+async def test_aliexpress_previous_price_from_the_text_is_kept(
+    make_pipeline, publisher, monkeypatch
+):
+    # The parser only keeps a previous price next to a price; an offer may still carry one.
+    import patobarato.core.pipeline as pipeline_module
+
+    real = pipeline_module.extract_offers
+
+    async def with_previous(msg, resolver, reg):
+        offers = await real(msg, resolver, reg)
+        return [dataclasses.replace(o, previous_price=Decimal("150")) for o in offers]
+
+    monkeypatch.setattr(pipeline_module, "extract_offers", with_previous)
+    store = FakeAliExpress(PriceQuote(Decimal("114.32"), Decimal("228.64")))
+    await make_pipeline(registry=StoreRegistry([store])).process(_symino_msg())
+    caption = publisher.calls[0][0]
+    assert "❌ Antes: <s>150,00 €</s>" in caption
+    assert "228" not in caption
+
+
+async def test_other_store_price_is_not_marked_before_coupon(make_pipeline, repo, publisher):
+    store = PricedStore(PriceQuote(Decimal("8.50"), Decimal("12.00")))
+    await make_pipeline(registry=StoreRegistry([store])).process(_priceless_msg())
+    assert "✅ Precio: <b>8,50 €</b>" in publisher.calls[0][0]
+    assert repo.publications()[0]["price_before_coupon"] is False
+
+
+async def test_aliexpress_text_price_is_not_marked_before_coupon(make_pipeline, repo, publisher):
+    store = FakeAliExpress(PriceQuote(Decimal("1"), None))
+    await make_pipeline(registry=StoreRegistry([store])).process(_fake_msg())
+    assert store.price_calls == []
+    assert "✅ Precio: <b>10,00 €</b>" in publisher.calls[0][0]
+    assert repo.publications()[0]["price_before_coupon"] is False
+
+
+async def test_store_title_mismatch_is_not_published(make_pipeline, repo, publisher, caplog):
+    store = FakeAliExpress(
+        PriceQuote(
+            Decimal("31.08"),
+            Decimal("62.16"),
+            title="Nothing Ear (a) Auriculares inalámbricos con cancelación de ruido",
+        )
+    )
+    with caplog.at_level(logging.WARNING, logger="patobarato.pipeline"):
+        statuses = await make_pipeline(registry=StoreRegistry([store])).process(_symino_msg())
+
+    assert statuses == [OfferStatus.SKIPPED_MISMATCH]
+    assert publisher.calls == []
+    assert repo.publications() == []
+    assert repo.offer_statuses() == [OfferStatus.SKIPPED_MISMATCH]
+    assert store.affiliate_calls == []
+    message = next(r.getMessage() for r in caplog.records if "mismatch" in r.getMessage())
+    assert "SYMINO Raqueta de Pádel" in message
+    assert "Nothing Ear (a)" in message
+
+
+async def test_store_title_match_is_published(make_pipeline, publisher):
+    store = FakeAliExpress(
+        PriceQuote(Decimal("31.08"), None, title="SYMINO Pickleball Padel Racket")
+    )
+    statuses = await make_pipeline(registry=StoreRegistry([store])).process(_symino_msg())
+    assert statuses == [OfferStatus.PUBLISHED]

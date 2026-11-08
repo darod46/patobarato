@@ -319,3 +319,19 @@ async def test_missing_promotion_link_and_link_generate_failing_is_not_published
     warnings = [r.getMessage() for r in caplog.records if r.levelno == logging.WARNING]
     assert any("affiliate=missing" in m and "7" in m and "not published" in m for m in warnings)
     assert all("http" not in m for m in warnings)
+
+
+async def test_api_original_price_is_never_stored_as_previous_price():
+    # original_price is often an inflated list price (exactly 2x): a fake -50 %.
+    repo, source, _, runner = _setup([_product("1", 50, price="114.32", original="228.64")])
+
+    await runner.run(source)
+
+    assert repo.offer_statuses() == [OfferStatus.PUBLISHED_WEB]
+    assert [o["previous_price"] for o in repo._offers.values()] == [None]
+
+
+async def test_api_publications_are_marked_price_before_coupon():
+    repo, source, _, runner = _setup([_product("1", 50)])
+    await runner.run(source)
+    assert [p["price_before_coupon"] for p in repo.publications()] == [True]

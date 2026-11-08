@@ -139,7 +139,9 @@ class AliExpressSource:
             store=STORE_ID,
             title=product.title,
             price=product.price,
-            previous_price=product.original_price,
+            # The API's original_price is often an inflated list price (a fake -50 %):
+            # it only filters by discount above, never shown as the previous price.
+            previous_price=None,
             coupon=None,
             hashtags=[*source.hashtags, "aliexpress"],
             canonical_url=f"https://es.aliexpress.com/item/{product.product_id}.html",
@@ -191,6 +193,8 @@ class AliExpressSource:
                     affiliate,
                     now,
                     channel="web",
+                    # The API sale price is before any coupon AliExpress offers.
+                    price_before_coupon=True,
                 )
             except Exception:
                 await self._repo.set_offer_status(offer_id, OfferStatus.PUBLISH_FAILED)

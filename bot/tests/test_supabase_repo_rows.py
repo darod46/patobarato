@@ -294,3 +294,15 @@ async def test_replace_event_promos_empty_only_deletes():
     await SupabaseRepository(client).replace_event_promos(7, [])
     names = [n for n, _, _ in client.log]
     assert "delete" in names and "insert" not in names
+
+
+async def test_insert_publication_writes_price_before_coupon_only_when_set():
+    client = _Client([{"id": 7}])
+    repo = SupabaseRepository(client)
+    await repo.insert_publication(1, 2, "ES", -1, 5, Decimal("9.99"), "https://aff", NOW)
+    await repo.insert_publication(
+        1, 2, "ES", -1, 6, Decimal("9.99"), "https://aff", NOW, price_before_coupon=True
+    )
+    rows = [args[0] for name, args, _ in client.log if name == "insert"]
+    assert "price_before_coupon" not in rows[0]
+    assert rows[1]["price_before_coupon"] is True

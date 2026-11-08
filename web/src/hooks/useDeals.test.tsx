@@ -21,6 +21,7 @@ const deal = (id: number): Deal => ({
   discountPct: null,
   previousMinPrice: null,
   isLowest: false,
+  priceBeforeCoupon: false,
 })
 
 type Result = { deals: Deal[]; hasMore: boolean }

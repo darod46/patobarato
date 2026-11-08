@@ -23,6 +23,7 @@ const full: Deal = {
   discountPct: null,
   previousMinPrice: null,
   isLowest: false,
+  priceBeforeCoupon: false,
 }
 
 it('shows every caption line in order, with the Amazon link as visible text', () => {
@@ -40,6 +41,12 @@ it('shows every caption line in order, with the Amazon link as visible text', ()
   expect(link).toHaveAttribute('href', URL_ES)
   expect(link).toHaveAttribute('target', '_blank')
   expect(link).toHaveAttribute('rel', 'sponsored noopener noreferrer')
+})
+
+it('labels a price before coupon like the Telegram caption', () => {
+  const { container } = render(<TelegramPreview deal={{ ...full, previousPrice: null, coupon: 'AEES03', priceBeforeCoupon: true }} />)
+  const lines = Array.from(container.querySelectorAll('[data-line]')).map((n) => n.textContent)
+  expect(lines.slice(1, 3)).toEqual([`✅ Precio sin cupón: ${formatPrice(80)}`, '🎟️ Cupón: AEES03'])
 })
 
 it('shows only title, price and link for a minimal deal', () => {

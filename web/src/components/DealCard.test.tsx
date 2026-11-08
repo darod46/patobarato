@@ -24,6 +24,7 @@ const full: Deal = {
   discountPct: 35,
   previousMinPrice: 31.5,
   isLowest: true,
+  priceBeforeCoupon: false,
 }
 
 const minimal: Deal = {
@@ -35,6 +36,7 @@ const minimal: Deal = {
   discountPct: null,
   previousMinPrice: null,
   isLowest: false,
+  priceBeforeCoupon: false,
 }
 
 describe('DealCard', () => {
@@ -60,6 +62,16 @@ describe('DealCard', () => {
     expect(img).toHaveAttribute('src', full.imageUrl)
     expect(img).toHaveAttribute('alt', full.title)
     expect(img).not.toHaveAttribute('data-placeholder')
+  })
+
+  it('labels a price before coupon with "sin cupón"', () => {
+    render(<DealCard deal={{ ...full, priceBeforeCoupon: true }} now={now} />)
+    expect(screen.getByTestId('price-before-coupon')).toHaveTextContent('sin cupón')
+  })
+
+  it('has no "sin cupón" label for a plain price', () => {
+    render(<DealCard deal={full} now={now} />)
+    expect(screen.queryByText('sin cupón')).toBeNull()
   })
 
   it('shows the discount from the view, not recomputed from prices', () => {

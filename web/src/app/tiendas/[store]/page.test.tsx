@@ -23,6 +23,7 @@ const deal = (id: number): Deal => ({
   discountPct: null,
   previousMinPrice: null,
   isLowest: false,
+  priceBeforeCoupon: false,
 })
 
 vi.mock('../../../lib/supabase', () => ({ getSupabase: () => ({}) }))

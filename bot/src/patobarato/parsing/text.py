@@ -53,6 +53,33 @@ DISCOUNT_SUFFIX_RE = re.compile(r"\s*(?:de\s+)?(?:descuento|dto)\b")
 COUPON_KEYWORD_RE = re.compile(r"\bcupon\b")
 COUPON_CODE_RE = re.compile(r"^(?:\s*`(?P<tick>[A-Z0-9]{4,})`|[^:`]{0,25}:\s*`?(?P<code>[A-Z0-9]{4,})\b)")
 COUPON_MAX_LENGTH = 60
+# Coupon value or price after coupon? (accent-free, lowercase; spaces only ([ \t]), never
+# newlines: the amount must be on the coupon's own line.)
+# - "cupón de 8€", "cupón -3€", "cupón de descuento de 5€": always the coupon's value, even
+#   after a price word ("Precio final con cupón de 5€: 20€" costs 20 €).
+# - "con/aplicando/usando [el] cupón 19,99€": the price paid WITH the coupon.
+# - "aplicar [el] cupón 8€" and "cupón 5€: CODE": the coupon's value.
+# - Any other "cupón 19,99€" ("Precio: cupón 19,99€") is the price.
+COUPON_AMOUNT_RE = re.compile(
+    r"\bcupon(?P<de>[ \t]+de(?:[ \t]+descuento[ \t]+de)?|[ \t]+descuento[ \t]+de)?"
+    r"[ \t]*(?P<minus>-)?[ \t]*(?=[€\d])"
+)
+COUPON_PRICE_LEAD_RE = re.compile(r"\b(?:con|aplicando|usando)[ \t]+(?:el[ \t]+)?$")
+COUPON_APPLY_LEAD_RE = re.compile(r"\b(?:aplicar|aplica|aplique|usa|usar)[ \t]+(?:el[ \t]+)?$")
+# Case-sensitive, on the original text: ": AEES08" right after the amount.
+COUPON_CODE_AFTER_RE = re.compile(r"[ \t]*:[ \t]*`?[A-Z0-9]{4,}\b")
+# Other phrasings where the amount is the coupon's value: "descuento de 10€ con el código…",
+# "código PROMO10 -10€".
+OTHER_COUPON_AMOUNT_PREFIX_RE = re.compile(
+    r"\bdescuento[ \t]+(?:de[ \t]+)?-?[ \t]*(?=[€\d][^\n]*?\bcon[ \t]+(?:el[ \t]+)?(?:codigo|cupon)\b)"
+    r"|\b(?:codigo|cupon)[ \t]*:?[ \t]*[a-z0-9]{4,}[ \t]*[:(]?[ \t]*-[ \t]*(?=[€\d])"
+)
+# A coupon given by its value ("cupón de 3€", "cupón -3€"), with no code: shown as "3 €".
+COUPON_AMOUNT_TEXT_RE = re.compile(
+    r"^[ \t]*(?:de[ \t]+(?:descuento[ \t]+de[ \t]+)?|-[ \t]*)"
+    r"(?:€[ \t]*(?P<before>[\d.,]*\d)|(?P<after>[\d.,]*\d)[ \t]*€)",
+    re.IGNORECASE,
+)
 
 # Common TLDs of deal links; a bare "name.tld" with one of these is a link.
 _LINK_TLDS = r"es|com|net|org|eu|to|ly|co|io|me|gl|link|info|shop|store|de|fr|it|uk"
@@ -91,6 +118,11 @@ TITLE_MAX_LENGTH = 200
 BRAND_SEPARATOR_RE = re.compile("\\s*\u25ab\ufe0f?\\s*")
 
 HASHTAG_RE = re.compile(r"(?<!\w)#(\w+)")
+# Tags channels use to mark a post as an ad ("📢 #pub"): never our hashtags.
+AD_MARKER_TAGS = frozenset(
+    {"pub", "publi", "publicidad", "ad", "ads", "anuncio", "patrocinado", "sponsored"}
+)
+_NON_ALNUM_RE = re.compile(r"[^a-z0-9]")
 
 
 @dataclass(frozen=True)
@@ -149,6 +181,35 @@ def _reference_spans(folded: str, own_store: str | None) -> list[Span]:
     return spans
 
 
+def _is_coupon_value(m: re.Match[str], money: re.Match[str], text: str, folded: str) -> bool:
+    """Whether the amount after "cupón" is the coupon's value (see COUPON_AMOUNT_RE)."""
+    if m.group("de") or m.group("minus"):
+        return True
+    lead = folded[folded.rfind("\n", 0, m.start()) + 1 : m.start()]
+    if COUPON_PRICE_LEAD_RE.search(lead):
+        return False
+    if COUPON_APPLY_LEAD_RE.search(lead):
+        return True
+    return COUPON_CODE_AFTER_RE.match(text, money.end()) is not None
+
+
+def _coupon_amount_spans(text: str, folded: str) -> list[Span]:
+    """Spans of amounts that are a coupon's value ("Aplicar cupón de 8€: AEES08").
+
+    ``text`` is the NFC text ``folded`` was made from (same length, case kept).
+    """
+    spans: list[Span] = []
+    for m in COUPON_AMOUNT_RE.finditer(folded):
+        money = MONEY_RE.match(folded, m.end())
+        if money and _is_coupon_value(m, money, text, folded):
+            spans.append((money.start(), money.end()))
+    for m in OTHER_COUPON_AMOUNT_PREFIX_RE.finditer(folded):
+        money = MONEY_RE.match(folded, m.end())
+        if money:
+            spans.append((money.start(), money.end()))
+    return spans
+
+
 def _find_previous(folded: str, excluded: list[Span]) -> tuple[Decimal | None, Span | None]:
     """Return the previous price and the span of its text, if any (not in ``excluded``)."""
     for m in STRIKETHROUGH_RE.finditer(folded):
@@ -194,6 +255,9 @@ def _find_coupon(text: str, folded: str) -> str | None:
         code = COUPON_CODE_RE.match(rest)
         if code:
             return code.group("tick") or code.group("code")
+        amount = COUPON_AMOUNT_TEXT_RE.match(rest)
+        if amount:
+            return f"{amount.group('before') or amount.group('after')} €"
         description = " ".join(rest.replace(STRIKE_MARK, "").split()).strip(" \t:-–—`")
         if description:
             return description[:COUPON_MAX_LENGTH].rstrip()
@@ -202,13 +266,14 @@ def _find_coupon(text: str, folded: str) -> str | None:
 
 def parse_prices(text: str, own_store: str | None = None) -> PriceInfo:
     """Prices in a post; ``own_store`` (a store id) is the store the deal is for."""
+    text = unicodedata.normalize("NFC", text)  # same length as ``folded``
     folded = _fold(text)
-    references = _reference_spans(folded, own_store)
+    references = _reference_spans(folded, own_store) + _coupon_amount_spans(text, folded)
     previous, span = _find_previous(folded, references)
     price = _find_price(folded, references + ([span] if span else []))
     if price is None or (previous is not None and previous <= price):
         previous = None
-    return PriceInfo(price, previous, _find_coupon(unicodedata.normalize("NFC", text), folded))
+    return PriceInfo(price, previous, _find_coupon(text, folded))
 
 
 def _strip_emojis(text: str) -> str:
@@ -273,3 +338,8 @@ def parse_hashtags(text: str) -> list[str]:
     for tag in HASHTAG_RE.findall(text):
         seen.setdefault(tag.lower(), None)
     return list(seen)
+
+
+def is_ad_marker(tag: str) -> bool:
+    """A source's ad marker such as "#pub" (case, accents and punctuation ignored)."""
+    return _NON_ALNUM_RE.sub("", _fold(tag)) in AD_MARKER_TAGS

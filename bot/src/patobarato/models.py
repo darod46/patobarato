@@ -14,6 +14,7 @@ class OfferStatus(StrEnum):
     SKIPPED_NO_PRICE = "skipped_no_price"
     SKIPPED_STALE = "skipped_stale"
     SKIPPED_NO_AFFILIATE = "skipped_no_affiliate"
+    SKIPPED_MISMATCH = "skipped_mismatch"
     PUBLISH_FAILED = "publish_failed"
 
 
@@ -53,6 +54,8 @@ class ParsedOffer:
     product_url: str
     image_url: str | None = None
     affiliate_url: str | None = None
+    # The price came from the store's API and coupons in the message still lower it.
+    price_before_coupon: bool = False
 
 
 @dataclass(frozen=True)
@@ -100,6 +103,8 @@ class PriceQuote:
     previous_price: Decimal | None
     currency: str = "EUR"
     image_url: str | None = None
+    # The store's own product title, when it reports one (checked against the message's).
+    title: str | None = None
 
 
 @dataclass(frozen=True)

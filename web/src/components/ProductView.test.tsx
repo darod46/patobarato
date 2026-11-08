@@ -24,6 +24,7 @@ const deal: Deal = {
   discountPct: null,
   previousMinPrice: null,
   isLowest: false,
+  priceBeforeCoupon: false,
 }
 
 const related: Deal[] = [
@@ -55,6 +56,19 @@ describe('ProductView', () => {
     const img = article.getByRole('img', { name: deal.title })
     expect(img).toHaveAttribute('src', deal.imageUrl)
     expect(img).not.toHaveAttribute('loading', 'lazy')
+  })
+
+  it('labels a price before coupon with "sin cupón" next to the price', () => {
+    const { container } = render(
+      <ProductView deal={{ ...deal, priceBeforeCoupon: true }} related={[]} now={now} />,
+    )
+    const article = within(container.querySelector('article')!)
+    expect(article.getByTestId('price-before-coupon')).toHaveTextContent('sin cupón')
+  })
+
+  it('has no "sin cupón" label for a plain price', () => {
+    const { container } = render(<ProductView deal={deal} related={[]} now={now} />)
+    expect(container.textContent).not.toContain('sin cupón')
   })
 
   it('links hashtags and shows the affiliate disclaimer', () => {

@@ -31,7 +31,10 @@ function productDescription(deal: Deal): string {
   const before =
     discount !== null ? ` (antes ${formatPrice(deal.previousPrice!)}, -${discount}%)` : ''
   const coupon = deal.coupon ? ` ${deal.coupon}.` : ''
-  const tail = `: ${formatPrice(deal.price)}${before} en ${storeInfo(deal.store).name}.${coupon}`
+  const price = deal.priceBeforeCoupon
+    ? ` por ${formatPrice(deal.price)} sin cupón`
+    : `: ${formatPrice(deal.price)}`
+  const tail = `${price}${before} en ${storeInfo(deal.store).name}.${coupon}`
   // The title gives way first; the tail is cut only when it alone is too long (very long coupon).
   const title = truncate(deal.title, Math.max(20, MAX_DESCRIPTION - tail.length))
   return truncate(`${title}${tail}`, MAX_DESCRIPTION)
@@ -39,7 +42,8 @@ function productDescription(deal: Deal): string {
 
 export function productMetadata(deal: Deal): Metadata {
   const discount = dealDiscount(deal)
-  const title = `${deal.title} por ${formatPrice(deal.price)}${discount !== null ? ` (-${discount}%)` : ''} · PatoBarato`
+  const sinCupon = deal.priceBeforeCoupon ? ' sin cupón' : ''
+  const title = `${deal.title} por ${formatPrice(deal.price)}${sinCupon}${discount !== null ? ` (-${discount}%)` : ''} · PatoBarato`
   const description = productDescription(deal)
   const path = productPath(deal)
   const images = deal.imageUrl ? [{ url: deal.imageUrl, alt: deal.title }] : [OG_IMAGE]

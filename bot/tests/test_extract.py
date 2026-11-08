@@ -1,3 +1,4 @@
+import dataclasses
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -10,6 +11,7 @@ import pytest
 from patobarato.models import SourceMessage
 from patobarato.parsing.extract import extract_offers
 from patobarato.parsing.links import UrlResolver
+from patobarato.parsing.text import is_ad_marker
 from patobarato.stores.amazon import AmazonStore
 from patobarato.stores.awin import awin_store
 from patobarato.stores.base import BaseStore
@@ -215,3 +217,22 @@ async def test_offer_price_ignores_only_other_stores(resolver, registry):
     url = "https://www.amazon.es/dp/B09XS7JWHH"
     offers = await extract_offers(_msg(f"Precio en Amazon: 19,99€ {url}", [url]), resolver, registry)
     assert offers[0].price == Decimal("19.99")
+
+
+async def test_source_ad_marker_hashtags_are_dropped(resolver):
+    # CazaChollazos ends every post with "📢 #pub": an ad marker, not a topic of ours.
+    registry = StoreRegistry([AmazonStore("patobarato-21", None)])
+    amazon = "https://www.amazon.es/dp/B084ZK9QVF?tag=cazachollazos-21"
+    msg = dataclasses.replace(
+        _msg(CAZACHOLLAZOS_A + "\n#Lubricante #PUBLI #Ads", [amazon]),
+        hashtags=["pub", "Publicidad", "durex", "anuncio", "Patrocinado", "sponsored", "ad"],
+    )
+    [offer] = await extract_offers(msg, resolver, registry)
+    assert offer.hashtags == ["durex", "lubricante"]
+
+
+@pytest.mark.parametrize("tag", ["pub", "publi", "publicidad", "ad", "ads", "anuncio", "patrocinado", "sponsored"])
+def test_is_ad_marker(tag):
+    assert is_ad_marker(tag)
+    assert is_ad_marker(tag.upper())
+    assert not is_ad_marker(tag + "x")

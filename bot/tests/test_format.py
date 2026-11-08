@@ -181,3 +181,14 @@ def test_caption_uses_store_name_in_link_label():
 
 def test_caption_defaults_to_amazon_label():
     assert LINK_LINE in cap(make_offer())
+
+
+def test_price_before_coupon_label_keeps_the_coupon():
+    caption = cap(make_offer(coupon="AEES03", price_before_coupon=True), store_name="AliExpress")
+    assert "✅ Precio sin cupón: <b>249,99 €</b>" in caption
+    assert "✅ Precio: " not in caption
+    assert "🎟️ Cupón: <code>AEES03</code>" in caption
+
+
+def test_plain_price_label_by_default():
+    assert "✅ Precio: <b>249,99 €</b>" in cap(make_offer())

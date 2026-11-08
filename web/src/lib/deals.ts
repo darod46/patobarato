@@ -30,6 +30,7 @@ type DealRow = {
   discount_pct?: number | string | null
   previous_min_price?: number | string | null
   is_lowest?: boolean | null
+  price_before_coupon?: boolean | null
 }
 
 function toDeal(row: DealRow): Deal {
@@ -50,6 +51,7 @@ function toDeal(row: DealRow): Deal {
     discountPct: row.discount_pct == null ? null : Number(row.discount_pct),
     previousMinPrice: row.previous_min_price == null ? null : Number(row.previous_min_price),
     isLowest: row.is_lowest === true,
+    priceBeforeCoupon: row.price_before_coupon === true,
   }
 }
 

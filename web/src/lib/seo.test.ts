@@ -22,6 +22,7 @@ const deal: Deal = {
   discountPct: null,
   previousMinPrice: null,
   isLowest: false,
+  priceBeforeCoupon: false,
 }
 
 const bare: Deal = { ...deal, previousPrice: null, coupon: null, hashtags: [], imageUrl: null }
@@ -85,6 +86,19 @@ describe('productMetadata', () => {
     const meta = productMetadata(long)
     expect(meta.title).toBe(`${long.title} por ${formatPrice(13.9)} · PatoBarato`)
     expect((meta.description as string).length).toBeLessThanOrEqual(160)
+  })
+
+  it('says the price is before the coupon in title and description', () => {
+    const meta = productMetadata({ ...deal, previousPrice: null, coupon: 'AEES03', priceBeforeCoupon: true })
+    expect(meta.title).toBe(`${deal.title} por ${formatPrice(13.9)} sin cupón · PatoBarato`)
+    expect(meta.description).toContain(`por ${formatPrice(13.9)} sin cupón`)
+    expect(meta.description).toContain('AEES03')
+  })
+
+  it('does not mention the coupon for a plain price', () => {
+    const meta = productMetadata(deal)
+    expect(meta.title).not.toContain('sin cupón')
+    expect(meta.description).not.toContain('sin cupón')
   })
 
   it('falls back to the default Open Graph image when the deal has no image', () => {

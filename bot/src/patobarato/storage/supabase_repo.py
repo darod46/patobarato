@@ -221,6 +221,7 @@ class SupabaseRepository:
         affiliate_url: str,
         published_at: datetime,
         channel: PublicationChannel = "telegram",
+        price_before_coupon: bool = False,
     ) -> int:
         row = {
             "offer_id": offer_id,
@@ -236,6 +237,8 @@ class SupabaseRepository:
             row["chat_id"] = chat_id
         if message_id is not None:
             row["message_id"] = message_id
+        if price_before_coupon:  # the column defaults to false
+            row["price_before_coupon"] = True
 
         def run():
             return self._client.table("publications").insert(row).execute()

@@ -22,6 +22,7 @@ const deal: Deal = {
   discountPct: null,
   previousMinPrice: null,
   isLowest: false,
+  priceBeforeCoupon: false,
 }
 
 const deals = (n: number): Deal[] =>
