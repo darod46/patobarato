@@ -12,9 +12,13 @@ export function usePanelId(): [string | null, (id: string | null) => void] {
   const id = params.get('id')
   const setId = useCallback(
     (next: string | null) => {
-      router.push(next ? `${pathname}?id=${encodeURIComponent(next)}` : pathname)
+      const q = new URLSearchParams(params.toString())
+      if (next) q.set('id', next)
+      else q.delete('id')
+      const qs = q.toString()
+      router.push(qs ? `${pathname}?${qs}` : pathname)
     },
-    [router, pathname],
+    [router, pathname, params],
   )
   return [id, setId]
 }

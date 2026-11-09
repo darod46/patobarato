@@ -33,6 +33,22 @@ export function WhatsAppActions({ text, imageUrl }: Props) {
     setDraft(text)
   }
 
+  // Preload the PNG so Compartir needs no network or decoding after the click (user activation expires).
+  const [preloaded, setPreloaded] = useState<{ url: string; file: File } | null>(null)
+  useEffect(() => {
+    if (!canShare || !imageUrl) return
+    let cancelled = false
+    loadPng(imageUrl)
+      .then((png) => {
+        if (!cancelled) setPreloaded({ url: imageUrl, file: new File([png], 'patobarato.png', { type: 'image/png' }) })
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [canShare, imageUrl])
+  const shareFile = preloaded && preloaded.url === imageUrl ? preloaded.file : null
+
   useEffect(() => {
     if (!done) return
     const t = setTimeout(() => setDone(null), 2000)
@@ -48,7 +64,11 @@ export function WhatsAppActions({ text, imageUrl }: Props) {
       setDone(label)
     } catch (e) {
       // The user dismissing the share sheet is not an error.
-      if (!(e instanceof DOMException && e.name === 'AbortError')) {
+      if (e instanceof DOMException && e.name === 'AbortError') {
+        // dismissed
+      } else if (e instanceof DOMException && e.name === 'NotAllowedError') {
+        setError('Pulsa de nuevo Compartir')
+      } else {
         setError('No se pudo copiar o compartir. Inténtalo de nuevo.')
       }
     } finally {
@@ -62,13 +82,9 @@ export function WhatsAppActions({ text, imageUrl }: Props) {
   const onCopyText = () => run('Copiado', () => copyText(draft))
   const onShare = () =>
     run('Compartido', async () => {
-      if (!imageUrl) {
-        await navigator.share({ text: draft })
-        return
-      }
       await copyText(draft)
-      const png = await loadPng(imageUrl)
-      await navigator.share({ files: [new File([png], 'patobarato.png', { type: 'image/png' })], text: draft })
+      // Never start the image load after the click: without a preloaded image, share text only.
+      await navigator.share(shareFile ? { files: [shareFile], text: draft } : { text: draft })
     })
 
   return (

@@ -44,6 +44,7 @@ describe('WhatsAppActions', () => {
     clip.copyText.mockImplementation(async () => void order.push('copy'))
     share.mockImplementation(async () => void order.push('share'))
     render(<WhatsAppActions text="oferta" imageUrl="https://x.es/a.png" />)
+    await waitFor(() => expect(clip.loadPng).toHaveBeenCalledTimes(1))
     await userEvent.click(screen.getByRole('button', { name: 'Compartir' }))
     await waitFor(() => expect(share).toHaveBeenCalled())
     expect(order).toEqual(['copy', 'share'])
@@ -62,6 +63,26 @@ describe('WhatsAppActions', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Copiar texto' }))
     expect(clip.copyText).toHaveBeenCalledWith('editado')
     expect(await screen.findByText('Copiado')).toBeInTheDocument()
+  })
+
+  it('Compartir uses the preloaded image without fetching after the click', async () => {
+    const share = setShare(true)
+    render(<WhatsAppActions text="oferta" imageUrl="https://x.es/a.png" />)
+    await waitFor(() => expect(clip.loadPng).toHaveBeenCalledTimes(1))
+    await new Promise((r) => setTimeout(r, 0))
+    clip.loadPng.mockClear()
+    await userEvent.click(screen.getByRole('button', { name: 'Compartir' }))
+    await waitFor(() => expect(share).toHaveBeenCalled())
+    expect(clip.loadPng).not.toHaveBeenCalled()
+    expect(share.mock.calls[0][0].files[0].name).toBe('patobarato.png')
+  })
+
+  it('asks to press Compartir again on NotAllowedError', async () => {
+    const share = setShare(true)
+    share.mockRejectedValue(new DOMException('x', 'NotAllowedError'))
+    render(<WhatsAppActions text="t" imageUrl="https://x.es/a.png" />)
+    await userEvent.click(screen.getByRole('button', { name: 'Compartir' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Pulsa de nuevo Compartir')
   })
 
   it('hides image buttons without an image', () => {

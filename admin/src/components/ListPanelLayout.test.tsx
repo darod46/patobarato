@@ -42,4 +42,12 @@ describe('ListPanelLayout', () => {
     const { result } = renderHook(() => usePanelId())
     expect(result.current[0]).toBeNull()
   })
+  it('setId preserves other query params', () => {
+    nav.qs = 'tab=x&id=7'
+    const { result } = renderHook(() => usePanelId())
+    act(() => result.current[1]('9'))
+    expect(nav.push).toHaveBeenLastCalledWith('/ofertas?tab=x&id=9')
+    act(() => result.current[1](null))
+    expect(nav.push).toHaveBeenLastCalledWith('/ofertas?tab=x')
+  })
 })
