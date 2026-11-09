@@ -10,7 +10,7 @@ from typing import Protocol
 
 from patobarato.config import Settings
 from patobarato.core.decision import decide
-from patobarato.models import OfferStatus, ParsedOffer, SourceMessage
+from patobarato.models import OfferStatus, ParsedOffer, PublicationStatus, SourceMessage
 from patobarato.parsing.extract import extract_offers
 from patobarato.parsing.links import UrlResolver
 from patobarato.parsing.title_match import titles_mismatch
@@ -29,6 +29,10 @@ PRICE_FETCH_TIMEOUT_SECONDS = 5.0
 # Stores whose API price is before the coupons a message advertises, and whose API
 # "original price" is an inflated list price (never shown as the previous price).
 STORES_PRICED_BEFORE_COUPON = frozenset({"aliexpress"})
+
+
+class DraftError(Exception):
+    """A pasted link cannot become a draft; the message is shown to the admin."""
 
 
 class Publisher(Protocol):
@@ -160,6 +164,63 @@ class Pipeline:
                 return status  # _publish already stored it
         await self._repo.set_offer_status(offer_id, status)
         return status
+
+    async def create_draft(self, url: str, job_id: int) -> int:
+        """Stores a draft publication for a pasted product link and returns its id.
+
+        Skips the duplicate/worth-it decision and never publishes. Nothing is
+        written until the price and the affiliate link are known.
+        """
+        msg = SourceMessage(
+            source_id=await self._repo.manual_source_id(),
+            message_id=job_id,
+            text=url,
+            urls=[url],
+            hashtags=[],
+            received_at=self._clock(),
+        )
+        offers = await extract_offers(msg, self._resolver, self._registry)
+        if not offers:
+            raise DraftError("No reconozco la tienda de ese enlace")
+        offer = offers[0]
+        if offer.price is None:
+            offer, _ = await self._with_store_price(offer)
+        price = offer.price
+        if price is None:
+            raise DraftError("No he encontrado el precio en la tienda")
+        store = self._registry.get(offer.store)
+        if store is None:  # extract_offers only yields registered stores
+            raise DraftError("No reconozco la tienda de ese enlace")
+        affiliate_url = await self._affiliate_url(offer, store)
+        if affiliate_url is None:
+            raise DraftError("No se pudo generar el enlace de afiliado")
+
+        product_id = await self._repo.upsert_product(offer)
+        offer_id = await self._repo.insert_offer(
+            product_id, msg.source_id, msg.message_id, offer, msg.text, msg.received_at
+        )
+        if offer_id is None:
+            raise DraftError("Este enlace ya se procesó")
+        publication_id = await self._repo.insert_publication(
+            offer_id,
+            product_id,
+            offer.country,
+            None,
+            None,
+            price,
+            affiliate_url,
+            self._clock(),
+            price_before_coupon=offer.price_before_coupon,
+            status=PublicationStatus.DRAFT,
+        )
+        await self._repo.set_offer_status(offer_id, OfferStatus.PENDING)
+        image_url = offer.image_url or await self._find_image(offer, store)
+        if image_url:
+            try:
+                await self._repo.set_product_image(product_id, image_url)
+            except Exception:
+                logger.error("Image store failed for %s", offer.asin, exc_info=True)
+        return publication_id
 
     async def _publish(
         self, msg: SourceMessage, offer: ParsedOffer, offer_id: int, product_id: int

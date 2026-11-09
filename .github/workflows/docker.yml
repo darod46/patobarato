@@ -3,7 +3,7 @@ name: Docker image
 on:
   push:
     branches: [main]
-    paths: ["bot/**", ".github/workflows/docker.yml"]
+    paths: ["bot/**", "shared/**", ".github/workflows/docker.yml"]
   workflow_dispatch:
 
 permissions:

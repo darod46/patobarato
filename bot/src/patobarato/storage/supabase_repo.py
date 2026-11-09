@@ -7,6 +7,7 @@ from postgrest.exceptions import APIError
 from supabase import Client
 
 from patobarato.models import (
+    AdminJob,
     ApiSource,
     CatalogRow,
     CouponUpsert,
@@ -16,6 +17,7 @@ from patobarato.models import (
     LastPublication,
     OfferStatus,
     ParsedOffer,
+    PostData,
     PublicationChannel,
     PublicationStatus,
     Source,
@@ -43,6 +45,7 @@ def _money(value: Decimal | None) -> str | None:
 class SupabaseRepository:
     def __init__(self, client: Client) -> None:
         self._client = client
+        self._manual_source_id: int | None = None
 
     async def sync_sources(self, channels: dict[str, str], country: str) -> list[Source]:
         if not channels:
@@ -195,6 +198,7 @@ class SupabaseRepository:
                 .select("published_price::text, published_at, status")
                 .eq("product_id", product_id)
                 .eq("country", country)
+                .neq("status", PublicationStatus.DRAFT.value)
             )
             if channel is not None:
                 query = query.eq("channel", channel)
@@ -222,6 +226,7 @@ class SupabaseRepository:
         published_at: datetime,
         channel: PublicationChannel = "telegram",
         price_before_coupon: bool = False,
+        status: PublicationStatus = PublicationStatus.ACTIVE,
     ) -> int:
         row = {
             "offer_id": offer_id,
@@ -230,7 +235,7 @@ class SupabaseRepository:
             "channel": channel,
             "published_price": str(published_price),
             "affiliate_url": affiliate_url,
-            "status": PublicationStatus.ACTIVE.value,
+            "status": status.value,
             "published_at": published_at.isoformat(),
         }
         if chat_id is not None:
@@ -245,6 +250,173 @@ class SupabaseRepository:
 
         response = await asyncio.to_thread(run)
         return response.data[0]["id"]
+
+    async def get_post(self, publication_id: int) -> PostData | None:
+        def run():
+            return (
+                self._client.table("publications")
+                .select(
+                    "id, offer_id, product_id, status, chat_id, message_id, country, "
+                    "published_price::text, price_before_coupon, affiliate_url, "
+                    "offers(previous_price::text, coupon, hashtags), "
+                    "products(title, store, image_url)"
+                )
+                .eq("id", publication_id)
+                .limit(1)
+                .execute()
+            )
+
+        response = await asyncio.to_thread(run)
+        if not response.data:
+            return None
+        row = response.data[0]
+        offer, product = row["offers"], row["products"]
+        previous = offer["previous_price"]
+        return PostData(
+            publication_id=row["id"],
+            offer_id=row["offer_id"],
+            product_id=row["product_id"],
+            status=PublicationStatus(row["status"]),
+            chat_id=row["chat_id"],
+            message_id=row["message_id"],
+            title=product["title"],
+            price=Decimal(row["published_price"]),
+            previous_price=Decimal(previous) if previous is not None else None,
+            coupon=offer["coupon"],
+            hashtags=offer["hashtags"] or [],
+            price_before_coupon=bool(row["price_before_coupon"]),
+            affiliate_url=row["affiliate_url"],
+            store=product["store"],
+            country=row["country"],
+            image_url=product["image_url"],
+        )
+
+    async def mark_post_published(
+        self, publication_id: int, chat_id: int, message_id: int, published_at: datetime
+    ) -> None:
+        def run():
+            updated = (
+                self._client.table("publications")
+                .update(
+                    {
+                        "chat_id": chat_id,
+                        "message_id": message_id,
+                        "published_at": published_at.isoformat(),
+                        "status": PublicationStatus.ACTIVE.value,
+                    }
+                )
+                .eq("id", publication_id)
+                .execute()
+            )
+            for row in updated.data:
+                self._client.table("offers").update(
+                    {"status": OfferStatus.PUBLISHED.value}
+                ).eq("id", row["offer_id"]).execute()
+
+        await asyncio.to_thread(run)
+
+    async def manual_source_id(self) -> int:
+        if self._manual_source_id is None:
+
+            def run():
+                return (
+                    self._client.table("sources")
+                    .select("id")
+                    .eq("type", "manual")
+                    .eq("identifier", "admin")
+                    .limit(1)
+                    .execute()
+                )
+
+            response = await asyncio.to_thread(run)
+            if not response.data:
+                raise RuntimeError(
+                    "No manual source (type='manual', identifier='admin') in sources; "
+                    "apply the admin migration"
+                )
+            self._manual_source_id = response.data[0]["id"]
+        return self._manual_source_id
+
+    async def claim_jobs(self, limit: int) -> list[AdminJob]:
+        def run():
+            pending = (
+                self._client.table("admin_jobs")
+                .select("id")
+                .eq("status", "pending")
+                .order("id")
+                .limit(limit)
+                .execute()
+            )
+            claimed = []
+            for row in pending.data:
+                updated = (
+                    self._client.table("admin_jobs")
+                    .update({"status": "running"})
+                    .eq("id", row["id"])
+                    .eq("status", "pending")
+                    .execute()
+                )
+                claimed.extend(updated.data)
+            return claimed
+
+        rows = await asyncio.to_thread(run)
+        return [AdminJob(id=r["id"], type=r["type"], payload=r["payload"] or {}) for r in rows]
+
+    async def finish_job(
+        self, job_id: int, *, result: dict | None = None, error: str | None = None
+    ) -> None:
+        def run():
+            return (
+                self._client.table("admin_jobs")
+                .update(
+                    {
+                        "status": "done" if error is None else "error",
+                        "result": result,
+                        "error": error,
+                    }
+                )
+                .eq("id", job_id)
+                .execute()
+            )
+
+        await asyncio.to_thread(run)
+
+    async def fail_running_jobs(self, error: str) -> int:
+        def run():
+            return (
+                self._client.table("admin_jobs")
+                .update({"status": "error", "error": error})
+                .eq("status", "running")
+                .execute()
+            )
+
+        response = await asyncio.to_thread(run)
+        return len(response.data)
+
+    async def add_admin_user(self, user_id: str, email: str) -> None:
+        def run():
+            return (
+                self._client.table("admin_users")
+                .upsert(
+                    {"user_id": user_id, "email": email, "is_owner": False},
+                    on_conflict="user_id",
+                )
+                .execute()
+            )
+
+        await asyncio.to_thread(run)
+
+    async def owner_ids(self) -> list[str]:
+        def run():
+            return (
+                self._client.table("admin_users")
+                .select("user_id")
+                .eq("is_owner", True)
+                .execute()
+            )
+
+        response = await asyncio.to_thread(run)
+        return [r["user_id"] for r in response.data]
 
     async def list_api_sources(self) -> list[ApiSource]:
         def run():

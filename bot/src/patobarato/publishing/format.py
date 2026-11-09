@@ -30,14 +30,23 @@ def normalize_hashtag(tag: str) -> str:
 
 
 def _build(
-    offer: ParsedOffer, title: str, coupon: str | None, link: str, store_name: str
+    offer: ParsedOffer,
+    title: str,
+    coupon: str | None,
+    link: str,
+    store_name: str,
+    ended: bool = False,
 ) -> str:
     assert offer.price is not None, "format_caption requires a price"
     label = "Precio sin cupón" if offer.price_before_coupon else "Precio"
-    lines = [
-        f"<b>{html.escape(title)}</b>",
-        f"✅ {label}: <b>{format_price(offer.price)} €</b>",
-    ]
+    price = format_price(offer.price)
+    lines = []
+    if ended:
+        lines.append("❌ <b>OFERTA TERMINADA</b>")
+    lines.append(f"<b>{html.escape(title)}</b>")
+    lines.append(
+        f"✅ {label}: <s>{price} €</s>" if ended else f"✅ {label}: <b>{price} €</b>"
+    )
     if offer.previous_price is not None:
         lines.append(
             f"❌ Antes: <s>{format_price(offer.previous_price)} €</s>"
@@ -53,8 +62,8 @@ def _build(
     return "\n".join(lines)
 
 
-def format_caption(
-    offer: ParsedOffer, link: str, store_name: str = "Amazon", max_len: int = 1024
+def _format(
+    offer: ParsedOffer, link: str, store_name: str, max_len: int, ended: bool
 ) -> str:
     """Builds the HTML caption.
 
@@ -65,15 +74,28 @@ def format_caption(
     """
     title = strip_urls(offer.title)
     coupon = strip_urls(offer.coupon) if offer.coupon else None
-    caption = _build(offer, title, coupon, link, store_name)
+    caption = _build(offer, title, coupon, link, store_name, ended)
     if len(caption) <= max_len:
         return caption
     # Trim only the (unescaped) title, longest prefix that fits.
     lo, hi = 0, len(title)
     while lo < hi:
         mid = (lo + hi + 1) // 2
-        if len(_build(offer, title[:mid].rstrip() + "…", coupon, link, store_name)) <= max_len:
+        if len(_build(offer, title[:mid].rstrip() + "…", coupon, link, store_name, ended)) <= max_len:
             lo = mid
         else:
             hi = mid - 1
-    return _build(offer, title[:lo].rstrip() + "…", coupon, link, store_name)
+    return _build(offer, title[:lo].rstrip() + "…", coupon, link, store_name, ended)
+
+
+def format_caption(
+    offer: ParsedOffer, link: str, store_name: str = "Amazon", max_len: int = 1024
+) -> str:
+    return _format(offer, link, store_name, max_len, ended=False)
+
+
+def format_ended_caption(
+    offer: ParsedOffer, link: str, store_name: str = "Amazon", max_len: int = 1024
+) -> str:
+    """Same caption with an OFERTA TERMINADA header and the price struck through."""
+    return _format(offer, link, store_name, max_len, ended=True)

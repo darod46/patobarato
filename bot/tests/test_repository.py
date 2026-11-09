@@ -9,6 +9,7 @@ from patobarato.models import (
     GuideProduct,
     OfferStatus,
     ParsedOffer,
+    PublicationStatus,
 )
 from patobarato.storage.repository import InMemoryRepository
 
@@ -369,3 +370,113 @@ async def test_replace_event_promos_drops_previous_rows():
     await repo.replace_event_promos(ev, [_promo("1"), _promo("2")])
     await repo.replace_event_promos(ev, [_promo("3")])
     assert [r.external_id for r in repo.event_promos[ev]] == ["3"]
+
+
+async def _draft(repo: InMemoryRepository, offer: ParsedOffer | None = None) -> tuple[int, int, int]:
+    offer = offer or dataclasses.replace(
+        make_offer(title="Robot S20"), price=Decimal("149"), previous_price=Decimal("249"),
+        coupon="XIAO20", hashtags=["#robot"],
+    )
+    product_id = await repo.upsert_product(offer)
+    source = await repo.manual_source_id()
+    offer_id = await repo.insert_offer(product_id, source, 1, offer, "raw", NOW)
+    pub_id = await repo.insert_publication(
+        offer_id, product_id, "ES", None, None, Decimal("149"), "https://aff/x", NOW,
+        status=PublicationStatus.DRAFT,
+    )
+    return pub_id, offer_id, product_id
+
+
+async def test_last_publication_ignores_drafts():
+    repo = InMemoryRepository()
+    pid = await repo.upsert_product(make_offer())
+    await repo.insert_publication(
+        1, pid, "ES", 1, 1, Decimal("10"), "u", NOW, channel="telegram"
+    )
+    await repo.insert_publication(
+        1, pid, "ES", None, None, Decimal("5"), "u", NOW + timedelta(hours=1),
+        channel="telegram", status=PublicationStatus.DRAFT,
+    )
+    last = await repo.get_last_publication(pid, "ES", channel="telegram")
+    assert last.status == PublicationStatus.ACTIVE
+    assert last.published_price == Decimal("10")
+
+
+async def test_manual_source_id_is_stable():
+    repo = InMemoryRepository()
+    assert await repo.manual_source_id() == await repo.manual_source_id()
+
+
+async def test_get_post_joins_offer_and_product():
+    repo = InMemoryRepository()
+    pub_id, offer_id, product_id = await _draft(repo)
+    post = await repo.get_post(pub_id)
+    assert (post.title, post.coupon, post.price, post.status) == (
+        "Robot S20", "XIAO20", Decimal("149"), PublicationStatus.DRAFT,
+    )
+    assert (post.offer_id, post.product_id, post.previous_price) == (
+        offer_id, product_id, Decimal("249"),
+    )
+    assert (post.chat_id, post.message_id, post.store, post.country) == (None, None, "amazon", "ES")
+    assert post.hashtags == ["robot"]
+    assert await repo.get_post(999) is None
+
+
+async def test_mark_post_published_sets_ids_and_active():
+    repo = InMemoryRepository()
+    pub_id, _offer_id, _ = await _draft(repo)
+    later = NOW + timedelta(days=1)
+    await repo.mark_post_published(pub_id, -100, 42, later)
+    post = await repo.get_post(pub_id)
+    assert (post.chat_id, post.message_id, post.status) == (-100, 42, PublicationStatus.ACTIVE)
+    assert repo.publications()[0]["published_at"] == later
+    assert repo.offer_statuses() == [OfferStatus.PUBLISHED]
+
+
+async def test_claim_jobs_claims_once():
+    repo = InMemoryRepository()
+    repo.add_job("publish", {"a": 1})
+    repo.add_job("edit", {"b": 2})
+    jobs = await repo.claim_jobs(10)
+    assert [j.id for j in jobs] == [1, 2]
+    assert (jobs[0].type, jobs[0].payload) == ("publish", {"a": 1})
+    assert await repo.claim_jobs(10) == []
+
+
+async def test_claim_jobs_respects_limit():
+    repo = InMemoryRepository()
+    for _ in range(3):
+        repo.add_job("publish", {})
+    assert [j.id for j in await repo.claim_jobs(2)] == [1, 2]
+    assert [j.id for j in await repo.claim_jobs(2)] == [3]
+
+
+async def test_finish_job_done_and_error():
+    repo = InMemoryRepository()
+    repo.add_job("publish", {})
+    repo.add_job("publish", {})
+    await repo.claim_jobs(10)
+    await repo.finish_job(1, result={"ok": True})
+    await repo.finish_job(2, error="boom")
+    jobs = repo.jobs()
+    assert (jobs[0]["status"], jobs[0]["result"], jobs[0]["error"]) == ("done", {"ok": True}, None)
+    assert (jobs[1]["status"], jobs[1]["error"]) == ("error", "boom")
+
+
+async def test_add_admin_user_stores_non_owner():
+    repo = InMemoryRepository()
+    await repo.add_admin_user("u1", "a@b.c")
+    assert repo.admin_users == {"u1": {"email": "a@b.c", "is_owner": False}}
+
+
+async def test_fail_running_jobs_only_touches_running():
+    repo = InMemoryRepository()
+    repo.add_job("publish", {})
+    repo.add_job("publish", {})
+    repo.add_job("publish", {})
+    await repo.claim_jobs(2)
+    await repo.finish_job(1, result={})
+    assert await repo.fail_running_jobs("interrumpido") == 1
+    jobs = repo.jobs()
+    assert [j["status"] for j in jobs] == ["done", "error", "pending"]
+    assert jobs[1]["error"] == "interrumpido"

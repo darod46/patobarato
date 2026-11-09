@@ -15,6 +15,10 @@ from pydantic_settings import SettingsError
 from supabase import create_client
 from telethon import TelegramClient
 
+from patobarato.admin.jobs import JobRunner
+from patobarato.admin.posts import PostService
+from patobarato.admin.revalidate import WebRevalidator
+from patobarato.admin.users import UserAdmin
 from patobarato.config import Settings, get_settings
 from patobarato.core.backfill import backfill_images
 from patobarato.core.pipeline import Pipeline, utcnow
@@ -157,9 +161,8 @@ async def run(settings: Settings) -> int:
         httpx.AsyncClient(timeout=settings.http_timeout_seconds) as amazon_http,
     ):
         resolver = UrlResolver(http)
-        repo = SupabaseRepository(
-            create_client(settings.supabase_url, settings.supabase_service_key)
-        )
+        supabase_client = create_client(settings.supabase_url, settings.supabase_service_key)
+        repo = SupabaseRepository(supabase_client)
         publisher = TelegramPublisher(bot, settings.target_channel)
         registry = build_registry(settings, http, amazon_http)
         pipeline = Pipeline(
@@ -172,6 +175,16 @@ async def run(settings: Settings) -> int:
             image_downloader=lambda url: download_photo(http, url),
         )
         scheduler = ApiScheduler(repo, build_runners(registry, repo, settings, utcnow, http))
+        runner = JobRunner(
+            repo,
+            PostService(
+                repo, publisher, registry, lambda url: download_photo(http, url), utcnow
+            ),
+            pipeline,
+            UserAdmin(supabase_client, repo, settings.admin_url),
+            WebRevalidator(http, settings.web_revalidate_url, settings.revalidate_secret),
+            settings.admin_jobs_poll_seconds,
+        )
         listener = TelegramListener(
             reader,
             repo,
@@ -187,6 +200,7 @@ async def run(settings: Settings) -> int:
                 pipeline=pipeline.run(),
                 scheduler=scheduler.run(),
                 refresh=listener.run_refresh_loop(),
+                admin_jobs=runner.run(),
                 reader=reader.run_until_disconnected(),
                 bot=bot.run_until_disconnected(),
             )

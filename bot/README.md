@@ -61,6 +61,10 @@ El resto tiene valores por defecto razonables (`TARGET_CHANNEL=@patobarato`, `AF
 | `DEFAULT_COUNTRY` | `ES` | País por defecto. En v1 solo se admite `ES`; el país de cada oferta sale del dominio del enlace (`amazon.es`). |
 | `HTTP_TIMEOUT_SECONDS` | `10.0` | Tiempo máximo, en segundos, de cada petición HTTP al resolver enlaces acortados (`amzn.to`, `bit.ly`...). |
 | `SOURCES_REFRESH_SECONDS` | `300` | Cada cuánto se repasan los canales de la cuenta lectora. |
+| `ADMIN_URL` | _(vacío)_ | URL base del panel de administración; las invitaciones por email redirigen a `ADMIN_URL/auth/confirm`. Sin ella no se pueden invitar usuarios. |
+| `WEB_REVALIDATE_URL` | _(vacío)_ | Endpoint de la web pública (`https://www.patobarato.com/api/revalidate`) al que el bot avisa tras publicar o editar. Debe ser el host canónico `www`: el bot no sigue redirecciones. |
+| `REVALIDATE_SECRET` | _(vacío)_ | Secreto compartido enviado en la cabecera `x-revalidate-secret`. Sin URL y secreto, no se avisa a la web. |
+| `ADMIN_JOBS_POLL_SECONDS` | `3.0` | Cada cuánto el bot busca trabajos nuevos del panel de administración. |
 
 ## 4. Puesta en marcha con Docker
 

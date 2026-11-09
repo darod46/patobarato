@@ -3,9 +3,15 @@
 import asyncio
 import io
 import logging
+from collections.abc import Awaitable, Callable
 
 from telethon import TelegramClient, utils
-from telethon.errors import FloodWaitError, RPCError, ServerError
+from telethon.errors import (
+    FloodWaitError,
+    MessageNotModifiedError,
+    RPCError,
+    ServerError,
+)
 
 
 logger = logging.getLogger("patobarato.telegram_publisher")
@@ -31,6 +37,10 @@ def can_retry_without_photo(exc: BaseException) -> bool:
     return not isinstance(exc, FloodWaitError) and not _is_transient(exc)
 
 
+class ChannelMismatchError(Exception):
+    """The post's channel cannot be resolved and is not the current target channel."""
+
+
 class TelegramPublisher:
     def __init__(
         self,
@@ -45,11 +55,48 @@ class TelegramPublisher:
         self._base_delay = base_delay
 
     async def publish(self, caption: str, photo: bytes | None) -> tuple[int, int]:
+        async def attempt() -> tuple[int, int]:
+            msg = await self._send(caption, photo)
+            return utils.get_peer_id(msg.peer_id), msg.id
+
+        return await self._with_retries(attempt)
+
+    async def edit(self, chat_id: int, message_id: int, caption: str) -> None:
+        """Edit a published message (the caption, for a photo post)."""
+
+        async def attempt() -> None:
+            async def edit_in(entity: int | str) -> None:
+                await self._client.edit_message(
+                    entity,
+                    message_id,
+                    caption,
+                    parse_mode="html",
+                    link_preview=False,
+                )
+
+            try:
+                try:
+                    await edit_in(chat_id)
+                except ValueError:
+                    # A restarted session may not have the channel cached: use the target,
+                    # but only if it is the channel the post lives in.
+                    target = await self._client.get_entity(self._target)
+                    if utils.get_peer_id(target) != chat_id:
+                        raise ChannelMismatchError(
+                            f"Chat {chat_id} is not the target channel {self._target}"
+                        ) from None
+                    logger.info("Chat %s not resolvable, editing via target", chat_id)
+                    await edit_in(self._target)
+            except MessageNotModifiedError:
+                logger.info("Message %s unchanged, nothing to edit", message_id)
+
+        await self._with_retries(attempt)
+
+    async def _with_retries[T](self, fn: Callable[[], Awaitable[T]]) -> T:
         attempt = 0
         while True:
             try:
-                msg = await self._send(caption, photo)
-                return utils.get_peer_id(msg.peer_id), msg.id
+                return await fn()
             except FloodWaitError as e:
                 if attempt >= self._max_retries:
                     raise
