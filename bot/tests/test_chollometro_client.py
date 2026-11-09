@@ -91,7 +91,6 @@ async def test_resolve_visit_direct_store_location():
     "response",
     [
         httpx.Response(200, text="ok"),
-        httpx.Response(500),
         httpx.Response(302, headers={"Location": "https://path.chollometro.com/other"}),
         httpx.Response(302, headers={"Location": "/visit/b/2"}),
     ],
@@ -102,3 +101,18 @@ async def test_resolve_visit_none_cases(response):
             "https://www.chollometro.com/visit/a/1"
         )
     assert result is None
+
+
+async def test_resolve_visit_server_error_raises():
+    async with _client(lambda r: httpx.Response(503)) as http:
+        with pytest.raises(httpx.HTTPStatusError):
+            await ChollometroClient(http).resolve_visit("https://www.chollometro.com/visit/a/1")
+
+
+async def test_resolve_visit_network_error_raises():
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("down", request=request)
+
+    async with _client(handler) as http:
+        with pytest.raises(httpx.ConnectError):
+            await ChollometroClient(http).resolve_visit("https://www.chollometro.com/visit/a/1")

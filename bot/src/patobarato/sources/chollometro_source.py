@@ -1,16 +1,19 @@
 """Deal source reading chollometro.com: follows threads, publishes the hot ones and ends them.
 
-One run, with a shared budget of Chollometro pages (thread pages and /visit/ links):
+One run, with a shared budget of Chollometro pages (thread pages and /visit/ links),
+spent in this order of priority:
 
 1. Read /nuevos; record new threads of registered stores and refresh the watched ones.
-2. Published threads the listing shows as expired are ended (no page needed).
+   Published threads the listing shows as expired are ended (no page needed). Watched
+   threads past their warm-up window are dropped as cold.
+2. Watched threads that qualify have their /visit/ link resolved, hottest first, once:
+   QUALIFIED or SKIPPED (a transient failure leaves them watched, retried next run).
 3. Published threads not in the listing are checked on their page, oldest check first.
 4. Watched threads that left the listing are re-read, hottest first, while they can warm up.
-5. Watched threads that qualify have their /visit/ link resolved, once: QUALIFIED or SKIPPED.
-6. Ending an offer: publication ``ended``, Telegram post edited, website revalidated.
-7. QUALIFIED threads are published, best first, while the hourly cap has room.
+5. Ending an offer: publication ``ended``, Telegram post edited, website revalidated.
+6. QUALIFIED threads are published, best first, while the hourly cap has room.
 
-When Chollometro blocks us, no more pages are requested; step 7 still runs and the
+When Chollometro blocks us, no more pages are requested; step 6 still runs and the
 error is raised at the end so the scheduler records it.
 """
 
@@ -76,17 +79,26 @@ def thread_to_snapshot(t: ChollometroThread) -> dict:
 
 
 def thread_from_snapshot(data: dict) -> ChollometroThread:
+    """Rebuilds a snapshot; unknown keys are ignored and missing optional ones defaulted."""
+
     def decimal(value: str | None) -> Decimal | None:
         return None if value is None else Decimal(value)
 
     return ChollometroThread(
-        **{
-            **data,
-            "price": decimal(data["price"]),
-            "previous_price": decimal(data["previous_price"]),
-            "categories": list(data["categories"]),
-            "published_at": datetime.fromisoformat(data["published_at"]),
-        }
+        thread_id=int(data["thread_id"]),
+        title=data["title"],
+        url=data["url"],
+        visit_url=data.get("visit_url"),
+        merchant=data.get("merchant"),
+        price=decimal(data.get("price")),
+        previous_price=decimal(data.get("previous_price")),
+        discount=data.get("discount"),
+        temperature=float(data.get("temperature") or 0),
+        expired=bool(data.get("expired", False)),
+        sold_out=bool(data.get("sold_out", False)),
+        coupon=data.get("coupon"),
+        categories=list(data.get("categories") or []),
+        published_at=datetime.fromisoformat(data["published_at"]),
     )
 
 
@@ -136,6 +148,7 @@ class _Run:
     now: datetime
     pages: int = 0
     listed: set[int] = field(default_factory=set)
+    attempted: set[int] = field(default_factory=set)  # /visit/ tried during this run
     links: dict[int, StoreLink] = field(default_factory=dict)  # resolved during this run
     ended: int = 0
     published: int = 0
@@ -180,9 +193,11 @@ class ChollometroSource:
         try:
             try:
                 await self._read_listing(run)
+                await self._drop_cold(run)
+                # New hot deals get the budget first, then the end of published ones.
+                await self._resolve_qualifying(run)
                 await self._watch_publications(run)
                 await self._rewarm(run)
-                await self._resolve_qualifying(run)
             except ChollometroBlocked as exc:
                 logger.warning("Chollometro blocked us (%s): no more pages this run", exc)
                 blocked = exc
@@ -200,7 +215,7 @@ class ChollometroSource:
         if blocked is not None:
             raise blocked
 
-    # Steps 1-2 ------------------------------------------------------------
+    # Step 1 ---------------------------------------------------------------
 
     async def _read_listing(self, run: _Run) -> None:
         stores = {
@@ -263,6 +278,13 @@ class ChollometroSource:
         checked = self._checked(t, thread, now)
         return self._skipped(checked, "expired") if _ended(thread) else checked
 
+    async def _drop_cold(self, run: _Run) -> None:
+        """Watched threads outside the listing that can no longer warm up are dropped."""
+        warm = timedelta(hours=run.config.warm_hours)
+        for t in await self._repo.list_tracked_threads(run.source.id, [ThreadState.WATCHING]):
+            if t.thread_id not in run.listed and run.now - t.published_at > warm:
+                await self._save(self._skipped(t, "cold"))
+
     # Step 3 ---------------------------------------------------------------
 
     async def _watch_publications(self, run: _Run) -> None:
@@ -288,15 +310,15 @@ class ChollometroSource:
     # Step 4 ---------------------------------------------------------------
 
     async def _rewarm(self, run: _Run) -> None:
-        warm = timedelta(hours=run.config.warm_hours)
-        due: list[TrackedThread] = []
-        for t in await self._repo.list_tracked_threads(run.source.id, [ThreadState.WATCHING]):
-            if t.thread_id in run.listed:
-                continue
-            if run.now - t.published_at > warm:
-                await self._save(self._skipped(t, "cold"))
-            elif not self._qualifies(run, t):  # those that qualify go to step 5 as they are
-                due.append(t)
+        # A thread that warms up here is resolved by the next run (step 2 already ran).
+        # Those that qualify already, or whose /visit/ was tried this run, need no page.
+        due = [
+            t
+            for t in await self._repo.list_tracked_threads(run.source.id, [ThreadState.WATCHING])
+            if t.thread_id not in run.listed
+            and t.thread_id not in run.attempted
+            and not self._qualifies(run, t)
+        ]
         due.sort(key=lambda t: -t.temperature)
         for t in due:
             if not run.has_budget():
@@ -309,7 +331,7 @@ class ChollometroSource:
             else:
                 await self._save(replace(t, last_checked_at=run.now))
 
-    # Step 5 ---------------------------------------------------------------
+    # Step 2 ---------------------------------------------------------------
 
     async def _resolve_qualifying(self, run: _Run) -> None:
         watching = await self._repo.list_tracked_threads(run.source.id, [ThreadState.WATCHING])
@@ -324,8 +346,20 @@ class ChollometroSource:
                 continue
             if not run.has_budget():
                 continue
-            store_url = await self._page(run, lambda: self._client.resolve_visit(visit_url))
-            link = await self._store_link(store_url) if store_url else None
+            run.attempted.add(t.thread_id)
+            try:
+                store_url = await self._page(run, lambda: self._client.resolve_visit(visit_url))
+                link = await self._store_link(store_url) if store_url else None
+            except ChollometroBlocked:
+                raise
+            except Exception as exc:  # transient: still WATCHING, tried again next run
+                logger.warning(
+                    "Chollometro thread %s: /visit/ resolution failed: %s: %s",
+                    t.thread_id,
+                    type(exc).__name__,
+                    exc,
+                )
+                continue
             if link is None:
                 logger.info(
                     "Chollometro thread %s: no registered store at %s", t.thread_id, store_url
@@ -337,7 +371,7 @@ class ChollometroSource:
                 replace(t, state=ThreadState.QUALIFIED, qualified_at=run.now, store_url=store_url)
             )
 
-    # Step 6 ---------------------------------------------------------------
+    # Step 5 ---------------------------------------------------------------
 
     async def _end(self, run: _Run, t: TrackedThread, thread: ChollometroThread) -> None:
         ended = replace(self._checked(t, thread, run.now), state=ThreadState.ENDED)
@@ -371,7 +405,7 @@ class ChollometroSource:
         except Exception as exc:
             logger.error("Could not revalidate the website: %s: %s", type(exc).__name__, exc)
 
-    # Step 7 ---------------------------------------------------------------
+    # Step 6 ---------------------------------------------------------------
 
     async def _publish_qualified(self, run: _Run) -> None:
         stale_after = timedelta(minutes=self._settings.stale_after_minutes)
@@ -388,7 +422,12 @@ class ChollometroSource:
         for t in sorted(pending, key=lambda t: rank_key(t.temperature, t.discount)):
             if slots <= 0:
                 return
-            if await self._publish(run, t):
+            try:
+                published = await self._publish(run, t)
+            except Exception:  # still QUALIFIED: retried until it goes stale
+                logger.exception("Chollometro thread %s could not be published", t.thread_id)
+                continue
+            if published:
                 slots -= 1
 
     async def _publish(self, run: _Run, t: TrackedThread) -> bool:
@@ -504,11 +543,8 @@ class ChollometroSource:
         return True, thread
 
     async def _store_link(self, url: str) -> StoreLink | None:
-        try:
-            return await resolve_store_link(url, self._resolver, self._registry)
-        except Exception as exc:
-            logger.warning("Store link of %s failed: %s: %s", url, type(exc).__name__, exc)
-            return None
+        """The registered product at ``url``; resolver errors propagate (transient)."""
+        return await resolve_store_link(url, self._resolver, self._registry)
 
     async def _quote(self, link: StoreLink) -> PriceQuote | None:
         try:

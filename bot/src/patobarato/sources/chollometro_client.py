@@ -54,11 +54,13 @@ class ChollometroClient:
         Chollometro answers with a redirect to its own tracker whose ``url`` parameter
         holds the clean store URL. The next hop is deliberately not followed: it is where
         the store would receive Chollometro's affiliate tag.
+
+        None means the link leads to no store URL. Transient failures (network errors,
+        5xx) raise ``httpx.HTTPError`` so the caller can try again later.
         """
-        try:
-            response = await self._get(visit_url, follow_redirects=False)
-        except httpx.HTTPError:
-            return None
+        response = await self._get(visit_url, follow_redirects=False)
+        if response.status_code >= 500:
+            response.raise_for_status()
         location = response.headers.get("Location")
         if not response.is_redirect or not location:
             return None

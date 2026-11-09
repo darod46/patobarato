@@ -75,7 +75,10 @@ class FakeClient:
         self.pages: dict[str, ChollometroThread | None] = {}
         # visit URL -> store URL; default: the Amazon page of the thread's ASIN.
         self.visits: dict[str, str | None] = {}
-        self.block_threads = False
+        # Calls answered with ChollometroBlocked: "new", "thread" and/or "visit".
+        self.blocked: set[str] = set()
+        # visit URL -> exception raised once by resolve_visit (transient failure).
+        self.visit_errors: dict[str, Exception] = {}
         self.thread_calls: list[str] = []
         self.visit_calls: list[str] = []
 
@@ -83,17 +86,27 @@ class FakeClient:
     def requests(self) -> int:
         return len(self.thread_calls) + len(self.visit_calls)
 
+    def reset_calls(self) -> None:
+        self.thread_calls.clear()
+        self.visit_calls.clear()
+
     async def fetch_new(self) -> list[ChollometroThread]:
+        if "new" in self.blocked:
+            raise ChollometroBlocked("403")
         return list(self.listing)
 
     async def fetch_thread(self, url: str) -> ChollometroThread | None:
         self.thread_calls.append(url)
-        if self.block_threads:
+        if "thread" in self.blocked:
             raise ChollometroBlocked("403")
         return self.pages.get(url)
 
     async def resolve_visit(self, visit_url: str) -> str | None:
         self.visit_calls.append(visit_url)
+        if "visit" in self.blocked:
+            raise ChollometroBlocked("429")
+        if visit_url in self.visit_errors:
+            raise self.visit_errors.pop(visit_url)
         if visit_url in self.visits:
             return self.visits[visit_url]
         n = int(visit_url.rsplit("/", 1)[1])
@@ -142,9 +155,12 @@ class SpyPipeline(Pipeline):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.offers: list[tuple[int, ParsedOffer, datetime]] = []
+        self.fail_ids: set[int] = set()  # threads whose processing raises
 
     async def process_offer(self, source_id, external_id, offer, raw_text, detected_at):
         self.offers.append((external_id, offer, detected_at))
+        if external_id in self.fail_ids:
+            raise RuntimeError("database down")
         return await super().process_offer(source_id, external_id, offer, raw_text, detected_at)
 
 
@@ -470,6 +486,13 @@ async def test_watching_thread_rewarmed_from_its_page(env):
     env.client.pages[_thread(1).url] = _thread(1, 70)
     await env.run()
     assert env.client.thread_calls == [_thread(1).url]
+    # Warmed up after this run's /visit/ step: resolved and published by the next run.
+    tracked = await env.thread(1)
+    assert tracked.state == ThreadState.WATCHING
+    assert tracked.temperature == 70
+    env.clock.now += timedelta(minutes=5)
+    await env.run()
+    assert env.client.thread_calls == [_thread(1).url]
     assert (await env.thread(1)).state == ThreadState.PUBLISHED
 
 
@@ -490,30 +513,134 @@ async def test_page_budget_respected():
 
 
 async def test_blocked_stops_run_and_keeps_state(env):
-    env.client.listing = [_thread(1, 10)]
+    env.client.listing = [_thread(1, 60)]  # published: its end would be checked by page
     await env.run()
     env.clock.now += timedelta(minutes=5)
-    env.client.listing = [_thread(2, 90), _thread(3, 90)]
-    env.client.block_threads = True
+    env.client.reset_calls()
+    env.client.listing = [_thread(2, 90), _thread(3, 80)]
+    env.client.blocked = {"visit", "thread"}
     with pytest.raises(ChollometroBlocked):
         await env.run()
-    assert len(env.client.thread_calls) == 1
-    assert env.client.visit_calls == []
+    # The first /visit/ was blocked: no thread page and no second /visit/ afterwards.
+    assert env.client.visit_calls == [_thread(2).visit_url]
+    assert env.client.thread_calls == []
     assert (await env.thread(2)).state == ThreadState.WATCHING
     assert (await env.thread(3)).state == ThreadState.WATCHING
+    assert (await env.thread(1)).state == ThreadState.PUBLISHED
 
 
-async def test_blocked_still_publishes_qualified(env):
-    _big_budget(env)
-    env.client.listing = [_thread(n, 51 + n) for n in range(1, 12)]  # 11 qualify, 10 slots
+async def test_blocked_run_still_publishes_qualified(env):
+    env.source = dataclasses.replace(env.source, config={"max_per_hour": 0})
+    env.client.listing = [_thread(1, 90)]
     await env.run()
-    env.clock.now = NOW + timedelta(minutes=61)
-    env.client.listing = []
-    env.client.block_threads = True
+    assert (await env.thread(1)).state == ThreadState.QUALIFIED
+    env.source = dataclasses.replace(env.source, config={})
+    env.clock.now += timedelta(minutes=5)
+    env.client.blocked = {"new"}
     with pytest.raises(ChollometroBlocked):
         await env.run()
-    # The QUALIFIED one would be stale at 61 min: blocked run still ran the publish step.
-    assert (await env.thread(1)).skip_reason == "stale"
+    assert (await env.thread(1)).state == ThreadState.PUBLISHED
+    assert len(_published(env)) == 1
+
+
+async def _publish_five(env: Env) -> None:
+    """Threads 1-5 published and active, then back to the default budget of 5 pages."""
+    _big_budget(env)
+    env.client.listing = [_thread(n, 60) for n in range(1, 6)]
+    await env.run()
+    for n in range(1, 6):
+        env.client.pages[_thread(n).url] = _thread(n, 60)
+    env.source = dataclasses.replace(env.source, config={})
+    env.client.reset_calls()
+
+
+async def test_new_hot_deal_gets_budget_before_watched_publications(env):
+    await _publish_five(env)
+    env.clock.now += timedelta(minutes=5)
+    env.client.listing = [_thread(100, 90)]
+    await env.run()
+    assert env.client.visit_calls == [_thread(100).visit_url]
+    assert (await env.thread(100)).state == ThreadState.PUBLISHED
+    assert len(env.client.thread_calls) == 4
+
+
+async def test_watched_publications_checked_later_when_budget_spent_on_resolutions(env):
+    await _publish_five(env)
+    env.clock.now += timedelta(minutes=5)
+    env.client.listing = [_thread(n, 90) for n in range(100, 105)]
+    await env.run()
+    assert len(env.client.visit_calls) == 5
+    assert env.client.thread_calls == []
+    env.clock.now += timedelta(minutes=5)
+    env.client.listing = []
+    env.client.reset_calls()
+    await env.run()
+    assert sorted(env.client.thread_calls) == sorted(_thread(n).url for n in range(1, 6))
+
+
+async def test_transient_visit_failure_keeps_thread_watching(env):
+    visit = _thread(1).visit_url
+    env.client.visit_errors[visit] = httpx.ConnectError("down")
+    env.client.listing = [_thread(1, 90)]
+    await env.run()
+    assert (await env.thread(1)).state == ThreadState.WATCHING
+    env.clock.now += timedelta(minutes=5)
+    await env.run()
+    assert (await env.thread(1)).state == ThreadState.PUBLISHED
+    assert env.client.visit_calls == [visit, visit]
+
+
+async def test_resolver_error_keeps_thread_watching(env):
+    class RaisingResolver:
+        async def resolve(self, url, is_final=None):
+            raise RuntimeError("resolver exploded")
+
+    real = env.runner._resolver
+    env.runner._resolver = RaisingResolver()
+    env.client.listing = [_thread(1, 90)]
+    await env.run()
+    assert (await env.thread(1)).state == ThreadState.WATCHING
+    env.runner._resolver = real
+    env.clock.now += timedelta(minutes=5)
+    await env.run()
+    assert (await env.thread(1)).state == ThreadState.PUBLISHED
+
+
+async def test_hot_thread_failing_resolution_goes_cold(env):
+    env.client.visit_errors[_thread(1).visit_url] = httpx.ConnectError("down")
+    env.client.listing = [_thread(1, 90)]
+    await env.run()
+    env.client.listing = []
+    env.clock.now = NOW + timedelta(hours=24)
+    await env.run()
+    tracked = await env.thread(1)
+    assert tracked.state == ThreadState.SKIPPED
+    assert tracked.skip_reason == "cold"
+    assert len(env.client.visit_calls) == 1
+
+
+async def test_publish_error_of_one_thread_does_not_abort_run(env):
+    env.pipeline.fail_ids = {1}
+    env.client.listing = [_thread(1, 80), _thread(2, 70)]
+    await env.run()
+    assert (await env.thread(1)).state == ThreadState.QUALIFIED
+    assert (await env.thread(2)).state == ThreadState.PUBLISHED
+    env.pipeline.fail_ids = set()
+    env.clock.now += timedelta(minutes=5)
+    await env.run()
+    assert (await env.thread(1)).state == ThreadState.PUBLISHED
+
+
+async def test_publish_error_does_not_hide_block(env):
+    env.source = dataclasses.replace(env.source, config={"max_per_hour": 0})
+    env.client.listing = [_thread(1, 90)]
+    await env.run()
+    env.source = dataclasses.replace(env.source, config={})
+    env.pipeline.fail_ids = {1}
+    env.client.blocked = {"new"}
+    with pytest.raises(ChollometroBlocked):
+        await env.run()
+    assert (await env.thread(1)).state == ThreadState.QUALIFIED
 
 
 async def test_image_never_from_chollometro(env):
@@ -619,3 +746,22 @@ def test_snapshot_round_trip():
     assert thread_from_snapshot(snapshot) == thread
     no_price = dataclasses.replace(thread, price=None)
     assert thread_from_snapshot(thread_to_snapshot(no_price)).price is None
+
+
+def test_snapshot_tolerates_unknown_and_missing_keys():
+    snapshot = {
+        "thread_id": 7,
+        "title": "Cosa",
+        "url": "https://www.chollometro.com/ofertas/cosa-7",
+        "published_at": "2026-11-09T11:00:00+00:00",
+        "price": "9.99",
+        "added_later": {"x": 1},
+    }
+    thread = thread_from_snapshot(snapshot)
+    assert thread.price == Decimal("9.99")
+    assert thread.visit_url is None
+    assert thread.merchant is None
+    assert thread.previous_price is None
+    assert thread.temperature == 0.0
+    assert thread.expired is False
+    assert thread.categories == []
