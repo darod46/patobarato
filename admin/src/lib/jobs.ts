@@ -52,22 +52,28 @@ export function useJob(jobId: number | null): JobState {
     let timer: ReturnType<typeof setTimeout> | undefined
 
     async function poll() {
-      const { data } = await client.from('admin_jobs').select('status, error, result, created_at').eq('id', id).single()
-      if (cancelled) return
-      if (data) {
-        const status = data.status as JobStatusValue
-        const createdAt = data.created_at ? new Date(data.created_at as string).getTime() : Date.now()
-        setTracked({
-          jobId: id,
-          state: {
-            status,
-            error: (data.error as string | null) ?? null,
-            result: data.result ?? null,
-            stuck: status === 'pending' && Date.now() - createdAt >= STUCK_MS,
-          },
-        })
-        if (status === 'done' || status === 'error') return
+      let finished = false
+      try {
+        const { data } = await client.from('admin_jobs').select('status, error, result, created_at').eq('id', id).single()
+        if (cancelled) return
+        if (data) {
+          const status = data.status as JobStatusValue
+          const createdAt = data.created_at ? new Date(data.created_at as string).getTime() : Date.now()
+          setTracked({
+            jobId: id,
+            state: {
+              status,
+              error: (data.error as string | null) ?? null,
+              result: data.result ?? null,
+              stuck: status === 'pending' && Date.now() - createdAt >= STUCK_MS,
+            },
+          })
+          finished = status === 'done' || status === 'error'
+        }
+      } catch {
+        // Transient network error: keep polling.
       }
+      if (cancelled || finished) return
       timer = setTimeout(poll, POLL_MS)
     }
 

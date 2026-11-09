@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const state = vi.hoisted(() => ({ row: null as Record<string, unknown> | null, calls: 0, inserted: null as unknown }))
+const state = vi.hoisted(() => ({ row: null as Record<string, unknown> | null, calls: 0, inserted: null as unknown, failNext: 0 }))
 
 vi.mock('./supabase/browser', () => ({
   createBrowserSupabase: () => ({
@@ -10,6 +10,10 @@ vi.mock('./supabase/browser', () => ({
         eq: () => ({
           single: async () => {
             state.calls += 1
+            if (state.failNext > 0) {
+              state.failNext -= 1
+              throw new Error('network')
+            }
             return { data: state.row, error: null }
           },
         }),
@@ -23,6 +27,7 @@ import { enqueueJob, useJob } from './jobs'
 beforeEach(() => {
   vi.useFakeTimers()
   state.calls = 0
+  state.failNext = 0
 })
 afterEach(() => vi.useRealTimers())
 
@@ -99,6 +104,21 @@ describe('useJob', () => {
       await vi.advanceTimersByTimeAsync(32000)
     })
     expect(result.current.stuck).toBe(true)
+  })
+
+  it('keeps polling after a network error', async () => {
+    state.row = { status: 'done', error: null, result: { ok: 1 }, created_at: new Date().toISOString() }
+    state.failNext = 1
+    const { result } = renderHook(() => useJob(1))
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    expect(result.current.status).toBeNull()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2000)
+    })
+    expect(state.calls).toBe(2)
+    expect(result.current.status).toBe('done')
   })
 
   it('stops polling on unmount', async () => {
