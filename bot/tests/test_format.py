@@ -1,4 +1,6 @@
+import json
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -7,6 +9,7 @@ from patobarato.parsing.text import parse_title
 from patobarato.publishing.format import (
     discount_percent,
     format_caption,
+    format_ended_caption,
     format_price,
 )
 
@@ -192,3 +195,29 @@ def test_price_before_coupon_label_keeps_the_coupon():
 
 def test_plain_price_label_by_default():
     assert "✅ Precio: <b>249,99 €</b>" in cap(make_offer())
+
+
+# --- shared golden cases (also pinned by the admin's TypeScript port) --------------
+
+CASES_PATH = Path(__file__).resolve().parents[2] / "shared" / "post-format-cases.json"
+CASES = json.loads(CASES_PATH.read_text(encoding="utf-8"))
+
+
+@pytest.mark.parametrize("case", CASES, ids=[c["name"] for c in CASES])
+def test_shared_cases(case):
+    i = case["input"]
+    offer = ParsedOffer(
+        asin="X",
+        country="ES",
+        store="amazon",
+        title=i["title"],
+        price=Decimal(i["price"]),
+        previous_price=Decimal(i["previous_price"]) if i["previous_price"] else None,
+        coupon=i["coupon"],
+        hashtags=i["hashtags"],
+        canonical_url="https://example.com",
+        product_url="https://example.com",
+        price_before_coupon=i["price_before_coupon"],
+    )
+    fmt = format_ended_caption if i["ended"] else format_caption
+    assert fmt(offer, i["link"], i["store_name"]) == case["expected"]

@@ -1,0 +1,148 @@
+[
+  {
+    "name": "full amazon offer",
+    "input": {
+      "title": "Sony WH-1000XM5",
+      "price": "149.00",
+      "previous_price": "199.00",
+      "coupon": "SONY10",
+      "hashtags": [
+        "auriculares",
+        "sony"
+      ],
+      "link": "https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21",
+      "store_name": "Amazon",
+      "price_before_coupon": false,
+      "ended": false
+    },
+    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio: <b>149,00 €</b>\n❌ Antes: <s>199,00 €</s> (-25%)\n🎟️ Cupón: <code>SONY10</code>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\n\n#auriculares #sony"
+  },
+  {
+    "name": "no previous price",
+    "input": {
+      "title": "Sony WH-1000XM5",
+      "price": "149.00",
+      "previous_price": null,
+      "coupon": null,
+      "hashtags": [],
+      "link": "https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21",
+      "store_name": "Amazon",
+      "price_before_coupon": false,
+      "ended": false
+    },
+    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio: <b>149,00 €</b>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21"
+  },
+  {
+    "name": "coupon present",
+    "input": {
+      "title": "Sony WH-1000XM5",
+      "price": "149.00",
+      "previous_price": null,
+      "coupon": "SONY10",
+      "hashtags": [],
+      "link": "https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21",
+      "store_name": "Amazon",
+      "price_before_coupon": false,
+      "ended": false
+    },
+    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio: <b>149,00 €</b>\n🎟️ Cupón: <code>SONY10</code>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21"
+  },
+  {
+    "name": "price before coupon",
+    "input": {
+      "title": "Sony WH-1000XM5",
+      "price": "149.00",
+      "previous_price": null,
+      "coupon": "AEES03",
+      "hashtags": [],
+      "link": "https://s.click.aliexpress.com/e/_abc",
+      "store_name": "AliExpress",
+      "price_before_coupon": true,
+      "ended": false
+    },
+    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio sin cupón: <b>149,00 €</b>\n🎟️ Cupón: <code>AEES03</code>\n🛒 Ver en AliExpress: https://s.click.aliexpress.com/e/_abc"
+  },
+  {
+    "name": "hashtags normalised",
+    "input": {
+      "title": "Sony WH-1000XM5",
+      "price": "149.00",
+      "previous_price": null,
+      "coupon": null,
+      "hashtags": [
+        "Black Friday",
+        "#Café",
+        "***"
+      ],
+      "link": "https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21",
+      "store_name": "Amazon",
+      "price_before_coupon": false,
+      "ended": false
+    },
+    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio: <b>149,00 €</b>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\n\n#blackfriday #café"
+  },
+  {
+    "name": "title with html chars",
+    "input": {
+      "title": "Cable <USB> & más",
+      "price": "149.00",
+      "previous_price": null,
+      "coupon": null,
+      "hashtags": [],
+      "link": "https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21",
+      "store_name": "Amazon",
+      "price_before_coupon": false,
+      "ended": false
+    },
+    "expected": "<b>Cable &lt;USB&gt; &amp; más</b>\n✅ Precio: <b>149,00 €</b>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21"
+  },
+  {
+    "name": "long title trimmed",
+    "input": {
+      "title": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "price": "149.00",
+      "previous_price": "199.00",
+      "coupon": null,
+      "hashtags": [
+        "x"
+      ],
+      "link": "https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21",
+      "store_name": "Amazon",
+      "price_before_coupon": false,
+      "ended": false
+    },
+    "expected": "<b>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa…</b>\n✅ Precio: <b>149,00 €</b>\n❌ Antes: <s>199,00 €</s> (-25%)\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\n\n#x"
+  },
+  {
+    "name": "ended full",
+    "input": {
+      "title": "Sony WH-1000XM5",
+      "price": "149.00",
+      "previous_price": "199.00",
+      "coupon": "SONY10",
+      "hashtags": [
+        "sony"
+      ],
+      "link": "https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21",
+      "store_name": "Amazon",
+      "price_before_coupon": false,
+      "ended": true
+    },
+    "expected": "❌ <b>OFERTA TERMINADA</b>\n<b>Sony WH-1000XM5</b>\n✅ Precio: <s>149,00 €</s>\n❌ Antes: <s>199,00 €</s> (-25%)\n🎟️ Cupón: <code>SONY10</code>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\n\n#sony"
+  },
+  {
+    "name": "ended minimal",
+    "input": {
+      "title": "Sony WH-1000XM5",
+      "price": "149.00",
+      "previous_price": null,
+      "coupon": null,
+      "hashtags": [],
+      "link": "https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21",
+      "store_name": "Amazon",
+      "price_before_coupon": false,
+      "ended": true
+    },
+    "expected": "❌ <b>OFERTA TERMINADA</b>\n<b>Sony WH-1000XM5</b>\n✅ Precio: <s>149,00 €</s>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21"
+  }
+]
