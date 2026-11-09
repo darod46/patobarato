@@ -15,7 +15,7 @@ import {
 } from '../../lib/offers'
 import { storeName } from '../../lib/stores'
 import { createBrowserSupabase } from '../../lib/supabase/browser'
-import { telegramCaption, type PostInput } from '../../lib/telegram-format'
+import { cleanHashtags, telegramCaption, type PostInput } from '../../lib/telegram-format'
 import { whatsappOffer } from '../../lib/whatsapp'
 
 const BTN = 'min-h-11 rounded-md border border-neutral-300 px-4 text-sm font-medium hover:bg-neutral-100 disabled:opacity-50'
@@ -30,10 +30,8 @@ const madridDate = new Intl.DateTimeFormat('es-ES', {
 })
 
 function parseHashtags(text: string): string[] {
-  return text
-    .split(/[\s,]+/)
-    .map((t) => t.replace(/^#+/, ''))
-    .filter(Boolean)
+  const tags = cleanHashtags(text.split(/[\s,]+/).map((t) => t.replace(/^#+/, '')))
+  return [...new Set(tags)]
 }
 
 function stateLine(d: OfferDetail): string {

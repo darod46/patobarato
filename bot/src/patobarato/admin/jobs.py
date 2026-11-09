@@ -41,9 +41,13 @@ class JobRunner:
         self._sleep = sleep
 
     async def run(self) -> None:
-        interrupted = await self._repo.fail_running_jobs(INTERRUPTED_ERROR)
-        if interrupted:
-            logger.warning("Marked %d interrupted admin job(s) as failed", interrupted)
+        try:
+            interrupted = await self._repo.fail_running_jobs(INTERRUPTED_ERROR)
+        except Exception:
+            logger.exception("Could not fail leftover admin jobs; continuing")
+        else:
+            if interrupted:
+                logger.warning("Marked %d interrupted admin job(s) as failed", interrupted)
         while True:
             try:
                 await self.run_once()

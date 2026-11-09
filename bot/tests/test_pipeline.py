@@ -1025,14 +1025,15 @@ async def test_create_draft_stores_draft_without_publishing(make_pipeline, repo,
 
 
 async def test_create_draft_ignores_duplicate_rule(make_pipeline, repo, publisher):
-    pipeline = make_pipeline()
-    assert await pipeline.process(_msg()) == [OfferStatus.PUBLISHED]
-    store = PricedStore(PriceQuote(Decimal("249.99"), None))
+    store = PricedStore(PriceQuote(Decimal("8.50"), None))
     pipeline = make_pipeline(registry=StoreRegistry([store]))
-    # Same product as the published one would be skipped by decide(); a draft is not.
-    publication_id = await pipeline.create_draft(FAKE_URL, 1)
+    # Publish the SAME product (same store, same URL) first.
+    assert await pipeline.process(_priceless_msg()) == [OfferStatus.PUBLISHED]
+    # A repeat of that product would be skipped by decide(); a draft is not.
+    publication_id = await pipeline.create_draft(FAKE_URL, 99)
     drafts = [p for p in repo.publications() if p["id"] == publication_id]
     assert drafts[0]["status"] == PublicationStatus.DRAFT
+    assert len(repo.publications()) == 2
 
 
 async def test_create_draft_same_product_twice_creates_two_drafts(make_pipeline, repo):

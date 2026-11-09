@@ -77,7 +77,8 @@ begin
 end $$;
 
 create policy admin_jobs_admin_insert on admin_jobs for insert to authenticated
-    with check (is_admin() and (type not in ('invite_user', 'revoke_user') or is_owner()));
+    with check (is_admin() and (type not in ('invite_user', 'revoke_user') or is_owner())
+        and created_by = auth.uid() and status = 'pending' and result is null and error is null);
 
 -- web_deals and web_guide_items: same columns as before; drafts never count in the "previous price" laterals.
 create or replace view web_deals as

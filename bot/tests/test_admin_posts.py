@@ -5,6 +5,7 @@ import pytest
 from telethon.errors import PhotoInvalidDimensionsError
 
 from patobarato.admin.posts import PostError, PostService
+from patobarato.publishing.telegram_publisher import ChannelMismatchError
 from patobarato.models import PublicationStatus
 from patobarato.storage.repository import InMemoryRepository
 from patobarato.stores.registry import StoreRegistry
@@ -104,6 +105,20 @@ async def test_sync_post_edits_with_active_caption():
     assert (chat_id, message_id) == (-1001, 5)
     assert "OFERTA TERMINADA" not in caption
     assert "Amazon" in caption
+
+
+async def test_sync_post_maps_channel_mismatch_to_post_error():
+    publisher = FakePublisher()
+
+    async def mismatch(chat_id, message_id, caption):
+        raise ChannelMismatchError("other channel")
+
+    publisher.edit = mismatch
+    service, _, _, pid = await make_service(
+        status=PublicationStatus.ACTIVE, chat_id=-1001, message_id=5, publisher=publisher
+    )
+    with pytest.raises(PostError, match="No se encuentra el canal del post"):
+        await service.sync_post(pid)
 
 
 async def test_sync_post_ended_uses_ended_caption():

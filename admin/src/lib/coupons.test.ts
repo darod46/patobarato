@@ -93,7 +93,9 @@ describe('saveCoupon', () => {
   it('inserts without id and returns the new id', async () => {
     const { client, calls } = mockClient(() => ({ data: { id: 42 } }))
     expect(await saveCoupon(client, input)).toBe(42)
-    const row = ops(calls[0], 'upsert')[0][0] as Record<string, unknown>
+    expect(ops(calls[0], 'upsert')).toHaveLength(0)
+    expect(ops(calls[0], 'update')).toHaveLength(0)
+    const row = ops(calls[0], 'insert')[0][0] as Record<string, unknown>
     expect(row).not.toHaveProperty('id')
     expect(row).toMatchObject({
       store: 'amazon',
@@ -105,11 +107,14 @@ describe('saveCoupon', () => {
       expires_at: null,
     })
   })
-  it('upserts with id', async () => {
+  it('updates by id', async () => {
     const { client, calls } = mockClient(() => ({ data: { id: 5 } }))
     expect(await saveCoupon(client, { ...input, id: 5, startsAt: null })).toBe(5)
-    const row = ops(calls[0], 'upsert')[0][0] as Record<string, unknown>
-    expect(row.id).toBe(5)
+    expect(ops(calls[0], 'upsert')).toHaveLength(0)
+    expect(ops(calls[0], 'insert')).toHaveLength(0)
+    expect(ops(calls[0], 'eq')).toEqual([['id', 5]])
+    const row = ops(calls[0], 'update')[0][0] as Record<string, unknown>
+    expect(row).not.toHaveProperty('id')
     expect(row).not.toHaveProperty('starts_at')
   })
   it('throws on error', async () => {

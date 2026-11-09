@@ -8,7 +8,7 @@ from typing import Protocol
 from patobarato.core.pipeline import ImageDownloader
 from patobarato.models import ParsedOffer, PostData, PublicationStatus
 from patobarato.publishing.format import format_caption, format_ended_caption
-from patobarato.publishing.telegram_publisher import can_retry_without_photo
+from patobarato.publishing.telegram_publisher import ChannelMismatchError, can_retry_without_photo
 from patobarato.storage.repository import Repository
 from patobarato.stores.registry import StoreRegistry
 
@@ -96,7 +96,12 @@ class PostService:
             raise PostError("Es un borrador: publícalo primero")
         if post.chat_id is None or post.message_id is None:
             return {"edited": False}
-        await self._publisher.edit(post.chat_id, post.message_id, caption_for(post, self._registry))
+        try:
+            await self._publisher.edit(
+                post.chat_id, post.message_id, caption_for(post, self._registry)
+            )
+        except ChannelMismatchError:
+            raise PostError("No se encuentra el canal del post") from None
         return {"edited": True}
 
     async def _download(self, url: str) -> bytes | None:

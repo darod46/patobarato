@@ -177,6 +177,22 @@ async def test_run_fails_leftover_running_jobs_on_start():
     assert job["error"] == "Trabajo interrumpido; reinténtalo"
 
 
+async def test_run_survives_fail_running_jobs_error():
+    runner, repo, *_ = make()
+
+    async def boom(_):
+        raise RuntimeError("db down")
+
+    repo.fail_running_jobs = boom
+
+    async def stop(_):
+        raise KeyboardInterrupt
+
+    runner._sleep = stop
+    with pytest.raises(KeyboardInterrupt):  # reached the loop instead of failing at startup
+        await runner.run()
+
+
 async def test_finish_job_failure_does_not_abandon_batch():
     runner, repo, posts, *_ = make()
     repo.add_job("publish_draft", {"publication_id": 1})

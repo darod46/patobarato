@@ -24,7 +24,7 @@ jobs:
     env:
       NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy-anon-key
-      NEXT_PUBLIC_WEB_URL: https://patobarato.es
+      NEXT_PUBLIC_WEB_URL: https://www.patobarato.com
       NEXT_TELEMETRY_DISABLED: 1
     steps:
       - uses: actions/checkout@v4

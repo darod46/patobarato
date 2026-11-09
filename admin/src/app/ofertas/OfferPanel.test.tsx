@@ -81,6 +81,21 @@ describe('OfferPanel', () => {
     expect(await screen.findByText('job 77')).toBeInTheDocument()
   })
 
+  it('saves normalized, deduplicated hashtags', async () => {
+    setup()
+    const input = await screen.findByLabelText('Hashtags')
+    await userEvent.clear(input)
+    await userEvent.type(input, '#Tech, tech  #Ratón-Gamer ## #Ñandú')
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar y actualizar Telegram' }))
+    await waitFor(() =>
+      expect(m.saveOffer).toHaveBeenCalledWith(
+        expect.anything(),
+        5,
+        expect.objectContaining({ hashtags: ['tech', 'ratóngamer', 'ñandú'] }),
+      ),
+    )
+  })
+
   it('web-only posts only offer Guardar and enqueue revalidate', async () => {
     vi.resetAllMocks()
     m.saveOffer.mockResolvedValue(undefined)

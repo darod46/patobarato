@@ -12,7 +12,7 @@ from telethon.errors import (
 )
 from telethon.tl.types import PeerChannel
 
-from patobarato.publishing.telegram_publisher import TelegramPublisher
+from patobarato.publishing.telegram_publisher import ChannelMismatchError, TelegramPublisher
 
 URL = "https://www.amazon.es/dp/B0ABC12345?tag=patobarato-21"
 
@@ -44,6 +44,11 @@ class FakeClient:
 
     async def edit_message(self, *args, **kwargs):
         return await self._respond("edit_message", args, kwargs)
+
+    async def get_entity(self, target):
+        return PeerChannel(self.target_channel_id)
+
+    target_channel_id = 123
 
 
 @pytest.fixture
@@ -160,16 +165,27 @@ async def test_edit_calls_edit_message_with_html_and_no_preview(sleep):
 
 
 async def test_edit_falls_back_to_target_when_chat_id_unresolvable(sleep):
-    client = FakeClient([ValueError("Could not find the input entity for -100123")])
+    chat_id = utils.get_peer_id(PeerChannel(123))
+    client = FakeClient([ValueError("Could not find the input entity for chat_id")])
     publisher = TelegramPublisher(client, "@patobarato")
 
-    await publisher.edit(-100123, 77, "cap")
+    await publisher.edit(chat_id, 77, "cap")
 
     assert [(k, a[0]) for k, a, _ in client.calls] == [
-        ("edit_message", -100123),
+        ("edit_message", chat_id),
         ("edit_message", "@patobarato"),
     ]
     assert client.calls[1][1][1:] == (77, "cap")
+
+
+async def test_edit_refuses_fallback_when_target_is_another_channel(sleep):
+    client = FakeClient([ValueError("Could not find the input entity for -100999")])
+    publisher = TelegramPublisher(client, "@patobarato")
+
+    with pytest.raises(ChannelMismatchError):
+        await publisher.edit(-100999, 77, "cap")
+
+    assert [(k, a[0]) for k, a, _ in client.calls] == [("edit_message", -100999)]
 
 
 async def test_edit_ignores_message_not_modified(sleep):

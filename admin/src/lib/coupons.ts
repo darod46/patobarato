@@ -118,8 +118,11 @@ export async function saveCoupon(client: SupabaseClient, coupon: CouponInput & {
     event_id: coupon.eventId,
   }
   if (coupon.startsAt) row.starts_at = coupon.startsAt
-  if (coupon.id !== undefined) row.id = coupon.id
-  const { data, error } = await client.from('coupons').upsert(row).select('id').single()
+  // `id` is `generated always`, so an upsert that names it would be rejected: update or insert explicitly.
+  const { data, error } =
+    coupon.id !== undefined
+      ? await client.from('coupons').update(row).eq('id', coupon.id).select('id').single()
+      : await client.from('coupons').insert(row).select('id').single()
   fail(error)
   if (!data) throw new Error('No se pudo guardar el cupón')
   return (data as Row).id as number

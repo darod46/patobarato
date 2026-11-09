@@ -101,8 +101,11 @@ export async function saveEvent(client: SupabaseClient, e: EventInput & { id?: n
     status: e.status,
     updated_at: new Date().toISOString(),
   }
-  if (e.id !== undefined) row.id = e.id
-  const { data, error } = await client.from('events').upsert(row).select('id').single()
+  // `id` is `generated always`, so an upsert that names it would be rejected: update or insert explicitly.
+  const { data, error } =
+    e.id !== undefined
+      ? await client.from('events').update(row).eq('id', e.id).select('id').single()
+      : await client.from('events').insert(row).select('id').single()
   fail(error)
   if (!data) throw new Error('No se pudo guardar el evento')
   return (data as Row).id as number

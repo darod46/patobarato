@@ -37,6 +37,10 @@ def can_retry_without_photo(exc: BaseException) -> bool:
     return not isinstance(exc, FloodWaitError) and not _is_transient(exc)
 
 
+class ChannelMismatchError(Exception):
+    """The post's channel cannot be resolved and is not the current target channel."""
+
+
 class TelegramPublisher:
     def __init__(
         self,
@@ -74,7 +78,13 @@ class TelegramPublisher:
                 try:
                     await edit_in(chat_id)
                 except ValueError:
-                    # A restarted session may not have the channel cached: use the target.
+                    # A restarted session may not have the channel cached: use the target,
+                    # but only if it is the channel the post lives in.
+                    target = await self._client.get_entity(self._target)
+                    if utils.get_peer_id(target) != chat_id:
+                        raise ChannelMismatchError(
+                            f"Chat {chat_id} is not the target channel {self._target}"
+                        ) from None
                     logger.info("Chat %s not resolvable, editing via target", chat_id)
                     await edit_in(self._target)
             except MessageNotModifiedError:

@@ -28,7 +28,7 @@ npm run lint && npm run typecheck && npm test && npm run build
    ```
 
 5. Create the Vercel project with Root Directory `admin` and the three variables
-   `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `NEXT_PUBLIC_WEB_URL`.
+   `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `NEXT_PUBLIC_WEB_URL`. `NEXT_PUBLIC_WEB_URL` must be the canonical `https://www.patobarato.com` (the image proxy does not follow redirects).
 
 ## Prueba de extremo a extremo
 
