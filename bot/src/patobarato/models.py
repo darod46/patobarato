@@ -1,5 +1,5 @@
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -221,3 +221,31 @@ class ChollometroThread:
     coupon: str | None
     categories: list[str]
     published_at: datetime  # aware, UTC
+
+
+class ThreadState(StrEnum):
+    WATCHING = "watching"  # not eligible yet, re-evaluated during warm_hours
+    QUALIFIED = "qualified"  # eligible, waiting for a free slot (qualified_at set)
+    PUBLISHED = "published"  # published; its end is watched
+    ENDED = "ended"  # publication marked as ended
+    SKIPPED = "skipped"  # dropped for good (unknown store, stale, mismatch, duplicate, no affiliate)
+
+
+@dataclass(frozen=True)
+class TrackedThread:
+    """Chollometro thread followed across runs (``chollometro_threads``)."""
+
+    source_id: int
+    thread_id: int
+    url: str
+    state: ThreadState
+    temperature: float
+    discount: int | None
+    first_seen_at: datetime
+    published_at: datetime  # on Chollometro
+    qualified_at: datetime | None
+    store_url: str | None  # result of /visit/ (resolved once)
+    publication_id: int | None
+    last_checked_at: datetime | None
+    skip_reason: str | None = None
+    snapshot: dict = field(default_factory=dict)  # latest deal data, JSON-safe

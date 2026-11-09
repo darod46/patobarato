@@ -10,6 +10,8 @@ from patobarato.models import (
     OfferStatus,
     ParsedOffer,
     PublicationStatus,
+    ThreadState,
+    TrackedThread,
 )
 from patobarato.storage.repository import InMemoryRepository
 
@@ -151,6 +153,96 @@ async def test_insert_publication_defaults_to_telegram_channel():
     repo = InMemoryRepository()
     await repo.insert_publication(1, 1, "ES", -1, 5, Decimal("1"), "https://x", NOW)
     assert repo.publications()[0]["channel"] == "telegram"
+
+
+def make_thread(
+    thread_id: int = 1, source_id: int = 1, state: ThreadState = ThreadState.WATCHING, **over
+) -> TrackedThread:
+    fields = dict(
+        source_id=source_id,
+        thread_id=thread_id,
+        url=f"https://www.chollometro.com/ofertas/x-{thread_id}",
+        state=state,
+        temperature=10.0,
+        discount=None,
+        first_seen_at=NOW,
+        published_at=NOW,
+        qualified_at=None,
+        store_url=None,
+        publication_id=None,
+        last_checked_at=None,
+    )
+    fields.update(over)
+    return TrackedThread(**fields)
+
+
+async def test_tracked_thread_save_read_and_upsert_does_not_duplicate():
+    repo = InMemoryRepository()
+    await repo.save_tracked_thread(make_thread(5))
+    first = (await repo.get_tracked_threads(1, [5, 6]))[5]
+    assert first.state is ThreadState.WATCHING and first.snapshot == {}
+    await repo.save_tracked_thread(
+        dataclasses.replace(
+            first,
+            state=ThreadState.QUALIFIED,
+            temperature=99.0,
+            qualified_at=NOW,
+            snapshot={"title": "Pato", "price": "9.99"},
+        )
+    )
+    got = await repo.get_tracked_threads(1, [5, 6])
+    assert list(got) == [5]  # unknown id absent
+    assert got[5].state is ThreadState.QUALIFIED and got[5].temperature == 99.0
+    assert got[5].snapshot == {"title": "Pato", "price": "9.99"}
+    assert len(await repo.list_tracked_threads(1, list(ThreadState))) == 1
+
+
+async def test_list_tracked_threads_filters_by_state_and_source():
+    repo = InMemoryRepository()
+    await repo.save_tracked_thread(make_thread(1, state=ThreadState.WATCHING))
+    await repo.save_tracked_thread(make_thread(2, state=ThreadState.QUALIFIED))
+    await repo.save_tracked_thread(make_thread(3, state=ThreadState.ENDED))
+    await repo.save_tracked_thread(make_thread(1, source_id=2, state=ThreadState.WATCHING))
+    got = await repo.list_tracked_threads(1, [ThreadState.WATCHING, ThreadState.QUALIFIED])
+    assert sorted(t.thread_id for t in got) == [1, 2]
+    assert all(t.source_id == 1 for t in got)
+    assert await repo.list_tracked_threads(1, []) == []
+
+
+async def _publish(
+    repo: InMemoryRepository, source_id: int, asin: str, at: datetime, **kwargs
+) -> int:
+    product_id = await repo.upsert_product(make_offer(asin))
+    offer_id = await repo.insert_offer(product_id, source_id, 1, make_offer(asin), "raw", at)
+    assert offer_id is not None
+    return await repo.insert_publication(
+        offer_id, product_id, "ES", None, None, Decimal("9.99"), "https://x", at, **kwargs
+    )
+
+
+async def test_count_publications_since_filters_source_channel_date_and_drafts():
+    repo = InMemoryRepository()
+    since = NOW - timedelta(hours=1)
+    await _publish(repo, 1, "A1", NOW)  # counts
+    await _publish(repo, 1, "A2", NOW - timedelta(hours=2))  # too old
+    await _publish(repo, 2, "A3", NOW)  # other source
+    await _publish(repo, 1, "A4", NOW, channel="web")  # other channel
+    await _publish(repo, 1, "A5", NOW, status=PublicationStatus.DRAFT)  # draft
+    await _publish(repo, 1, "A6", since)  # boundary is inclusive
+    assert await repo.count_publications_since(1, since) == 2
+    assert await repo.count_publications_since(1, since, channel="web") == 1
+    assert await repo.count_publications_since(2, since) == 1
+
+
+async def test_set_publication_status_marks_ended():
+    repo = InMemoryRepository()
+    product_id = await repo.upsert_product(make_offer())
+    publication_id = await repo.insert_publication(
+        1, product_id, "ES", -1, 5, Decimal("9.99"), "https://x", NOW
+    )
+    await repo.set_publication_status(publication_id, PublicationStatus.ENDED)
+    last = await repo.get_last_publication(product_id, "ES")
+    assert last is not None and last.status is PublicationStatus.ENDED
 
 
 def make_coupon(external_id: str = "a", title: str = "Cupón", source_id: int = 1) -> CouponUpsert:
