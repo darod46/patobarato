@@ -11,6 +11,15 @@ export function formatPrice(n: number): string {
   return `${String(whole).replace(/\B(?=(\d{3})+(?!\d))/g, '.')},${frac}`
 }
 
+/** Parses a price typed in Spanish ("149,99", "1.299,90", "20"); null when empty or not a number. */
+export function parseMoney(text: string): number | null {
+  const t = text.replace(/[€\s]/g, '')
+  if (!t) return null
+  const normalized = t.includes(',') ? t.replace(/\./g, '').replace(',', '.') : t
+  if (!/^\d+(\.\d+)?$/.test(normalized)) return null
+  return Number(normalized)
+}
+
 /** Percent off `previous`, rounded half up (same as the bot's `discount_percent`). */
 export function discountPercent(price: number, previous: number): number {
   return roundHalfUp(((previous - price) / previous) * 100)
