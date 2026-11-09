@@ -203,3 +203,21 @@ class CatalogRow:
     affiliate_url: str
     feed_updated_at: datetime | None
     updated_at: datetime | None = None
+
+
+@dataclass(frozen=True)
+class ChollometroThread:
+    thread_id: int
+    title: str
+    url: str  # thread page on chollometro.com
+    visit_url: str | None  # https://www.chollometro.com/visit/...
+    merchant: str | None  # name shown by Chollometro ("Amazon")
+    price: Decimal | None
+    previous_price: Decimal | None
+    discount: int | None  # % given by Chollometro, if any
+    temperature: float
+    expired: bool
+    sold_out: bool
+    coupon: str | None
+    categories: list[str]
+    published_at: datetime  # aware, UTC
