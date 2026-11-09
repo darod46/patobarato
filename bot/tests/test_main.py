@@ -192,8 +192,7 @@ async def test_run_supervises_bot_connection(fake_clients, monkeypatch):
 
     assert await run(_run_settings()) == 1
 
-    assert sorted(supervised) == ["admin_jobs", "bot", "pipeline", "reader", "refresh", "scheduler"]
-    assert fake_clients["reader"].disconnected
+    assert sorted(supervised) == ["admin_jobs", "bot", "scheduler"]
     assert fake_clients["bot"].disconnected
 
 
@@ -207,7 +206,6 @@ async def test_run_bot_login_failure_is_reported_in_spanish(fake_clients, capsys
     assert "No se pudo iniciar el bot" in err
     assert "TELEGRAM_BOT_TOKEN" in err
     assert "Traceback" not in err
-    assert fake_clients["reader"].disconnected
     assert fake_clients["bot"].disconnected
 
 

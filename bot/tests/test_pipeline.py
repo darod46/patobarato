@@ -14,9 +14,16 @@ from patobarato.core.pipeline import (
     MIN_PUBLISH_INTERVAL_SECONDS,
     PRICE_FETCH_TIMEOUT_SECONDS,
     DraftError,
+    OfferResult,
     Pipeline,
 )
-from patobarato.models import OfferStatus, PriceQuote, PublicationStatus, SourceMessage
+from patobarato.models import (
+    OfferStatus,
+    ParsedOffer,
+    PriceQuote,
+    PublicationStatus,
+    SourceMessage,
+)
 from patobarato.parsing.extract import extract_offers
 from patobarato.parsing.links import UrlResolver
 from patobarato.storage.repository import InMemoryRepository
@@ -63,10 +70,6 @@ class FakePublisher:
         if self.fail:
             raise RuntimeError("telegram down")
         return (-100123, len(self.calls))
-
-
-async def _no_photo(msg: SourceMessage, url: str) -> bytes | None:
-    return None
 
 
 def _settings() -> Settings:
@@ -133,10 +136,26 @@ def fake_time():
     return FakeTime()
 
 
+class _MsgPipeline(Pipeline):
+    """Pipeline plus a helper that feeds it a message the way a source would."""
+
+    async def process(self, msg: SourceMessage) -> list[OfferStatus]:
+        from patobarato.core import pipeline as pipeline_module
+
+        offers = await pipeline_module.extract_offers(msg, self._resolver, self._registry)
+        statuses: list[OfferStatus] = []
+        for offer in offers:
+            result = await self.process_offer(
+                msg.source_id, msg.message_id, offer, msg.text, msg.received_at
+            )
+            if result.offer_id is not None:
+                statuses.append(result.status)
+        return statuses
+
+
 @pytest.fixture
 def make_pipeline(repo, resolver, publisher, fake_time):
     def factory(
-        photo_provider=_no_photo,
         pub=None,
         repository=None,
         image_finder=None,
@@ -146,11 +165,10 @@ def make_pipeline(repo, resolver, publisher, fake_time):
     ) -> Pipeline:
         if registry is None:
             registry = StoreRegistry([FakeAmazon(image_finder)])
-        return Pipeline(
+        return _MsgPipeline(
             repository or repo,
             resolver,
             pub or publisher,
-            photo_provider,
             _settings(),
             clock=lambda: NOW,
             sleep=fake_time.sleep,
@@ -198,20 +216,11 @@ async def test_new_offer_published_with_affiliate_url(make_pipeline, repo, publi
     assert repo.offer_statuses() == [OfferStatus.PUBLISHED]
 
 
-async def test_same_offer_from_two_sources_publishes_once(
-    make_pipeline, repo, publisher
-):
+async def test_same_offer_from_two_sources_publishes_once(make_pipeline, repo, publisher):
     pipeline = make_pipeline()
-    worker = asyncio.create_task(pipeline.run())
-    try:
-        await pipeline.submit(_msg(source_id=1, message_id=10))
-        await pipeline.submit(_msg(source_id=2, message_id=20))
-        await _wait_for(
-            lambda: len(repo.offer_statuses()) == 2
-            and OfferStatus.PENDING not in repo.offer_statuses()
-        )
-    finally:
-        await _stop(worker)
+
+    await pipeline.process(_msg(source_id=1, message_id=10))
+    await pipeline.process(_msg(source_id=2, message_id=20))
 
     assert len(publisher.calls) == 1
     assert repo.offer_statuses() == [
@@ -266,59 +275,6 @@ async def test_publish_failure_marks_failed(make_pipeline, repo, caplog):
     assert len(failing.calls) == 1
     assert repo.publications() == []
     assert repo.offer_statuses() == [OfferStatus.PUBLISH_FAILED]
-    assert any(
-        r.name == "patobarato.pipeline" and r.exc_info for r in caplog.records
-    )
-
-
-async def test_photo_provider_error_publishes_without_photo(
-    make_pipeline, repo, publisher, caplog
-):
-    seen: list[tuple[SourceMessage, str]] = []
-
-    async def broken_photo(msg: SourceMessage, url: str) -> bytes | None:
-        seen.append((msg, url))
-        raise RuntimeError("no preview")
-
-    pipeline = make_pipeline(photo_provider=broken_photo)
-    msg = _msg()
-
-    statuses = await pipeline.process(msg)
-
-    assert statuses == [OfferStatus.PUBLISHED]
-    assert seen == [(msg, "https://www.amazon.es/dp/B09XS7JWHH")]
-    assert len(publisher.calls) == 1
-    assert publisher.calls[0][1] is None
-    assert any(
-        r.name == "patobarato.pipeline" and r.exc_info for r in caplog.records
-    )
-
-
-async def test_photo_is_passed_to_publisher(make_pipeline, publisher):
-    async def photo(msg: SourceMessage, url: str) -> bytes | None:
-        return b"jpeg"
-
-    pipeline = make_pipeline(photo_provider=photo)
-
-    await pipeline.process(_msg())
-
-    assert publisher.calls[0][1] == b"jpeg"
-
-
-async def test_listener_error_does_not_stop_worker(
-    make_pipeline, repo, publisher, caplog
-):
-    pipeline = make_pipeline()
-    worker = asyncio.create_task(pipeline.run())
-    try:
-        await pipeline.submit(_msg(message_id=1, url=BOOM_URL))
-        await pipeline.submit(_msg(message_id=2))
-        await _wait_for(lambda: len(publisher.calls) == 1)
-    finally:
-        await _stop(worker)
-
-    assert AFFILIATE_URL in publisher.calls[0][0]
-    assert repo.offer_statuses() == [OfferStatus.PUBLISHED]
     assert any(
         r.name == "patobarato.pipeline" and r.exc_info for r in caplog.records
     )
@@ -391,20 +347,17 @@ async def test_published_status_retried_once(make_pipeline):
     assert flaky.publication_attempts == 1
 
 
-async def test_published_status_failing_twice_does_not_stop_worker(
+async def test_published_status_failing_twice_does_not_stop_pipeline(
     make_pipeline, publisher, caplog
 ):
     flaky = FlakyRepository(status_failures=2)
     pipeline = make_pipeline(repository=flaky)
-    worker = asyncio.create_task(pipeline.run())
-    try:
-        with caplog.at_level(logging.ERROR, logger="patobarato.pipeline"):
-            await pipeline.submit(_msg(message_id=1, price="249,99€"))
-            await pipeline.submit(_msg(source_id=2, message_id=2, price="199,99€"))
-            await _wait_for(lambda: len(publisher.calls) == 2 and len(flaky.publications()) == 2)
-    finally:
-        await _stop(worker)
+    with caplog.at_level(logging.ERROR, logger="patobarato.pipeline"):
+        await pipeline.process(_msg(message_id=1, price="249,99€"))
+        await pipeline.process(_msg(source_id=2, message_id=2, price="199,99€"))
 
+    assert len(publisher.calls) == 2
+    assert len(flaky.publications()) == 2
     assert flaky.publication_attempts == 2  # not re-inserted by the status retry
     assert any("publicado pero no registrado" in r.getMessage() for r in caplog.records)
 
@@ -721,44 +674,6 @@ async def test_store_previous_price_not_above_price_is_dropped(make_pipeline, pu
     assert publisher.calls[0][0].count("8,50") == 1
 
 
-TWO_OFFERS = (
-    "Auriculares 249,99€ https://www.amazon.es/dp/B09XS7JWHH\n\n"
-    "Ratón 19,95€ https://www.amazon.es/dp/B0BDJH7LQ2"
-)
-
-
-def _attached_msg(text: str, urls: list[str]) -> SourceMessage:
-    async def attached() -> bytes | None:
-        return b"attached"
-
-    return SourceMessage(1, 1, text, urls, [], NOW, attached_photo=attached)
-
-
-class RecordingProvider:
-    def __init__(self, result: bytes | None = None) -> None:
-        self.result = result
-        self.seen: list[SourceMessage] = []
-
-    async def __call__(self, msg: SourceMessage, url: str) -> bytes | None:
-        self.seen.append(msg)
-        return self.result
-
-
-async def test_attached_photo_offered_only_for_single_offer_messages(make_pipeline):
-    provider = RecordingProvider()
-    url = "https://www.amazon.es/dp/B09XS7JWHH"
-    await make_pipeline(photo_provider=provider).process(_attached_msg(f"Cascos 9€ {url}", [url]))
-    two = _attached_msg(
-        TWO_OFFERS, ["https://www.amazon.es/dp/B09XS7JWHH", "https://www.amazon.es/dp/B0BDJH7LQ2"]
-    )
-    await make_pipeline(photo_provider=provider, repository=InMemoryRepository()).process(two)
-
-    single, *multi = provider.seen
-    assert single.attached_photo is not None
-    assert len(multi) == 2
-    assert all(m.attached_photo is None for m in multi)
-
-
 class FakeDownloader:
     def __init__(self, result: bytes | None = b"downloaded", fail: bool = False) -> None:
         self.result = result
@@ -772,13 +687,11 @@ class FakeDownloader:
         return self.result
 
 
-def _pipeline_with_downloader(make_pipeline, store, downloader, provider=_no_photo) -> Pipeline:
-    return make_pipeline(
-        registry=StoreRegistry([store]), photo_provider=provider, image_downloader=downloader
-    )
+def _pipeline_with_downloader(make_pipeline, store, downloader) -> Pipeline:
+    return make_pipeline(registry=StoreRegistry([store]), image_downloader=downloader)
 
 
-async def test_store_image_is_downloaded_when_telegram_has_no_photo(make_pipeline, repo, publisher):
+async def test_store_image_is_downloaded(make_pipeline, repo, publisher):
     store = FakeStore(image="https://img/found.jpg")
     downloader = FakeDownloader()
 
@@ -800,18 +713,6 @@ async def test_store_price_image_is_downloaded_without_lookup(make_pipeline, pub
     assert downloader.urls == ["https://img/q.jpg"]
     assert store.image_calls == []
     assert publisher.calls[0][1] == b"downloaded"
-
-
-async def test_telegram_photo_skips_download(make_pipeline, publisher):
-    store = FakeStore(image="https://img/found.jpg")
-    downloader = FakeDownloader()
-
-    await _pipeline_with_downloader(
-        make_pipeline, store, downloader, provider=RecordingProvider(b"tg")
-    ).process(_fake_msg())
-
-    assert downloader.urls == []
-    assert publisher.calls[0][1] == b"tg"
 
 
 @pytest.mark.parametrize("downloader", [FakeDownloader(None), FakeDownloader(fail=True)])
@@ -847,8 +748,10 @@ class PhotoRejectingPublisher(FakePublisher):
         return (-100123, len(self.calls))
 
 
-async def _photo(msg: SourceMessage, url: str) -> bytes | None:
-    return b"bad-photo"
+def _bad_photo_pipeline(make_pipeline, pub) -> Pipeline:
+    return make_pipeline(
+        pub=pub, image_finder=FakeImageFinder(), image_downloader=FakeDownloader(b"bad-photo")
+    )
 
 
 @pytest.mark.parametrize(
@@ -857,7 +760,7 @@ async def _photo(msg: SourceMessage, url: str) -> bytes | None:
 async def test_rejected_photo_is_retried_without_photo(make_pipeline, repo, error, caplog):
     pub = PhotoRejectingPublisher(error)
     with caplog.at_level(logging.WARNING, logger="patobarato.pipeline"):
-        statuses = await make_pipeline(photo_provider=_photo, pub=pub).process(_msg())
+        statuses = await _bad_photo_pipeline(make_pipeline, pub).process(_msg())
     assert statuses == [OfferStatus.PUBLISHED]
     assert [photo for _, photo in pub.calls] == [b"bad-photo", None]
     assert len(repo.publications()) == 1
@@ -869,7 +772,7 @@ async def test_rejected_photo_is_retried_without_photo(make_pipeline, repo, erro
 )
 async def test_transient_failure_with_photo_is_not_retried(make_pipeline, repo, error):
     pub = PhotoRejectingPublisher(error)
-    statuses = await make_pipeline(photo_provider=_photo, pub=pub).process(_msg())
+    statuses = await _bad_photo_pipeline(make_pipeline, pub).process(_msg())
     assert statuses == [OfferStatus.PUBLISH_FAILED]
     assert len(pub.calls) == 1
 
@@ -997,6 +900,67 @@ async def test_store_title_match_is_published(make_pipeline, publisher):
     )
     statuses = await make_pipeline(registry=StoreRegistry([store])).process(_symino_msg())
     assert statuses == [OfferStatus.PUBLISHED]
+
+
+def _offer(**overrides) -> ParsedOffer:
+    fields = dict(
+        asin="P1",
+        country="ES",
+        store="fake",
+        title="Cacharro",
+        price=Decimal("10.00"),
+        previous_price=None,
+        coupon=None,
+        hashtags=[],
+        canonical_url="https://fake.example/p/P1",
+        product_url="https://fake.example/p/P1",
+    )
+    fields.update(overrides)
+    return ParsedOffer(**fields)
+
+
+async def test_process_offer_returns_publication_id(make_pipeline, repo, publisher):
+    pipeline = make_pipeline(registry=StoreRegistry([FakeStore()]))
+
+    result = await pipeline.process_offer(5, 100, _offer(), "Cacharro a 10€", NOW)
+
+    assert result.status == OfferStatus.PUBLISHED
+    assert result.offer_id is not None
+    assert result.publication_id == repo.publications()[0]["id"]
+    assert len(publisher.calls) == 1
+
+
+async def test_process_offer_same_external_id_twice(make_pipeline, repo, publisher):
+    pipeline = make_pipeline(registry=StoreRegistry([FakeStore()]))
+
+    await pipeline.process_offer(5, 100, _offer(), "Cacharro a 10€", NOW)
+    second = await pipeline.process_offer(5, 100, _offer(), "Cacharro a 10€", NOW)
+
+    assert second == OfferResult(OfferStatus.SKIPPED_DUPLICATE, None, None)
+    assert len(repo.publications()) == 1
+    assert len(publisher.calls) == 1
+
+
+async def test_process_offer_unpublished_has_no_publication_id(make_pipeline, repo):
+    pipeline = make_pipeline(registry=StoreRegistry([FakeStore(affiliate=None)]))
+
+    result = await pipeline.process_offer(5, 100, _offer(), "Cacharro a 10€", NOW)
+
+    assert result.status == OfferStatus.SKIPPED_NO_AFFILIATE
+    assert result.offer_id is not None
+    assert result.publication_id is None
+
+
+async def test_photo_comes_from_store_image(make_pipeline, publisher):
+    store = FakeStore(image="https://img/found.jpg")
+    downloader = FakeDownloader(b"store-bytes")
+    pipeline = make_pipeline(registry=StoreRegistry([store]), image_downloader=downloader)
+
+    await pipeline.process_offer(5, 100, _offer(), "Cacharro a 10€", NOW)
+
+    assert store.image_calls == [("P1", "https://fake.example/p/P1")]
+    assert downloader.urls == ["https://img/found.jpg"]
+    assert publisher.calls[0][1] == b"store-bytes"
 
 
 FAKE_URL = "https://fake.example/p/P1"

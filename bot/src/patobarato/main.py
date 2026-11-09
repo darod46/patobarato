@@ -31,7 +31,6 @@ from patobarato.sources.awin_feeds import AwinFeedsSource
 from patobarato.sources.awin_source import AwinClient, AwinPromotionsSource
 from patobarato.sources.event_promos import EventPromosSource
 from patobarato.sources.guide_prices import GuidePriceRefresher
-from patobarato.sources.telegram_listener import TelegramListener, make_photo_provider
 from patobarato.storage.repository import Repository
 from patobarato.storage.supabase_repo import SupabaseRepository
 from patobarato.stores.aliexpress import AliExpressStore
@@ -139,13 +138,6 @@ def build_runners(
 
 
 async def run(settings: Settings) -> int:
-    reader = _client(settings.telegram_session_path, settings)
-    await reader.connect()
-    if not await reader.is_user_authorized():
-        await reader.disconnect()
-        print(LOGIN_FIRST_MESSAGE, file=sys.stderr)
-        return 1
-
     bot = _client(BOT_SESSION_PATH, settings)
     try:
         await bot.start(bot_token=settings.telegram_bot_token)
@@ -153,7 +145,6 @@ async def run(settings: Settings) -> int:
         logger.debug("Bot login failed", exc_info=True)
         print(f"{BOT_START_FAILED_MESSAGE}: {e}", file=sys.stderr)
         await bot.disconnect()
-        await reader.disconnect()
         return 1
 
     async with (
@@ -169,7 +160,6 @@ async def run(settings: Settings) -> int:
             repo,
             resolver,
             publisher,
-            make_photo_provider(reader, resolver),
             settings,
             registry=registry,
             image_downloader=lambda url: download_photo(http, url),
@@ -185,27 +175,14 @@ async def run(settings: Settings) -> int:
             WebRevalidator(http, settings.web_revalidate_url, settings.revalidate_secret),
             settings.admin_jobs_poll_seconds,
         )
-        listener = TelegramListener(
-            reader,
-            repo,
-            pipeline,
-            target=settings.target_channel,
-            refresh_seconds=settings.sources_refresh_seconds,
-            country=settings.default_country,
-        )
-        await listener.start()
         logger.info("PatoBarato en marcha; publicando en %s", settings.target_channel)
         try:
             return await _supervise(
-                pipeline=pipeline.run(),
                 scheduler=scheduler.run(),
-                refresh=listener.run_refresh_loop(),
                 admin_jobs=runner.run(),
-                reader=reader.run_until_disconnected(),
                 bot=bot.run_until_disconnected(),
             )
         finally:
-            await reader.disconnect()
             await bot.disconnect()
 
 

@@ -1,4 +1,3 @@
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
@@ -35,10 +34,6 @@ class SourceMessage:
     urls: list[str]
     hashtags: list[str]
     received_at: datetime
-    preview_photo: Callable[[], Awaitable[bytes | None]] | None = None
-    preview_url: str | None = None
-    # The photo attached to the message itself (channels that post a photo + caption).
-    attached_photo: Callable[[], Awaitable[bytes | None]] | None = None
 
 
 @dataclass(frozen=True)
