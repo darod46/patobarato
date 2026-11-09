@@ -6,6 +6,7 @@ from telethon import utils
 from telethon.errors import (
     ChatWriteForbiddenError,
     FloodWaitError,
+    MessageNotModifiedError,
     RPCError,
     ServerError,
 )
@@ -40,6 +41,9 @@ class FakeClient:
 
     async def send_message(self, *args, **kwargs):
         return await self._respond("send_message", args, kwargs)
+
+    async def edit_message(self, *args, **kwargs):
+        return await self._respond("edit_message", args, kwargs)
 
 
 @pytest.fixture
@@ -134,6 +138,53 @@ async def test_bad_request_errors_are_not_retried(sleep):
 
     with pytest.raises(RPCError):
         await publisher.publish("cap", None)
+
+    assert len(client.calls) == 1
+    sleep.assert_not_called()
+
+
+async def test_edit_calls_edit_message_with_html_and_no_preview(sleep):
+    client = FakeClient()
+    publisher = TelegramPublisher(client, "@patobarato")
+
+    result = await publisher.edit(-100123, 77, "new caption")
+
+    assert result is None
+    assert client.calls == [
+        (
+            "edit_message",
+            (-100123, 77, "new caption"),
+            {"parse_mode": "html", "link_preview": False},
+        )
+    ]
+
+
+async def test_edit_ignores_message_not_modified(sleep):
+    client = FakeClient([MessageNotModifiedError(None)])
+    publisher = TelegramPublisher(client, "@patobarato")
+
+    await publisher.edit(-100123, 77, "same")
+
+    assert len(client.calls) == 1
+    sleep.assert_not_called()
+
+
+async def test_edit_retries_flood_wait(sleep):
+    client = FakeClient([FloodWaitError(None, capture=7)])
+    publisher = TelegramPublisher(client, "@patobarato")
+
+    await publisher.edit(-100123, 77, "cap")
+
+    assert len(client.calls) == 2
+    sleep.assert_awaited_once_with(7)
+
+
+async def test_edit_raises_bad_request(sleep):
+    client = FakeClient([ChatWriteForbiddenError(None)])
+    publisher = TelegramPublisher(client, "@patobarato")
+
+    with pytest.raises(ChatWriteForbiddenError):
+        await publisher.edit(-100123, 77, "cap")
 
     assert len(client.calls) == 1
     sleep.assert_not_called()
