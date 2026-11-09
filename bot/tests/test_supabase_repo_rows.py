@@ -3,7 +3,7 @@
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from patobarato.models import EventPromoRow, EventRef, ParsedOffer
+from patobarato.models import EventPromoRow, EventRef, ParsedOffer, PublicationStatus
 from patobarato.storage.supabase_repo import SupabaseRepository
 
 NOW = datetime(2026, 11, 4, 12, 0, tzinfo=UTC)
@@ -306,3 +306,63 @@ async def test_insert_publication_writes_price_before_coupon_only_when_set():
     rows = [args[0] for name, args, _ in client.log if name == "insert"]
     assert "price_before_coupon" not in rows[0]
     assert rows[1]["price_before_coupon"] is True
+
+
+async def test_insert_draft_publication_row_has_status_and_no_ids():
+    client = _Client([{"id": 9}])
+    pub_id = await SupabaseRepository(client).insert_publication(
+        1, 2, "ES", None, None, Decimal("5"), "u", NOW, status=PublicationStatus.DRAFT
+    )
+    assert pub_id == 9
+    row = next(a[0] for n, a, _ in client.log if n == "insert")
+    assert row["status"] == "draft"
+    assert "chat_id" not in row and "message_id" not in row
+
+
+async def test_last_publication_excludes_drafts():
+    client = _Client([])
+    await SupabaseRepository(client).get_last_publication(1, "ES")
+    assert ("neq", ("status", "draft"), {}) in client.log
+
+
+async def test_claim_jobs_updates_conditionally_and_keeps_returned_rows():
+    class Client(_Client):
+        def table(self, name):
+            q = super().table(name)
+            if name == "admin_jobs":
+                orig = q.execute
+                log = self.log
+
+                def execute():
+                    if any(n == "update" for n, _, _ in log):
+                        q._data = [{"id": 1, "type": "publish", "payload": {"x": 1}}]
+                    else:
+                        q._data = [{"id": 1}, {"id": 2}]
+                    return orig()
+
+                q.execute = execute
+            return q
+
+    client = Client([])
+    jobs = await SupabaseRepository(client).claim_jobs(5)
+    assert [(j.id, j.type, j.payload) for j in jobs] == [(1, "publish", {"x": 1})] * 2
+    assert ("eq", ("status", "pending"), {}) in client.log
+    assert any(n == "update" and a[0]["status"] == "running" for n, a, _ in client.log)
+
+
+async def test_finish_job_status_by_error():
+    client = _Client([])
+    repo = SupabaseRepository(client)
+    await repo.finish_job(1, result={"a": 1})
+    await repo.finish_job(2, error="boom")
+    updates = [a[0] for n, a, _ in client.log if n == "update"]
+    assert updates[0]["status"] == "done" and updates[0]["result"] == {"a": 1}
+    assert updates[1]["status"] == "error" and updates[1]["error"] == "boom"
+
+
+async def test_manual_source_id_raises_when_missing():
+    import pytest
+
+    with pytest.raises(RuntimeError, match="manual"):
+        await SupabaseRepository(_Client([])).manual_source_id()
+    assert await SupabaseRepository(_Client([{"id": 7}])).manual_source_id() == 7

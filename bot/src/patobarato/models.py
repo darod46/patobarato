@@ -24,6 +24,7 @@ PublicationChannel = Literal["telegram", "web"]
 class PublicationStatus(StrEnum):
     ACTIVE = "active"
     ENDED = "ended"
+    DRAFT = "draft"
 
 
 @dataclass(frozen=True)
@@ -70,6 +71,33 @@ class LastPublication:
     published_price: Decimal
     published_at: datetime
     status: PublicationStatus
+
+
+@dataclass(frozen=True)
+class AdminJob:
+    id: int
+    type: str
+    payload: dict
+
+
+@dataclass(frozen=True)
+class PostData:
+    publication_id: int
+    offer_id: int
+    product_id: int
+    status: PublicationStatus
+    chat_id: int | None
+    message_id: int | None
+    title: str
+    price: Decimal
+    previous_price: Decimal | None
+    coupon: str | None
+    hashtags: list[str]
+    price_before_coupon: bool
+    affiliate_url: str
+    store: str
+    country: str
+    image_url: str | None
 
 
 @dataclass(frozen=True)

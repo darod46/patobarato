@@ -5,6 +5,7 @@ from decimal import Decimal
 from typing import Protocol
 
 from patobarato.models import (
+    AdminJob,
     ApiSource,
     CatalogRow,
     CouponUpsert,
@@ -14,6 +15,7 @@ from patobarato.models import (
     LastPublication,
     OfferStatus,
     ParsedOffer,
+    PostData,
     PublicationChannel,
     PublicationStatus,
     Source,
@@ -75,7 +77,34 @@ class Repository(Protocol):
         published_at: datetime,
         channel: PublicationChannel = "telegram",
         price_before_coupon: bool = False,
+        status: PublicationStatus = PublicationStatus.ACTIVE,
     ) -> int: ...
+
+    async def get_post(self, publication_id: int) -> PostData | None:
+        """Publication joined with its offer and product, or None."""
+        ...
+
+    async def mark_post_published(
+        self, publication_id: int, chat_id: int, message_id: int, published_at: datetime
+    ) -> None:
+        """Sets the Telegram ids and ``published_at``, status ``active``; the offer becomes ``published``."""
+        ...
+
+    async def manual_source_id(self) -> int:
+        """Id of the ``sources`` row of type ``manual`` (posts made from the admin portal)."""
+        ...
+
+    async def claim_jobs(self, limit: int) -> list[AdminJob]:
+        """Oldest ``pending`` jobs, set to ``running``; a job is never claimed twice."""
+        ...
+
+    async def finish_job(
+        self, job_id: int, *, result: dict | None = None, error: str | None = None
+    ) -> None:
+        """Status ``done``, or ``error`` when ``error`` is given."""
+        ...
+
+    async def add_admin_user(self, user_id: str, email: str) -> None: ...
 
     async def list_api_sources(self) -> list[ApiSource]:
         """Active sources that are not Telegram channels."""
@@ -170,12 +199,16 @@ class InMemoryRepository(Repository):
         self._events: dict[int, tuple[str, str | None, str]] = {}
         self._event_promos: dict[int, list[EventPromoRow]] = {}
         self.feed_runs: dict[tuple[str, int], dict] = {}
+        self._jobs: list[dict] = []
+        self.admin_users: dict[str, dict] = {}
+        self._manual_source_id: int | None = None
         self._next_id = {
             "source": 1,
             "product": 1,
             "offer": 1,
             "publication": 1,
             "coupon": 1,
+            "job": 1,
         }
 
     def _new_id(self, kind: str) -> int:
@@ -307,6 +340,7 @@ class InMemoryRepository(Repository):
             for p in self._publications
             if p["product_id"] == product_id
             and p["country"] == country
+            and p["status"] != PublicationStatus.DRAFT
             and (channel is None or p["channel"] == channel)
         ]
         if not matches:
@@ -330,6 +364,7 @@ class InMemoryRepository(Repository):
         published_at: datetime,
         channel: PublicationChannel = "telegram",
         price_before_coupon: bool = False,
+        status: PublicationStatus = PublicationStatus.ACTIVE,
     ) -> int:
         publication_id = self._new_id("publication")
         self._publications.append(
@@ -344,11 +379,95 @@ class InMemoryRepository(Repository):
                 "published_price": published_price,
                 "price_before_coupon": price_before_coupon,
                 "affiliate_url": affiliate_url,
-                "status": PublicationStatus.ACTIVE,
+                "status": status,
                 "published_at": published_at,
             }
         )
         return publication_id
+
+    async def get_post(self, publication_id: int) -> PostData | None:
+        pub = next((p for p in self._publications if p["id"] == publication_id), None)
+        if pub is None:
+            return None
+        offer = self._offers[pub["offer_id"]]
+        product_id = pub["product_id"]
+        store = next(k[0] for k, v in self._products.items() if v == product_id)
+        return PostData(
+            publication_id=publication_id,
+            offer_id=pub["offer_id"],
+            product_id=product_id,
+            status=pub["status"],
+            chat_id=pub["chat_id"],
+            message_id=pub["message_id"],
+            title=self.product_titles[product_id],
+            price=pub["published_price"],
+            previous_price=offer["previous_price"],
+            coupon=offer["coupon"],
+            hashtags=list(offer["hashtags"]),
+            price_before_coupon=pub["price_before_coupon"],
+            affiliate_url=pub["affiliate_url"],
+            store=store,
+            country=pub["country"],
+            image_url=self.product_images.get(product_id),
+        )
+
+    async def mark_post_published(
+        self, publication_id: int, chat_id: int, message_id: int, published_at: datetime
+    ) -> None:
+        for pub in self._publications:
+            if pub["id"] == publication_id:
+                pub.update(
+                    chat_id=chat_id,
+                    message_id=message_id,
+                    published_at=published_at,
+                    status=PublicationStatus.ACTIVE,
+                )
+                await self.set_offer_status(pub["offer_id"], OfferStatus.PUBLISHED)
+
+    async def manual_source_id(self) -> int:
+        if self._manual_source_id is None:
+            self._manual_source_id = self._new_id("source")
+        return self._manual_source_id
+
+    def add_job(self, type: str, payload: dict) -> int:
+        job_id = self._new_id("job")
+        self._jobs.append(
+            {
+                "id": job_id,
+                "type": type,
+                "payload": payload,
+                "status": "pending",
+                "result": None,
+                "error": None,
+            }
+        )
+        return job_id
+
+    def jobs(self) -> list[dict]:
+        """Copies of the stored jobs in insertion order (for tests)."""
+        return [dict(j) for j in self._jobs]
+
+    async def claim_jobs(self, limit: int) -> list[AdminJob]:
+        claimed = []
+        for job in self._jobs:
+            if len(claimed) >= limit:
+                break
+            if job["status"] == "pending":
+                job["status"] = "running"
+                claimed.append(AdminJob(job["id"], job["type"], job["payload"]))
+        return claimed
+
+    async def finish_job(
+        self, job_id: int, *, result: dict | None = None, error: str | None = None
+    ) -> None:
+        for job in self._jobs:
+            if job["id"] == job_id:
+                job.update(
+                    status="done" if error is None else "error", result=result, error=error
+                )
+
+    async def add_admin_user(self, user_id: str, email: str) -> None:
+        self.admin_users[user_id] = {"email": email, "is_owner": False}
 
     async def list_api_sources(self) -> list[ApiSource]:
         result = []
