@@ -29,3 +29,15 @@ describe('FaqEditor', () => {
     expect(latest.map((i) => i.q)).toEqual(['B'])
   })
 })
+
+describe("FaqEditor stable keys", () => {
+  it("per-row preview state follows the row when reordered", async () => {
+    render(<Host initial={[{ q: "A", a_md: "aa" }, { q: "B", a_md: "bb" }]} />)
+    await userEvent.click(screen.getAllByRole("button", { name: "Vista previa" })[1])
+    await userEvent.click(screen.getAllByRole("button", { name: "Subir" })[1])
+    const previews = screen.getAllByTestId("markdown-preview")
+    expect(previews).toHaveLength(1)
+    expect(previews[0]).toHaveTextContent("bb")
+    expect(screen.getAllByRole("button", { name: "Vista previa" })[0]).toHaveAttribute("aria-pressed", "true")
+  })
+})

@@ -29,3 +29,12 @@ describe('StringListEditor', () => {
     expect(latest).toContain('BlackFriday')
   })
 })
+
+describe("StringListEditor touch target", () => {
+  it("chip remove button is 44px", () => {
+    render(<Host />)
+    const btn = screen.getByRole("button", { name: "Quitar amazon" })
+    expect(btn.className).toContain("min-h-11")
+    expect(btn.className).toContain("min-w-11")
+  })
+})

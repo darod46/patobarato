@@ -17,6 +17,7 @@ const PRIMARY = 'min-h-11 rounded-md bg-neutral-900 px-4 text-sm font-medium tex
 const SECONDARY = 'min-h-11 rounded-md border border-neutral-300 px-4 text-sm font-medium disabled:opacity-50'
 const INPUT = 'mt-1 min-h-11 w-full rounded-md border border-neutral-300 px-3'
 const SLUG_RE = /^[a-z0-9-]+$/
+const REVALIDATE_FAILED = 'Guardado, pero no se pudo actualizar la web. Reinténtalo.'
 
 type Props = { id: string; onChanged: () => void; onSaved: (id: number) => void }
 type Loaded = { id: string; detail: EventDetail | null }
@@ -27,6 +28,8 @@ export function EventPanel({ id, onChanged, onSaved }: Props) {
   // The revalidate job lives here, above the keyed form, so switching to the new id after a save keeps it visible.
   const [tracked, setTracked] = useState<{ jobId: number; forId: string } | null>(null)
   const [busy, setBusy] = useState(false)
+  // Held here too: a save of a new event switches the id and remounts the form, which would lose the message.
+  const [notice, setNotice] = useState<{ forId: string } | null>(null)
   const handled = useRef<number | null>(null)
   const jobId = tracked?.forId === id ? tracked.jobId : null
   const job = useJob(jobId)
@@ -69,17 +72,28 @@ export function EventPanel({ id, onChanged, onSaved }: Props) {
         key={id}
         detail={loaded.detail}
         disabled={busy || jobActive}
-        setBusy={setBusy}
+        setBusy={(b) => {
+          if (b) setNotice(null)
+          setBusy(b)
+        }}
         db={db}
         onSaved={async (savedId) => {
           try {
             await revalidate(String(savedId))
+          } catch {
+            // The save itself succeeded: only the web refresh failed.
+            setNotice({ forId: String(savedId) })
           } finally {
             onChanged()
             if (!loaded.detail) onSaved(savedId)
           }
         }}
       />
+      {notice?.forId === id && (
+        <p role="alert" className="text-sm text-red-700">
+          {REVALIDATE_FAILED}
+        </p>
+      )}
       <JobStatus
         jobId={jobId}
         onRetry={() => {

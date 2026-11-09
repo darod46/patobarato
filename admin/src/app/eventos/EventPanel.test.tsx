@@ -94,6 +94,15 @@ describe('EventPanel', () => {
     expect(await screen.findByText('job 77')).toBeInTheDocument()
   })
 
+  it('save ok but revalidate fails shows Guardado, pero no se pudo actualizar la web', async () => {
+    setup('4')
+    m.saveEvent.mockResolvedValue(4)
+    m.enqueueJob.mockRejectedValue(new Error('rls'))
+    await userEvent.click(await screen.findByRole('button', { name: 'Publicar' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Guardado, pero no se pudo actualizar la web. Reinténtalo.')
+    expect(screen.queryByText(/No se pudo guardar/)).toBeNull()
+  })
+
   it('rejects end before start', async () => {
     setup('4', { startsOn: '2026-11-20', endsOn: '2026-11-10' })
     await userEvent.click(await screen.findByRole('button', { name: 'Publicar' }))

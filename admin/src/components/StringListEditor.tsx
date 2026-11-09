@@ -55,7 +55,7 @@ export function StringListEditor({ label, value, onChange, suggestions, stripHas
               type="button"
               aria-label={`Quitar ${item}`}
               onClick={() => onChange(value.filter((v) => v !== item))}
-              className="min-h-8 min-w-8 rounded-full text-neutral-600 hover:bg-neutral-200"
+              className="min-h-11 min-w-11 rounded-full text-neutral-600 hover:bg-neutral-200"
             >
               ×
             </button>
