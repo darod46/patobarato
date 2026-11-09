@@ -16,16 +16,12 @@ _BLOCK_SEPARATOR = re.compile(r"\n\s*\n")
 
 
 @dataclass(frozen=True)
-class StoreLink:
+class _Link:
+    original: str
     store: Store
     product_id: str
     country: str
     canonical: str
-
-
-@dataclass(frozen=True)
-class _Link(StoreLink):
-    original: str
 
 
 def _is_product_link(url: str, registry: StoreRegistry) -> bool:
@@ -34,35 +30,23 @@ def _is_product_link(url: str, registry: StoreRegistry) -> bool:
     return store is not None and store.product_id(url) is not None
 
 
-async def resolve_store_link(
-    url: str, resolver: UrlResolver, registry: StoreRegistry
-) -> StoreLink | None:
-    """The registered store product a URL leads to (expanding shorteners), or None."""
-    resolved = await resolver.resolve(url, is_final=lambda u: _is_product_link(u, registry))
-    if resolved is None:
-        return None
-    store = registry.store_for(resolved)
-    if store is None:
-        return None
-    product_id = store.product_id(resolved)
-    country = country_from_url(resolved) or (None if store.id == "amazon" else _DEFAULT_COUNTRY)
-    if product_id is None or country is None:
-        return None
-    return StoreLink(store, product_id, country, store.canonical_for(resolved, country))
-
-
 async def _store_links(
     urls: list[str], resolver: UrlResolver, registry: StoreRegistry
 ) -> list[_Link]:
     links: dict[tuple[str, str], _Link] = {}
     for url in urls:
-        link = await resolve_store_link(url, resolver, registry)
-        if link is None:
+        resolved = await resolver.resolve(url, is_final=lambda u: _is_product_link(u, registry))
+        if resolved is None:
             continue
-        links.setdefault(
-            (link.store.id, link.product_id),
-            _Link(link.store, link.product_id, link.country, link.canonical, url),
-        )
+        store = registry.store_for(resolved)
+        if store is None:
+            continue
+        product_id = store.product_id(resolved)
+        country = country_from_url(resolved) or (None if store.id == "amazon" else _DEFAULT_COUNTRY)
+        if product_id is None or country is None:
+            continue
+        canonical = store.canonical_for(resolved, country)
+        links.setdefault((store.id, product_id), _Link(url, store, product_id, country, canonical))
     return list(links.values())
 
 

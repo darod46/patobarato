@@ -9,7 +9,7 @@ import httpx
 import pytest
 
 from patobarato.models import SourceMessage
-from patobarato.parsing.extract import StoreLink, extract_offers, resolve_store_link
+from patobarato.parsing.extract import extract_offers
 from patobarato.parsing.links import UrlResolver
 from patobarato.parsing.text import is_ad_marker
 from patobarato.stores.amazon import AmazonStore
@@ -236,20 +236,3 @@ def test_is_ad_marker(tag):
     assert is_ad_marker(tag)
     assert is_ad_marker(tag.upper())
     assert not is_ad_marker(tag + "x")
-
-
-async def test_resolve_store_link_from_store_url(resolver, registry):
-    url = "https://www.amazon.es/dp/B0TEST1234?tag=otro-21"
-    link = await resolve_store_link(url, resolver, registry)
-    assert link is not None
-    assert link.store.id == "amazon"
-    assert link == StoreLink(
-        store=link.store,
-        product_id="B0TEST1234",
-        country="ES",
-        canonical="https://www.amazon.es/dp/B0TEST1234",
-    )
-
-
-async def test_resolve_store_link_unknown_store_none(resolver, registry):
-    assert await resolve_store_link("https://www.ejemplo.com/x", resolver, registry) is None

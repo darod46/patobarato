@@ -1,4 +1,4 @@
-"""Command-line entrypoint: ``python -m patobarato run|backfill-images|promos``."""
+"""Command-line entrypoint: ``python -m patobarato login|run|backfill-images|promos``."""
 
 import argparse
 import asyncio
@@ -29,10 +29,9 @@ from patobarato.sources.aliexpress_source import AliExpressSource
 from patobarato.sources.api_scheduler import ApiScheduler, ApiSourceRunner
 from patobarato.sources.awin_feeds import AwinFeedsSource
 from patobarato.sources.awin_source import AwinClient, AwinPromotionsSource
-from patobarato.sources.chollometro_client import ChollometroClient
-from patobarato.sources.chollometro_source import ChollometroSource
 from patobarato.sources.event_promos import EventPromosSource
 from patobarato.sources.guide_prices import GuidePriceRefresher
+from patobarato.sources.telegram_listener import TelegramListener, make_photo_provider
 from patobarato.storage.repository import Repository
 from patobarato.storage.supabase_repo import SupabaseRepository
 from patobarato.stores.aliexpress import AliExpressStore
@@ -42,6 +41,7 @@ from patobarato.stores.registry import StoreRegistry, build_registry
 logger = logging.getLogger("patobarato.main")
 
 BOT_SESSION_PATH = "data/bot.session"
+LOGIN_FIRST_MESSAGE = "Ejecuta primero: docker compose run --rm bot login"
 BOT_START_FAILED_MESSAGE = "No se pudo iniciar el bot (revisa TELEGRAM_BOT_TOKEN)"
 EXIT_CONFIG_ERROR = 2
 
@@ -51,6 +51,21 @@ def _client(session_path: str, settings: Settings) -> TelegramClient:
     return TelegramClient(
         session_path, settings.telegram_api_id, settings.telegram_api_hash
     )
+
+
+async def login(settings: Settings) -> int:
+    client = _client(settings.telegram_session_path, settings)
+    try:
+        await client.start()
+        me = await client.get_me()
+        print(f"Sesión iniciada como {me.first_name} (id {me.id}).")
+        return 0
+    except Exception as e:
+        logger.debug("Login failed", exc_info=True)
+        print(f"No se pudo iniciar sesión: {e}", file=sys.stderr)
+        return 1
+    finally:
+        await client.disconnect()
 
 
 async def _supervise(**named_coros: Coroutine[Any, Any, Any]) -> int:
@@ -99,27 +114,10 @@ def build_runners(
     repo: Repository,
     settings: Settings,
     clock: Callable[[], datetime],
-    http: httpx.AsyncClient,
-    *,
-    pipeline: Pipeline,
-    posts: PostService,
-    revalidator: WebRevalidator,
-    resolver: UrlResolver,
+    http: httpx.AsyncClient | None = None,
 ) -> list[ApiSourceRunner]:
-    """Source runners available with the configured credentials (Chollometro needs none)."""
-    runners: list[ApiSourceRunner] = [
-        ChollometroSource(
-            ChollometroClient(http),
-            resolver,
-            registry,
-            repo,
-            pipeline,
-            posts,
-            revalidator,
-            settings,
-            clock,
-        )
-    ]
+    """API source runners available with the configured credentials."""
+    runners: list[ApiSourceRunner] = []
     ali_store = registry.get("aliexpress")
     if isinstance(ali_store, AliExpressStore):
         runners.append(AliExpressSource(ali_store.client, repo, settings, clock))
@@ -128,7 +126,7 @@ def build_runners(
     # the source itself warns and does nothing when it ends up with none.
     if settings.awin_publisher_id and settings.awin_api_token:
         client = AwinClient(
-            http,
+            http or httpx.AsyncClient(timeout=settings.http_timeout_seconds),
             settings.awin_publisher_id,
             settings.awin_api_token,
         )
@@ -141,6 +139,13 @@ def build_runners(
 
 
 async def run(settings: Settings) -> int:
+    reader = _client(settings.telegram_session_path, settings)
+    await reader.connect()
+    if not await reader.is_user_authorized():
+        await reader.disconnect()
+        print(LOGIN_FIRST_MESSAGE, file=sys.stderr)
+        return 1
+
     bot = _client(BOT_SESSION_PATH, settings)
     try:
         await bot.start(bot_token=settings.telegram_bot_token)
@@ -148,6 +153,7 @@ async def run(settings: Settings) -> int:
         logger.debug("Bot login failed", exc_info=True)
         print(f"{BOT_START_FAILED_MESSAGE}: {e}", file=sys.stderr)
         await bot.disconnect()
+        await reader.disconnect()
         return 1
 
     async with (
@@ -163,46 +169,43 @@ async def run(settings: Settings) -> int:
             repo,
             resolver,
             publisher,
+            make_photo_provider(reader, resolver),
             settings,
             registry=registry,
             image_downloader=lambda url: download_photo(http, url),
         )
-        posts = PostService(
-            repo, publisher, registry, lambda url: download_photo(http, url), utcnow
-        )
-        revalidator = WebRevalidator(
-            http, settings.web_revalidate_url, settings.revalidate_secret
-        )
-        scheduler = ApiScheduler(
-            repo,
-            build_runners(
-                registry,
-                repo,
-                settings,
-                utcnow,
-                http,
-                pipeline=pipeline,
-                posts=posts,
-                revalidator=revalidator,
-                resolver=resolver,
-            ),
-        )
+        scheduler = ApiScheduler(repo, build_runners(registry, repo, settings, utcnow, http))
         runner = JobRunner(
             repo,
-            posts,
+            PostService(
+                repo, publisher, registry, lambda url: download_photo(http, url), utcnow
+            ),
             pipeline,
             UserAdmin(supabase_client, repo, settings.admin_url),
-            revalidator,
+            WebRevalidator(http, settings.web_revalidate_url, settings.revalidate_secret),
             settings.admin_jobs_poll_seconds,
         )
+        listener = TelegramListener(
+            reader,
+            repo,
+            pipeline,
+            target=settings.target_channel,
+            refresh_seconds=settings.sources_refresh_seconds,
+            country=settings.default_country,
+        )
+        await listener.start()
         logger.info("PatoBarato en marcha; publicando en %s", settings.target_channel)
         try:
             return await _supervise(
+                pipeline=pipeline.run(),
                 scheduler=scheduler.run(),
+                refresh=listener.run_refresh_loop(),
                 admin_jobs=runner.run(),
+                reader=reader.run_until_disconnected(),
                 bot=bot.run_until_disconnected(),
             )
         finally:
+            await reader.disconnect()
             await bot.disconnect()
 
 
@@ -278,7 +281,7 @@ def _config_error_message(error: ValidationError) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="patobarato")
-    parser.add_argument("command", choices=["run", "backfill-images", "promos"])
+    parser.add_argument("command", choices=["login", "run", "backfill-images", "promos"])
     args = parser.parse_args(argv)
 
     logging.basicConfig(
@@ -300,6 +303,8 @@ def main(argv: list[str] | None = None) -> int:
         )
         return EXIT_CONFIG_ERROR
 
+    if args.command == "login":
+        return asyncio.run(login(settings))
     if args.command == "backfill-images":
         return asyncio.run(backfill(settings))
     if args.command == "promos":

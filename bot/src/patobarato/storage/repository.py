@@ -19,8 +19,6 @@ from patobarato.models import (
     PublicationChannel,
     PublicationStatus,
     Source,
-    ThreadState,
-    TrackedThread,
 )
 from patobarato.publishing.format import normalize_hashtag
 
@@ -33,6 +31,10 @@ def clean_hashtags(tags: list[str]) -> list[str]:
 
 
 class Repository(Protocol):
+    async def sync_sources(self, channels: dict[str, str], country: str) -> list[Source]:
+        """Registers unknown channels (identifier -> name) and returns the active ones."""
+        ...
+
     async def upsert_product(self, offer: ParsedOffer) -> int: ...
 
     async def find_product_id(self, store: str, country: str, asin: str) -> int | None:
@@ -182,32 +184,13 @@ class Repository(Protocol):
 
     async def find_catalog_product(self, store: str, url: str) -> CatalogRow | None: ...
 
-    async def get_tracked_threads(
-        self, source_id: int, thread_ids: list[int]
-    ) -> dict[int, TrackedThread]: ...
-
-    async def save_tracked_thread(self, t: TrackedThread) -> None:
-        """Upsert by ``(source_id, thread_id)``."""
-        ...
-
-    async def list_tracked_threads(
-        self, source_id: int, states: list[ThreadState]
-    ) -> list[TrackedThread]: ...
-
-    async def count_publications_since(
-        self, source_id: int, since: datetime, channel: PublicationChannel = "telegram"
-    ) -> int:
-        """Non-draft publications of ``channel`` whose offer belongs to ``source_id``, from ``since`` on."""
-        ...
-
-    async def set_publication_status(self, publication_id: int, status: PublicationStatus) -> None: ...
-
 
 class InMemoryRepository(Repository):
     """Test double that mirrors the database uniqueness rules."""
 
     def __init__(self) -> None:
         self._sources: list[tuple[Source, bool]] = []
+        self._source_names: dict[str, str] = {}
         self._products: dict[tuple[str, str, str], int] = {}
         self.product_titles: dict[int, str] = {}
         self.product_images: dict[int, str] = {}
@@ -225,7 +208,6 @@ class InMemoryRepository(Repository):
         self._event_promos: dict[int, list[EventPromoRow]] = {}
         self.feed_runs: dict[tuple[str, int], dict] = {}
         self._jobs: list[dict] = []
-        self._threads: dict[tuple[int, int], TrackedThread] = {}
         self.admin_users: dict[str, dict] = {}
         self._manual_source_id: int | None = None
         self._next_id = {
@@ -273,6 +255,21 @@ class InMemoryRepository(Repository):
         )
         self._api_sources.append((source, active))
         return source
+
+    def source_names(self) -> dict[str, str]:
+        return dict(self._source_names)
+
+    async def sync_sources(self, channels: dict[str, str], country: str) -> list[Source]:
+        known = {source.identifier for source, _ in self._sources}
+        for identifier, name in channels.items():
+            if identifier not in known:
+                self.add_source(identifier, country=country)
+                self._source_names[identifier] = name
+        return [
+            source
+            for source, active in self._sources
+            if active and source.identifier in channels
+        ]
 
     async def upsert_product(self, offer: ParsedOffer) -> int:
         key = (offer.store, offer.country, offer.asin)
@@ -619,40 +616,3 @@ class InMemoryRepository(Repository):
     async def find_catalog_product(self, store: str, url: str) -> CatalogRow | None:
         matches = [r for (s, _), r in self.catalog.items() if s == store and r.url == url]
         return next((r for r in matches if r.in_stock), matches[0] if matches else None)
-
-    async def get_tracked_threads(
-        self, source_id: int, thread_ids: list[int]
-    ) -> dict[int, TrackedThread]:
-        return {
-            tid: self._threads[(source_id, tid)]
-            for tid in thread_ids
-            if (source_id, tid) in self._threads
-        }
-
-    async def save_tracked_thread(self, t: TrackedThread) -> None:
-        self._threads[(t.source_id, t.thread_id)] = t
-
-    async def list_tracked_threads(
-        self, source_id: int, states: list[ThreadState]
-    ) -> list[TrackedThread]:
-        return [t for t in self._threads.values() if t.source_id == source_id and t.state in states]
-
-    async def count_publications_since(
-        self, source_id: int, since: datetime, channel: PublicationChannel = "telegram"
-    ) -> int:
-        return sum(
-            1
-            for p in self._publications
-            if p["channel"] == channel
-            and p["status"] != PublicationStatus.DRAFT
-            and p["published_at"] >= since
-            and self._offers[p["offer_id"]]["source_id"] == source_id
-        )
-
-    async def set_publication_status(self, publication_id: int, status: PublicationStatus) -> None:
-        for pub in self._publications:
-            if pub["id"] == publication_id:
-                pub["status"] = status
-                pub["ended_at"] = (
-                    datetime.now(UTC) if status == PublicationStatus.ENDED else None
-                )

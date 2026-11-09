@@ -3,14 +3,7 @@
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from patobarato.models import (
-    EventPromoRow,
-    EventRef,
-    ParsedOffer,
-    PublicationStatus,
-    ThreadState,
-    TrackedThread,
-)
+from patobarato.models import EventPromoRow, EventRef, ParsedOffer, PublicationStatus
 from patobarato.storage.supabase_repo import SupabaseRepository
 
 NOW = datetime(2026, 11, 4, 12, 0, tzinfo=UTC)
@@ -37,7 +30,6 @@ class _Query:
     def execute(self):
         class R:
             data = self._data
-            count = len(self._data)
 
         return R()
 
@@ -382,120 +374,3 @@ async def test_fail_running_jobs_updates_running_rows():
     assert ("eq", ("status", "running"), {}) in client.log
     update = next(a[0] for n, a, _ in client.log if n == "update")
     assert update == {"status": "error", "error": "boom"}
-
-
-def _thread_row(**over) -> dict:
-    row = {
-        "source_id": 7,
-        "thread_id": 42,
-        "url": "https://www.chollometro.com/ofertas/x-42",
-        "state": "qualified",
-        "temperature": 120.5,
-        "discount": 55,
-        "first_seen_at": "2026-11-09T10:00:00+00:00",
-        "published_at": "2026-11-09T09:30:00Z",
-        "qualified_at": "2026-11-09T10:05:00+00:00",
-        "store_url": "https://shop/x",
-        "publication_id": None,
-        "last_checked_at": None,
-        "skip_reason": None,
-        "snapshot": {"title": "x", "price": "9.99"},
-    }
-    row.update(over)
-    return row
-
-
-async def test_get_tracked_threads_parses_rows():
-    client = _Client([_thread_row()])
-    got = await SupabaseRepository(client).get_tracked_threads(7, [42])
-    t = got[42]
-    assert t.state is ThreadState.QUALIFIED
-    assert t.published_at == datetime(2026, 11, 9, 9, 30, tzinfo=UTC)
-    assert t.qualified_at == datetime(2026, 11, 9, 10, 5, tzinfo=UTC)
-    assert t.last_checked_at is None and t.publication_id is None
-    assert t.snapshot == {"title": "x", "price": "9.99"}
-    assert ("in_", ("thread_id", [42]), {}) in client.log
-
-
-async def test_get_tracked_threads_empty_ids_skips_query():
-    client = _Client([])
-    assert await SupabaseRepository(client).get_tracked_threads(7, []) == {}
-    assert client.log == []
-
-
-async def test_save_tracked_thread_writes_iso_and_string_state():
-    client = _Client([])
-    t = TrackedThread(
-        source_id=7,
-        thread_id=42,
-        url="u",
-        state=ThreadState.SKIPPED,
-        temperature=3.0,
-        discount=None,
-        first_seen_at=NOW,
-        published_at=NOW,
-        qualified_at=None,
-        store_url=None,
-        publication_id=None,
-        last_checked_at=NOW,
-        skip_reason="stale",
-        snapshot={"k": 1},
-    )
-    await SupabaseRepository(client).save_tracked_thread(t)
-    row = next(a[0] for n, a, _ in client.log if n == "upsert")
-    assert row["state"] == "skipped"
-    assert row["first_seen_at"] == NOW.isoformat() and row["qualified_at"] is None
-    assert row["last_checked_at"] == NOW.isoformat()
-    assert row["snapshot"] == {"k": 1} and row["skip_reason"] == "stale"
-    assert ("table", ("chollometro_threads",), {}) in client.log
-
-
-async def test_list_tracked_threads_filters_by_source_and_state_values():
-    client = _Client([_thread_row(state="watching")])
-    got = await SupabaseRepository(client).list_tracked_threads(
-        7, [ThreadState.WATCHING, ThreadState.QUALIFIED]
-    )
-    assert [t.state for t in got] == [ThreadState.WATCHING]
-    assert ("eq", ("source_id", 7), {}) in client.log
-    assert ("in_", ("state", ["watching", "qualified"]), {}) in client.log
-
-
-async def test_count_publications_since_joins_offers_and_excludes_drafts():
-    client = _Client([{"id": 1}, {"id": 2}, {"id": 3}])
-    assert await SupabaseRepository(client).count_publications_since(7, NOW) == 3
-    assert ("eq", ("offers.source_id", 7), {}) in client.log
-    assert ("eq", ("channel", "telegram"), {}) in client.log
-    assert ("neq", ("status", "draft"), {}) in client.log
-    assert ("gte", ("published_at", NOW.isoformat()), {}) in client.log
-    assert ("select", ("id, offers!inner(source_id)",), {"count": "exact"}) in client.log
-
-
-async def test_set_publication_status_ended_sets_ended_at():
-    client = _Client([])
-    before = datetime.now(UTC)
-    await SupabaseRepository(client).set_publication_status(9, PublicationStatus.ENDED)
-    update = next(a[0] for n, a, _ in client.log if n == "update")
-    assert update["status"] == "ended"
-    assert before <= datetime.fromisoformat(update["ended_at"]) <= datetime.now(UTC)
-    assert ("eq", ("id", 9), {}) in client.log
-
-
-async def test_set_publication_status_active_clears_ended_at():
-    client = _Client([])
-    await SupabaseRepository(client).set_publication_status(9, PublicationStatus.ACTIVE)
-    update = next(a[0] for n, a, _ in client.log if n == "update")
-    assert update == {"status": "active", "ended_at": None}
-
-
-async def test_list_tracked_threads_reads_every_page():
-    pages = [
-        [_thread_row(thread_id=i, state="published") for i in range(1000)],
-        [_thread_row(thread_id=i, state="published") for i in range(1000, 2000)],
-        [_thread_row(thread_id=2000, state="published")],
-    ]
-    client = _ScriptedClient(pages)
-    got = await SupabaseRepository(client).list_tracked_threads(7, [ThreadState.PUBLISHED])
-    assert len(got) == 2001
-    ranges = [a for n, a, _ in client.log if n == "range"]
-    assert ranges == [(0, 999), (1000, 1999), (2000, 2999)]
-    assert ("order", ("thread_id",), {}) in client.log

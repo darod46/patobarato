@@ -123,6 +123,22 @@ async def test_last_publication_is_most_recent(repo, source, asin):
     assert last.status is PublicationStatus.ACTIVE
 
 
+async def test_sync_sources_registers_once_and_skips_inactive(repo, client):
+    new_id = "-100" + str(uuid.uuid4().int)[:10]
+    off_id = "-100" + str(uuid.uuid4().int)[:10]
+    client.table("sources").insert({"identifier": off_id, "active": False}).execute()
+    try:
+        first = await repo.sync_sources({new_id: "Nuevo", off_id: "Apagado"}, "ES")
+        again = await repo.sync_sources({new_id: "Nuevo", off_id: "Apagado"}, "ES")
+        assert [s.identifier for s in first] == [new_id]
+        assert first[0].country == "ES"
+        assert again == first
+        rows = client.table("sources").select("name").eq("identifier", new_id).execute()
+        assert [r["name"] for r in rows.data] == ["Nuevo"]
+    finally:
+        client.table("sources").delete().in_("identifier", [new_id, off_id]).execute()
+
+
 @pytest.fixture
 def api_source(client):
     row = (

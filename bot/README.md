@@ -1,10 +1,11 @@
 # PatoBarato
 
-Bot que lee los chollos de [chollometro.com](https://www.chollometro.com), guarda en Supabase las ofertas de las tiendas registradas (Amazon España, AliExpress y las tiendas de Awin), además de las que traen las fuentes de API, y las publica en [@patobarato](https://t.me/patobarato) a través de un bot. Los enlaces de Amazon llevan el tag de afiliado (`https://www.amazon.es/dp/{ASIN}?tag=patobarato-21`); en las demás tiendas se usa su enlace de afiliado cuando está configurado.
+Bot que lee canales de chollos de Telegram con una cuenta de usuario, guarda las ofertas de Amazon España en Supabase (y, con las fuentes correspondientes, de otras tiendas como AliExpress o las de Awin) y las publica en [@patobarato](https://t.me/patobarato) a través de un bot. Los enlaces de Amazon llevan el tag de afiliado (`https://www.amazon.es/dp/{ASIN}?tag=patobarato-21`); en las demás tiendas se usa su enlace de afiliado cuando está configurado.
 
 ## Requisitos
 
 - Docker y Docker Compose (para ejecutarlo); o Python 3.12 si se ejecuta sin Docker.
+- Una cuenta de Telegram que sea miembro de los canales de origen.
 - Un proyecto de Supabase.
 - Node.js (`npx`) para aplicar el esquema de base de datos.
 - El canal @patobarato dado de alta en Amazon Afiliados.
@@ -13,7 +14,7 @@ Bot que lee los chollos de [chollometro.com](https://www.chollometro.com), guard
 
 ### `api_id` y `api_hash`
 
-1. Entra en <https://my.telegram.org> con tu cuenta de Telegram (Telethon los necesita para conectar el bot).
+1. Entra en <https://my.telegram.org> con el teléfono de la cuenta lectora.
 2. Abre **API development tools** y crea una aplicación (el nombre es libre).
 3. Copia `api_id` y `api_hash`.
 
@@ -59,6 +60,7 @@ El resto tiene valores por defecto razonables (`TARGET_CHANNEL=@patobarato`, `AF
 | --- | --- | --- |
 | `DEFAULT_COUNTRY` | `ES` | País por defecto. En v1 solo se admite `ES`; el país de cada oferta sale del dominio del enlace (`amazon.es`). |
 | `HTTP_TIMEOUT_SECONDS` | `10.0` | Tiempo máximo, en segundos, de cada petición HTTP al resolver enlaces acortados (`amzn.to`, `bit.ly`...). |
+| `SOURCES_REFRESH_SECONDS` | `300` | Cada cuánto se repasan los canales de la cuenta lectora. |
 | `ADMIN_URL` | _(vacío)_ | URL base del panel de administración; las invitaciones por email redirigen a `ADMIN_URL/auth/confirm`. Sin ella no se pueden invitar usuarios. |
 | `WEB_REVALIDATE_URL` | _(vacío)_ | Endpoint de la web pública (`https://www.patobarato.com/api/revalidate`) al que el bot avisa tras publicar o editar. Debe ser el host canónico `www`: el bot no sigue redirecciones. |
 | `REVALIDATE_SECRET` | _(vacío)_ | Secreto compartido enviado en la cabecera `x-revalidate-secret`. Sin URL y secreto, no se avisa a la web. |
@@ -82,9 +84,15 @@ docker compose pull
 
 Para actualizar tras un nuevo push: `docker compose pull && docker compose up -d`.
 
-### Arranque
+### Sesiones y arranque
 
-No hay que iniciar sesión con ninguna cuenta de usuario: el bot se conecta con su token y guarda su sesión en `./data/bot.session`. Arranca el bot en segundo plano:
+Primero hay que iniciar sesión una vez con la cuenta lectora (te pedirá teléfono, código y, si lo tiene, la contraseña de 2 pasos):
+
+```
+docker compose run --rm bot login
+```
+
+La sesión se guarda en `./data/reader.session` (y la del bot en `./data/bot.session`). Después, arranca el bot en segundo plano:
 
 ```
 docker compose up -d
@@ -93,39 +101,27 @@ docker compose logs -f bot
 
 ### Permisos de `./data`
 
-El contenedor se ejecuta con un usuario no root (UID 1000) y escribe la sesión en `/app/data`, montado desde `./data`. En Linux, la carpeta `./data` debe poder escribirla ese UID:
+El contenedor se ejecuta con un usuario no root (UID 1000) y escribe las sesiones en `/app/data`, montado desde `./data`. En Linux, la carpeta `./data` debe poder escribirla ese UID:
 
 ```
 mkdir -p data && sudo chown 1000:1000 data
 ```
 
-Alternativa: usar un volumen con nombre en `docker-compose.yml` (`volumes: [bot-data:/app/data]` y declarar `bot-data` en la sección `volumes:`), que se crea con los permisos correctos. En ese caso, la sesión no queda visible en el host.
+Alternativa: usar un volumen con nombre en `docker-compose.yml` (`volumes: [bot-data:/app/data]` y declarar `bot-data` en la sección `volumes:`), que se crea con los permisos correctos. En ese caso, las sesiones no quedan visibles en el host.
 
-El fichero `bot.session` equivale a tener el bot abierto: no lo compartas ni los subas al repositorio.
+Los ficheros `*.session` equivalen a tener la cuenta abierta: no los compartas ni los subas al repositorio.
 
-## 5. Chollometro
+## 5. Canales de origen
 
-La fuente `chollometro` lee [chollometro.com](https://www.chollometro.com) y publica los chollos calientes en @patobarato. No necesita credenciales y la crea la migración `20261113000000_chollometro.sql`, así que siempre está disponible.
+El bot lee **todos los canales de difusión a los que está suscrita la cuenta lectora**. Para añadir un canal, únete a él desde la app de Telegram con esa cuenta; para dejar de leerlo, sal del canal.
 
-- **Qué lee:** el listado `/nuevos` y las páginas de cada hilo. Solo se siguen los hilos de tiendas registradas en el bot (Amazon, AliExpress, PcComponentes...). El enlace a la tienda sale del botón `/visit/` del hilo, una sola vez por hilo, y se convierte a tu enlace de afiliado.
-- **Filtro:** un hilo es apto cuando supera `min_temperature` grados **o** tiene un descuento de al menos `min_discount` %. Si solo es apto por el descuento y la tienda da su propio precio anterior, el descuento se calcula con ese precio (salvo en AliExpress, cuyo precio anterior está inflado); si no llega a `min_discount` %, el hilo se descarta. Los hilos nuevos se vigilan durante `warm_hours` horas por si entran en calor; pasado ese tiempo sin llegar al umbral se descartan.
-- **Límite:** como máximo `max_per_hour` publicaciones por hora, las mejores primero, y `max_pages_per_run` páginas de Chollometro por ejecución.
-- **Fin de oferta:** cuando el hilo aparece como caducado, la publicación pasa a `ended`, el mensaje de Telegram se edita y se avisa a la web.
-- **Valores por defecto:** se ejecuta cada 5 minutos con `min_temperature` 50, `min_discount` 40, `max_per_hour` 10, `warm_hours` 24 y `max_pages_per_run` 5.
-
-Para cambiar un umbral (sin reiniciar el bot):
-
-```sql
-update sources set config = jsonb_set(config, '{min_temperature}', '60') where type = 'chollometro';
-```
-
-Para pausarla: `update sources set active = false where type = 'chollometro';`. Para forzar una ejecución sin esperar al intervalo: `update sources set last_run_at = null where type = 'chollometro';`. El resultado de la última ejecución queda en `last_run_at` y `last_error`.
-
-**Aviso: `/visit/` y robots.txt.** El `robots.txt` de Chollometro prohíbe `/visit/`, y el bot lo visita para resolver el enlace de cada tienda. Es un riesgo asumido: Chollometro puede bloquear la IP del bot. Si responde 403 o 429, el bot deja de pedir páginas en esa ejecución y el error aparece en `sources.last_error`; vuelve a intentarlo en la siguiente.
+- Cada `SOURCES_REFRESH_SECONDS` segundos (300 por defecto) el bot repasa los canales de la cuenta y apunta los nuevos en la tabla `sources` de Supabase, con su identificador numérico (`-100…`), su nombre y el país `DEFAULT_COUNTRY`. No hace falta reiniciarlo.
+- No se leen grupos, chats privados ni el propio canal de destino (`TARGET_CHANNEL`).
+- Para silenciar un canal sin salir de él, pon `active = false` en su fila de `sources`.
 
 ## 6. Tiendas y fuentes de API (AliExpress y Awin)
 
-Además de Chollometro, el bot puede alimentar la web con ofertas y cupones obtenidos por API. Cada tienda se activa por separado con sus credenciales en `.env`:
+Además de los canales de Telegram, el bot puede alimentar la web con ofertas y cupones obtenidos por API. Cada tienda se activa por separado con sus credenciales en `.env`:
 
 | Variable | Descripción |
 | --- | --- |
@@ -140,7 +136,7 @@ Tiendas soportadas: AliExpress (`aliexpress`) y, vía Awin, PcComponentes (`pcco
 
 ### Dar de alta una fuente de API
 
-Las fuentes de API viven en la tabla `sources` (junto a la de Chollometro). `identifier` es obligatorio y único por tipo: usa un nombre corto. `every_minutes` indica cada cuánto se ejecuta; `config` y `hashtags` son opcionales.
+Las fuentes de API viven en la tabla `sources` (junto a los canales de Telegram). `identifier` es obligatorio y único por tipo: usa un nombre corto. `every_minutes` indica cada cuánto se ejecuta; `config` y `hashtags` son opcionales.
 
 ```sql
 -- Ofertas calientes de AliExpress; la fuente añade el hashtag aliexpress sola (config: query, category_ids, keywords, min_discount, min_price, max_price, max_results)

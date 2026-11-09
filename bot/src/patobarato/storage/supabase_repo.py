@@ -20,14 +20,12 @@ from patobarato.models import (
     PostData,
     PublicationChannel,
     PublicationStatus,
-    ThreadState,
-    TrackedThread,
+    Source,
 )
 from patobarato.storage.repository import clean_hashtags
 
 UNIQUE_VIOLATION = "23505"
 CATALOG_PAGE = 1000
-TRACKED_PAGE = 1000
 CATALOG_UPDATE_CHUNK = 500  # ids travel in the URL of the update request
 
 logger = logging.getLogger("patobarato.supabase_repo")
@@ -40,33 +38,6 @@ def _parse_timestamp(value: str) -> datetime:
     return parsed.astimezone(UTC)
 
 
-def _optional_timestamp(value: str | None) -> datetime | None:
-    return None if value is None else _parse_timestamp(value)
-
-
-def _iso(value: datetime | None) -> str | None:
-    return None if value is None else value.isoformat()
-
-
-def _thread_from_row(r: dict) -> TrackedThread:
-    return TrackedThread(
-        source_id=r["source_id"],
-        thread_id=r["thread_id"],
-        url=r["url"],
-        state=ThreadState(r["state"]),
-        temperature=float(r["temperature"]),
-        discount=r["discount"],
-        first_seen_at=_parse_timestamp(r["first_seen_at"]),
-        published_at=_parse_timestamp(r["published_at"]),
-        qualified_at=_optional_timestamp(r["qualified_at"]),
-        store_url=r["store_url"],
-        publication_id=r["publication_id"],
-        last_checked_at=_optional_timestamp(r["last_checked_at"]),
-        skip_reason=r["skip_reason"],
-        snapshot=r.get("snapshot") or {},
-    )
-
-
 def _money(value: Decimal | None) -> str | None:
     return None if value is None else str(value)
 
@@ -75,6 +46,33 @@ class SupabaseRepository:
     def __init__(self, client: Client) -> None:
         self._client = client
         self._manual_source_id: int | None = None
+
+    async def sync_sources(self, channels: dict[str, str], country: str) -> list[Source]:
+        if not channels:
+            return []
+        rows = [
+            {"identifier": identifier, "name": name, "country": country}
+            for identifier, name in channels.items()
+        ]
+
+        def run():
+            self._client.table("sources").upsert(
+                rows, on_conflict="type,identifier", ignore_duplicates=True
+            ).execute()
+            return (
+                self._client.table("sources")
+                .select("id, identifier, country")
+                .in_("identifier", list(channels))
+                .eq("active", True)
+                .order("id")
+                .execute()
+            )
+
+        response = await asyncio.to_thread(run)
+        return [
+            Source(id=row["id"], identifier=row["identifier"], country=row["country"])
+            for row in response.data
+        ]
 
     async def upsert_product(self, offer: ParsedOffer) -> int:
         row = {
@@ -765,102 +763,3 @@ class SupabaseRepository:
             feed_updated_at=_parse_timestamp(r["feed_updated_at"]) if r.get("feed_updated_at") else None,
             updated_at=_parse_timestamp(r["updated_at"]) if r.get("updated_at") else None,
         )
-
-    async def get_tracked_threads(
-        self, source_id: int, thread_ids: list[int]
-    ) -> dict[int, TrackedThread]:
-        if not thread_ids:
-            return {}
-
-        def run():
-            return (
-                self._client.table("chollometro_threads")
-                .select("*")
-                .eq("source_id", source_id)
-                .in_("thread_id", thread_ids)
-                .execute()
-            )
-
-        rows = (await asyncio.to_thread(run)).data
-        return {r["thread_id"]: _thread_from_row(r) for r in rows}
-
-    async def save_tracked_thread(self, t: TrackedThread) -> None:
-        row = {
-            "source_id": t.source_id,
-            "thread_id": t.thread_id,
-            "url": t.url,
-            "state": t.state.value,
-            "temperature": t.temperature,
-            "discount": t.discount,
-            "first_seen_at": t.first_seen_at.isoformat(),
-            "published_at": t.published_at.isoformat(),
-            "qualified_at": _iso(t.qualified_at),
-            "store_url": t.store_url,
-            "publication_id": t.publication_id,
-            "last_checked_at": _iso(t.last_checked_at),
-            "skip_reason": t.skip_reason,
-            "snapshot": t.snapshot,
-        }
-
-        def run():
-            self._client.table("chollometro_threads").upsert(
-                row, on_conflict="source_id,thread_id"
-            ).execute()
-
-        await asyncio.to_thread(run)
-
-    async def list_tracked_threads(
-        self, source_id: int, states: list[ThreadState]
-    ) -> list[TrackedThread]:
-        if not states:
-            return []
-
-        def run() -> list[dict]:
-            # Paged: PostgREST returns at most 1000 rows per request.
-            rows: list[dict] = []
-            start = 0
-            while True:
-                page = (
-                    self._client.table("chollometro_threads")
-                    .select("*")
-                    .eq("source_id", source_id)
-                    .in_("state", [s.value for s in states])
-                    .order("thread_id")
-                    .range(start, start + TRACKED_PAGE - 1)
-                    .execute()
-                    .data
-                )
-                rows.extend(page)
-                if len(page) < TRACKED_PAGE:
-                    return rows
-                start += TRACKED_PAGE
-
-        return [_thread_from_row(r) for r in await asyncio.to_thread(run)]
-
-    async def count_publications_since(
-        self, source_id: int, since: datetime, channel: PublicationChannel = "telegram"
-    ) -> int:
-        def run():
-            return (
-                self._client.table("publications")
-                .select("id, offers!inner(source_id)", count="exact")
-                .eq("offers.source_id", source_id)
-                .eq("channel", channel)
-                .neq("status", PublicationStatus.DRAFT.value)
-                .gte("published_at", since.isoformat())
-                .limit(1)
-                .execute()
-            )
-
-        return (await asyncio.to_thread(run)).count or 0
-
-    async def set_publication_status(self, publication_id: int, status: PublicationStatus) -> None:
-        # Same as the admin's setOfferStatus: ended_at is set on end and cleared otherwise.
-        ended_at = datetime.now(UTC).isoformat() if status == PublicationStatus.ENDED else None
-
-        def run():
-            self._client.table("publications").update(
-                {"status": status.value, "ended_at": ended_at}
-            ).eq("id", publication_id).execute()
-
-        await asyncio.to_thread(run)
