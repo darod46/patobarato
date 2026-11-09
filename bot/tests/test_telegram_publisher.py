@@ -159,6 +159,19 @@ async def test_edit_calls_edit_message_with_html_and_no_preview(sleep):
     ]
 
 
+async def test_edit_falls_back_to_target_when_chat_id_unresolvable(sleep):
+    client = FakeClient([ValueError("Could not find the input entity for -100123")])
+    publisher = TelegramPublisher(client, "@patobarato")
+
+    await publisher.edit(-100123, 77, "cap")
+
+    assert [(k, a[0]) for k, a, _ in client.calls] == [
+        ("edit_message", -100123),
+        ("edit_message", "@patobarato"),
+    ]
+    assert client.calls[1][1][1:] == (77, "cap")
+
+
 async def test_edit_ignores_message_not_modified(sleep):
     client = FakeClient([MessageNotModifiedError(None)])
     publisher = TelegramPublisher(client, "@patobarato")

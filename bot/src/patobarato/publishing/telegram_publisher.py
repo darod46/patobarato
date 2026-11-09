@@ -61,14 +61,22 @@ class TelegramPublisher:
         """Edit a published message (the caption, for a photo post)."""
 
         async def attempt() -> None:
-            try:
+            async def edit_in(entity: int | str) -> None:
                 await self._client.edit_message(
-                    chat_id,
+                    entity,
                     message_id,
                     caption,
                     parse_mode="html",
                     link_preview=False,
                 )
+
+            try:
+                try:
+                    await edit_in(chat_id)
+                except ValueError:
+                    # A restarted session may not have the channel cached: use the target.
+                    logger.info("Chat %s not resolvable, editing via target", chat_id)
+                    await edit_in(self._target)
             except MessageNotModifiedError:
                 logger.info("Message %s unchanged, nothing to edit", message_id)
 
