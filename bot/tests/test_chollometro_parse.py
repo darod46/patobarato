@@ -125,3 +125,18 @@ def test_malformed_thread_json_is_skipped():
         '"props":{broken\'></div>'
     )
     assert len(parse_listing(bad + good)) == 30
+
+
+def test_thread_with_absurd_timestamp_is_skipped_alone():
+    good = _read("chollometro_nuevos.html")
+    bad = (
+        "<div data-vue3='{\"name\":\"ThreadMainListItemNormalizer\",\"props\":{\"thread\":"
+        "{\"threadId\":\"1\",\"title\":\"x\",\"titleSlug\":\"x\",\"publishedAt\":99999999999999999,"
+        "\"temperature\":1}}}'></div>"
+    )
+    assert len(parse_listing(bad + good)) == 30
+    page = "window.__INITIAL_STATE__ = " + (
+        '{"threadDetail": {"threadId": "1", "title": "x", "titleSlug": "x",'
+        ' "publishedAt": 99999999999999999}};'
+    )
+    assert parse_thread_page(page) is None

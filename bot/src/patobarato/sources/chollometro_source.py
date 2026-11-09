@@ -31,7 +31,7 @@ from typing import TypeVar
 from patobarato.admin.posts import PostService
 from patobarato.admin.revalidate import WebRevalidator
 from patobarato.config import Settings
-from patobarato.core.pipeline import Pipeline
+from patobarato.core.pipeline import STORES_PRICED_BEFORE_COUPON, Pipeline
 from patobarato.models import (
     ApiSource,
     ChollometroThread,
@@ -44,7 +44,7 @@ from patobarato.models import (
 )
 from patobarato.parsing.extract import StoreLink, resolve_store_link
 from patobarato.parsing.links import UrlResolver
-from patobarato.publishing.format import normalize_hashtag
+from patobarato.publishing.format import discount_percent, normalize_hashtag
 from patobarato.sources.chollometro_client import ChollometroBlocked, ChollometroClient
 from patobarato.sources.chollometro_rules import discount_of, qualifies, rank_key, reconcile_price
 from patobarato.storage.repository import Repository
@@ -62,7 +62,9 @@ DEFAULT_CONFIG: dict[str, float] = {
 # Pause between two Chollometro pages of one run.
 PAGE_DELAY_SECONDS = 2.0
 STORE_PRICE_TIMEOUT_SECONDS = 5.0
-# A longer voucher, or one with spaces, is a condition ("Aplicar cupón de 5 €"), not a code.
+# A voucher outside these lengths, or with spaces, is a condition, not a code:
+# "Aplicar cupón de 5 €", or "CR" (compra recurrente).
+MIN_COUPON_CODE_LENGTH = 4
 MAX_COUPON_CODE_LENGTH = 30
 CAP_WINDOW = timedelta(minutes=60)
 
@@ -113,7 +115,11 @@ def _ended(t: ChollometroThread) -> bool:
 
 
 def _coupon_code(voucher: str | None) -> str | None:
-    if not voucher or len(voucher) > MAX_COUPON_CODE_LENGTH or any(c.isspace() for c in voucher):
+    if (
+        not voucher
+        or not MIN_COUPON_CODE_LENGTH <= len(voucher) <= MAX_COUPON_CODE_LENGTH
+        or any(c.isspace() for c in voucher)
+    ):
         return None
     return voucher
 
@@ -439,9 +445,9 @@ class ChollometroSource:
         if link is None:
             await self._save(self._skipped(t, "unknown_store"))
             return False
-        offer = await self._offer(run.source, thread, link)
-        if offer is None:
-            await self._save(self._skipped(t, OfferStatus.SKIPPED_MISMATCH.value))
+        offer = await self._offer(run, thread, link)
+        if isinstance(offer, str):
+            await self._save(self._skipped(t, offer))
             return False
         result = await self._pipeline.process_offer(
             run.source.id,
@@ -471,10 +477,11 @@ class ChollometroSource:
         return True
 
     async def _offer(
-        self, source: ApiSource, thread: ChollometroThread, link: StoreLink
-    ) -> ParsedOffer | None:
-        """The offer to publish, or None when the store's price contradicts the deal."""
-        categories = [normalize_hashtag(c) for c in thread.categories]
+        self, run: _Run, thread: ChollometroThread, link: StoreLink
+    ) -> ParsedOffer | str:
+        """The offer to publish, or the reason to skip the thread."""
+        tags = [normalize_hashtag(c) for c in thread.categories]
+        tags += [*run.source.hashtags, normalize_hashtag(link.store.id)]
         offer = ParsedOffer(
             asin=link.product_id,
             country=link.country,
@@ -483,7 +490,7 @@ class ChollometroSource:
             price=None,
             previous_price=None,
             coupon=_coupon_code(thread.coupon),
-            hashtags=list(dict.fromkeys([*filter(None, categories), *source.hashtags])),
+            hashtags=list(dict.fromkeys(filter(None, tags))),
             canonical_url=link.canonical,
             product_url=link.canonical,
         )
@@ -499,15 +506,45 @@ class ChollometroSource:
                 quote.price if quote else None,
                 thread.price,
             )
-            return None
+            return OfferStatus.SKIPPED_MISMATCH.value
         price, store_previous = reconciled
+        # The API price of these stores is before coupons, and their "before" is inflated.
+        before_coupon = link.store.id in STORES_PRICED_BEFORE_COUPON
+        if before_coupon:
+            store_previous = None
+        elif self._lukewarm(run, thread, price, quote):
+            logger.info(
+                "Chollometro thread %s: store discount below %s%% — skipped",
+                thread.thread_id,
+                run.config.min_discount,
+            )
+            return "lukewarm"
         previous = store_previous if store_previous is not None else thread.previous_price
+        from_store = quote is not None and quote.price < thread.price
         return replace(
             offer,
             price=price,
             previous_price=previous if previous is not None and previous > price else None,
             image_url=quote.image_url if quote is not None else None,
+            price_before_coupon=before_coupon and from_store,
         )
+
+    @staticmethod
+    def _lukewarm(
+        run: _Run, thread: ChollometroThread, price: Decimal, quote: PriceQuote | None
+    ) -> bool:
+        """Qualified only by its discount, which the store's own "before" price denies.
+
+        Chollometro's "before" can be inflated: when the store reports its previous
+        price, the discount is measured against it instead.
+        """
+        if thread.temperature > run.config.min_temperature:
+            return False
+        if quote is None or quote.previous_price is None:
+            return False
+        previous = quote.previous_price
+        discount = discount_percent(price, previous) if previous > price else 0
+        return discount < run.config.min_discount
 
     # Helpers --------------------------------------------------------------
 
@@ -543,7 +580,11 @@ class ChollometroSource:
         return True, thread
 
     async def _store_link(self, url: str) -> StoreLink | None:
-        """The registered product at ``url``; resolver errors propagate (transient)."""
+        """The registered product at ``url``, or None.
+
+        UrlResolver turns network errors into None (so they read as "no store"); only
+        unexpected errors propagate, and callers treat those as transient.
+        """
         return await resolve_store_link(url, self._resolver, self._registry)
 
     async def _quote(self, link: StoreLink) -> PriceQuote | None:

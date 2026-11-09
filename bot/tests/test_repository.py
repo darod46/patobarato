@@ -225,6 +225,9 @@ async def test_set_publication_status_marks_ended():
     await repo.set_publication_status(publication_id, PublicationStatus.ENDED)
     last = await repo.get_last_publication(product_id, "ES")
     assert last is not None and last.status is PublicationStatus.ENDED
+    assert repo.publications()[0]["ended_at"] is not None
+    await repo.set_publication_status(publication_id, PublicationStatus.ACTIVE)
+    assert repo.publications()[0]["ended_at"] is None
 
 
 def make_coupon(external_id: str = "a", title: str = "Cupón", source_id: int = 1) -> CouponUpsert:

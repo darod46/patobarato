@@ -131,7 +131,7 @@ def parse_listing(html: str) -> list[ChollometroThread]:
                     categories=_categories(group),
                 )
             )
-        except (ValueError, KeyError, TypeError):
+        except (ValueError, KeyError, TypeError, OverflowError, OSError):
             logger.warning(
                 "Skipping malformed Chollometro thread %s", data.get("threadId")
             )
@@ -158,6 +158,6 @@ def parse_thread_page(html: str) -> ChollometroThread | None:
             visit_url=_absolute(data.get("linkCloakedItemMainButton")),
             categories=_categories(*default, *names),
         )
-    except (ValueError, KeyError, TypeError, AttributeError):
+    except (ValueError, KeyError, TypeError, AttributeError, OverflowError, OSError):
         logger.warning("Could not parse Chollometro thread page", exc_info=True)
         return None

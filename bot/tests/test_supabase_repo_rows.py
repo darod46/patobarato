@@ -467,11 +467,35 @@ async def test_count_publications_since_joins_offers_and_excludes_drafts():
     assert ("eq", ("channel", "telegram"), {}) in client.log
     assert ("neq", ("status", "draft"), {}) in client.log
     assert ("gte", ("published_at", NOW.isoformat()), {}) in client.log
+    assert ("select", ("id, offers!inner(source_id)",), {"count": "exact"}) in client.log
 
 
-async def test_set_publication_status_updates_status_string():
+async def test_set_publication_status_ended_sets_ended_at():
     client = _Client([])
+    before = datetime.now(UTC)
     await SupabaseRepository(client).set_publication_status(9, PublicationStatus.ENDED)
     update = next(a[0] for n, a, _ in client.log if n == "update")
-    assert update == {"status": "ended"}
+    assert update["status"] == "ended"
+    assert before <= datetime.fromisoformat(update["ended_at"]) <= datetime.now(UTC)
     assert ("eq", ("id", 9), {}) in client.log
+
+
+async def test_set_publication_status_active_clears_ended_at():
+    client = _Client([])
+    await SupabaseRepository(client).set_publication_status(9, PublicationStatus.ACTIVE)
+    update = next(a[0] for n, a, _ in client.log if n == "update")
+    assert update == {"status": "active", "ended_at": None}
+
+
+async def test_list_tracked_threads_reads_every_page():
+    pages = [
+        [_thread_row(thread_id=i, state="published") for i in range(1000)],
+        [_thread_row(thread_id=i, state="published") for i in range(1000, 2000)],
+        [_thread_row(thread_id=2000, state="published")],
+    ]
+    client = _ScriptedClient(pages)
+    got = await SupabaseRepository(client).list_tracked_threads(7, [ThreadState.PUBLISHED])
+    assert len(got) == 2001
+    ranges = [a for n, a, _ in client.log if n == "range"]
+    assert ranges == [(0, 999), (1000, 1999), (2000, 2999)]
+    assert ("order", ("thread_id",), {}) in client.log

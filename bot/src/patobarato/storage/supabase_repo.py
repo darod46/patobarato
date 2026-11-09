@@ -27,6 +27,7 @@ from patobarato.storage.repository import clean_hashtags
 
 UNIQUE_VIOLATION = "23505"
 CATALOG_PAGE = 1000
+TRACKED_PAGE = 1000
 CATALOG_UPDATE_CHUNK = 500  # ids travel in the URL of the update request
 
 logger = logging.getLogger("patobarato.supabase_repo")
@@ -814,16 +815,27 @@ class SupabaseRepository:
         if not states:
             return []
 
-        def run():
-            return (
-                self._client.table("chollometro_threads")
-                .select("*")
-                .eq("source_id", source_id)
-                .in_("state", [s.value for s in states])
-                .execute()
-            )
+        def run() -> list[dict]:
+            # Paged: PostgREST returns at most 1000 rows per request.
+            rows: list[dict] = []
+            start = 0
+            while True:
+                page = (
+                    self._client.table("chollometro_threads")
+                    .select("*")
+                    .eq("source_id", source_id)
+                    .in_("state", [s.value for s in states])
+                    .order("thread_id")
+                    .range(start, start + TRACKED_PAGE - 1)
+                    .execute()
+                    .data
+                )
+                rows.extend(page)
+                if len(page) < TRACKED_PAGE:
+                    return rows
+                start += TRACKED_PAGE
 
-        return [_thread_from_row(r) for r in (await asyncio.to_thread(run)).data]
+        return [_thread_from_row(r) for r in await asyncio.to_thread(run)]
 
     async def count_publications_since(
         self, source_id: int, since: datetime, channel: PublicationChannel = "telegram"
@@ -843,9 +855,12 @@ class SupabaseRepository:
         return (await asyncio.to_thread(run)).count or 0
 
     async def set_publication_status(self, publication_id: int, status: PublicationStatus) -> None:
+        # Same as the admin's setOfferStatus: ended_at is set on end and cleared otherwise.
+        ended_at = datetime.now(UTC).isoformat() if status == PublicationStatus.ENDED else None
+
         def run():
-            self._client.table("publications").update({"status": status.value}).eq(
-                "id", publication_id
-            ).execute()
+            self._client.table("publications").update(
+                {"status": status.value, "ended_at": ended_at}
+            ).eq("id", publication_id).execute()
 
         await asyncio.to_thread(run)

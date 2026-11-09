@@ -653,3 +653,6 @@ class InMemoryRepository(Repository):
         for pub in self._publications:
             if pub["id"] == publication_id:
                 pub["status"] = status
+                pub["ended_at"] = (
+                    datetime.now(UTC) if status == PublicationStatus.ENDED else None
+                )

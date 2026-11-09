@@ -1,6 +1,6 @@
 # PatoBarato
 
-Bot que lee los chollos de [chollometro.com](https://www.chollometro.com), guarda las ofertas de las tiendas registradas (Amazon España, AliExpress, Awin…) en Supabase (y, con las fuentes de API correspondientes, las de AliExpress y Awin) y las publica en [@patobarato](https://t.me/patobarato) a través de un bot. Los enlaces de Amazon llevan el tag de afiliado (`https://www.amazon.es/dp/{ASIN}?tag=patobarato-21`); en las demás tiendas se usa su enlace de afiliado cuando está configurado.
+Bot que lee los chollos de [chollometro.com](https://www.chollometro.com), guarda en Supabase las ofertas de las tiendas registradas (Amazon España, AliExpress y las tiendas de Awin), además de las que traen las fuentes de API, y las publica en [@patobarato](https://t.me/patobarato) a través de un bot. Los enlaces de Amazon llevan el tag de afiliado (`https://www.amazon.es/dp/{ASIN}?tag=patobarato-21`); en las demás tiendas se usa su enlace de afiliado cuando está configurado.
 
 ## Requisitos
 
@@ -108,7 +108,7 @@ El fichero `bot.session` equivale a tener el bot abierto: no lo compartas ni los
 La fuente `chollometro` lee [chollometro.com](https://www.chollometro.com) y publica los chollos calientes en @patobarato. No necesita credenciales y la crea la migración `20261113000000_chollometro.sql`, así que siempre está disponible.
 
 - **Qué lee:** el listado `/nuevos` y las páginas de cada hilo. Solo se siguen los hilos de tiendas registradas en el bot (Amazon, AliExpress, PcComponentes...). El enlace a la tienda sale del botón `/visit/` del hilo, una sola vez por hilo, y se convierte a tu enlace de afiliado.
-- **Filtro:** un hilo se publica cuando alcanza `min_temperature` grados y, si trae descuento, `min_discount` %. Los hilos nuevos se vigilan durante `warm_hours` horas por si entran en calor; pasado ese tiempo sin llegar al umbral se descartan.
+- **Filtro:** un hilo es apto cuando supera `min_temperature` grados **o** tiene un descuento de al menos `min_discount` %. Si solo es apto por el descuento y la tienda da su propio precio anterior, el descuento se calcula con ese precio (salvo en AliExpress, cuyo precio anterior está inflado); si no llega a `min_discount` %, el hilo se descarta. Los hilos nuevos se vigilan durante `warm_hours` horas por si entran en calor; pasado ese tiempo sin llegar al umbral se descartan.
 - **Límite:** como máximo `max_per_hour` publicaciones por hora, las mejores primero, y `max_pages_per_run` páginas de Chollometro por ejecución.
 - **Fin de oferta:** cuando el hilo aparece como caducado, la publicación pasa a `ended`, el mensaje de Telegram se edita y se avisa a la web.
 - **Valores por defecto:** se ejecuta cada 5 minutos con `min_temperature` 50, `min_discount` 40, `max_per_hour` 10, `warm_hours` 24 y `max_pages_per_run` 5.

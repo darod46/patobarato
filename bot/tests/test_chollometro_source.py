@@ -1,5 +1,6 @@
 import dataclasses
 import json
+import re
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
@@ -26,6 +27,7 @@ from patobarato.sources.chollometro_source import (
 )
 from patobarato.storage.repository import InMemoryRepository
 from patobarato.stores.amazon import AmazonStore
+from patobarato.stores.base import BaseStore
 from patobarato.stores.registry import StoreRegistry
 
 NOW = datetime(2026, 11, 9, 12, 0, tzinfo=UTC)
@@ -125,6 +127,35 @@ class FakeAmazon(AmazonStore):
         return self.quotes.get(product_id)
 
 
+class FakeAliExpress(BaseStore):
+    """AliExpress-like store: API price before coupons, inflated "before" price."""
+
+    id = "aliexpress"
+    name = "AliExpress"
+
+    def __init__(self) -> None:
+        self.quotes: dict[str, PriceQuote | None] = {}
+
+    def matches(self, url: str) -> bool:
+        return "aliexpress.com/item/" in url
+
+    def product_id(self, url: str) -> str | None:
+        match = re.search(r"/item/(\d+)\.html", url)
+        return match.group(1) if match else None
+
+    def canonical_url(self, product_id: str, country: str) -> str:
+        return f"https://es.aliexpress.com/item/{product_id}.html"
+
+    async def affiliate_url(self, canonical_url: str, product_id: str) -> str:
+        return f"https://s.click.aliexpress.com/e/{product_id}"
+
+    async def find_image(self, product_id: str, canonical_url: str) -> str | None:
+        return None
+
+    async def fetch_price(self, product_id: str, canonical_url: str) -> PriceQuote | None:
+        return self.quotes.get(product_id)
+
+
 class FakePublisher:
     def __init__(self) -> None:
         self.calls: list[tuple[str, bytes | None]] = []
@@ -188,7 +219,8 @@ class Env:
         self.repo = InMemoryRepository()
         self.client = FakeClient()
         self.store = FakeAmazon()
-        self.registry = StoreRegistry([self.store])
+        self.aliexpress = FakeAliExpress()
+        self.registry = StoreRegistry([self.store, self.aliexpress])
         self.resolver = UrlResolver(http)
         self.publisher = FakePublisher()
         self.posts = FakePosts()
@@ -696,7 +728,7 @@ async def test_coupon_and_hashtags_in_offer(env):
     await env.run()
     offer = env.pipeline.offers[0][1]
     assert offer.coupon == "CODIGO10"
-    assert offer.hashtags == ["electrónica", "chollo"]
+    assert offer.hashtags == ["electrónica", "chollo", "amazon"]
     assert offer.asin == _asin(1)
     assert offer.store == "amazon"
     assert offer.country == "ES"
@@ -765,3 +797,83 @@ def test_snapshot_tolerates_unknown_and_missing_keys():
     assert thread.temperature == 0.0
     assert thread.expired is False
     assert thread.categories == []
+
+
+def _aliexpress_thread(env: Env, n: int, **kwargs) -> ChollometroThread:
+    thread = _thread(n, merchant="AliExpress", **kwargs)
+    env.client.visits[thread.visit_url] = f"https://es.aliexpress.com/item/{1000 + n}.html"
+    return thread
+
+
+async def test_aliexpress_store_price_is_before_coupon_and_ignores_store_before(env):
+    env.aliexpress.quotes["1001"] = PriceQuote(price=Decimal("15"), previous_price=Decimal("60"))
+    env.client.listing = [_aliexpress_thread(env, 1, temperature=60, price="20", previous="25")]
+    await env.run()
+    offer = env.pipeline.offers[0][1]
+    assert offer.store == "aliexpress"
+    assert offer.price == Decimal("15")
+    assert offer.previous_price == Decimal("25")  # Chollometro's, never the API list price
+    assert offer.price_before_coupon is True
+    assert len(_published(env)) == 1
+
+
+async def test_aliexpress_chollometro_price_is_not_before_coupon(env):
+    env.aliexpress.quotes["1001"] = PriceQuote(price=Decimal("25"), previous_price=Decimal("60"))
+    env.client.listing = [
+        _aliexpress_thread(env, 1, temperature=60, price="20", previous="30", coupon="CODIGO10")
+    ]
+    await env.run()
+    offer = env.pipeline.offers[0][1]
+    assert offer.price == Decimal("20")
+    assert offer.previous_price == Decimal("30")
+    assert offer.price_before_coupon is False
+
+
+async def test_discount_only_thread_denied_by_store_before_price_is_lukewarm(env):
+    env.source = dataclasses.replace(env.source, config={"max_per_hour": 1})
+    # Chollometro: 55 from 100 (45 %); the store says it was 70 (21 %).
+    env.store.quotes[_asin(1)] = PriceQuote(price=Decimal("55"), previous_price=Decimal("70"))
+    env.client.listing = [
+        _thread(1, 5, price="55", previous="100"),
+        _thread(2, 3, price="10", previous="50"),
+    ]
+    await env.run()
+    tracked = await env.thread(1)
+    assert tracked.state == ThreadState.SKIPPED
+    assert tracked.skip_reason == "lukewarm"
+    # No slot used: the other discount deal still got the only one.
+    assert (await env.thread(2)).state == ThreadState.PUBLISHED
+    assert [external_id for external_id, _, _ in env.pipeline.offers] == [2]
+
+
+async def test_discount_only_thread_confirmed_by_store_before_price(env):
+    env.store.quotes[_asin(1)] = PriceQuote(price=Decimal("55"), previous_price=Decimal("120"))
+    env.client.listing = [_thread(1, 5, price="55", previous="100")]
+    await env.run()
+    assert (await env.thread(1)).state == ThreadState.PUBLISHED
+    assert env.pipeline.offers[0][1].previous_price == Decimal("120")
+
+
+async def test_discount_only_thread_without_store_before_keeps_chollometro_discount(env):
+    env.store.quotes[_asin(1)] = PriceQuote(price=Decimal("55"), previous_price=None)
+    env.client.listing = [_thread(1, 5, price="55", previous="100")]
+    await env.run()
+    assert (await env.thread(1)).state == ThreadState.PUBLISHED
+    assert env.pipeline.offers[0][1].previous_price == Decimal("100")
+
+
+async def test_hot_thread_is_not_rechecked_for_discount(env):
+    env.store.quotes[_asin(1)] = PriceQuote(price=Decimal("20"), previous_price=Decimal("21"))
+    env.client.listing = [_thread(1, 60, price="20", previous="100")]
+    await env.run()
+    assert (await env.thread(1)).state == ThreadState.PUBLISHED
+
+
+async def test_short_voucher_is_a_condition_not_a_coupon(env):
+    env.store.quotes[_asin(1)] = PriceQuote(price=Decimal("25"), previous_price=None)
+    env.client.listing = [_thread(1, 60, price="20", coupon="CR")]
+    await env.run()
+    offer = env.pipeline.offers[0][1]
+    assert offer.coupon is None
+    assert offer.price == Decimal("20")  # "CR" still explains the higher store price
+    assert len(_published(env)) == 1
