@@ -29,3 +29,14 @@ npm run lint && npm run typecheck && npm test && npm run build
 
 5. Create the Vercel project with Root Directory `admin` and the three variables
    `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `NEXT_PUBLIC_WEB_URL`.
+
+## Prueba de extremo a extremo
+
+Manual, contra el proyecto real, con el bot en marcha y un canal de pruebas como `TARGET_CHANNEL`:
+
+- [ ] Invitar a un segundo email y aceptar la invitación.
+- [ ] Pegar un enlace de Amazon, revisar el borrador y publicarlo.
+- [ ] Cambiar el precio y comprobar la publicación de Telegram y la página web tras recargar.
+- [ ] Terminar la oferta y comprobar la cabecera de la publicación y que el chollo ha desaparecido de la web.
+- [ ] Copiar la imagen y el texto de WhatsApp en escritorio y compartir desde un móvil.
+- [ ] Anotar los resultados.
