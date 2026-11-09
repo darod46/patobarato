@@ -1,5 +1,4 @@
-from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -35,10 +34,6 @@ class SourceMessage:
     urls: list[str]
     hashtags: list[str]
     received_at: datetime
-    preview_photo: Callable[[], Awaitable[bytes | None]] | None = None
-    preview_url: str | None = None
-    # The photo attached to the message itself (channels that post a photo + caption).
-    attached_photo: Callable[[], Awaitable[bytes | None]] | None = None
 
 
 @dataclass(frozen=True)
@@ -203,3 +198,49 @@ class CatalogRow:
     affiliate_url: str
     feed_updated_at: datetime | None
     updated_at: datetime | None = None
+
+
+@dataclass(frozen=True)
+class ChollometroThread:
+    thread_id: int
+    title: str
+    url: str  # thread page on chollometro.com
+    visit_url: str | None  # https://www.chollometro.com/visit/...
+    merchant: str | None  # name shown by Chollometro ("Amazon")
+    price: Decimal | None
+    previous_price: Decimal | None
+    discount: int | None  # % given by Chollometro, if any
+    temperature: float
+    expired: bool
+    sold_out: bool
+    coupon: str | None
+    categories: list[str]
+    published_at: datetime  # aware, UTC
+
+
+class ThreadState(StrEnum):
+    WATCHING = "watching"  # not eligible yet, re-evaluated during warm_hours
+    QUALIFIED = "qualified"  # eligible, waiting for a free slot (qualified_at set)
+    PUBLISHED = "published"  # published; its end is watched
+    ENDED = "ended"  # publication marked as ended
+    SKIPPED = "skipped"  # dropped for good (unknown store, stale, mismatch, duplicate, no affiliate)
+
+
+@dataclass(frozen=True)
+class TrackedThread:
+    """Chollometro thread followed across runs (``chollometro_threads``)."""
+
+    source_id: int
+    thread_id: int
+    url: str
+    state: ThreadState
+    temperature: float
+    discount: int | None
+    first_seen_at: datetime
+    published_at: datetime  # on Chollometro
+    qualified_at: datetime | None
+    store_url: str | None  # result of /visit/ (resolved once)
+    publication_id: int | None
+    last_checked_at: datetime | None
+    skip_reason: str | None = None
+    snapshot: dict = field(default_factory=dict)  # latest deal data, JSON-safe

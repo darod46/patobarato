@@ -5,12 +5,12 @@ from types import SimpleNamespace
 
 import httpx
 import pytest
-from telethon.errors import AccessTokenInvalidError, PhoneCodeInvalidError
+from telethon.errors import AccessTokenInvalidError
 
 import patobarato.main as main_module
 
 from patobarato.config import Settings, get_settings
-from patobarato.main import EXIT_CONFIG_ERROR, _supervise, login, main, promos, run
+from patobarato.main import EXIT_CONFIG_ERROR, _supervise, main, promos, run
 from patobarato.stores.aliexpress_client import AliExpressError, AliPromo
 
 REQUIRED = [
@@ -65,21 +65,21 @@ async def test_supervise_returns_1_when_a_task_raises(caplog):
     cancelled: list[str] = []
 
     async def boom() -> None:
-        raise RuntimeError("pipeline exploded")
+        raise RuntimeError("scheduler exploded")
 
     with caplog.at_level(logging.ERROR, logger="patobarato.main"):
         code = await _supervise(
-            pipeline=boom(),
-            refresh=_forever(cancelled, "refresh"),
-            reader=_forever(cancelled, "reader"),
+            scheduler=boom(),
+            admin_jobs=_forever(cancelled, "admin_jobs"),
+            bot=_forever(cancelled, "bot"),
         )
 
     assert code == 1
-    assert sorted(cancelled) == ["reader", "refresh"]
+    assert sorted(cancelled) == ["admin_jobs", "bot"]
     [record] = [r for r in caplog.records if r.name == "patobarato.main"]
-    assert "pipeline" in record.getMessage()
+    assert "scheduler" in record.getMessage()
     assert record.exc_info is not None
-    assert "pipeline exploded" in str(record.exc_info[1])
+    assert "scheduler exploded" in str(record.exc_info[1])
 
 
 async def test_supervise_returns_1_when_a_task_ends(caplog):
@@ -90,39 +90,15 @@ async def test_supervise_returns_1_when_a_task_ends(caplog):
 
     with caplog.at_level(logging.ERROR, logger="patobarato.main"):
         code = await _supervise(
-            pipeline=_forever(cancelled, "pipeline"),
-            refresh=_forever(cancelled, "refresh"),
-            reader=disconnected(),
+            scheduler=_forever(cancelled, "scheduler"),
+            admin_jobs=_forever(cancelled, "admin_jobs"),
+            bot=disconnected(),
         )
 
     assert code == 1
-    assert sorted(cancelled) == ["pipeline", "refresh"]
+    assert sorted(cancelled) == ["admin_jobs", "scheduler"]
     messages = [r.getMessage() for r in caplog.records if r.name == "patobarato.main"]
-    assert any("reader" in m for m in messages)
-
-
-class _FailingLoginClient:
-    def __init__(self) -> None:
-        self.disconnected = False
-
-    async def start(self):
-        raise PhoneCodeInvalidError(request=None)
-
-    async def disconnect(self) -> None:
-        self.disconnected = True
-
-
-async def test_login_failure_prints_spanish_message_and_returns_1(monkeypatch, capsys):
-    client = _FailingLoginClient()
-    monkeypatch.setattr(main_module, "_client", lambda path, settings: client)
-
-    code = await login(SimpleNamespace(telegram_session_path="data/reader.session"))
-
-    assert code == 1
-    err = capsys.readouterr().err
-    assert "No se pudo iniciar sesión" in err
-    assert "Traceback" not in err
-    assert client.disconnected
+    assert any("bot" in m for m in messages)
 
 
 # --- I7: bot connection supervised, bot login failure handled ----------------
@@ -168,10 +144,11 @@ def _run_settings() -> Settings:
 
 @pytest.fixture
 def fake_clients(monkeypatch):
-    clients = {"reader": _FakeClient(), "bot": _FakeClient()}
+    clients = {"bot": _FakeClient()}
 
     def make(path, settings):
-        return clients["bot"] if path == main_module.BOT_SESSION_PATH else clients["reader"]
+        assert path == main_module.BOT_SESSION_PATH  # only the bot connects to Telegram
+        return clients["bot"]
 
     monkeypatch.setattr(main_module, "_client", make)
     monkeypatch.setattr(main_module, "create_client", lambda url, key: object())
@@ -192,8 +169,7 @@ async def test_run_supervises_bot_connection(fake_clients, monkeypatch):
 
     assert await run(_run_settings()) == 1
 
-    assert sorted(supervised) == ["admin_jobs", "bot", "pipeline", "reader", "refresh", "scheduler"]
-    assert fake_clients["reader"].disconnected
+    assert sorted(supervised) == ["admin_jobs", "bot", "scheduler"]
     assert fake_clients["bot"].disconnected
 
 
@@ -207,7 +183,6 @@ async def test_run_bot_login_failure_is_reported_in_spanish(fake_clients, capsys
     assert "No se pudo iniciar el bot" in err
     assert "TELEGRAM_BOT_TOKEN" in err
     assert "Traceback" not in err
-    assert fake_clients["reader"].disconnected
     assert fake_clients["bot"].disconnected
 
 
@@ -261,6 +236,24 @@ def _ali_settings(**kw) -> Settings:
     )
 
 
+def _build_runners(registry, settings, http):
+    from unittest.mock import MagicMock
+
+    from patobarato.storage.repository import InMemoryRepository
+
+    return main_module.build_runners(
+        registry,
+        InMemoryRepository(),
+        settings,
+        lambda: None,
+        http,
+        pipeline=MagicMock(),
+        posts=MagicMock(),
+        revalidator=MagicMock(),
+        resolver=MagicMock(),
+    )
+
+
 def test_build_runners_includes_aliexpress_with_credentials():
     import httpx
 
@@ -273,9 +266,9 @@ def test_build_runners_includes_aliexpress_with_credentials():
     http = httpx.AsyncClient()
     registry = build_registry(settings, http, http)
 
-    runners = main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None)
+    runners = _build_runners(registry, settings, http)
 
-    assert [r.type for r in runners] == ["aliexpress_api", "event_promos", "guide_prices"]
+    assert [r.type for r in runners] == ["chollometro", "aliexpress_api", "event_promos", "guide_prices"]
 
 
 def test_no_runner_without_aliexpress_credentials():
@@ -294,14 +287,14 @@ def test_no_runner_without_aliexpress_credentials():
         registry = build_registry(settings, http, http)
         return [
             r.type
-            for r in main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None)
+            for r in _build_runners(registry, settings, http)
         ]
 
     assert "event_promos" not in types(without)
     assert "event_promos" in types(with_creds)
 
 
-def test_build_runners_is_empty_without_credentials():
+def test_build_runners_includes_chollometro_without_credentials():
     import httpx
 
     from patobarato.storage.repository import InMemoryRepository
@@ -312,8 +305,8 @@ def test_build_runners_is_empty_without_credentials():
     registry = build_registry(settings, http, http)
 
     assert [
-        r.type for r in main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None)
-    ] == ["guide_prices"]
+        r.type for r in _build_runners(registry, settings, http)
+    ] == ["chollometro", "guide_prices"]
 
 
 def test_build_runners_includes_awin_with_publisher_and_token():
@@ -327,9 +320,9 @@ def test_build_runners_includes_awin_with_publisher_and_token():
     http = httpx.AsyncClient()
     registry = build_registry(settings, http, http)
 
-    runners = main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None, http)
+    runners = _build_runners(registry, settings, http)
 
-    assert [r.type for r in runners] == ["awin_promotions", "awin_feeds", "guide_prices"]
+    assert [r.type for r in runners] == ["chollometro", "awin_promotions", "awin_feeds", "guide_prices"]
 
 
 def test_build_runners_includes_awin_feeds_with_credentials():
@@ -340,11 +333,9 @@ def test_build_runners_includes_awin_feeds_with_credentials():
 
     settings = _ali_settings(awin_publisher_id="999", awin_api_token="tok")
     http = httpx.AsyncClient()
-    runners = main_module.build_runners(
-        build_registry(settings, http, http), InMemoryRepository(), settings, lambda: None, http
-    )
+    runners = _build_runners(build_registry(settings, http, http), settings, http)
 
-    promotions, feeds = runners[0], runners[1]
+    promotions, feeds = runners[1], runners[2]
     assert feeds.type == "awin_feeds"
     assert feeds._client is promotions._client
 
@@ -364,8 +355,8 @@ def test_build_runners_skips_awin_without_token_or_publisher():
         registry = build_registry(settings, http, http)
         assert [
             r.type
-            for r in main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None, http)
-        ] == ["guide_prices"]
+            for r in _build_runners(registry, settings, http)
+        ] == ["chollometro", "guide_prices"]
 
 
 def test_build_runners_passes_guide_price_delay():
@@ -378,7 +369,7 @@ def test_build_runners_passes_guide_price_delay():
     http = httpx.AsyncClient()
     registry = build_registry(settings, http, http)
 
-    (runner,) = main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None)
+    runner = _build_runners(registry, settings, http)[-1]
 
     assert runner.type == "guide_prices"
     assert runner._delay == 0.25
@@ -466,3 +457,8 @@ def test_main_dispatches_promos(monkeypatch):
 
     assert main(["promos"]) == 0
     assert seen == ["settings"]
+
+
+def test_cli_rejects_login():
+    with pytest.raises(SystemExit):
+        main(["login"])
