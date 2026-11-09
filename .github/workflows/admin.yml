@@ -1,0 +1,40 @@
+name: admin
+
+on:
+  push:
+    paths:
+      - "admin/**"
+      - "shared/**"
+      - ".github/workflows/admin.yml"
+  pull_request:
+    paths:
+      - "admin/**"
+      - "shared/**"
+      - ".github/workflows/admin.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy-anon-key
+      NEXT_PUBLIC_WEB_URL: https://patobarato.es
+      NEXT_TELEMETRY_DISABLED: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build

@@ -1,0 +1,33 @@
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+@import "@fontsource/space-grotesk/500.css";
+@import "@fontsource/space-grotesk/600.css";
+@import "@fontsource/space-grotesk/700.css";
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Inter", sans-serif;
+
+  /* Design tokens (same as web/). */
+  --color-ink: #14161a;
+  --color-muted: #5b6470;
+  --color-line: #e6e8ec;
+  --color-surface: #f6f7f9;
+  --color-primary: #1f4fd1;
+  --color-primary-hover: #163ea8;
+  --color-primary-soft: #e8eefc;
+  --color-accent: #ffd24d;
+  --color-accent-ink: #3d2e00;
+  --color-danger: #b42318;
+  --color-success: #14633a;
+  --color-success-soft: #e3f6ea;
+  --color-warm: #fffbe8;
+  --color-warm-line: #f3e4a6;
+}
+
+@utility price {
+  font-variant-numeric: tabular-nums;
+}
