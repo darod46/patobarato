@@ -12,3 +12,6 @@ const STORE_NAMES: Record<string, string> = {
 export function storeName(id: string): string {
   return STORE_NAMES[id] ?? id
 }
+
+/** Ids of the known stores, for pickers. */
+export const STORE_IDS: string[] = Object.keys(STORE_NAMES)
