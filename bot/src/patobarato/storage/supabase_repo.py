@@ -20,7 +20,6 @@ from patobarato.models import (
     PostData,
     PublicationChannel,
     PublicationStatus,
-    Source,
     ThreadState,
     TrackedThread,
 )
@@ -75,33 +74,6 @@ class SupabaseRepository:
     def __init__(self, client: Client) -> None:
         self._client = client
         self._manual_source_id: int | None = None
-
-    async def sync_sources(self, channels: dict[str, str], country: str) -> list[Source]:
-        if not channels:
-            return []
-        rows = [
-            {"identifier": identifier, "name": name, "country": country}
-            for identifier, name in channels.items()
-        ]
-
-        def run():
-            self._client.table("sources").upsert(
-                rows, on_conflict="type,identifier", ignore_duplicates=True
-            ).execute()
-            return (
-                self._client.table("sources")
-                .select("id, identifier, country")
-                .in_("identifier", list(channels))
-                .eq("active", True)
-                .order("id")
-                .execute()
-            )
-
-        response = await asyncio.to_thread(run)
-        return [
-            Source(id=row["id"], identifier=row["identifier"], country=row["country"])
-            for row in response.data
-        ]
 
     async def upsert_product(self, offer: ParsedOffer) -> int:
         row = {

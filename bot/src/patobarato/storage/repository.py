@@ -33,10 +33,6 @@ def clean_hashtags(tags: list[str]) -> list[str]:
 
 
 class Repository(Protocol):
-    async def sync_sources(self, channels: dict[str, str], country: str) -> list[Source]:
-        """Registers unknown channels (identifier -> name) and returns the active ones."""
-        ...
-
     async def upsert_product(self, offer: ParsedOffer) -> int: ...
 
     async def find_product_id(self, store: str, country: str, asin: str) -> int | None:
@@ -212,7 +208,6 @@ class InMemoryRepository(Repository):
 
     def __init__(self) -> None:
         self._sources: list[tuple[Source, bool]] = []
-        self._source_names: dict[str, str] = {}
         self._products: dict[tuple[str, str, str], int] = {}
         self.product_titles: dict[int, str] = {}
         self.product_images: dict[int, str] = {}
@@ -278,21 +273,6 @@ class InMemoryRepository(Repository):
         )
         self._api_sources.append((source, active))
         return source
-
-    def source_names(self) -> dict[str, str]:
-        return dict(self._source_names)
-
-    async def sync_sources(self, channels: dict[str, str], country: str) -> list[Source]:
-        known = {source.identifier for source, _ in self._sources}
-        for identifier, name in channels.items():
-            if identifier not in known:
-                self.add_source(identifier, country=country)
-                self._source_names[identifier] = name
-        return [
-            source
-            for source, active in self._sources
-            if active and source.identifier in channels
-        ]
 
     async def upsert_product(self, offer: ParsedOffer) -> int:
         key = (offer.store, offer.country, offer.asin)

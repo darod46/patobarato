@@ -1,4 +1,4 @@
-"""Command-line entrypoint: ``python -m patobarato login|run|backfill-images|promos``."""
+"""Command-line entrypoint: ``python -m patobarato run|backfill-images|promos``."""
 
 import argparse
 import asyncio
@@ -29,6 +29,8 @@ from patobarato.sources.aliexpress_source import AliExpressSource
 from patobarato.sources.api_scheduler import ApiScheduler, ApiSourceRunner
 from patobarato.sources.awin_feeds import AwinFeedsSource
 from patobarato.sources.awin_source import AwinClient, AwinPromotionsSource
+from patobarato.sources.chollometro_client import ChollometroClient
+from patobarato.sources.chollometro_source import ChollometroSource
 from patobarato.sources.event_promos import EventPromosSource
 from patobarato.sources.guide_prices import GuidePriceRefresher
 from patobarato.storage.repository import Repository
@@ -40,7 +42,6 @@ from patobarato.stores.registry import StoreRegistry, build_registry
 logger = logging.getLogger("patobarato.main")
 
 BOT_SESSION_PATH = "data/bot.session"
-LOGIN_FIRST_MESSAGE = "Ejecuta primero: docker compose run --rm bot login"
 BOT_START_FAILED_MESSAGE = "No se pudo iniciar el bot (revisa TELEGRAM_BOT_TOKEN)"
 EXIT_CONFIG_ERROR = 2
 
@@ -50,21 +51,6 @@ def _client(session_path: str, settings: Settings) -> TelegramClient:
     return TelegramClient(
         session_path, settings.telegram_api_id, settings.telegram_api_hash
     )
-
-
-async def login(settings: Settings) -> int:
-    client = _client(settings.telegram_session_path, settings)
-    try:
-        await client.start()
-        me = await client.get_me()
-        print(f"Sesión iniciada como {me.first_name} (id {me.id}).")
-        return 0
-    except Exception as e:
-        logger.debug("Login failed", exc_info=True)
-        print(f"No se pudo iniciar sesión: {e}", file=sys.stderr)
-        return 1
-    finally:
-        await client.disconnect()
 
 
 async def _supervise(**named_coros: Coroutine[Any, Any, Any]) -> int:
@@ -113,10 +99,27 @@ def build_runners(
     repo: Repository,
     settings: Settings,
     clock: Callable[[], datetime],
-    http: httpx.AsyncClient | None = None,
+    http: httpx.AsyncClient,
+    *,
+    pipeline: Pipeline,
+    posts: PostService,
+    revalidator: WebRevalidator,
+    resolver: UrlResolver,
 ) -> list[ApiSourceRunner]:
-    """API source runners available with the configured credentials."""
-    runners: list[ApiSourceRunner] = []
+    """Source runners available with the configured credentials (Chollometro needs none)."""
+    runners: list[ApiSourceRunner] = [
+        ChollometroSource(
+            ChollometroClient(http),
+            resolver,
+            registry,
+            repo,
+            pipeline,
+            posts,
+            revalidator,
+            settings,
+            clock,
+        )
+    ]
     ali_store = registry.get("aliexpress")
     if isinstance(ali_store, AliExpressStore):
         runners.append(AliExpressSource(ali_store.client, repo, settings, clock))
@@ -125,7 +128,7 @@ def build_runners(
     # the source itself warns and does nothing when it ends up with none.
     if settings.awin_publisher_id and settings.awin_api_token:
         client = AwinClient(
-            http or httpx.AsyncClient(timeout=settings.http_timeout_seconds),
+            http,
             settings.awin_publisher_id,
             settings.awin_api_token,
         )
@@ -164,15 +167,32 @@ async def run(settings: Settings) -> int:
             registry=registry,
             image_downloader=lambda url: download_photo(http, url),
         )
-        scheduler = ApiScheduler(repo, build_runners(registry, repo, settings, utcnow, http))
+        posts = PostService(
+            repo, publisher, registry, lambda url: download_photo(http, url), utcnow
+        )
+        revalidator = WebRevalidator(
+            http, settings.web_revalidate_url, settings.revalidate_secret
+        )
+        scheduler = ApiScheduler(
+            repo,
+            build_runners(
+                registry,
+                repo,
+                settings,
+                utcnow,
+                http,
+                pipeline=pipeline,
+                posts=posts,
+                revalidator=revalidator,
+                resolver=resolver,
+            ),
+        )
         runner = JobRunner(
             repo,
-            PostService(
-                repo, publisher, registry, lambda url: download_photo(http, url), utcnow
-            ),
+            posts,
             pipeline,
             UserAdmin(supabase_client, repo, settings.admin_url),
-            WebRevalidator(http, settings.web_revalidate_url, settings.revalidate_secret),
+            revalidator,
             settings.admin_jobs_poll_seconds,
         )
         logger.info("PatoBarato en marcha; publicando en %s", settings.target_channel)
@@ -258,7 +278,7 @@ def _config_error_message(error: ValidationError) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="patobarato")
-    parser.add_argument("command", choices=["login", "run", "backfill-images", "promos"])
+    parser.add_argument("command", choices=["run", "backfill-images", "promos"])
     args = parser.parse_args(argv)
 
     logging.basicConfig(
@@ -280,8 +300,6 @@ def main(argv: list[str] | None = None) -> int:
         )
         return EXIT_CONFIG_ERROR
 
-    if args.command == "login":
-        return asyncio.run(login(settings))
     if args.command == "backfill-images":
         return asyncio.run(backfill(settings))
     if args.command == "promos":
