@@ -106,6 +106,10 @@ class Repository(Protocol):
 
     async def add_admin_user(self, user_id: str, email: str) -> None: ...
 
+    async def owner_ids(self) -> list[str]:
+        """User ids of the admin users flagged ``is_owner``."""
+        ...
+
     async def list_api_sources(self) -> list[ApiSource]:
         """Active sources that are not Telegram channels."""
         ...
@@ -466,8 +470,11 @@ class InMemoryRepository(Repository):
                     status="done" if error is None else "error", result=result, error=error
                 )
 
-    async def add_admin_user(self, user_id: str, email: str) -> None:
-        self.admin_users[user_id] = {"email": email, "is_owner": False}
+    async def add_admin_user(self, user_id: str, email: str, *, is_owner: bool = False) -> None:
+        self.admin_users[user_id] = {"email": email, "is_owner": is_owner}
+
+    async def owner_ids(self) -> list[str]:
+        return [uid for uid, u in self.admin_users.items() if u["is_owner"]]
 
     async def list_api_sources(self) -> list[ApiSource]:
         result = []

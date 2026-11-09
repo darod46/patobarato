@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     aliexpress_tracking_id: str | None = None
     awin_publisher_id: str | None = None
     awin_api_token: str | None = None
+    admin_url: str | None = None
+    web_revalidate_url: str | None = None
+    revalidate_secret: str | None = None
+    admin_jobs_poll_seconds: float = 3.0
     # JSON in env: {"pccomponentes": 1234}. A null/missing mid still publishes plain links.
     awin_merchants: dict[str, int | None] = Field(
         default_factory=lambda: {"pccomponentes": None, "mediamarkt": None, "elcorteingles": None}

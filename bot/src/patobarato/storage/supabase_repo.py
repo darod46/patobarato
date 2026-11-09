@@ -394,6 +394,18 @@ class SupabaseRepository:
 
         await asyncio.to_thread(run)
 
+    async def owner_ids(self) -> list[str]:
+        def run():
+            return (
+                self._client.table("admin_users")
+                .select("user_id")
+                .eq("is_owner", True)
+                .execute()
+            )
+
+        response = await asyncio.to_thread(run)
+        return [r["user_id"] for r in response.data]
+
     async def list_api_sources(self) -> list[ApiSource]:
         def run():
             return (
