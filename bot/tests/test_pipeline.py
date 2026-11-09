@@ -13,9 +13,10 @@ from patobarato.config import Settings
 from patobarato.core.pipeline import (
     MIN_PUBLISH_INTERVAL_SECONDS,
     PRICE_FETCH_TIMEOUT_SECONDS,
+    DraftError,
     Pipeline,
 )
-from patobarato.models import OfferStatus, PriceQuote, SourceMessage
+from patobarato.models import OfferStatus, PriceQuote, PublicationStatus, SourceMessage
 from patobarato.parsing.extract import extract_offers
 from patobarato.parsing.links import UrlResolver
 from patobarato.storage.repository import InMemoryRepository
@@ -996,3 +997,72 @@ async def test_store_title_match_is_published(make_pipeline, publisher):
     )
     statuses = await make_pipeline(registry=StoreRegistry([store])).process(_symino_msg())
     assert statuses == [OfferStatus.PUBLISHED]
+
+
+FAKE_URL = "https://fake.example/p/P1"
+
+
+async def test_create_draft_stores_draft_without_publishing(make_pipeline, repo, publisher):
+    store = PricedStore(
+        PriceQuote(Decimal("8.50"), Decimal("12.00"), image_url="https://img/q.jpg")
+    )
+    pipeline = make_pipeline(registry=StoreRegistry([store]))
+
+    publication_id = await pipeline.create_draft(FAKE_URL, 7)
+
+    assert publisher.calls == []
+    publications = repo.publications()
+    assert len(publications) == 1
+    assert publications[0]["id"] == publication_id
+    assert publications[0]["status"] == PublicationStatus.DRAFT
+    assert publications[0]["affiliate_url"] == FAKE_URL + "?aff=1"
+    assert publications[0]["published_price"] == Decimal("8.50")
+    assert publications[0]["chat_id"] is None
+    assert publications[0]["message_id"] is None
+    assert publications[0]["published_at"] == NOW
+    assert repo.offer_statuses() == [OfferStatus.PENDING]
+    assert list(repo.product_images.values()) == ["https://img/q.jpg"]
+
+
+async def test_create_draft_ignores_duplicate_rule(make_pipeline, repo, publisher):
+    pipeline = make_pipeline()
+    assert await pipeline.process(_msg()) == [OfferStatus.PUBLISHED]
+    store = PricedStore(PriceQuote(Decimal("249.99"), None))
+    pipeline = make_pipeline(registry=StoreRegistry([store]))
+    # Same product as the published one would be skipped by decide(); a draft is not.
+    publication_id = await pipeline.create_draft(FAKE_URL, 1)
+    drafts = [p for p in repo.publications() if p["id"] == publication_id]
+    assert drafts[0]["status"] == PublicationStatus.DRAFT
+
+
+async def test_create_draft_same_product_twice_creates_two_drafts(make_pipeline, repo):
+    store = PricedStore(PriceQuote(Decimal("8.50"), None))
+    pipeline = make_pipeline(registry=StoreRegistry([store]))
+    first = await pipeline.create_draft(FAKE_URL, 1)
+    second = await pipeline.create_draft(FAKE_URL, 2)
+    assert first != second
+
+
+async def test_create_draft_unknown_store_raises(make_pipeline, repo):
+    pipeline = make_pipeline()
+    with pytest.raises(DraftError, match="No reconozco la tienda de ese enlace"):
+        await pipeline.create_draft("https://unknown.example/p/1", 1)
+    assert repo.publications() == []
+
+
+async def test_create_draft_no_price_raises_and_leaves_no_publication(make_pipeline, repo):
+    store = PricedStore(None)
+    pipeline = make_pipeline(registry=StoreRegistry([store]))
+    with pytest.raises(DraftError, match="No he encontrado el precio en la tienda"):
+        await pipeline.create_draft(FAKE_URL, 1)
+    assert repo.publications() == []
+    assert repo.offer_statuses() == []
+
+
+async def test_create_draft_no_affiliate_raises(make_pipeline, repo):
+    store = PricedStore(PriceQuote(Decimal("8.50"), None), affiliate=None)
+    pipeline = make_pipeline(registry=StoreRegistry([store]))
+    with pytest.raises(DraftError, match="No se pudo generar el enlace de afiliado"):
+        await pipeline.create_draft(FAKE_URL, 1)
+    assert repo.publications() == []
+    assert repo.offer_statuses() == []
