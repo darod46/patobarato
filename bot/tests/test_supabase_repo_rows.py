@@ -366,3 +366,11 @@ async def test_manual_source_id_raises_when_missing():
     with pytest.raises(RuntimeError, match="manual"):
         await SupabaseRepository(_Client([])).manual_source_id()
     assert await SupabaseRepository(_Client([{"id": 7}])).manual_source_id() == 7
+
+
+async def test_fail_running_jobs_updates_running_rows():
+    client = _Client([{"id": 1}, {"id": 2}])
+    assert await SupabaseRepository(client).fail_running_jobs("boom") == 2
+    assert ("eq", ("status", "running"), {}) in client.log
+    update = next(a[0] for n, a, _ in client.log if n == "update")
+    assert update == {"status": "error", "error": "boom"}

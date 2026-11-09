@@ -104,6 +104,10 @@ class Repository(Protocol):
         """Status ``done``, or ``error`` when ``error`` is given."""
         ...
 
+    async def fail_running_jobs(self, error: str) -> int:
+        """Marks every ``running`` job as ``error`` (left over by a crash); returns how many."""
+        ...
+
     async def add_admin_user(self, user_id: str, email: str) -> None: ...
 
     async def owner_ids(self) -> list[str]:
@@ -469,6 +473,14 @@ class InMemoryRepository(Repository):
                 job.update(
                     status="done" if error is None else "error", result=result, error=error
                 )
+
+    async def fail_running_jobs(self, error: str) -> int:
+        count = 0
+        for job in self._jobs:
+            if job["status"] == "running":
+                job.update(status="error", error=error)
+                count += 1
+        return count
 
     async def add_admin_user(self, user_id: str, email: str, *, is_owner: bool = False) -> None:
         self.admin_users[user_id] = {"email": email, "is_owner": is_owner}

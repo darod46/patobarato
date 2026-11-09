@@ -381,6 +381,18 @@ class SupabaseRepository:
 
         await asyncio.to_thread(run)
 
+    async def fail_running_jobs(self, error: str) -> int:
+        def run():
+            return (
+                self._client.table("admin_jobs")
+                .update({"status": "error", "error": error})
+                .eq("status", "running")
+                .execute()
+            )
+
+        response = await asyncio.to_thread(run)
+        return len(response.data)
+
     async def add_admin_user(self, user_id: str, email: str) -> None:
         def run():
             return (

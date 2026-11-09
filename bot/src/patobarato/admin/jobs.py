@@ -16,6 +16,7 @@ logger = logging.getLogger("patobarato.admin.jobs")
 
 CLAIM_LIMIT = 10
 INTERNAL_ERROR = "Error interno del bot"
+INTERRUPTED_ERROR = "Trabajo interrumpido; reinténtalo"
 UNKNOWN_TYPE = "Tipo de trabajo desconocido"
 _USER_ERRORS = (PostError, DraftError, UserError, RevalidateError)
 
@@ -40,6 +41,9 @@ class JobRunner:
         self._sleep = sleep
 
     async def run(self) -> None:
+        interrupted = await self._repo.fail_running_jobs(INTERRUPTED_ERROR)
+        if interrupted:
+            logger.warning("Marked %d interrupted admin job(s) as failed", interrupted)
         while True:
             try:
                 await self.run_once()
@@ -54,6 +58,12 @@ class JobRunner:
         return len(jobs)
 
     async def _handle(self, job: AdminJob) -> None:
+        try:
+            await self._handle_unsafe(job)
+        except Exception:
+            logger.exception("Could not record the outcome of admin job %s", job.id)
+
+    async def _handle_unsafe(self, job: AdminJob) -> None:
         try:
             result = await self._dispatch(job)
         except _USER_ERRORS as e:

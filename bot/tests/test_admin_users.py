@@ -73,3 +73,14 @@ async def test_revoke_owner_allowed_when_another_exists():
     await repo.add_admin_user("o2", "p@b.es", is_owner=True)
     await users.revoke("o1")
     assert admin.deleted == ["o1"]
+
+
+async def test_revoke_invalid_user_id_is_user_error():
+    users, repo, admin = make()
+
+    def bad(_):
+        raise ValueError("Invalid id, 'x' is not a valid uuid")
+
+    admin.delete_user = bad
+    with pytest.raises(UserError, match="Usuario no válido"):
+        await users.revoke("x")

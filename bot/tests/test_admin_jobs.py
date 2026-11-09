@@ -159,3 +159,39 @@ async def test_run_survives_exception_in_run_once():
     with pytest.raises(KeyboardInterrupt):
         await runner.run()
     assert calls == 2
+
+
+async def test_run_fails_leftover_running_jobs_on_start():
+    runner, repo, *_ = make()
+    repo.add_job("publish_draft", {"publication_id": 1})
+    await repo.claim_jobs(10)  # left "running" by a previous crash
+
+    async def stop(_):
+        raise KeyboardInterrupt
+
+    runner._sleep = stop
+    with pytest.raises(KeyboardInterrupt):
+        await runner.run()
+    job = repo.jobs()[0]
+    assert job["status"] == "error"
+    assert job["error"] == "Trabajo interrumpido; reinténtalo"
+
+
+async def test_finish_job_failure_does_not_abandon_batch():
+    runner, repo, posts, *_ = make()
+    repo.add_job("publish_draft", {"publication_id": 1})
+    repo.add_job("publish_draft", {"publication_id": 2})
+    real = repo.finish_job
+    calls = 0
+
+    async def flaky(job_id, **kw):
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise RuntimeError("db down")
+        await real(job_id, **kw)
+
+    repo.finish_job = flaky
+    assert await runner.run_once() == 2
+    assert posts.calls == [("publish", 1), ("publish", 2)]
+    assert repo.jobs()[1]["status"] == "done"

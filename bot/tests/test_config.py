@@ -82,3 +82,15 @@ def test_invalid_awin_merchants_json_raises_settings_error(monkeypatch):
     monkeypatch.setenv("AWIN_MERCHANTS", "{bad")
     with pytest.raises(SettingsError, match="awin_merchants"):
         Settings(_env_file=None)
+
+
+def test_settings_admin_defaults(monkeypatch):
+    for key, value in REQUIRED_ENV.items():
+        monkeypatch.setenv(key, value)
+    for key in ("ADMIN_URL", "WEB_REVALIDATE_URL", "REVALIDATE_SECRET", "ADMIN_JOBS_POLL_SECONDS"):
+        monkeypatch.delenv(key, raising=False)
+    settings = Settings(_env_file=None)
+    assert settings.admin_url is None
+    assert settings.web_revalidate_url is None
+    assert settings.revalidate_secret is None
+    assert settings.admin_jobs_poll_seconds == 3.0

@@ -43,6 +43,8 @@ class UserAdmin:
             raise UserError("No puedes quitar al último propietario")
         try:
             await asyncio.to_thread(self._client.auth.admin.delete_user, user_id)
+        except ValueError:
+            raise UserError("Usuario no válido") from None
         except AuthError as e:
             raise UserError(str(e.message)) from None
         return {"user_id": user_id}

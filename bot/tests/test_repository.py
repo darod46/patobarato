@@ -467,3 +467,16 @@ async def test_add_admin_user_stores_non_owner():
     repo = InMemoryRepository()
     await repo.add_admin_user("u1", "a@b.c")
     assert repo.admin_users == {"u1": {"email": "a@b.c", "is_owner": False}}
+
+
+async def test_fail_running_jobs_only_touches_running():
+    repo = InMemoryRepository()
+    repo.add_job("publish", {})
+    repo.add_job("publish", {})
+    repo.add_job("publish", {})
+    await repo.claim_jobs(2)
+    await repo.finish_job(1, result={})
+    assert await repo.fail_running_jobs("interrumpido") == 1
+    jobs = repo.jobs()
+    assert [j["status"] for j in jobs] == ["done", "error", "pending"]
+    assert jobs[1]["error"] == "interrumpido"
