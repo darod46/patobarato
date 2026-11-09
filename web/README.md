@@ -70,6 +70,7 @@ Notas:
 - Cupones (`/cupones`): 600 s.
 - Producto (`/oferta/...`): 600 s.
 - Sitemap: 3600 s.
+- Revalidación bajo demanda: `POST /api/revalidate` con la cabecera `x-revalidate-secret` (debe coincidir con `REVALIDATE_SECRET`; sin variable, siempre 401) revalida todo el sitio (`revalidatePath('/', 'layout')`). Lo llama el bot tras cada cambio del admin, para que las ediciones se vean al instante.
 
 ## SEO
 
@@ -127,6 +128,6 @@ La web solo usa la clave pública (anon) de Supabase y solo lee las vistas `web_
 
 1. Importa el repositorio `darod46/patobarato`.
 2. Root Directory: `web` (el framework Next.js lo fija `vercel.json`).
-3. Variables de entorno `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` en Production y Preview; además `ALIEXPRESS_APP_KEY`, `ALIEXPRESS_APP_SECRET` y `ALIEXPRESS_TRACKING_ID` (solo servidor) para el bloque de AliExpress. Las `VITE_SUPABASE_*` antiguas siguen valiendo por el fallback de `next.config.ts`.
+3. Variables de entorno `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` en Production y Preview; además `ALIEXPRESS_APP_KEY`, `ALIEXPRESS_APP_SECRET` y `ALIEXPRESS_TRACKING_ID` (solo servidor) para el bloque de AliExpress; y `REVALIDATE_SECRET` (solo servidor, el mismo valor que en el `.env` del bot) para la revalidación bajo demanda. Las `VITE_SUPABASE_*` antiguas siguen valiendo por el fallback de `next.config.ts`.
 4. Las variables se incrustan en el build: tras cambiarlas hay que redesplegar.
 5. Dominio principal: `www.patobarato.com` (`patobarato.com` redirige a él).
