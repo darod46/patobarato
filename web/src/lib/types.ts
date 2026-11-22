@@ -121,3 +121,15 @@ export type SiteEvent = {
 }
 
 export type EventPhase = 'before' | 'during' | 'after'
+
+export type PageCopyKind = 'category' | 'store' | 'static'
+
+export type PageCopy = {
+  kind: PageCopyKind
+  slug: string
+  title: string
+  h1: string
+  introMd: string
+  faq: { q: string; aMd: string }[]
+  updatedAt: string
+}
