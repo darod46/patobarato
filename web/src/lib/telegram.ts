@@ -73,7 +73,7 @@ export async function fetchChannelRecent(client: SupabaseClient, limit = 3): Pro
 /** Subscriber count for display; hidden below 100 so a young channel never looks empty. */
 export function formatMembers(n: number | null): string | null {
   if (n === null || n < 100) return null
-  return new Intl.NumberFormat('es-ES').format(n)
+  return new Intl.NumberFormat('es-ES', { useGrouping: 'always' }).format(n)
 }
 
 export const CATEGORY_TAGS: Record<string, string> = {

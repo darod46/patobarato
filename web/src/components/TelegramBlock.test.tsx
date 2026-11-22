@@ -35,6 +35,12 @@ describe('TelegramBlock', () => {
     expect(screen.getByRole('link', { name: 'Unirme al canal gratis' })).toBeInTheDocument()
   })
 
+  it('uses the singular when only one deal was posted today', () => {
+    render(<TelegramBlock fetchLatestDeal={noDeal} live={live({ postedToday: 1 })} now={now} />)
+    expect(screen.getByText('1 chollo hoy')).toBeInTheDocument()
+    expect(screen.queryByText('1 chollos hoy')).toBeNull()
+  })
+
   it('lists the latest channel posts linking to their messages', () => {
     render(<TelegramBlock fetchLatestDeal={noDeal} live={live()} now={now} />)
     const list = screen.getByRole('list', { name: 'Últimos en el canal' })

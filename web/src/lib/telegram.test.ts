@@ -53,7 +53,8 @@ describe('formatMembers', () => {
     expect(formatMembers(100)).toBe('100')
   })
   it('formats with es-ES grouping', () => {
-    expect(formatMembers(1240)).toMatch(/^1\.?240$/)
+    expect(formatMembers(1240)).toBe('1.240')
+    expect(formatMembers(12400)).toBe('12.400')
   })
 })
 

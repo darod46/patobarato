@@ -13,7 +13,7 @@ function channelFacts(live: ChannelLive, now: Date): Fact[] {
   const { postedToday, lastPostedAt, members } = live.stats
   const facts: Fact[] = []
   if (postedToday > 0) {
-    facts.push({ key: 'today', icon: <Flame size={16} aria-hidden="true" />, text: `${postedToday} chollos hoy` })
+    facts.push({ key: 'today', icon: <Flame size={16} aria-hidden="true" />, text: postedToday === 1 ? '1 chollo hoy' : `${postedToday} chollos hoy` })
   }
   if (lastPostedAt) {
     facts.push({ key: 'last', icon: <Clock size={16} aria-hidden="true" />, text: `Último chollo ${timeAgo(lastPostedAt, now)}` })

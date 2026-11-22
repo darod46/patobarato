@@ -178,7 +178,8 @@ async def run(settings: Settings) -> int:
             registry=registry,
             image_downloader=lambda url: download_photo(http, url),
         )
-        scheduler = ApiScheduler(repo, build_runners(registry, repo, settings, utcnow, http, bot=bot)
+        scheduler = ApiScheduler(
+            repo, build_runners(registry, repo, settings, utcnow, http, bot=bot)
         )
         runner = JobRunner(
             repo,
