@@ -52,4 +52,10 @@ describe('Markdown', () => {
     expect(container.querySelector('a')).toBeNull()
     expect(container.textContent).toContain('x')
   })
+
+  it('gives h2 and h3 headings a slug id', () => {
+    const { container } = render(<Markdown source={'## Cómo elegimos los chollos\n\n### Ñandú: año **nuevo**'} />)
+    expect(container.querySelector('h2')!.id).toBe('como-elegimos-los-chollos')
+    expect(container.querySelector('h3')!.id).toBe('nandu-ano-nuevo')
+  })
 })

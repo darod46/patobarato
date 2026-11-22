@@ -46,6 +46,7 @@ describe('buildSitemap', () => {
       'https://www.patobarato.com/cookies',
       'https://www.patobarato.com/afiliados',
       'https://www.patobarato.com/contacto',
+      'https://www.patobarato.com/sobre-nosotros',
     ])
   })
 
@@ -128,6 +129,7 @@ describe('buildSitemap guides', () => {
       'https://www.patobarato.com/cookies',
       'https://www.patobarato.com/afiliados',
       'https://www.patobarato.com/contacto',
+      'https://www.patobarato.com/sobre-nosotros',
     ])
   })
 })

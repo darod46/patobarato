@@ -9,7 +9,7 @@ import { productPath, tagPath } from './urls'
 
 type DealRef = Pick<Deal, 'store' | 'asin' | 'title' | 'publishedAt'>
 
-export const STATIC_PATHS = ['/aviso-legal', '/privacidad', '/cookies', '/afiliados', '/contacto']
+export const STATIC_PATHS = ['/aviso-legal', '/privacidad', '/cookies', '/afiliados', '/contacto', '/sobre-nosotros']
 
 export function buildSitemap(
   deals: DealRef[],

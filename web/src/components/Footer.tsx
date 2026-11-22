@@ -18,7 +18,8 @@ const COLUMNS: Column[] = [
     title: 'Contenido',
     links: [
       { label: 'Cómo funciona', href: '/#como-funciona' },
-      { label: 'Quiénes somos', href: '/#sobre' },
+      { label: 'Quiénes somos', href: '/sobre-nosotros' },
+      { label: 'Cómo elegimos los chollos', href: '/sobre-nosotros#como-elegimos-los-chollos' },
       { label: 'Canal de Telegram', href: 'https://t.me/patobarato', external: true },
     ],
   },

@@ -16,6 +16,13 @@ describe('Footer', () => {
     expect(screen.getByRole('link', { name: 'Por categoría' })).toHaveAttribute('href', '/chollos')
   })
 
+  it('links the about page and its «how we choose» section', () => {
+    render(<Footer year={2026} />)
+    expect(screen.getByRole('link', { name: 'Quiénes somos' })).toHaveAttribute('href', '/sobre-nosotros')
+    expect(screen.getByRole('link', { name: 'Cómo elegimos los chollos' })).toHaveAttribute('href', '/sobre-nosotros#como-elegimos-los-chollos')
+    expect(screen.getByRole('link', { name: 'Cómo funciona' })).toBeInTheDocument()
+  })
+
   it('names other stores in the affiliate notice only when they have data', () => {
     const { unmount } = render(<Footer year={2026} />)
     expect(screen.getByText(/Afiliado de Amazon/)).toBeInTheDocument()
