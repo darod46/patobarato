@@ -1,6 +1,6 @@
 """SupabaseRepository row shapes against a recording fake client (no database needed)."""
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from patobarato.models import EventPromoRow, EventRef, ParsedOffer, PublicationStatus
@@ -100,7 +100,33 @@ async def test_list_guide_products_selects_published_and_dedupes():
     assert ("table", ("guide_item_stores",), {}) in client.log
     assert ("eq", ("guide_items.guides.status", "published"), {}) in client.log
     select = next(a[0] for n, a, _ in client.log if n == "select")
-    assert "guide_items!inner" in select and "guides!inner(status)" in select
+    assert "guide_items!inner" in select and "guides!inner(status, published_at)" in select
+
+
+async def test_list_guide_products_filters_scheduled_beyond_seven_days(monkeypatch):
+    now = datetime(2026, 11, 22, 12, 0, tzinfo=UTC)
+    monkeypatch.setattr("patobarato.core.pipeline.utcnow", lambda: now)
+
+    def row(ext, published_at):
+        return {
+            "store": "amazon",
+            "external_id": ext,
+            "url": f"https://s/{ext}",
+            "guide_items": {
+                "name": ext,
+                "image_url": None,
+                "guides": {"status": "published", "published_at": published_at},
+            },
+        }
+
+    client = _Client([
+        row("A_NULL", None),
+        row("B_PAST", "2026-11-01T10:00:00+00:00"),
+        row("C_SOON", "2026-11-25T10:00:00Z"),
+        row("D_FAR", (now + timedelta(days=10)).isoformat()),
+    ])
+    products = await SupabaseRepository(client).list_guide_products()
+    assert [p.external_id for p in products] == ["A_NULL", "B_PAST", "C_SOON"]
 
 
 async def test_upsert_product_price_success_sends_full_row():

@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from postgrest.exceptions import APIError
@@ -527,7 +527,7 @@ class SupabaseRepository:
             return (
                 self._client.table("guide_item_stores")
                 .select(
-                    "store, external_id, url, guide_items!inner(name, image_url, guides!inner(status))"
+                    "store, external_id, url, guide_items!inner(name, image_url, guides!inner(status, published_at))"
                 )
                 .eq("guide_items.guides.status", "published")
                 .order("store")
@@ -536,10 +536,20 @@ class SupabaseRepository:
                 .execute()
             )
 
+        from patobarato.core import pipeline  # lazy: pipeline imports the repository module
+
         response = await asyncio.to_thread(run)
+        horizon = pipeline.utcnow() + timedelta(days=7)
         unique: dict[tuple[str, str], GuideProduct] = {}
         for row in response.data:
             item = row["guide_items"]
+            raw_published_at = (item.get("guides") or {}).get("published_at")
+            if raw_published_at:
+                published_at = datetime.fromisoformat(raw_published_at.replace("Z", "+00:00"))
+                if published_at.tzinfo is None:
+                    published_at = published_at.replace(tzinfo=UTC)
+                if published_at > horizon:
+                    continue
             unique.setdefault(
                 (row["store"], row["external_id"]),
                 GuideProduct(

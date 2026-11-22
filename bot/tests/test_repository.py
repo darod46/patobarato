@@ -261,6 +261,24 @@ async def test_list_guide_products_dedupes_and_skips_drafts():
     assert [p.external_id for p in products] == ["B2", "B3"]
 
 
+async def test_list_guide_products_includes_scheduled_within_seven_days(monkeypatch):
+    now = datetime(2026, 11, 22, 12, 0, tzinfo=UTC)
+    monkeypatch.setattr("patobarato.core.pipeline.utcnow", lambda: now)
+    repo = InMemoryRepository()
+
+    def gp(ext):
+        return GuideProduct("amazon", ext, f"https://a/{ext}", ext, None)
+
+    repo.add_guide_product(gp("NODATE"))
+    repo.add_guide_product(gp("PAST"), published_at=now - timedelta(days=2))
+    repo.add_guide_product(gp("SOON"), published_at=now + timedelta(days=3))
+    repo.add_guide_product(gp("EDGE"), published_at=now + timedelta(days=7))
+    repo.add_guide_product(gp("FAR"), published_at=now + timedelta(days=10))
+    repo.add_guide_product(gp("DRAFT"), published=False, published_at=now - timedelta(days=1))
+    products = await repo.list_guide_products()
+    assert [p.external_id for p in products] == ["EDGE", "NODATE", "PAST", "SOON"]
+
+
 async def test_upsert_product_price_keeps_price_on_error():
     repo = InMemoryRepository()
     await repo.upsert_product_price(

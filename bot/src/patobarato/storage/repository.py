@@ -1,6 +1,6 @@
 import dataclasses
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Protocol
 
@@ -136,7 +136,12 @@ class Repository(Protocol):
         ...
 
     async def list_guide_products(self) -> list[GuideProduct]:
-        """Products of PUBLISHED guides, deduplicated by (store, external_id), ordered by both."""
+        """Products of guides that are published OR scheduled within the next 7 days.
+
+        A guide counts when its status is ``published`` and its ``published_at`` is
+        null or ``<= now + 7 days``; later-scheduled guides and drafts are excluded.
+        Deduplicated by (store, external_id), ordered by both.
+        """
         ...
 
     async def upsert_product_price(
@@ -201,7 +206,7 @@ class InMemoryRepository(Repository):
         self._api_sources: list[tuple[ApiSource, bool]] = []
         self.source_runs: dict[int, tuple[datetime, str | None]] = {}
         self.coupons: dict[int, dict] = {}
-        self._guide_products: list[tuple[GuideProduct, bool]] = []
+        self._guide_products: list[tuple[GuideProduct, bool, datetime | None]] = []
         self.prices: dict[int, dict] = {}
         self.catalog: dict[tuple[str, str], CatalogRow] = {}
         self._events: dict[int, tuple[str, str | None, str]] = {}
@@ -527,13 +532,21 @@ class InMemoryRepository(Repository):
                 count += 1
         return count
 
-    def add_guide_product(self, product: GuideProduct, published: bool = True) -> None:
-        self._guide_products.append((product, published))
+    def add_guide_product(
+        self,
+        product: GuideProduct,
+        published: bool = True,
+        published_at: datetime | None = None,
+    ) -> None:
+        self._guide_products.append((product, published, published_at))
 
     async def list_guide_products(self) -> list[GuideProduct]:
+        from patobarato.core import pipeline  # lazy: pipeline imports this module
+
+        horizon = pipeline.utcnow() + timedelta(days=7)
         unique: dict[tuple[str, str], GuideProduct] = {}
-        for product, published in self._guide_products:
-            if published:
+        for product, published, published_at in self._guide_products:
+            if published and (published_at is None or published_at <= horizon):
                 unique.setdefault((product.store, product.external_id), product)
         return [unique[key] for key in sorted(unique)]
 
