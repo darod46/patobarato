@@ -71,6 +71,11 @@ for (const t of ['events', 'event_promos']) {
   if (r.status === 200) problems.push(`${t} table is readable by anon (expected permission denied)`)
 }
 
+const pageCopy = await rest('web_page_copy?select=kind,slug&limit=1')
+if (pageCopy.status !== 200 || !Array.isArray(pageCopy.body)) problems.push(`web_page_copy: HTTP ${pageCopy.status}`)
+const pageCopyTable = await rest('page_copy?select=*&limit=1')
+if (pageCopyTable.status === 200) problems.push('page_copy table is readable by anon (expected permission denied)')
+
 for (const t of ['admin_users', 'admin_jobs']) {
   const r = await rest(`${t}?select=*&limit=1`)
   if (r.status === 200) problems.push(`${t} table is readable by anon (expected permission denied)`)
