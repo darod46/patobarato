@@ -101,6 +101,18 @@ describe('/chollos/[tag]', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Chollos de tecnologia' })).toBeInTheDocument()
   })
 
+  it('stays indexable with 2 deals when the copy read fails (the DB did not answer)', async () => {
+    given({ n: 2, withCopy: false })
+    vi.mocked(pageCopy.fetchPageCopy).mockRejectedValue(new Error('down'))
+    expect((await generateMetadata(props())).robots).toBeUndefined()
+  })
+
+  it('is still noindex with 2 deals when the copy row is absent', async () => {
+    given({ n: 2, withCopy: false })
+    vi.mocked(pageCopy.fetchPageCopy).mockResolvedValue(null)
+    expect((await generateMetadata(props())).robots).toEqual({ index: false, follow: true })
+  })
+
   it('rejects (no 404, no noindex) when the deals read fails', async () => {
     given({ n: 3, withCopy: true })
     vi.mocked(deals.fetchDeals).mockRejectedValue(new Error('down'))

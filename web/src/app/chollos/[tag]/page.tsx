@@ -28,7 +28,7 @@ const loadTag = cache(async (param: string) => {
   const tag = parseTagParam(param)
   if (!tag) return null
   const client = getSupabase()
-  const [page, hashtagCount, copy] = await Promise.all([
+  const [page, hashtagCount, copyRead] = await Promise.all([
     fetchDeals(client, { tag, page: 0 }),
     // The count only feeds the copy and indexing; on failure fall back to the deals fetched.
     fetchHashtagCount(client, tag).catch(() => null),
@@ -36,7 +36,10 @@ const loadTag = cache(async (param: string) => {
   ])
   if (page.deals.length === 0) return null
   const count = hashtagCount ?? page.deals.length
-  return { tag, page, count, copy: copy ?? null }
+  // A failed copy read (undefined) is not "no copy": the DB did not answer, so it never makes the page noindex.
+  const copyFailed = copyRead === undefined
+  const copy = copyRead ?? null
+  return { tag, page, count, copy, copyFailed }
 })
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -48,8 +51,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     path: tagPath(data.tag),
     copy: data.copy,
     values: { deals: data.count },
-    // Thin only when the DB answered with 1–2 deals and there is no editorial copy (spec §6).
-    indexable: data.copy !== null || data.count >= MIN_INDEXABLE_DEALS,
+    // Thin only when the DB answered with 1–2 deals and no editorial copy (spec §6); a failed copy read keeps it indexable.
+    indexable: data.copyFailed || data.copy !== null || data.count >= MIN_INDEXABLE_DEALS,
     fallbackDescription: `Los últimos chollos de #${data.tag} en Amazon, cazados por PatoBarato con su precio, el precio anterior y el cupón si lo hay.`,
   })
 }

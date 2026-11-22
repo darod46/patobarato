@@ -30,7 +30,7 @@ const loadStore = cache(async (slug: string) => {
   const store = storeFromSlug(slug)
   if (!store) return null
   const client = getSupabase()
-  const [page, stores, coupons, tags, copy] = await Promise.all([
+  const [page, stores, coupons, tags, copyRead] = await Promise.all([
     fetchDeals(client, { page: 0, store }),
     optional('tienda', () => fetchStores(client)),
     optional('tienda', () => fetchCoupons(client, MAX_STORE_COUPONS, store)),
@@ -43,7 +43,9 @@ const loadStore = cache(async (slug: string) => {
   // The copy only states a count that is exact, and 0 is no value: its "{deals}" sentence is dropped.
   const shown = live ?? (page.hasMore ? null : page.deals.length)
   const values = { deals: shown !== null && shown > 0 ? shown : null }
-  return { store, page, stores: stores ?? [], coupons, tags: tags ?? [], deals, values, copy: copy ?? null }
+  // A failed copy read (undefined) is not "no copy": the DB did not answer, so it never makes the page noindex.
+  const copyFailed = copyRead === undefined
+  return { store, page, stores: stores ?? [], coupons, tags: tags ?? [], deals, values, copy: copyRead ?? null, copyFailed }
 })
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -56,8 +58,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     path: `/tiendas/${slug}`,
     copy: data.copy,
     values: data.values,
-    // Thin only when the DB answered with fewer than 3 deals and there is no editorial copy (spec §6).
-    indexable: data.copy !== null || data.deals >= MIN_INDEXABLE_DEALS,
+    // Thin only when the DB answered with fewer than 3 deals and no editorial copy (spec §6); a failed copy read keeps it indexable.
+    indexable: data.copyFailed || data.copy !== null || data.deals >= MIN_INDEXABLE_DEALS,
     fallbackDescription: `Los últimos chollos y cupones de ${name} cazados por PatoBarato, con su precio, el precio anterior y el cupón si lo hay.`,
   })
 }

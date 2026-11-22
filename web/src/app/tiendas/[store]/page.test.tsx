@@ -140,6 +140,18 @@ describe('StorePage', () => {
     expect(meta.robots).toBeUndefined()
   })
 
+  it('stays indexable with 2 deals when the copy read fails (the DB did not answer)', async () => {
+    vi.mocked(fetchPageCopy).mockImplementation(down)
+    const meta = await generateMetadata(params('aliexpress'))
+    expect(meta.title).toBe('Chollos de AliExpress hoy: 2 ofertas · PatoBarato')
+    expect(meta.robots).toBeUndefined()
+  })
+
+  it('is still noindex with 2 deals when the copy row is absent', async () => {
+    vi.mocked(fetchPageCopy).mockResolvedValue(null)
+    expect((await generateMetadata(params('aliexpress'))).robots).toEqual({ index: false, follow: true })
+  })
+
   it('rejects (never 404 or noindex) when the deals read fails', async () => {
     vi.mocked(fetchDeals).mockImplementation(down)
     await expect(generateMetadata(params('aliexpress'))).rejects.toThrow('down')
