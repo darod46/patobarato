@@ -1,7 +1,7 @@
 [
  {
   "week": 1,
-  "monday": "2026-11-30",
+  "monday": "2026-11-23",
   "slug": "freidoras-de-aire-menos-100",
   "title": "Freidoras de aire por menos de 100 €",
   "category": "Hogar",
@@ -15,7 +15,7 @@
  },
  {
   "week": 2,
-  "monday": "2026-12-07",
+  "monday": "2026-11-30",
   "slug": "auriculares-inalambricos-menos-50",
   "title": "Auriculares inalámbricos por menos de 50 €",
   "category": "Tecnología",
@@ -29,7 +29,7 @@
  },
  {
   "week": 3,
-  "monday": "2026-12-14",
+  "monday": "2026-12-07",
   "slug": "robots-aspiradores-menos-300",
   "title": "Robots aspiradores por menos de 300 €",
   "category": "Hogar",
@@ -43,7 +43,7 @@
  },
  {
   "week": 4,
-  "monday": "2026-12-21",
+  "monday": "2026-12-14",
   "slug": "juegos-de-mesa-familiares",
   "title": "Juegos de mesa para toda la familia",
   "category": "Juguetes",
@@ -57,7 +57,7 @@
  },
  {
   "week": 5,
-  "monday": "2026-12-28",
+  "monday": "2026-12-21",
   "slug": "relojes-y-pulseras-de-actividad-menos-100",
   "title": "Relojes y pulseras de actividad por menos de 100 €",
   "category": "Deporte",
@@ -71,7 +71,7 @@
  },
  {
   "week": 6,
-  "monday": "2027-01-04",
+  "monday": "2026-12-28",
   "slug": "gimnasio-en-casa-para-empezar",
   "title": "Gimnasio en casa: lo esencial para empezar",
   "category": "Deporte",
@@ -84,7 +84,7 @@
  },
  {
   "week": 7,
-  "monday": "2027-01-11",
+  "monday": "2027-01-04",
   "slug": "calefactores-bajo-consumo",
   "title": "Calefactores y radiadores de bajo consumo",
   "category": "Hogar",
@@ -98,7 +98,7 @@
  },
  {
   "week": 8,
-  "monday": "2027-01-18",
+  "monday": "2027-01-11",
   "slug": "ssd-nvme-y-discos-externos",
   "title": "SSD NVMe y discos externos de 1 y 2 TB",
   "category": "Tecnología",
@@ -112,7 +112,7 @@
  },
  {
   "week": 9,
-  "monday": "2027-01-25",
+  "monday": "2027-01-18",
   "slug": "cafeteras-capsulas-y-espresso-menos-150",
   "title": "Cafeteras de cápsulas y espresso por menos de 150 €",
   "category": "Hogar",
@@ -126,7 +126,7 @@
  },
  {
   "week": 10,
-  "monday": "2027-02-01",
+  "monday": "2027-01-25",
   "slug": "secadores-y-planchas-de-pelo-menos-80",
   "title": "Secadores y planchas de pelo por menos de 80 €",
   "category": "Belleza",
@@ -140,7 +140,7 @@
  },
  {
   "week": 11,
-  "monday": "2027-02-08",
+  "monday": "2027-02-01",
   "slug": "afeitadoras-y-recortadoras-de-barba",
   "title": "Afeitadoras y recortadoras de barba",
   "category": "Belleza",
@@ -154,7 +154,7 @@
  },
  {
   "week": 12,
-  "monday": "2027-02-15",
+  "monday": "2027-02-08",
   "slug": "monitores-27-teletrabajo",
   "title": "Monitores de 27\" para teletrabajo y estudio",
   "category": "Tecnología",
@@ -168,7 +168,7 @@
  },
  {
   "week": 13,
-  "monday": "2027-02-22",
+  "monday": "2027-02-15",
   "slug": "aspiradores-escoba-sin-cable-menos-200",
   "title": "Aspiradores escoba sin cable por menos de 200 €",
   "category": "Hogar",
@@ -182,7 +182,7 @@
  },
  {
   "week": 14,
-  "monday": "2027-03-01",
+  "monday": "2027-02-22",
   "slug": "taladros-atornilladores-bateria",
   "title": "Taladros atornilladores a batería",
   "category": "Bricolaje",
@@ -196,7 +196,7 @@
  },
  {
   "week": 15,
-  "monday": "2027-03-08",
+  "monday": "2027-03-01",
   "slug": "cortacespedes-y-robots-cortacesped",
   "title": "Cortacéspedes y robots cortacésped",
   "category": "Bricolaje",
@@ -210,7 +210,7 @@
  },
  {
   "week": 16,
-  "monday": "2027-03-15",
+  "monday": "2027-03-08",
   "slug": "tablets-menos-200",
   "title": "Tablets por menos de 200 €",
   "category": "Tecnología",
@@ -224,7 +224,7 @@
  },
  {
   "week": 17,
-  "monday": "2027-03-22",
+  "monday": "2027-03-15",
   "slug": "moviles-menos-300",
   "title": "Móviles por menos de 300 €",
   "category": "Tecnología",
@@ -238,7 +238,7 @@
  },
  {
   "week": 18,
-  "monday": "2027-03-29",
+  "monday": "2027-03-22",
   "slug": "zapatillas-running-empezar-a-correr",
   "title": "Zapatillas de running para empezar a correr",
   "category": "Deporte",
@@ -254,7 +254,7 @@
  },
  {
   "week": 19,
-  "monday": "2027-04-05",
+  "monday": "2027-03-29",
   "slug": "equipo-senderismo-para-empezar",
   "title": "Equipo de senderismo: botas, mochila y bastones",
   "category": "Deporte",
@@ -268,7 +268,7 @@
  },
  {
   "week": 20,
-  "monday": "2027-04-12",
+  "monday": "2027-04-05",
   "slug": "barbacoas-y-planchas-electricas",
   "title": "Barbacoas y planchas eléctricas",
   "category": "Hogar",
@@ -282,7 +282,7 @@
  },
  {
   "week": 21,
-  "monday": "2027-04-19",
+  "monday": "2027-04-12",
   "slug": "ventiladores-silenciosos-verano",
   "title": "Ventiladores silenciosos para el verano",
   "category": "Hogar",
@@ -296,7 +296,7 @@
  },
  {
   "week": 22,
-  "monday": "2027-04-26",
+  "monday": "2027-04-19",
   "slug": "depiladoras-ipl-y-cuidado-facial",
   "title": "Depiladoras IPL y cuidado facial",
   "category": "Belleza",
@@ -309,7 +309,7 @@
  },
  {
   "week": 23,
-  "monday": "2027-05-03",
+  "monday": "2027-04-26",
   "slug": "camaras-de-seguridad-y-timbres-inteligentes",
   "title": "Cámaras de seguridad y timbres inteligentes",
   "category": "Tecnología",
@@ -323,7 +323,7 @@
  },
  {
   "week": 24,
-  "monday": "2027-05-10",
+  "monday": "2027-05-03",
   "slug": "piscinas-desmontables-y-depuradoras",
   "title": "Piscinas desmontables y depuradoras",
   "category": "Hogar",

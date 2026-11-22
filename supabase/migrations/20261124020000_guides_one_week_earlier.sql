@@ -1,0 +1,25 @@
+-- Todas las guías programadas se adelantan una semana (07:00 Madrid de cada lunes, DST-aware).
+update guides set published_at = '2026-11-23T06:00:00Z'::timestamptz where slug = 'freidoras-de-aire-menos-100';
+update guides set published_at = '2026-11-30T06:00:00Z'::timestamptz where slug = 'auriculares-inalambricos-menos-50';
+update guides set published_at = '2026-12-07T06:00:00Z'::timestamptz where slug = 'robots-aspiradores-menos-300';
+update guides set published_at = '2026-12-14T06:00:00Z'::timestamptz where slug = 'juegos-de-mesa-familiares';
+update guides set published_at = '2026-12-21T06:00:00Z'::timestamptz where slug = 'relojes-y-pulseras-de-actividad-menos-100';
+update guides set published_at = '2026-12-28T06:00:00Z'::timestamptz where slug = 'gimnasio-en-casa-para-empezar';
+update guides set published_at = '2027-01-04T06:00:00Z'::timestamptz where slug = 'calefactores-bajo-consumo';
+update guides set published_at = '2027-01-11T06:00:00Z'::timestamptz where slug = 'ssd-nvme-y-discos-externos';
+update guides set published_at = '2027-01-18T06:00:00Z'::timestamptz where slug = 'cafeteras-capsulas-y-espresso-menos-150';
+update guides set published_at = '2027-01-25T06:00:00Z'::timestamptz where slug = 'secadores-y-planchas-de-pelo-menos-80';
+update guides set published_at = '2027-02-01T06:00:00Z'::timestamptz where slug = 'afeitadoras-y-recortadoras-de-barba';
+update guides set published_at = '2027-02-08T06:00:00Z'::timestamptz where slug = 'monitores-27-teletrabajo';
+update guides set published_at = '2027-02-15T06:00:00Z'::timestamptz where slug = 'aspiradores-escoba-sin-cable-menos-200';
+update guides set published_at = '2027-02-22T06:00:00Z'::timestamptz where slug = 'taladros-atornilladores-bateria';
+update guides set published_at = '2027-03-01T06:00:00Z'::timestamptz where slug = 'cortacespedes-y-robots-cortacesped';
+update guides set published_at = '2027-03-08T06:00:00Z'::timestamptz where slug = 'tablets-menos-200';
+update guides set published_at = '2027-03-15T06:00:00Z'::timestamptz where slug = 'moviles-menos-300';
+update guides set published_at = '2027-03-22T06:00:00Z'::timestamptz where slug = 'zapatillas-running-empezar-a-correr';
+update guides set published_at = '2027-03-29T05:00:00Z'::timestamptz where slug = 'equipo-senderismo-para-empezar';
+update guides set published_at = '2027-04-05T05:00:00Z'::timestamptz where slug = 'barbacoas-y-planchas-electricas';
+update guides set published_at = '2027-04-12T05:00:00Z'::timestamptz where slug = 'ventiladores-silenciosos-verano';
+update guides set published_at = '2027-04-19T05:00:00Z'::timestamptz where slug = 'depiladoras-ipl-y-cuidado-facial';
+update guides set published_at = '2027-04-26T05:00:00Z'::timestamptz where slug = 'camaras-de-seguridad-y-timbres-inteligentes';
+update guides set published_at = '2027-05-03T05:00:00Z'::timestamptz where slug = 'piscinas-desmontables-y-depuradoras';
