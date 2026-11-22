@@ -1,4 +1,5 @@
 import { LegalLayout } from '../../components/LegalLayout'
+import { TelegramCta } from '../../components/TelegramCta'
 import { legalMetadata } from '../../lib/seo'
 
 /** Static page: the year is fixed at build time, which is also when the texts were last reviewed. */
@@ -11,9 +12,7 @@ export default function ContactoPage() {
     <LegalLayout title="Contacto" updated="6 de noviembre de 2026" year={YEAR}>
       <p>
         La forma más rápida de hablar con nosotros es el canal de Telegram:{' '}
-        <a href="https://t.me/patobarato" target="_blank" rel="noopener noreferrer">
-          t.me/patobarato
-        </a>
+        <TelegramCta placement="contact">t.me/patobarato</TelegramCta>
         .
       </p>
       <p>

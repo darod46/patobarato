@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Deal } from '../lib/types'
+import { TelegramCta } from './TelegramCta'
 import { TelegramPreview } from './TelegramPreview'
 
 export function TelegramBlock({
@@ -34,14 +35,12 @@ export function TelegramBlock({
             Cada oferta llega al canal con su precio, el precio anterior, el cupón si lo hay y un
             botón directo a la tienda.
           </p>
-          <a
-            href="https://t.me/patobarato"
-            target="_blank"
-            rel="noopener noreferrer"
+          <TelegramCta
+            placement="block"
             className="inline-flex h-14 items-center rounded-xl bg-white px-7 text-base font-semibold text-primary hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           >
             Unirme al canal gratis
-          </a>
+          </TelegramCta>
         </div>
         {deal && <TelegramPreview deal={deal} />}
       </div>

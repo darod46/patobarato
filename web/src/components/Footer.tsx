@@ -1,9 +1,11 @@
 import { storeNames } from '../lib/stores'
+import { TELEGRAM_URL } from '../lib/telegram'
 import { joinNames } from '../lib/text'
+import { TelegramCta } from './TelegramCta'
 
 const FOCUS = 'rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
-type Column = { title: string; links: { label: string; href: string; external?: boolean }[] }
+type Column = { title: string; links: { label: string; href: string; external?: boolean; telegram?: boolean }[] }
 
 const COLUMNS: Column[] = [
   {
@@ -20,7 +22,7 @@ const COLUMNS: Column[] = [
       { label: 'Cómo funciona', href: '/#como-funciona' },
       { label: 'Quiénes somos', href: '/sobre-nosotros' },
       { label: 'Cómo elegimos los chollos', href: '/sobre-nosotros#como-elegimos-los-chollos' },
-      { label: 'Canal de Telegram', href: 'https://t.me/patobarato', external: true },
+      { label: 'Canal de Telegram', href: TELEGRAM_URL, external: true, telegram: true },
     ],
   },
   {
@@ -60,7 +62,12 @@ export function Footer({ year, stores = [] }: Props) {
           {COLUMNS.map((col) => (
             <nav key={col.title} aria-label={col.title} className="flex flex-col gap-2.5 text-sm">
               <span className="font-semibold text-ink">{col.title}</span>
-              {col.links.map((link) => (
+              {col.links.map((link) =>
+                link.telegram ? (
+                  <TelegramCta key={link.href} placement="footer" className={`text-muted hover:text-ink ${FOCUS}`}>
+                    {link.label}
+                  </TelegramCta>
+                ) : (
                 <a
                   key={link.href}
                   href={link.href}
@@ -69,7 +76,8 @@ export function Footer({ year, stores = [] }: Props) {
                 >
                   {link.label}
                 </a>
-              ))}
+                ),
+              )}
             </nav>
           ))}
         </div>

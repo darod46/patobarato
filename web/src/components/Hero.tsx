@@ -2,6 +2,7 @@ import { Check, Send, TrendingDown, Zap } from 'lucide-react'
 import { eventPath } from '../lib/events'
 import { joinNames } from '../lib/text'
 import type { SiteEvent } from '../lib/types'
+import { TelegramCta } from './TelegramCta'
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
 /** Facts taken from the current listing; a null/false value hides its badge. */
@@ -57,15 +58,13 @@ export function Hero({ highlights, storeNames, activeEvent = null }: Props) {
               {activeEvent && <Zap size={18} aria-hidden="true" />}
               {activeEvent ? `Chollos del ${activeEvent.name}` : 'Ver chollos de hoy'}
             </a>
-            <a
-              href="https://t.me/patobarato"
-              target="_blank"
-              rel="noopener noreferrer"
+            <TelegramCta
+              placement="hero"
               className={`inline-flex h-13 items-center justify-center gap-2 rounded-xl border border-[#d7dae0] bg-white px-6 text-base font-semibold text-ink hover:bg-surface ${FOCUS}`}
             >
               <Send size={18} aria-hidden="true" />
               Recibirlos en Telegram
-            </a>
+            </TelegramCta>
           </div>
           <ul className="flex flex-col gap-2 text-sm text-muted sm:flex-row sm:flex-wrap sm:gap-x-6">
             {GUARANTEES.map((text) => (
