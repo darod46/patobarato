@@ -148,9 +148,9 @@ const DEFAULT_DESCRIPTION = 'Los últimos chollos cazados por PatoBarato, con su
 /** Metadata of a listing page (category, store or static): published copy first, honest defaults otherwise. */
 export function listingMetadata(m: ListingMeta): Metadata {
   const title = pageTitle(m.copy, m.kind, m.slug, m.values)
-  const description = m.copy
-    ? truncate(firstSentence(renderCopy(m.copy.introMd, m.values)), MAX_DESCRIPTION)
-    : (m.fallbackDescription ?? DEFAULT_DESCRIPTION)
+  const fromCopy = m.copy ? truncate(firstSentence(renderCopy(m.copy.introMd, m.values)), MAX_DESCRIPTION) : ''
+  // Copy whose sentences all needed a missing value renders empty: fall back like a page without copy.
+  const description = fromCopy || (m.fallbackDescription ?? DEFAULT_DESCRIPTION)
   return {
     title,
     description,

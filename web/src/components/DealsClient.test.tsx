@@ -182,3 +182,33 @@ it('hydrates a server-filtered page 0 without mismatches and without refetching 
     errors.mockRestore()
   }
 })
+
+it('renders the page intro with the copy h1 and the rendered intro', () => {
+  render(
+    <DealsClient
+      now="2026-11-04T12:00:00Z"
+      fetchDeals={vi.fn().mockResolvedValue({ deals: [], hasMore: false })}
+      fetchHashtags={vi.fn().mockResolvedValue([])}
+      intro={{
+        copy: { kind: 'static', slug: 'chollos', title: 'T', h1: 'Chollos de hoy en Amazon', introMd: 'Hay {deals} ofertas en {stores}.', faq: [], updatedAt: '2026-11-01T00:00:00Z' },
+        values: { deals: 315, stores: ['amazon', 'aliexpress'] },
+        nextEvent: null,
+      }}
+    />,
+  )
+  expect(screen.getByRole('heading', { level: 1, name: 'Chollos de hoy en Amazon' })).toBeInTheDocument()
+  expect(screen.getByText('Hay 315 ofertas en Amazon y AliExpress.')).toBeInTheDocument()
+  expect(screen.getByText('Se actualiza automáticamente')).toBeInTheDocument()
+})
+
+it('uses the default h1 when there is no copy', () => {
+  render(
+    <DealsClient
+      now="2026-11-04T12:00:00Z"
+      fetchDeals={vi.fn().mockResolvedValue({ deals: [], hasMore: false })}
+      fetchHashtags={vi.fn().mockResolvedValue([])}
+      intro={{ copy: null, values: { deals: null }, nextEvent: null }}
+    />,
+  )
+  expect(screen.getByRole('heading', { level: 1, name: 'Chollos de hoy' })).toBeInTheDocument()
+})

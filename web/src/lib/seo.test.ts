@@ -408,6 +408,12 @@ describe('listingMetadata', () => {
     expect(m.description).toBe('Segunda frase.')
   })
 
+  it('falls back when the rendered copy description is empty', () => {
+    const empty = { ...copy, introMd: 'Hay {deals} chollos.' }
+    expect(listingMetadata({ ...base, values: {}, copy: empty, fallbackDescription: 'Respaldo.' }).description).toBe('Respaldo.')
+    expect(listingMetadata({ ...base, values: {}, copy: empty }).description).toMatch(/^Los últimos chollos cazados/)
+  })
+
   it('is noindex only when not indexable', () => {
     expect(listingMetadata({ ...base, copy: null }).robots).toBeUndefined()
     expect(listingMetadata({ ...base, copy: null, indexable: false }).robots).toEqual({ index: false, follow: true })

@@ -64,3 +64,41 @@ it('has no search field; the header links to /buscar', () => {
   expect(screen.getByRole('link', { name: /Buscar chollos/ })).toHaveAttribute('href', '/buscar')
 })
 
+
+const event = {
+  id: 1, slug: 'black-friday', name: 'Black Friday', stores: [], startsOn: '2026-11-27', endsOn: '2026-11-29',
+  approximate: false, hashtags: [], aliexpressPromo: null, introMd: '', tipsMd: '', faq: [], updatedAt: '2026-11-01T00:00:00Z',
+}
+
+it('renders the page intro: copy h1, rendered intro and the next event', () => {
+  render(
+    <HashtagClient
+      tag="tecnologia"
+      now="2026-11-04T12:00:00Z"
+      initialDeals={{ q: '', tag: 'tecnologia', deals: [deal(1)], hasMore: false }}
+      initialTags={[]}
+      intro={{
+        copy: { kind: 'category', slug: 'tecnologia', title: 'T', h1: 'Chollos de tecnología', introMd: 'Hoy hay {deals} chollos de tecnología.', faq: [], updatedAt: '2026-11-01T00:00:00Z' },
+        values: { deals: 12 },
+        nextEvent: event,
+      }}
+    />,
+  )
+  expect(screen.getByRole('heading', { level: 1, name: 'Chollos de tecnología' })).toBeInTheDocument()
+  expect(screen.getByText('Hoy hay 12 chollos de tecnología.')).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Black Friday 2026' })).toHaveAttribute('href', '/eventos/black-friday')
+})
+
+it('falls back to the default h1 when the intro has no copy', () => {
+  render(
+    <HashtagClient
+      tag="tecnologia"
+      now="2026-11-04T12:00:00Z"
+      initialDeals={{ q: '', tag: 'tecnologia', deals: [deal(1)], hasMore: false }}
+      initialTags={[]}
+      intro={{ copy: null, values: {}, nextEvent: null }}
+    />,
+  )
+  expect(screen.getByRole('heading', { level: 1, name: 'Chollos de tecnologia' })).toBeInTheDocument()
+  expect(screen.queryByText(/Próximo evento/)).toBeNull()
+})
