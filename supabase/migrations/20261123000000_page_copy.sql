@@ -73,7 +73,7 @@ Ahora mismo seguimos {deals} chollos activos en esta categoría.$md$,
   $json$[
     {"q": "¿Cuándo es buen momento para comprar perfume?", "a_md": "Black Friday y las semanas previas a Navidad suelen traer las mejores ofertas en perfumes y estuches. Fuera de esas fechas, compara el precio con el que muestra cada chollo como anterior."},
     {"q": "¿Cómo sé si un cosmético es original?", "a_md": "Fíjate en quién lo vende y envía. Si lo vende la propia tienda o la marca oficial, el riesgo es menor; si es un vendedor externo, revisa sus valoraciones antes de comprar."},
-    {"q": "¿Qué significa «Mínimo histórico» en un chollo?", "a_md": "Que es el precio más bajo que PatoBarato ha registrado para ese producto desde que lo seguimos. No incluye precios que no hayamos visto."}
+    {"q": "¿Compensa comprar el formato grande?", "a_md": "No siempre. Compara el precio por mililitro y, si el producto caduca, como un protector solar, piensa si lo gastarás antes de la fecha indicada en el envase."}
   ]$json$::jsonb
 );
 
@@ -83,7 +83,7 @@ values (
   'Chollos de tecnología hoy: ofertas en Amazon y AliExpress',
   'Chollos de tecnología',
   'published',
-  $md$Esta es la sección con más movimiento: móviles, tablets, portátiles, auriculares, relojes inteligentes, discos SSD, memorias, cargadores, monitores y accesorios para el ordenador. El bot publica los chollos de Amazon y AliExpress en cuanto los detecta, así que conviene pasarse a menudo.
+  $md$En tecnología publicamos ofertas en móviles, tablets, portátiles, auriculares, relojes inteligentes, discos SSD, memorias, cargadores, monitores y accesorios para el ordenador. El bot publica los chollos de Amazon y AliExpress en cuanto los detecta, así que conviene pasarse a menudo.
 
 Las grandes bajadas de tecnología se concentran en Black Friday, Cyber Monday y Prime Day, y AliExpress tiene su propia campaña fuerte el 11.11. Otra pista útil: cuando sale un modelo nuevo, el anterior suele abaratarse en las semanas siguientes.
 
@@ -127,7 +127,7 @@ values (
   'Chollos de alimentación hoy: ofertas en Amazon y AliExpress',
   'Chollos de alimentación',
   'published',
-  $md$Aquí reunimos las ofertas en alimentación y bebida: despensa, café e infusiones, snacks, dulces, suplementos, bebidas y productos de droguería que se compran en la misma cesta. La mayoría llegan de Amazon, donde muchos productos se venden en packs, y el bot los publica según los encuentra.
+  $md$Aquí reunimos las ofertas en alimentación y bebida: despensa, café e infusiones, snacks, dulces, suplementos, bebidas y productos de droguería que se compran en la misma cesta. Llegan de Amazon y AliExpress, a menudo en packs, y el bot los publica según los encuentra.
 
 A diferencia de otras categorías, aquí hay pocas grandes fechas. Los descuentos aparecen de forma escalonada durante todo el año, con más movimiento en Prime Day, Black Friday y antes de Navidad, cuando llegan los turrones, los bombones y las cestas.
 
@@ -217,7 +217,7 @@ values (
   'Chollos de Amazon hoy: ofertas y cupones en Amazon.es',
   'Chollos de Amazon',
   'published',
-  $md$En esta página están los chollos de Amazon.es que ha encontrado PatoBarato: ofertas de casi todas las categorías, desde tecnología y hogar hasta alimentación y juguetes. El bot revisa canales de chollos, comprueba el precio en la tienda y publica cada oferta en cuanto la encuentra.
+  $md$En esta página están los chollos de Amazon.es que ha encontrado PatoBarato: ofertas de casi todas las categorías, desde tecnología y hogar hasta alimentación y juguetes. El bot revisa canales de chollos y publica cada oferta en cuanto la encuentra.
 
 Amazon tiene sus propias campañas, como Prime Day, normalmente en verano, y la Fiesta de Ofertas Prime de otoño, además de participar en Black Friday y Cyber Monday. Fuera de esas fechas también hay ofertas flash que duran pocas horas, por eso conviene mirar con frecuencia o seguir el canal de Telegram.
 
@@ -262,7 +262,7 @@ values (
   'Chollos de hoy: ofertas en Amazon y AliExpress',
   'Chollos de hoy',
   'published',
-  $md$Estos son los últimos chollos que ha publicado PatoBarato, ordenados por defecto del más reciente al más antiguo. Un bot revisa canales de chollos y las APIs de las tiendas, comprueba cada oferta y la publica aquí y en nuestro canal de Telegram en cuanto la encuentra.
+  $md$Estos son los últimos chollos que ha publicado PatoBarato, ordenados por defecto del más reciente al más antiguo. Un bot revisa canales de chollos y la API de AliExpress, y publica cada oferta aquí y en nuestro canal de Telegram en cuanto la encuentra.
 
 Hoy hay {deals} chollos activos en {stores}.
 
@@ -284,7 +284,7 @@ values (
   'Tiendas con chollos: Amazon y AliExpress',
   'Tiendas con chollos',
   'published',
-  $md$Desde esta página puedes ver los chollos de cada tienda por separado. Hoy publicamos ofertas de Amazon.es y AliExpress, y estamos preparando la incorporación de PcComponentes, MediaMarkt, El Corte Inglés y Decathlon, que aparecerán aquí cuando tengan chollos.
+  $md$Desde esta página puedes ver los chollos de cada tienda por separado. Hoy publicamos ofertas de Amazon.es y AliExpress. Iremos sumando otras tiendas españolas a medida que podamos comprobar sus precios.
 
 Hoy hay {deals} chollos activos en {stores}.
 
@@ -292,9 +292,9 @@ Cada tienda tiene su página con sus ofertas, sus cupones vigentes y algunos con
 
 Elegimos las tiendas por el interés de sus ofertas para quien compra desde España, no porque nos paguen por aparecer: ninguna tienda paga por salir en PatoBarato. Sí tenemos enlaces de afiliado con ellas, y lo declaramos en [afiliados](/afiliados).
 
-En todas las tiendas aplicamos el mismo criterio: comprobamos el precio en la tienda, mostramos el precio anterior cuando lo conocemos, marcamos con «Mínimo histórico» los precios más bajos que hemos registrado y verificamos los cupones antes de publicarlos. Así puedes comparar ofertas de tiendas distintas con la misma información.$md$,
+En todas las tiendas aplicamos el mismo criterio: publicamos el precio que vemos al publicar el chollo, mostramos el precio anterior cuando lo conocemos, marcamos con «Mínimo histórico» los precios más bajos que hemos registrado y verificamos los cupones antes de publicarlos. Así puedes comparar ofertas de tiendas distintas con la misma información.$md$,
   $json$[
-    {"q": "¿Qué tiendas sigue PatoBarato?", "a_md": "Hoy, Amazon.es y AliExpress. PcComponentes, MediaMarkt, El Corte Inglés y Decathlon se incorporarán cuando tengan chollos."},
+    {"q": "¿Qué tiendas sigue PatoBarato?", "a_md": "Hoy, Amazon.es y AliExpress. Iremos sumando otras tiendas a medida que podamos comprobar sus precios."},
     {"q": "¿Las tiendas pagan por aparecer?", "a_md": "No. Ninguna tienda paga por salir en PatoBarato. Ganamos una comisión de afiliado si compras desde nuestros enlaces, como explicamos en [afiliados](/afiliados)."},
     {"q": "¿Puedo pedir que añadáis una tienda?", "a_md": "Sí, escríbenos desde la página de [contacto](/contacto). La valoraremos si tiene ofertas interesantes para quien compra en España y podemos comprobar sus precios."}
   ]$json$::jsonb
@@ -334,7 +334,7 @@ Cada producto de una guía tiene sus ventajas e inconvenientes, sus especificaci
 
 Las guías no sustituyen a los chollos, los complementan. Lo ideal es leer primero la guía para tener claro qué modelo te encaja y después esperar a que ese modelo baje de precio: con la etiqueta «Mínimo histórico» sabrás cuándo está más barato de lo que lo hemos visto nunca.
 
-Las escribimos a partir de las fichas técnicas de cada modelo y las revisamos cuando cambian los modelos. Ninguna marca ni tienda paga por aparecer en una guía ni por su posición. Los enlaces a las tiendas son de afiliado: si compras desde ellos nos llevamos una comisión sin que tú pagues más, como explicamos en [afiliados](/afiliados).$md$,
+Las escribimos a partir de las fichas técnicas de cada modelo. Ninguna marca ni tienda paga por aparecer en una guía ni por su posición. Los enlaces a las tiendas son de afiliado: si compras desde ellos nos llevamos una comisión sin que tú pagues más, como explicamos en [afiliados](/afiliados).$md$,
   $json$[
     {"q": "¿Las marcas pagan por salir en las guías?", "a_md": "No. Ninguna marca ni tienda paga por aparecer en una guía ni por su posición. Los enlaces son de afiliado, como explicamos en [afiliados](/afiliados)."},
     {"q": "¿Los precios de las guías están actualizados?", "a_md": "El bot los actualiza con regularidad, pero el precio final lo fija la tienda. Compruébalo siempre antes de pagar."},
@@ -348,7 +348,7 @@ values (
   'Eventos de compras: Black Friday, 11.11 y Cyber Monday',
   'Eventos de compras',
   'published',
-  $md$Algunas fechas concentran las mejores ofertas del año, y en esta página las tienes todas: Black Friday, el 11.11 de AliExpress y otras campañas como Cyber Monday, las rebajas de enero o Prime Day, que añadimos a medida que se acercan y las tiendas confirman sus fechas.
+  $md$Algunas fechas concentran las mejores ofertas del año, y en esta página reunimos las que seguimos: Black Friday, el 11.11 de AliExpress y otras campañas como Cyber Monday, las rebajas de enero o Prime Day, que añadimos a medida que se acercan y las tiendas confirman sus fechas.
 
 Cada evento tiene su propia página con las fechas, las tiendas que participan, los chollos que va encontrando el bot y, cuando los hay, los cupones de la campaña. Durante el evento, los chollos aparecen en la página y en nuestro canal de Telegram según los detectamos.
 
@@ -357,7 +357,7 @@ Los eventos son buenos momentos para comprar, pero no todo lo que se anuncia com
 - Haz una lista antes de que empiece el evento y mira el precio de esos productos con unos días de antelación.
 - Fíjate en la etiqueta «Mínimo histórico»: te dice si el precio es el más bajo que PatoBarato ha registrado, algo más fiable que un precio tachado.
 - Revisa el plazo de entrega y las condiciones de devolución, que en estas fechas pueden cambiar.
-- No te dejes llevar por las cuentas atrás: si el precio es bueno hoy, probablemente lo haya sido otras veces.
+- No te dejes llevar por las cuentas atrás: una oferta con cuenta atrás suele repetirse; comprueba con «Mínimo histórico» si ya estuvo a ese precio.
 
 Las fechas de cada evento las fija cada tienda, y algunas empiezan antes o terminan después de la fecha oficial.$md$,
   $json$[
@@ -374,13 +374,13 @@ values (
   'Quiénes somos y cómo elegimos los chollos',
   'Sobre PatoBarato',
   'published',
-  $md$PatoBarato es un proyecto independiente hecho en España por un desarrollador aficionado a cazar chollos; no pertenece a ninguna tienda. Un bot revisa canales de chollos y las APIs de las tiendas, y publica las ofertas que pasan nuestros filtros en esta web y en el [canal de Telegram](https://t.me/patobarato).
+  $md$PatoBarato es un proyecto independiente hecho en España por un desarrollador aficionado a cazar chollos; no pertenece a ninguna tienda. Un bot revisa canales de chollos y la API de AliExpress, y publica las ofertas que pasan nuestros filtros en esta web y en el [canal de Telegram](https://t.me/patobarato).
 
 ## Cómo elegimos los chollos
 
 No publicamos cualquier rebaja. Antes de que un chollo aparezca en PatoBarato, se cumplen estos criterios:
 
-- **Precio comprobado en la tienda.** El precio que mostramos es el que hemos leído en la propia tienda, no el que anuncia un tercero.
+- **Precio comprobado en la tienda.** El precio que publicamos es el que vemos en la tienda o en el canal de origen en el momento de publicarlo; si cambia después, la ficha lo indica cuando volvemos a comprobarlo.
 - **Precio anterior real.** Solo mostramos un precio tachado cuando lo conocemos; si no lo sabemos, no lo inventamos.
 - **Mínimo histórico registrado.** La etiqueta «Mínimo histórico» aparece cuando el precio es el más bajo que PatoBarato ha registrado para ese producto.
 - **Cupón verificado.** Si un chollo necesita cupón, comprobamos que funciona antes de publicarlo.
@@ -392,7 +392,7 @@ PatoBarato se financia con comisiones de afiliado de Amazon, AliExpress y las ti
   $json$[
     {"q": "¿Quién está detrás de PatoBarato?", "a_md": "Un desarrollador español aficionado a cazar chollos. Es un proyecto independiente y no pertenece a ninguna tienda."},
     {"q": "¿Las tiendas pagan por aparecer en PatoBarato?", "a_md": "No. Ganamos una comisión de afiliado cuando compras desde nuestros enlaces, pero ninguna tienda paga por salir ni por su posición. Más detalles en [afiliados](/afiliados)."},
-    {"q": "¿Cómo comprobáis los precios?", "a_md": "Leemos el precio en la propia tienda antes de publicar, mostramos el precio anterior solo cuando lo conocemos y marcamos como «Mínimo histórico» el precio más bajo que tenemos registrado."}
+    {"q": "¿Cómo comprobáis los precios?", "a_md": "Publicamos el precio que vemos en la tienda o en el canal de origen en el momento de publicar, mostramos el precio anterior solo cuando lo conocemos y marcamos como «Mínimo histórico» el precio más bajo que tenemos registrado."}
   ]$json$::jsonb
 );
 
