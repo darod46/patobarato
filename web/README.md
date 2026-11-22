@@ -197,6 +197,14 @@ Páginas editoriales de eventos de compras (`/eventos` y `/eventos/{slug}`). Los
 - Publicar un evento: rellena el contenido y cambia `status` a `published` (`update events set status = 'published' where slug = '...';`). Las páginas se regeneran cada hora (`revalidate = 3600`), así que el cambio tarda hasta 1 h en verse.
 - El seed de `supabase/migrations/20261110010000_events.sql` publica 11.11 y Black Friday; Cyber Monday, Rebajas de enero y Prime Day quedan como borrador con textos entre corchetes por rellenar.
 
+## Telegram
+
+- Actividad del canal: la tabla `channel_stats` se expone en la vista `web_channel_stats` (`members`, `checked_at`, `posted_today`, `last_posted_at`) y las últimas publicaciones (máximo 5) en `web_channel_recent`. El bloque de Telegram de la portada las lee en el servidor; si faltan, oculta las cifras.
+- El ejecutor `channel_stats` del bot actualiza esos datos cada 60 min con `GetFullChannelRequest` de Telethon. Ver `bot/README.md`.
+- `POST /api/clic` recibe `{placement, path}` e inserta una fila en `cta_clicks` (solo insert anónimo). Límite de 20 peticiones por minuto y por IP; responde siempre 204. No se guarda nada identificativo: ni IP, ni user agent, ni cookies.
+- La página de administración `/clics` (en `admin/`) lee la vista `cta_clicks_daily` (últimos 14 días).
+- En el cliente, el helper `trackCtaClick` envía el clic y el componente `TelegramCta` lo usa en cada botón que lleva al canal. Ubicaciones (`placement`): `header`, `hero`, `block`, `recent`, `deal`, `footer` y `contact`.
+
 ## Seguridad
 
 La web solo usa la clave pública (anon) de Supabase y solo lee las vistas `web_deals`, `web_hashtags`, `web_coupons`, `web_stores`, `web_guides`, `web_guide_items`, `web_guides_by_product`, `web_events`, `web_event_promos` y `web_page_copy`. Nunca pongas la clave `service_role` en la web ni en Vercel. `node scripts/check-views.mjs` comprueba con la clave anon que esas vistas se leen y que la tabla `coupons` no; también cubre las vistas y tablas de guías (`web_guides*` legibles; `guides`, `guide_items`, `guide_item_stores` y `product_prices` no) de eventos (`web_events` y `web_event_promos` legibles; `events` y `event_promos` no) y de textos editoriales (`web_page_copy` legible; `page_copy` no).
