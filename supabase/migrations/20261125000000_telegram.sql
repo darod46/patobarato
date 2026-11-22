@@ -53,7 +53,7 @@ create table cta_clicks (
 create index cta_clicks_created_idx on cta_clicks (created_at);
 alter table cta_clicks enable row level security;
 revoke all on cta_clicks from anon, authenticated;
-grant insert on cta_clicks to anon;
+grant insert (placement, path) on cta_clicks to anon;
 grant select on cta_clicks to authenticated;
 create policy cta_clicks_anon_insert on cta_clicks for insert to anon with check (true);
 create policy cta_clicks_admin_select on cta_clicks for select to authenticated using (is_admin());
