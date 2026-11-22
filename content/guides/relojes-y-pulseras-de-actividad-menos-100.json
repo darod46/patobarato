@@ -1,0 +1,140 @@
+{
+  "slug": "relojes-y-pulseras-de-actividad-menos-100",
+  "title": "Relojes y pulseras de actividad por menos de 100 €",
+  "subtitle": "Dos pulseras y tres relojes deportivos de Xiaomi, Huawei y CMF para empezar el año moviéndote más, comparados por GPS, batería y pantalla.",
+  "category": "Deporte",
+  "reading_minutes": 6,
+  "intro_md": "Enero es el mes de los propósitos, y una pulsera o un reloj de actividad ayuda a cumplirlos: cuenta pasos, mide el sueño, registra los entrenamientos y te da un empujón cuando llevas demasiado rato sentado. Sin gastar mucho se consigue hoy pantalla AMOLED, semanas de batería y, en algunos casos, GPS propio.\n\nPara esta guía hemos comparado las fichas técnicas y las opiniones públicas de los compradores de cinco modelos. Hay dos pulseras ligeras para el día a día y el sueño, y tres relojes con GPS integrado para quien sale a correr, a pedalear o al monte sin el móvil.\n\nLa gran diferencia entre unos y otros está en el GPS, el tamaño de la pantalla y los extras como el barómetro o el pago con el reloj. Si quieres ver más opciones rebajadas, mira los [chollos de deporte](/chollos/deporte).",
+  "how_to_choose_md": "## Pulsera o reloj\n\nLas pulseras son más ligeras y discretas, se llevan bien para dormir y su batería dura semanas. Los relojes tienen pantallas más grandes, que se leen mejor en plena carrera, y suelen añadir GPS propio y más funciones. Si lo tuyo es caminar y controlar el sueño, una pulsera basta.\n\n## GPS integrado o conectado\n\nCon GPS integrado puedes salir a correr sin el móvil y el reloj registra la ruta por su cuenta. Las pulseras sin GPS propio usan el del teléfono, así que tienes que llevarlo encima. Si haces deporte al aire libre con frecuencia, este punto es el que más pesa. El GPS de doble banda ayuda en ciudad, entre edificios altos.\n\n## Batería: lee la letra pequeña\n\nLas cifras de autonomía de los fabricantes son con uso ligero. Si activas la pantalla siempre encendida o usas el GPS a menudo, la batería real puede bajar a la mitad o menos. Aun así, los modelos de esta guía que indican autonomía anuncian más de una semana con un uso normal.\n\n## Agua y natación\n\nSi vas a nadar, busca resistencia de 5 ATM (50 metros) y un modo específico de natación. Un reloj resistente a salpicaduras no es lo mismo que uno apto para la piscina, y en las fichas a veces se mezclan ambos conceptos, así que comprueba el dato antes de meterte al agua.\n\n## Cuándo comprar\n\nLos wearables bajan mucho en Black Friday y vuelven a hacerlo en rebajas y en Prime Day. También es habitual que el modelo anterior caiga de precio cuando sale uno nuevo. Consulta el calendario de [eventos de ofertas](/eventos).",
+  "faq": [
+    {
+      "q": "¿Funcionan con iPhone?",
+      "a_md": "El Huawei Watch Fit 4 indica compatibilidad con iOS y Android; en el resto, comprueba en la ficha la compatibilidad con iPhone antes de comprar. Algunas funciones, como responder a mensajes, pueden estar más limitadas en iPhone."
+    },
+    {
+      "q": "¿Son fiables las mediciones de pulso y sueño?",
+      "a_md": "Sirven para ver tendencias, como si duermes mejor o peor que la semana pasada, pero no son dispositivos médicos. Si necesitas un control de salud, consulta con un profesional."
+    },
+    {
+      "q": "¿Puedo cambiar la correa?",
+      "a_md": "En general sí: las marcas venden correas de distintos materiales y colores para sus modelos. Comprueba que la correa sea compatible con tu modelo exacto antes de comprarla."
+    }
+  ],
+  "items": [
+    {
+      "position": 1,
+      "asin": "B0F2B1M9TB",
+      "name": "Huawei Watch Fit 4",
+      "award": "Mejor en general",
+      "summary_md": "Un reloj fino y ligero, de 27 gramos y 9,5 mm, que reúne casi todo lo que se puede pedir en este rango. Tiene GPS integrado, barómetro para medir altitud y ascenso acumulado, pago sin contacto por NFC y una pantalla con brillo de hasta 2000 nits que se lee al sol. La batería llega a 10 días y con diez minutos de carga inalámbrica tienes para un día entero. Lo que pega: es el más caro de la guía y la ficha es poco clara sobre su resistencia al agua.",
+      "pros": [
+        "GPS integrado y barómetro",
+        "Pago sin contacto por NFC",
+        "Ligero y fino para llevar todo el día"
+      ],
+      "cons": [
+        "El más caro de la guía",
+        "Ficha confusa sobre resistencia al agua"
+      ],
+      "specs": [
+        {"label": "Peso", "value": "27 g"},
+        {"label": "Grosor", "value": "9,5 mm"},
+        {"label": "Batería", "value": "Hasta 10 días"},
+        {"label": "GPS", "value": "Integrado"},
+        {"label": "Extras", "value": "Barómetro y NFC"}
+      ]
+    },
+    {
+      "position": 2,
+      "asin": "B0GQL9JZS7",
+      "name": "Xiaomi Redmi Watch 6",
+      "award": "Mejor relación calidad-precio",
+      "summary_md": "Una pantalla AMOLED grande, de 2,07 pulgadas, con biseles de 2 mm, en un cuerpo de aluminio de 9,9 mm. Su batería de 550 mAh anuncia hasta 24 días con uso ligero y tiene GPS con cinco sistemas de satélites para registrar rutas sin el móvil. Ofrece más de 150 modos deportivos y es resistente al agua hasta 50 metros. Lo que pega: la ficha no menciona NFC ni barómetro, y su tamaño puede resultar grande en muñecas finas.",
+      "pros": [
+        "Pantalla AMOLED de 2,07 pulgadas",
+        "Hasta 24 días de batería",
+        "GPS integrado y 150 modos deportivos"
+      ],
+      "cons": [
+        "Sin NFC ni barómetro en la ficha",
+        "Grande para muñecas finas"
+      ],
+      "specs": [
+        {"label": "Pantalla", "value": "AMOLED 2,07\""},
+        {"label": "Batería", "value": "Hasta 24 días (550 mAh)"},
+        {"label": "GPS", "value": "GNSS L1, cinco sistemas"},
+        {"label": "Resistencia al agua", "value": "50 m"},
+        {"label": "Caja", "value": "Aluminio, 9,9 mm"}
+      ]
+    },
+    {
+      "position": 3,
+      "asin": "B0F66MS88R",
+      "name": "CMF Watch 3 Pro",
+      "award": "Para salir a correr",
+      "summary_md": "Pensado para quien corre o camina por ciudad y por senderos: su GPS de doble banda, con señales L1 y L5, posiciona más rápido y mantiene mejor la ruta entre edificios. La pantalla AMOLED de 1,43 pulgadas ofrece más de 120 esferas y modo siempre encendido, y permite hacer llamadas por Bluetooth. Su batería anuncia hasta 13 días con uso normal y unos 10 con uso intenso. Lo que pega: la ficha solo indica resistencia al agua hasta 3 metros, así que no lo elijas para nadar.",
+      "pros": [
+        "GPS de doble banda",
+        "Llamadas por Bluetooth",
+        "Más de 120 esferas y modo siempre encendido"
+      ],
+      "cons": [
+        "No pensado para nadar",
+        "Batería más corta que la de la Smart Band 10"
+      ],
+      "specs": [
+        {"label": "Pantalla", "value": "AMOLED 1,43\""},
+        {"label": "GPS", "value": "Doble banda L1 + L5"},
+        {"label": "Batería", "value": "Hasta 13 días"},
+        {"label": "Llamadas", "value": "Bluetooth"},
+        {"label": "Caja", "value": "Aluminio"}
+      ]
+    },
+    {
+      "position": 4,
+      "asin": "B0DYF82545",
+      "name": "Xiaomi Smart Band 10",
+      "award": "Para nadar",
+      "summary_md": "Una pulsera con pantalla AMOLED de 1,72 pulgadas y caja de aluminio que destaca en la piscina: tiene modo profesional de natación, mide el pulso mientras nadas y es resistente al agua 5 ATM. Suma más de 150 modos deportivos, brújula, análisis del sueño con recomendaciones de recuperación y hasta 21 días de batería con carga rápida. Es una buena elección para quien quiere algo discreto que no moleste al dormir. Lo que pega: la ficha es ambigua sobre el GPS, así que no cuentes con registrar rutas sin el móvil.",
+      "pros": [
+        "Modo de natación con pulso en el agua",
+        "Hasta 21 días de batería",
+        "Pantalla AMOLED de 1,72 pulgadas"
+      ],
+      "cons": [
+        "Ficha ambigua sobre el GPS",
+        "Pantalla pequeña para leer datos corriendo"
+      ],
+      "specs": [
+        {"label": "Pantalla", "value": "AMOLED 1,72\""},
+        {"label": "Batería", "value": "Hasta 21 días"},
+        {"label": "Resistencia al agua", "value": "5 ATM"},
+        {"label": "Modos deportivos", "value": "Más de 150"},
+        {"label": "Caja", "value": "Aluminio"}
+      ]
+    },
+    {
+      "position": 5,
+      "asin": "B0DY1JKTRD",
+      "name": "Huawei Band 10",
+      "award": "Si quieres gastar lo mínimo",
+      "summary_md": "La más barata de la lista y muy ligera, con solo 15 gramos y 8,99 mm de grosor, pensada para olvidarte de que la llevas. Su punto fuerte es el sueño: mide pulso, oxígeno en sangre, frecuencia respiratoria e irregularidades en la respiración mientras duermes. Tiene 100 modos de entrenamiento, reconocimiento de brazada para nadar y resistencia al agua de 50 metros. Lo que pega: no tiene GPS propio, usa el del móvil, y la ficha no indica la duración de la batería.",
+      "pros": [
+        "Muy ligera, 15 g",
+        "Seguimiento completo del sueño",
+        "Resistente al agua hasta 50 metros"
+      ],
+      "cons": [
+        "Sin GPS propio",
+        "La ficha no detalla la batería"
+      ],
+      "specs": [
+        {"label": "Peso", "value": "15 g"},
+        {"label": "Grosor", "value": "8,99 mm"},
+        {"label": "Sensores", "value": "Pulso y SpO2"},
+        {"label": "GPS", "value": "Vía smartphone"},
+        {"label": "Resistencia al agua", "value": "50 m"}
+      ]
+    }
+  ]
+}

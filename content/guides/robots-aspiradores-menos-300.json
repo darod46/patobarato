@@ -1,0 +1,140 @@
+{
+  "slug": "robots-aspiradores-menos-300",
+  "title": "Robots aspiradores por menos de 300 €",
+  "subtitle": "Cinco robots aspiradores y friegasuelos de Roborock, Dreame, Xiaomi y Lefant, con y sin base de autovaciado, para pisos pequeños, familias y casas con mascotas.",
+  "category": "Hogar",
+  "reading_minutes": 7,
+  "intro_md": "Un robot aspirador no sustituye a una limpieza a fondo, pero sí te quita de encima la pasada diaria de polvo, migas y pelo. Y en los últimos años los modelos de gama media han ganado funciones que antes solo tenían los más caros: navegación láser, fregado y bases que vacían el depósito solas.\n\nEsta selección parte de las fichas técnicas y de las opiniones públicas de los compradores. Hay un modelo con base completa que también lava y seca la mopa, dos Dreame con autovaciado, un Xiaomi sencillo que se integra con los asistentes de voz y un Lefant pensado para gastar lo justo.\n\nTodos aspiran y friegan y se controlan desde el móvil. Lo que cambia es cuánto tienes que intervenir tú: vaciar, rellenar agua o lavar mopas. Si quieres ver otros modelos rebajados, pásate por los [chollos de hogar](/chollos/hogar).",
+  "how_to_choose_md": "## Navegación: láser sí o sí\n\nLos robots con navegación láser (LDS, LiDAR o dToF) hacen un mapa de la casa, limpian por filas y saben dónde están. Los que van a ciegas rebotan y repiten zonas. Casi todos los de esta guía usan láser y todos crean mapa, así que puedes crear zonas prohibidas o limpiar solo una habitación desde la app.\n\n## Autovaciado: el extra que más se nota\n\nUna base de autovaciado vacía el depósito del robot en una bolsa grande, y te olvidas de él durante semanas. Si tienes mascotas o una casa grande, es la función que más tiempo ahorra. Sin base, toca vaciar el depósito a menudo, a veces a diario.\n\n## Succión y alfombras\n\nLa cifra en pascales (Pa) da una idea de la potencia, pero no lo es todo: importan igual el diseño del cepillo y que el robot suba la potencia solo al detectar una alfombra. Para pelo largo, busca cepillos antienredos o de goma.\n\n## El fregado, con expectativas realistas\n\nEl fregado de estos robots es una mopa húmeda que repasa el suelo; quita el polvo fino y manchas ligeras, no la grasa incrustada. Fíjate en si puedes regular el agua y en si el robot evita mojar las alfombras.\n\n## Errores comunes y cuándo comprar\n\nNo midas solo la casa: mide también la altura bajo sofás y camas. Y recoge cables y calcetines antes de lanzarlo. Los robots aspiradores son de los productos más rebajados en Black Friday y Prime Day; si puedes esperar, consulta los [próximos eventos de ofertas](/eventos).",
+  "faq": [
+    {
+      "q": "¿Cada cuánto hay que cambiar filtros, cepillos y bolsas?",
+      "a_md": "Depende del uso, pero como orientación los filtros y cepillos laterales se cambian varias veces al año y las bolsas de la base cuando se llenan. Antes de comprar, comprueba que hay recambios fáciles de encontrar para ese modelo."
+    },
+    {
+      "q": "¿Funcionan en casas de dos plantas?",
+      "a_md": "Los que guardan varios mapas pueden limpiar en más de una planta, pero tendrás que subir el robot tú. La base solo está en un piso, así que el autovaciado y la carga ocurren al volver a ella."
+    },
+    {
+      "q": "¿Necesito wifi para usarlos?",
+      "a_md": "Para programarlos, ver el mapa y crear zonas prohibidas sí necesitas conectarlos a la wifi de casa con la app del fabricante. La mayoría aceptan solo redes de 2,4 GHz, así que revisa la configuración de tu router."
+    }
+  ],
+  "items": [
+    {
+      "position": 1,
+      "asin": "B0GZZ96X7N",
+      "name": "Roborock Qrevo 2 Pro",
+      "award": "Mejor en general",
+      "summary_md": "El más completo de la guía y el que menos trabajo te deja. Su base vacía el polvo, rellena el depósito de agua, lava la mopa a 75 ºC y la seca con aire templado. Aspira con hasta 25 000 Pa, sube la potencia en alfombras y retira la mopa cuando pasa por ellas. Su brazo FlexiArm friega muy cerca de las paredes y esquiva zapatos y juguetes. Lo que pega: roza el tope de la guía y la base ocupa bastante más que la de un robot sencillo.",
+      "pros": [
+        "Base que vacía, rellena agua, lava y seca la mopa",
+        "Retira la mopa al pasar por alfombras",
+        "Sistema antienredos doble para pelo largo"
+      ],
+      "cons": [
+        "El más caro de la lista, al límite del tope",
+        "Base voluminosa"
+      ],
+      "specs": [
+        {"label": "Succión", "value": "25 000 Pa"},
+        {"label": "Navegación", "value": "SLAM con evitación de obstáculos"},
+        {"label": "Lavado de mopa", "value": "Automático a 75 ºC"},
+        {"label": "Filtro", "value": "HEPA"},
+        {"label": "Suelos", "value": "Duros y alfombras"}
+      ]
+    },
+    {
+      "position": 2,
+      "asin": "B0GD6Z2YG2",
+      "name": "Dreame D20 Air Plus",
+      "award": "Mejor relación calidad-precio",
+      "summary_md": "Tiene base de autovaciado con bolsa de 4 litros, que según el fabricante da para unos 120 días sin tocarla, y 20 000 Pa de succión. Aspira y friega a la vez con caudal de agua regulable, sube la potencia sola al detectar alfombras y lleva cepillos antienredos. La batería anuncia hasta 300 minutos. Es una buena elección para casas medianas y grandes con mascotas. Lo que pega: la base no lava la mopa, así que esa parte sigue siendo tuya.",
+      "pros": [
+        "Autovaciado con bolsa de 4 L",
+        "Succión de 20 000 Pa",
+        "Batería de hasta 300 minutos"
+      ],
+      "cons": [
+        "La mopa se lava a mano",
+        "Las bolsas de la base son un gasto recurrente"
+      ],
+      "specs": [
+        {"label": "Succión", "value": "20 000 Pa"},
+        {"label": "Autovaciado", "value": "Bolsa de 4 L"},
+        {"label": "Autonomía", "value": "300 min"},
+        {"label": "Ancho de limpieza", "value": "39 cm"},
+        {"label": "Filtro", "value": "HEPA"}
+      ]
+    },
+    {
+      "position": 3,
+      "asin": "B0D3RGFSRB",
+      "name": "Dreame D10 Plus Gen 2",
+      "award": "Para alfombras y pelo de mascota",
+      "summary_md": "Un robot con autovaciado que cuida especialmente las alfombras gracias a su cepillo de goma flotante, que se adapta a la superficie y se enreda poco con el pelo. Aspira con 6000 Pa en cuatro niveles, vacía el depósito en una bolsa de 4 litros y anuncia hasta 285 minutos de batería. Crea mapas editables, admite zonas prohibidas y se controla por app o por voz. Lo que pega: el depósito de agua es pequeño, de 150 ml, así que el fregado es para repasos ligeros.",
+      "pros": [
+        "Autovaciado con bolsa de 4 L",
+        "Cepillo de goma flotante, bueno con el pelo",
+        "Control por voz y zonas prohibidas"
+      ],
+      "cons": [
+        "Depósito de agua de solo 150 ml",
+        "Menos succión que el D20 Air Plus"
+      ],
+      "specs": [
+        {"label": "Succión", "value": "6000 Pa"},
+        {"label": "Autovaciado", "value": "Bolsa de 4 L"},
+        {"label": "Autonomía", "value": "285 min"},
+        {"label": "Depósito de agua", "value": "150 ml"},
+        {"label": "Control", "value": "App y voz"}
+      ]
+    },
+    {
+      "position": 4,
+      "asin": "B0F4K1H6X5",
+      "name": "Xiaomi Robot Vacuum S40C",
+      "award": "Para el hogar conectado",
+      "summary_md": "Un robot sencillo y sin base de autovaciado, ideal si ya tienes Alexa o Google Home y quieres lanzarlo con la voz. Usa navegación láser LDS, aspira con 5000 Pa en cuatro modos y friega con tres niveles de agua. Su depósito de polvo de 520 ml y el de agua de 260 ml aguantan bien entre vaciados en un piso medio, y se gestiona con la app Xiaomi Home. Lo que pega: su autonomía es de 100 minutos y el vaciado es manual.",
+      "pros": [
+        "Compatible con Alexa y Google Home",
+        "Navegación láser LDS",
+        "Depósito de polvo de 520 ml"
+      ],
+      "cons": [
+        "Sin autovaciado",
+        "Autonomía de 100 minutos"
+      ],
+      "specs": [
+        {"label": "Succión", "value": "5000 Pa"},
+        {"label": "Navegación", "value": "Láser LDS"},
+        {"label": "Depósito de polvo", "value": "520 ml"},
+        {"label": "Depósito de agua", "value": "260 ml"},
+        {"label": "Autonomía", "value": "100 min"}
+      ]
+    },
+    {
+      "position": 5,
+      "asin": "B0FQPD78WL",
+      "name": "Lefant M1",
+      "award": "Si quieres gastar lo mínimo",
+      "summary_md": "El más barato de la guía y, aun así, con navegación láser dToF que escanea hasta 15 metros y mapeo de varias plantas. Aspira con 5500 Pa, friega, permite bloquear zonas o programar por habitaciones desde la app y obedece a Alexa. Su batería anuncia hasta 200 minutos y vuelve solo a la base a recargar. Es una opción sensata para un primer robot o para un piso pequeño. Lo que pega: no tiene autovaciado y la marca es menos conocida que las demás de la lista.",
+      "pros": [
+        "El más barato de la guía",
+        "Navegación láser dToF y mapeo multinivel",
+        "Hasta 200 minutos de autonomía"
+      ],
+      "cons": [
+        "Sin autovaciado",
+        "Marca menos conocida que las demás"
+      ],
+      "specs": [
+        {"label": "Succión", "value": "5500 Pa"},
+        {"label": "Navegación", "value": "Láser dToF"},
+        {"label": "Autonomía", "value": "200 min"},
+        {"label": "Control", "value": "App y voz (Alexa)"},
+        {"label": "Superficies", "value": "Madera y alfombra"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+{
+  "slug": "camaras-de-seguridad-y-timbres-inteligentes",
+  "title": "Cámaras de seguridad y timbres inteligentes",
+  "subtitle": "Para quien quiere vigilar su casa desde el móvil: comparamos cámaras de interior, de exterior con batería, con cable, PoE y un timbre.",
+  "category": "Tecnología",
+  "reading_minutes": 7,
+  "intro_md": "Ver desde el móvil qué pasa en casa cuando no estás ya no requiere un instalador ni una cuota mensual obligatoria. En esta guía repasamos cinco formas distintas de hacerlo: una cámara de interior motorizada, una de exterior a batería, otra de exterior con cable que gira 360°, una cámara PoE para quien quiere una instalación fija y un timbre con cámara.\n\nNo compiten entre sí: cada una resuelve un caso distinto, y muchas casas acaban combinando dos. La selección se ha hecho a partir de las fichas técnicas de cada fabricante y de las opiniones públicas de los compradores.\n\nAntes de colgar ninguna cámara, un recordatorio importante: enfoca siempre a tu propiedad. Grabar la calle, la acera o la casa del vecino no es buena idea, y más abajo te contamos cómo evitarlo.",
+  "how_to_choose_md": "## Interior, exterior o timbre\n\nUna cámara de interior vigila un salón, la entrada o a la mascota mientras estás fuera, y suele ser la más barata. Las de exterior aguantan lluvia y polvo y tienen visión nocturna. El timbre con cámara te enseña quién llama y te deja hablar con él desde el móvil, estés donde estés.\n\n## Batería, cable o PoE\n\nUna cámara a batería se coloca donde quieras sin hacer obra, pero hay que recargarla de vez en cuando. La de cable necesita un enchufe cerca, a cambio de no preocuparte nunca de la carga. La PoE usa un único cable de red para datos y corriente: es la opción más estable, pero requiere pasar ese cable y, normalmente, un switch o grabador compatible.\n\n## Dónde se guardan los vídeos\n\nCasi todas permiten grabar en una tarjeta microSD (que muchas veces no viene incluida) o en la nube con suscripción. La tarjeta no tiene coste mensual; la nube conserva los vídeos aunque alguien se lleve la cámara. Revisa qué ofrece cada marca antes de decidir.\n\n## Privacidad: enfoca solo lo tuyo\n\nColoca las cámaras para que graben tu casa, tu jardín o tu puerta, no la vía pública ni las ventanas de los vecinos. Si la cámara lo permite, usa las zonas de detección para ignorar la calle. Y si vives en una comunidad, pregunta antes de instalar nada en zonas comunes.\n\n## Cuándo comprar\n\nLas cámaras de seguridad y los timbres bajan a menudo en Black Friday y Prime Day, y es habitual encontrarlas en packs. Puedes seguir las ofertas en [los chollos de tecnología](/chollos/tecnologia).",
+  "faq": [
+    {
+      "q": "¿Necesito pagar una suscripción?",
+      "a_md": "En la mayoría, no: la C410 y la C210 admiten microSD de hasta 512 GB, el D210 indica grabación local y la Reolink graba en microSD, grabador NVR o servidor FTP. La ficha de la C530WS no detalla la grabación local. La nube es un servicio opcional de pago."
+    },
+    {
+      "q": "¿Funcionan con Alexa?",
+      "a_md": "Las fichas de las cámaras Tapo indican compatibilidad con Alexa. Para la Reolink, la ficha solo menciona las apps para móvil y ordenador."
+    },
+    {
+      "q": "¿Cada cuánto hay que cargar la batería?",
+      "a_md": "Depende del uso y de cuántos avisos genere. El fabricante habla de hasta 180 días para la Tapo C410 y unos seis meses para el timbre D210, pero con mucho movimiento durará menos."
+    }
+  ],
+  "items": [
+    {
+      "position": 1,
+      "asin": "B0D3814FFN",
+      "name": "Tapo C410 exterior a batería",
+      "award": "Mejor en general",
+      "summary_md": "La forma más sencilla de poner una cámara fuera sin hacer obra. Funciona con batería, así que no necesita enchufe, y el fabricante habla de hasta 180 días con una carga. Graba en 2K, tiene visión nocturna en color con focos integrados hasta unos 9 metros, audio bidireccional y avisos cuando detecta personas, lo que reduce las notificaciones inútiles. Guarda en microSD de hasta 512 GB o en la nube. No gira: lo que cubre depende de dónde la cuelgues.",
+      "pros": [
+        "Sin cables ni enchufes",
+        "Detección de personas",
+        "Visión nocturna en color"
+      ],
+      "cons": [
+        "Hay que recargar la batería",
+        "Ángulo fijo, sin giro"
+      ],
+      "specs": [
+        {"label": "Resolución", "value": "2K (3 MP)"},
+        {"label": "Alimentación", "value": "Batería 6400 mAh"},
+        {"label": "Autonomía", "value": "Hasta 180 días"},
+        {"label": "Visión nocturna", "value": "En color, hasta 9 m"},
+        {"label": "Almacenamiento", "value": "microSD hasta 512 GB o nube"}
+      ]
+    },
+    {
+      "position": 2,
+      "asin": "B095CLQ1PT",
+      "name": "Tapo C210 interior 360°",
+      "award": "Para vigilar dentro de casa",
+      "summary_md": "La opción más barata de la guía y la única pensada solo para interior. Gira 360° en horizontal y 114° en vertical, así que desde un rincón cubre una habitación entera, y puede seguir lo que se mueve. Graba en 2K, tiene visión nocturna hasta 9 metros, audio bidireccional para hablar con tu mascota y detección de llanto de bebé tras actualizar el firmware. Guarda en microSD (no incluida) de hasta 512 GB o en la nube.",
+      "pros": [
+        "Giro de 360° y seguimiento",
+        "Audio bidireccional",
+        "Detección de llanto de bebé"
+      ],
+      "cons": [
+        "Solo para interior",
+        "Tarjeta microSD no incluida"
+      ],
+      "specs": [
+        {"label": "Resolución", "value": "2K (3 MP)"},
+        {"label": "Giro", "value": "360° horizontal, 114° vertical"},
+        {"label": "Visión nocturna", "value": "Hasta 9 m"},
+        {"label": "Almacenamiento", "value": "microSD hasta 512 GB o nube"},
+        {"label": "Uso", "value": "Interior"}
+      ]
+    },
+    {
+      "position": 3,
+      "asin": "B0DY94MCLN",
+      "name": "Tapo C530WS exterior 360° 3K",
+      "award": "Para cubrir un jardín entero",
+      "summary_md": "Si tienes un patio o jardín amplio y un enchufe cerca, esta cámara gira 360° en horizontal y 130° en vertical y sigue el movimiento, de modo que una sola cubre mucho terreno. Graba en 3K, tiene visión nocturna en color, distingue personas, vehículos y mascotas y lleva sirena de 85 dB con luces. Es IP66 y la ficha indica que funciona entre -20 °C y 45 °C. Ojo: no tiene batería, se alimenta con adaptador de corriente.",
+      "pros": [
+        "Giro completo y seguimiento",
+        "Distingue personas, vehículos y mascotas",
+        "Sirena y luces disuasorias"
+      ],
+      "cons": [
+        "Necesita enchufe: sin batería",
+        "Al girar puede enfocar zonas que no son tuyas: configura bien los límites"
+      ],
+      "specs": [
+        {"label": "Resolución", "value": "3K (5 MP)"},
+        {"label": "Giro", "value": "360° horizontal, 130° vertical"},
+        {"label": "Protección", "value": "IP66"},
+        {"label": "Sirena", "value": "85 dB"},
+        {"label": "Alimentación", "value": "Adaptador de corriente"}
+      ]
+    },
+    {
+      "position": 4,
+      "asin": "B08KG1517Y",
+      "name": "Reolink RLC-520A PoE 5 MP",
+      "award": "Para una instalación fija",
+      "summary_md": "Para quien quiere una instalación seria y sin depender del wifi. Es una cámara tipo cúpula que recibe datos y corriente por un único cable de red (PoE), lo que la hace muy estable. Graba a 5 MP (2560 x 1920) con micrófono, distingue personas, vehículos y mascotas, y admite grabación continua, por movimiento o programada en grabador Reolink NVR, servidor FTP o microSD. Es la que más trabajo de instalación pide: hay que pasar cable y contar con un switch o grabador PoE.",
+      "pros": [
+        "Conexión por cable, sin cortes de wifi",
+        "Grabación continua o programada",
+        "Detección de personas y vehículos"
+      ],
+      "cons": [
+        "Necesita pasar cable de red",
+        "Requiere switch o grabador compatible con PoE"
+      ],
+      "specs": [
+        {"label": "Resolución", "value": "5 MP (2560 x 1920)"},
+        {"label": "Conexión", "value": "PoE (cable Ethernet)"},
+        {"label": "Formato", "value": "Cúpula"},
+        {"label": "Grabación", "value": "NVR, FTP o microSD"},
+        {"label": "Uso", "value": "Exterior"}
+      ]
+    },
+    {
+      "position": 5,
+      "asin": "B0DN6LZGBW",
+      "name": "Tapo D210 timbre con cámara 2K",
+      "award": "Para saber quién llama",
+      "summary_md": "Un timbre con cámara te deja ver y hablar con quien llama desde el móvil, también cuando no estás en casa. El D210 graba en 2K, tiene audio bidireccional, visión nocturna hasta 10 metros y avisos por movimiento. Funciona con batería, con una autonomía que el fabricante cifra en unos seis meses, y es IP66, así que aguanta la intemperie. Es el más caro de la guía. Colócalo de forma que capte tu puerta y no la acera o el rellano del vecino.",
+      "pros": [
+        "Habla con quien llama desde el móvil",
+        "Batería, sin cablear el timbre",
+        "Resistente al agua IP66"
+      ],
+      "cons": [
+        "El más caro de la guía",
+        "Hay que recargarlo cada pocos meses"
+      ],
+      "specs": [
+        {"label": "Resolución", "value": "2K"},
+        {"label": "Alimentación", "value": "Batería (unos 6 meses)"},
+        {"label": "Visión nocturna", "value": "Hasta 10 m"},
+        {"label": "Protección", "value": "IP66"},
+        {"label": "Audio", "value": "Bidireccional"}
+      ]
+    }
+  ]
+}

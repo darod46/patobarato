@@ -1,0 +1,142 @@
+{
+  "slug": "auriculares-inalambricos-menos-50",
+  "title": "Auriculares inalámbricos por menos de 50 €",
+  "subtitle": "Dos auriculares de botón y tres de diadema de Soundcore, Sony y JBL para el día a día, el gimnasio, los viajes y el teletrabajo.",
+  "category": "Tecnología",
+  "reading_minutes": 6,
+  "intro_md": "Por debajo del tope de esta guía hay auriculares inalámbricos que cumplen de sobra para música, pódcast y llamadas. Lo difícil es elegir entre decenas de modelos casi iguales en las fotos y muy distintos en el uso.\n\nHemos montado esta selección a partir de las fichas técnicas y de las opiniones públicas de los compradores. Incluye dos modelos de botón (uno sencillo para el gimnasio y otro con cancelación de ruido y traductor) y tres de diadema: uno con cancelación de ruido para viajar, uno ligero con buena gestión de llamadas y uno plegable con mucha batería.\n\nCasi todos tienen app para ajustar el sonido. La diferencia está en el formato, la cancelación de ruido y en cuántas horas aguantan. Si buscas otros modelos rebajados, revisa los [chollos de tecnología](/chollos/tecnologia).",
+  "how_to_choose_md": "## Botón o diadema\n\nLos de botón (intraurales) caben en el bolsillo y son cómodos para correr o ir en transporte público, pero su batería por carga es más corta y dependen del estuche. Los de diadema aguantan muchas más horas, suelen sonar con más cuerpo y aíslan mejor, a cambio de ocupar más y dar calor en verano.\n\n## Cancelación de ruido: cuándo merece la pena\n\nSi viajas en avión, tren o metro a menudo, o trabajas en una oficina ruidosa, la cancelación activa (ANC) se nota mucho. Para casa o para el gimnasio no es necesaria. Ten en cuenta que con la ANC encendida la batería dura menos; las fichas suelen dar las dos cifras.\n\n## Batería, llamadas y uso\n\nFíjate en las horas por carga, no solo en el total con estuche. La carga rápida es más útil de lo que parece: unos minutos enchufados te dan para un trayecto entero.\n\nSi vas a usarlos para trabajar, busca conexión multipunto (enganchados al móvil y al portátil a la vez) y varios micrófonos. Para entrenar, la resistencia al agua y al sudor, como la certificación IPX5, es lo que importa.\n\n## Errores comunes\n\nEl más habitual es fijarse solo en la cifra total de batería y no en el formato: unos cascos de diadema no son cómodos para correr, y unos de botón sin almohadillas del tamaño adecuado no aíslan nada. Prueba las distintas almohadillas que vienen en la caja antes de juzgar el sonido, y no des por hecho que todos los modelos tienen multipunto o cancelación de ruido.\n\n## Cuándo comprar\n\nLos auriculares de estas marcas bajan con frecuencia en Black Friday y Prime Day, y vuelven a moverse en las rebajas. Echa un ojo al calendario de [eventos de ofertas](/eventos) antes de pagar.",
+  "faq": [
+    {
+      "q": "¿Funcionan con iPhone y con Android?",
+      "a_md": "Sí, todos se conectan por Bluetooth estándar a cualquier móvil, tableta u ordenador. Algunas funciones avanzadas, como el códec LDAC, solo se aprovechan con móviles Android compatibles."
+    },
+    {
+      "q": "¿Puedo usarlos con cable si se quedan sin batería?",
+      "a_md": "Depende del modelo: el cable que incluyen la mayoría es para cargar, no para escuchar. Si es algo que necesitas, revisa en la ficha si traen entrada de audio de 3,5 mm."
+    },
+    {
+      "q": "¿Qué pasa si pierdo un auricular de botón?",
+      "a_md": "Algunos modelos, como el Soundcore P20i, tienen función para buscarlo desde la app. Si no aparece, pregunta al servicio técnico de la marca si venden la unidad suelta como repuesto."
+    }
+  ],
+  "items": [
+    {
+      "position": 1,
+      "asin": "B0FNWCYLZN",
+      "name": "Soundcore P31i",
+      "award": "Mejor en general",
+      "summary_md": "Auriculares de botón muy completos para su rango. Tienen cancelación de ruido adaptativa, que ajusta el nivel según el entorno, sonido de alta resolución con LDAC y seis micrófonos para llamadas en la calle. Aguantan 12 horas por carga (8 con la cancelación activada) y hasta 50 horas con el estuche. Como extra, traducen conversaciones en tiempo real en más de cien idiomas. Lo que pega: el LDAC solo funciona con móviles Android compatibles y el control es táctil, que no a todo el mundo le gusta.",
+      "pros": [
+        "Cancelación de ruido adaptativa",
+        "Hasta 50 horas con el estuche",
+        "Seis micrófonos para llamadas"
+      ],
+      "cons": [
+        "LDAC solo con Android compatible",
+        "Controles táctiles, fáciles de tocar sin querer"
+      ],
+      "specs": [
+        {"label": "Tipo", "value": "Intraurales (botón)"},
+        {"label": "Cancelación de ruido", "value": "Adaptativa"},
+        {"label": "Autonomía", "value": "12 h (50 h con estuche)"},
+        {"label": "Autonomía con ANC", "value": "8 h (40 h con estuche)"},
+        {"label": "Micrófonos", "value": "6"},
+        {"label": "Códec", "value": "LDAC"}
+      ]
+    },
+    {
+      "position": 2,
+      "asin": "B0C3HCD34R",
+      "name": "Soundcore Q20i",
+      "award": "Para viajar",
+      "summary_md": "Cascos de diadema con cancelación de ruido híbrida, con dos micrófonos internos y dos externos, pensados para aviones, trenes y oficinas ruidosas. Montan drivers de 40 mm y aguantan 40 horas con la cancelación encendida o 60 sin ella, así que en un viaje largo no te acordarás del cargador. Se conectan a dos dispositivos a la vez, tienen modo transparencia y la app ofrece 22 ecualizaciones. Lo que pega: son supraaurales, con lo que pueden apretar en sesiones largas, y usan Bluetooth 5.0, una versión algo antigua.",
+      "pros": [
+        "Cancelación de ruido híbrida",
+        "Hasta 60 horas sin ANC",
+        "Conexión a dos dispositivos y modo transparencia"
+      ],
+      "cons": [
+        "Supraaurales: pueden cansar la oreja",
+        "Bluetooth 5.0"
+      ],
+      "specs": [
+        {"label": "Tipo", "value": "Diadema supraaural"},
+        {"label": "Cancelación de ruido", "value": "Híbrida"},
+        {"label": "Autonomía", "value": "60 h (40 h con ANC)"},
+        {"label": "Drivers", "value": "40 mm"},
+        {"label": "Bluetooth", "value": "5.0, multipunto"}
+      ]
+    },
+    {
+      "position": 3,
+      "asin": "B0BTJ9WHL9",
+      "name": "Sony WH-CH520",
+      "award": "Para llamadas y teletrabajo",
+      "summary_md": "Unos cascos ligeros, de 147 gramos, para quien pasa muchas horas con ellos puestos y salta del portátil al móvil. Tienen conexión multipunto, micrófono integrado, botones físicos y emparejamiento rápido con Swift Pair y Fast Pair. La batería llega a 50 horas y con tres minutos de carga tienes hora y media de música. La app permite ajustar un ecualizador de cinco bandas. Lo que pega: no tienen cancelación de ruido, así que en sitios ruidosos se quedan atrás frente a los Soundcore.",
+      "pros": [
+        "Muy ligeros, 147 g",
+        "Multipunto y botones físicos",
+        "50 horas de batería con carga rápida"
+      ],
+      "cons": [
+        "Sin cancelación de ruido",
+        "Aíslan poco en transporte público"
+      ],
+      "specs": [
+        {"label": "Tipo", "value": "Diadema"},
+        {"label": "Peso", "value": "147 g"},
+        {"label": "Autonomía", "value": "50 h"},
+        {"label": "Carga rápida", "value": "3 min = 90 min"},
+        {"label": "Control", "value": "Botones"},
+        {"label": "Ecualizador", "value": "5 bandas en app"}
+      ]
+    },
+    {
+      "position": 4,
+      "asin": "B0BYWMLVG1",
+      "name": "JBL Tune 520BT",
+      "award": "Para llevar en la mochila",
+      "summary_md": "Cascos plegables y ligeros para quien quiere sonido con graves marcados y olvidarse del cargador. Aguantan hasta 57 horas, se cargan por USB-C en unas dos horas y con cinco minutos de carga sacas tres horas de música. Usan Bluetooth 5.3 y la app de JBL incluye ecualizador y Voice Aware, para oír tu propia voz durante las llamadas. Lo que pega: no tienen cancelación de ruido y, al ser supraaurales, en sesiones largas pueden apretar un poco.",
+      "pros": [
+        "Hasta 57 horas de batería",
+        "Diseño plegable",
+        "Bluetooth 5.3 y carga USB-C"
+      ],
+      "cons": [
+        "Sin cancelación de ruido",
+        "Supraaurales: aislamiento limitado"
+      ],
+      "specs": [
+        {"label": "Tipo", "value": "Diadema supraaural plegable"},
+        {"label": "Autonomía", "value": "57 h"},
+        {"label": "Carga rápida", "value": "5 min = 3 h"},
+        {"label": "Bluetooth", "value": "5.3"},
+        {"label": "Conector de carga", "value": "USB-C"}
+      ]
+    },
+    {
+      "position": 5,
+      "asin": "B0BTYCRJSS",
+      "name": "Soundcore P20i",
+      "award": "Si quieres gastar lo mínimo",
+      "summary_md": "Los más baratos de la guía y una buena puerta de entrada a los auriculares de botón. Tienen resistencia IPX5 al agua y al sudor, así que sirven para el gimnasio o para salir a correr con lluvia. Dan 10 horas por carga y 30 con el estuche, que trae un cordón para colgarlo. La app ofrece 22 ecualizaciones y una función para buscar un auricular perdido. Lo que pega: no tienen cancelación de ruido y tienen la autonomía total más corta de la guía (30 h con el estuche).",
+      "pros": [
+        "Resistentes al agua y al sudor (IPX5)",
+        "Función para localizar un auricular perdido",
+        "Estuche pequeño con cordón"
+      ],
+      "cons": [
+        "Sin cancelación de ruido",
+        "La autonomía total más corta de la guía (30 h con el estuche)"
+      ],
+      "specs": [
+        {"label": "Tipo", "value": "Intraurales (botón)"},
+        {"label": "Autonomía", "value": "10 h (30 h con estuche)"},
+        {"label": "Resistencia", "value": "IPX5"},
+        {"label": "Drivers", "value": "10 mm"},
+        {"label": "Bluetooth", "value": "5.3"}
+      ]
+    }
+  ]
+}

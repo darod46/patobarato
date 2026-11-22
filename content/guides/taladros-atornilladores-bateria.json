@@ -1,0 +1,140 @@
+{
+  "slug": "taladros-atornilladores-bateria",
+  "title": "Taladros atornilladores a batería",
+  "subtitle": "Cinco taladros y atornilladores sin cable, del pequeño para montar muebles al percutor de 18 V para colgar estanterías en la pared.",
+  "category": "Bricolaje",
+  "reading_minutes": 7,
+  "intro_md": "Un taladro atornillador a batería es de esas herramientas que, una vez en casa, sacas cada dos por tres: montar un mueble, colgar un cuadro, cambiar una bisagra o poner una barra de cortina. La duda suele ser cuánta máquina necesitas de verdad.\n\nEn esta guía repasamos cinco opciones con usos muy distintos, desde un atornillador de bolsillo hasta taladros percutores de 18 V que entran en ladrillo. Para elegirlos nos hemos basado en las fichas técnicas de Bosch y Einhell y en lo que cuentan los compradores en sus opiniones públicas: qué tal aguanta la batería, si el par se queda corto y qué traen en la caja.\n\nUn consejo antes de empezar: piensa en la batería como un sistema. Si ya tienes herramientas de jardín o bricolaje de una marca, comprar dentro de esa familia te ahorra cargadores y baterías. Tienes más ofertas en [chollos de bricolaje](/chollos/bricolaje).",
+  "how_to_choose_md": "## Atornillador, taladro o percutor\n\nUn atornillador pequeño (3,6 V) solo sirve para tornillos: muebles, enchufes, bisagras. Un taladro atornillador de 12 V ya perfora madera, metal y plástico. Si vas a colgar estanterías en paredes de ladrillo o tabique, necesitas función de percusión; sin ella, la broca apenas avanza en mampostería. Para hormigón duro, ninguno de esta guía sustituye a un martillo perforador.\n\n## Voltaje, par y portabrocas\n\nLos 12 V son más ligeros y manejables; los 18 V dan más fuerza y aguantan mejor trabajos largos. El par (en Nm) indica la fuerza al atornillar: con 30-40 Nm resuelves casi todo lo doméstico. Fíjate también en el portabrocas: el de 13 mm admite brocas más gruesas que el de 10 mm, y los de cierre rápido sin llave se agradecen. Los niveles de par sirven para no pasar de rosca tornillos pequeños.\n\n## Baterías y ecosistema\n\nComprueba cuántas baterías trae la caja y su capacidad (Ah). Con dos baterías puedes tener una cargando mientras trabajas. Además, Bosch (Power for All, verde), Bosch Professional (azul) y Einhell (Power X-Change) tienen familias propias: las baterías no son intercambiables entre sistemas, así que piensa en qué otras herramientas querrás después.\n\n## Errores comunes\n\nComprar un percutor enorme para montar muebles, o un atornillador mini esperando que taladre la pared. También fijarse solo en los vatios o las revoluciones de la ficha, que a veces vienen mal rellenados; el par, el voltaje y si hay percusión dicen mucho más.\n\n## Cuándo comprar\n\nLas herramientas bajan con frecuencia en el Black Friday, el Prime Day y, sobre todo, alrededor del Día del Padre, cuando muchas marcas lanzan packs con maletín y accesorios. Puedes seguir esas fechas en [eventos](/eventos).",
+  "faq": [
+    {
+      "q": "¿Puedo usar la batería de mi cortacésped Bosch en el taladro?",
+      "a_md": "Sí, si ambos son de la gama verde Bosch Home & Garden con el mismo voltaje (Power for All 12 V o 18 V). Las baterías de la gama azul Professional siguen un sistema distinto y no son intercambiables con las verdes."
+    },
+    {
+      "q": "¿Con cualquiera de estos se puede taladrar una pared?",
+      "a_md": "Para ladrillo o mampostería necesitas función de percusión, que tienen el Bosch UniversalImpact, el Bosch GSB 12V-15 y el Einhell TE-CD 18/40. El EasyDrill 1200 y el IXO no son para paredes."
+    },
+    {
+      "q": "¿Cómo cuido la batería de litio?",
+      "a_md": "Guárdala en un sitio seco y templado, sin dejarla totalmente vacía durante meses. Si no vas a usar el taladro en una temporada, déjala con algo de carga y recárgala de vez en cuando."
+    }
+  ],
+  "items": [
+    {
+      "position": 1,
+      "asin": "B09877WFM6",
+      "name": "Bosch UniversalImpact 18V",
+      "award": "Mejor en general",
+      "summary_md": "El que recomendaríamos para una casa donde se hace un poco de todo. Es un 3 en 1: atornilla, taladra y taladra con percusión en mampostería, así que vale para colgar estanterías. Tiene 20 ajustes de par, dos velocidades, portabrocas de 13 mm de cierre rápido y viene en maletín con puntas y brocas para madera y pared. Su batería forma parte de la alianza Power for All. La pega es que el pack solo trae una batería de 2,0 Ah.",
+      "pros": [
+        "Función de percusión para ladrillo y mampostería",
+        "Portabrocas de 13 mm de liberación rápida",
+        "Maletín con 32 piezas para atornillar y 10 brocas"
+      ],
+      "cons": [
+        "Solo incluye una batería",
+        "Más pesado que los modelos de 12 V"
+      ],
+      "specs": [
+        {"label": "Voltaje", "value": "18 V"},
+        {"label": "Par máximo", "value": "34 Nm"},
+        {"label": "Velocidad máxima", "value": "1350 rpm"},
+        {"label": "Portabrocas", "value": "13 mm"},
+        {"label": "Batería incluida", "value": "1 × 2,0 Ah"}
+      ]
+    },
+    {
+      "position": 2,
+      "asin": "B0987W5VK6",
+      "name": "Einhell TE-CD 18/40 con 2 baterías",
+      "award": "Mejor relación calidad-precio",
+      "summary_md": "Un percutor de 18 V muy completo para lo que cuesta: trae dos baterías de 2,0 Ah, cargador, maletín y un juego de 64 accesorios. Según su ficha da 40 Nm de par con 21 niveles, caja de dos velocidades, portabrocas de 13 mm de un solo casquillo y luz LED. Pertenece a la familia Power X-Change, que comparte baterías con las herramientas de jardín de Einhell. Encaja si ya tienes jardín Einhell.",
+      "pros": [
+        "Dos baterías de 2,0 Ah en la caja",
+        "40 Nm de par, el más alto de la guía",
+        "Baterías compatibles con el jardín Einhell"
+      ],
+      "cons": [
+        "Baterías no intercambiables con Bosch u otras marcas",
+        "Peso y tamaño propios de un 18 V"
+      ],
+      "specs": [
+        {"label": "Voltaje", "value": "18 V"},
+        {"label": "Par", "value": "40 Nm"},
+        {"label": "Niveles de par", "value": "21"},
+        {"label": "Portabrocas", "value": "13 mm"},
+        {"label": "Baterías incluidas", "value": "2 × 2,0 Ah"}
+      ]
+    },
+    {
+      "position": 3,
+      "asin": "B00YYBBUBY",
+      "name": "Bosch Professional GSB 12V-15",
+      "award": "Para uso frecuente",
+      "summary_md": "La gama azul de Bosch, pensada para un uso más intensivo pero en formato compacto de 12 V. Tiene percusión para mampostería, engranaje planetario de dos velocidades, portabrocas Autolock de 10 mm y llega a brocas de 19 mm en madera. El pack incluye dos baterías de 2,0 Ah, cargador, juegos de brocas para madera y metal y puntas. Encaja si haces reformas a menudo y quieres una herramienta manejable para trabajar por encima de la cabeza.",
+      "pros": [
+        "Dos baterías y sets de brocas en el pack",
+        "Compacto y ligero para su capacidad",
+        "Compatible con todo el sistema Professional 12 V"
+      ],
+      "cons": [
+        "Portabrocas de 10 mm, admite brocas menos gruesas",
+        "Baterías no compatibles con la gama verde de Bosch"
+      ],
+      "specs": [
+        {"label": "Voltaje", "value": "12 V"},
+        {"label": "Par máximo", "value": "30 Nm"},
+        {"label": "Broca máx. en madera", "value": "19 mm"},
+        {"label": "Portabrocas", "value": "10 mm Autolock"},
+        {"label": "Baterías incluidas", "value": "2 × 2,0 Ah"}
+      ]
+    },
+    {
+      "position": 4,
+      "asin": "B08CVT3QKL",
+      "name": "Bosch EasyDrill 1200",
+      "award": "Para pequeños arreglos en casa",
+      "summary_md": "Un taladro atornillador de 12 V para quien monta muebles, cambia herrajes y hace algún agujero en madera, metal o plástico. Tiene 20 niveles de par, luz LED para ver en rincones oscuros y una batería de 2,0 Ah compatible con toda la gama verde Bosch de 12 V. Viene con brocas y puntas en una funda blanda. No tiene percusión, así que no es la herramienta para colgar cosas en una pared de ladrillo.",
+      "pros": [
+        "Luz LED para rincones oscuros",
+        "20 niveles de par para no pasar de rosca",
+        "Batería compatible con la gama verde Bosch 12 V"
+      ],
+      "cons": [
+        "Sin percusión: no sirve para mampostería",
+        "Una sola batería"
+      ],
+      "specs": [
+        {"label": "Voltaje", "value": "12 V"},
+        {"label": "Par máximo", "value": "30 Nm"},
+        {"label": "Niveles de par", "value": "20"},
+        {"label": "Batería incluida", "value": "1 × 2,0 Ah"},
+        {"label": "Materiales", "value": "Madera, metal y plástico"}
+      ]
+    },
+    {
+      "position": 5,
+      "asin": "B0BQYW8LZ4",
+      "name": "Bosch IXO 7 con adaptador en ángulo",
+      "award": "La más compacta",
+      "summary_md": "No es un taladro, es un atornillador de bolsillo, y precisamente por eso es el que más vas a usar para montar muebles o apretar tornillos de enchufes y bisagras. La séptima generación da 5,5 Nm, atornilla hasta 190 tornillos por carga según Bosch y trae un adaptador en ángulo para rincones, 10 puntas y cable micro USB para cargar. Es la opción para gastar lo mínimo si no necesitas perforar.",
+      "pros": [
+        "Cabe en un cajón: 12 × 4,6 × 14,7 cm",
+        "Adaptador en ángulo para esquinas",
+        "Piezas de recambio durante 10 años"
+      ],
+      "cons": [
+        "Solo atornilla, no taladra",
+        "Carga por micro USB, no USB-C"
+      ],
+      "specs": [
+        {"label": "Voltaje", "value": "3,6 V"},
+        {"label": "Par", "value": "5,5 Nm"},
+        {"label": "Batería", "value": "Litio 2,0 Ah"},
+        {"label": "Tornillos por carga", "value": "Hasta 190"},
+        {"label": "Velocidad", "value": "235 rpm"}
+      ]
+    }
+  ]
+}

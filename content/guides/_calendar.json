@@ -1,0 +1,338 @@
+[
+ {
+  "week": 1,
+  "monday": "2026-11-30",
+  "slug": "freidoras-de-aire-menos-100",
+  "title": "Freidoras de aire por menos de 100 €",
+  "category": "Hogar",
+  "asins": [
+   "B07N8N6C85",
+   "B0CWP7M17B",
+   "B0DKKH9H5V",
+   "B0BPYX2TGJ",
+   "B0BQ1DJ65N"
+  ]
+ },
+ {
+  "week": 2,
+  "monday": "2026-12-07",
+  "slug": "auriculares-inalambricos-menos-50",
+  "title": "Auriculares inalámbricos por menos de 50 €",
+  "category": "Tecnología",
+  "asins": [
+   "B0BTYCRJSS",
+   "B0FNWCYLZN",
+   "B0C3HCD34R",
+   "B0BTJ9WHL9",
+   "B0BYWMLVG1"
+  ]
+ },
+ {
+  "week": 3,
+  "monday": "2026-12-14",
+  "slug": "robots-aspiradores-menos-300",
+  "title": "Robots aspiradores por menos de 300 €",
+  "category": "Hogar",
+  "asins": [
+   "B0GZZ96X7N",
+   "B0GD6Z2YG2",
+   "B0F4K1H6X5",
+   "B0FQPD78WL",
+   "B0D3RGFSRB"
+  ]
+ },
+ {
+  "week": 4,
+  "monday": "2026-12-21",
+  "slug": "juegos-de-mesa-familiares",
+  "title": "Juegos de mesa para toda la familia",
+  "category": "Juguetes",
+  "asins": [
+   "B006CZ0LGA",
+   "B00W5LCL8G",
+   "B019M2EA3Y",
+   "B092R6L3T3",
+   "B07D3Z1S7H"
+  ]
+ },
+ {
+  "week": 5,
+  "monday": "2026-12-28",
+  "slug": "relojes-y-pulseras-de-actividad-menos-100",
+  "title": "Relojes y pulseras de actividad por menos de 100 €",
+  "category": "Deporte",
+  "asins": [
+   "B0DYF82545",
+   "B0DY1JKTRD",
+   "B0GQL9JZS7",
+   "B0F66MS88R",
+   "B0F2B1M9TB"
+  ]
+ },
+ {
+  "week": 6,
+  "monday": "2027-01-04",
+  "slug": "gimnasio-en-casa-para-empezar",
+  "title": "Gimnasio en casa: lo esencial para empezar",
+  "category": "Deporte",
+  "asins": [
+   "B07GSVQGKF",
+   "B09V8BNQSZ",
+   "B07BKQRWHT",
+   "B09CTVQWK8"
+  ]
+ },
+ {
+  "week": 7,
+  "monday": "2027-01-11",
+  "slug": "calefactores-bajo-consumo",
+  "title": "Calefactores y radiadores de bajo consumo",
+  "category": "Hogar",
+  "asins": [
+   "B0C9D4KL9D",
+   "B0CDQJVJ8Q",
+   "B075MND4SV",
+   "B0FG2LVDSR",
+   "B00ZUUEBOQ"
+  ]
+ },
+ {
+  "week": 8,
+  "monday": "2027-01-18",
+  "slug": "ssd-nvme-y-discos-externos",
+  "title": "SSD NVMe y discos externos de 1 y 2 TB",
+  "category": "Tecnología",
+  "asins": [
+   "B0DBR3DZWG",
+   "B08M49JGKB",
+   "B07VTFN6HM",
+   "B0BGXZRKQN",
+   "B00IRV005E"
+  ]
+ },
+ {
+  "week": 9,
+  "monday": "2027-01-25",
+  "slug": "cafeteras-capsulas-y-espresso-menos-150",
+  "title": "Cafeteras de cápsulas y espresso por menos de 150 €",
+  "category": "Hogar",
+  "asins": [
+   "B00G5YOVZA",
+   "B0H2W6LBJ6",
+   "B0DFWH1QM5",
+   "B086RF6YJQ",
+   "B01ITGGKBY"
+  ]
+ },
+ {
+  "week": 10,
+  "monday": "2027-02-01",
+  "slug": "secadores-y-planchas-de-pelo-menos-80",
+  "title": "Secadores y planchas de pelo por menos de 80 €",
+  "category": "Belleza",
+  "asins": [
+   "B01KLXFBVI",
+   "B07ZRR8LJF",
+   "B01KLXFBFE",
+   "B0FX5GHMPF",
+   "B07W864798"
+  ]
+ },
+ {
+  "week": 11,
+  "monday": "2027-02-08",
+  "slug": "afeitadoras-y-recortadoras-de-barba",
+  "title": "Afeitadoras y recortadoras de barba",
+  "category": "Belleza",
+  "asins": [
+   "B0CFY7R1GX",
+   "B0DCFP3Z14",
+   "B0DQWYGX7M",
+   "B074F32LFP",
+   "B0DQWHNRH6"
+  ]
+ },
+ {
+  "week": 12,
+  "monday": "2027-02-15",
+  "slug": "monitores-27-teletrabajo",
+  "title": "Monitores de 27\" para teletrabajo y estudio",
+  "category": "Tecnología",
+  "asins": [
+   "B0CX9CVS9Q",
+   "B0DJTDVCVT",
+   "B0F9YSJJG2",
+   "B0D1RCQVKN",
+   "B0F5BTTM66"
+  ]
+ },
+ {
+  "week": 13,
+  "monday": "2027-02-22",
+  "slug": "aspiradores-escoba-sin-cable-menos-200",
+  "title": "Aspiradores escoba sin cable por menos de 200 €",
+  "category": "Hogar",
+  "asins": [
+   "B0GSVRWSHD",
+   "B0DV5RRL9F",
+   "B0G4VNL2W9",
+   "B0GPWHRFX6",
+   "B0D1KCLVPX"
+  ]
+ },
+ {
+  "week": 14,
+  "monday": "2027-03-01",
+  "slug": "taladros-atornilladores-bateria",
+  "title": "Taladros atornilladores a batería",
+  "category": "Bricolaje",
+  "asins": [
+   "B08CVT3QKL",
+   "B09877WFM6",
+   "B00YYBBUBY",
+   "B0987W5VK6",
+   "B0BQYW8LZ4"
+  ]
+ },
+ {
+  "week": 15,
+  "monday": "2027-03-08",
+  "slug": "cortacespedes-y-robots-cortacesped",
+  "title": "Cortacéspedes y robots cortacésped",
+  "category": "Bricolaje",
+  "asins": [
+   "B0853SGPMB",
+   "B0DN5YD69K",
+   "B078GWJ2N8",
+   "B07L1KM4Q2",
+   "B0CXDNFZLL"
+  ]
+ },
+ {
+  "week": 16,
+  "monday": "2027-03-15",
+  "slug": "tablets-menos-200",
+  "title": "Tablets por menos de 200 €",
+  "category": "Tecnología",
+  "asins": [
+   "B0GT9BW7DK",
+   "B0CN5LBKLL",
+   "B0HDSL1PCD",
+   "B0F7Q912Q4",
+   "B0DT4XFFN6"
+  ]
+ },
+ {
+  "week": 17,
+  "monday": "2027-03-22",
+  "slug": "moviles-menos-300",
+  "title": "Móviles por menos de 300 €",
+  "category": "Tecnología",
+  "asins": [
+   "B0FJSB3FH1",
+   "B0H4HBPMPR",
+   "B0F6CHCC89",
+   "B0F7RHTYD8",
+   "B0F3J3QQTK"
+  ]
+ },
+ {
+  "week": 18,
+  "monday": "2027-03-29",
+  "slug": "zapatillas-running-empezar-a-correr",
+  "title": "Zapatillas de running para empezar a correr",
+  "category": "Deporte",
+  "asins": [
+   "B0BN2332ZR",
+   "B0FYQLV2GM",
+   "B0D3VL3612",
+   "B0FBRG3ZPF",
+   "B0D1LDXSBL",
+   "B0CKRZNZBW",
+   "B0C2QK52LC"
+  ]
+ },
+ {
+  "week": 19,
+  "monday": "2027-04-05",
+  "slug": "equipo-senderismo-para-empezar",
+  "title": "Equipo de senderismo: botas, mochila y bastones",
+  "category": "Deporte",
+  "asins": [
+   "B0CLW1PYJD",
+   "B09N3Q6XVV",
+   "B0C5M35GLP",
+   "B0DNZ6FFN6",
+   "B07Q6BZQZC"
+  ]
+ },
+ {
+  "week": 20,
+  "monday": "2027-04-12",
+  "slug": "barbacoas-y-planchas-electricas",
+  "title": "Barbacoas y planchas eléctricas",
+  "category": "Hogar",
+  "asins": [
+   "B002S2QIWM",
+   "B09ZB7NF31",
+   "B09N2BTWR5",
+   "B09WHMH2S1",
+   "B01HMK4F42"
+  ]
+ },
+ {
+  "week": 21,
+  "monday": "2027-04-19",
+  "slug": "ventiladores-silenciosos-verano",
+  "title": "Ventiladores silenciosos para el verano",
+  "category": "Hogar",
+  "asins": [
+   "B0DQDTY7SH",
+   "B01891LZBY",
+   "B092J7CGXT",
+   "B0CX1HCVYB",
+   "B0F55DJ6QB"
+  ]
+ },
+ {
+  "week": 22,
+  "monday": "2027-04-26",
+  "slug": "depiladoras-ipl-y-cuidado-facial",
+  "title": "Depiladoras IPL y cuidado facial",
+  "category": "Belleza",
+  "asins": [
+   "B017BP58KS",
+   "B09RKCD7DS",
+   "B07QC61JFR",
+   "B00NDNDN5A"
+  ]
+ },
+ {
+  "week": 23,
+  "monday": "2027-05-03",
+  "slug": "camaras-de-seguridad-y-timbres-inteligentes",
+  "title": "Cámaras de seguridad y timbres inteligentes",
+  "category": "Tecnología",
+  "asins": [
+   "B095CLQ1PT",
+   "B0D3814FFN",
+   "B0DY94MCLN",
+   "B0DN6LZGBW",
+   "B08KG1517Y"
+  ]
+ },
+ {
+  "week": 24,
+  "monday": "2027-05-10",
+  "slug": "piscinas-desmontables-y-depuradoras",
+  "title": "Piscinas desmontables y depuradoras",
+  "category": "Hogar",
+  "asins": [
+   "B000XO2RV8",
+   "B001IWNDDA",
+   "B07FB823GL",
+   "B09M5S8BXB",
+   "B0DSPZX2Q3"
+  ]
+ }
+]

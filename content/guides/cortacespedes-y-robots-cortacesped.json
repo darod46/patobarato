@@ -1,0 +1,140 @@
+{
+  "slug": "cortacespedes-y-robots-cortacesped",
+  "title": "Cortacéspedes y robots cortacésped",
+  "subtitle": "Cortacéspedes con cable, a batería y un robot para olvidarte de segar, según el tamaño de tu jardín y las ganas de empujar.",
+  "category": "Bricolaje",
+  "reading_minutes": 7,
+  "intro_md": "Con la primavera vuelve la hierba, y con ella la pregunta de siempre: ¿con cable, con batería o directamente un robot? La respuesta depende sobre todo de los metros de césped, de si tienes un enchufe a mano y de cuánto te apetece pasar la tarde del sábado empujando.\n\nEn esta guía tienes cinco opciones: dos eléctricos con cable para jardines pequeños y medianos, dos a batería (uno de ellos se vende sin batería) y un robot que trabaja solo sin necesidad de enterrar cable perimetral. Las hemos elegido a partir de las fichas técnicas de Einhell, Bosch y Segway y de las opiniones públicas de quienes ya los usan.\n\nFíjate en la superficie recomendada por cada fabricante: es el dato más útil para no quedarte corto. Más herramientas de jardín en [chollos de bricolaje](/chollos/bricolaje).",
+  "how_to_choose_md": "## Superficie de césped\n\nCada fabricante recomienda una superficie máxima, y conviene hacerle caso. Para un patio de 100-150 m² basta un modelo ligero de 30 cm de corte; entre 200 y 450 m² compensa subir a 34-38 cm para dar menos pasadas. A partir de ahí, o si el jardín tiene muchos recovecos, un robot empieza a tener sentido.\n\n## Con cable, a batería o robot\n\nEl de cable es el más sencillo y no se queda sin carga, pero el cable estorba y hay que tener un enchufe exterior cerca. El de batería te da libertad total; mira si la batería y el cargador vienen incluidos (los modelos «Solo» de Einhell no los traen) y si puedes aprovecharla en otras herramientas de la misma familia. El robot pide una instalación inicial y una buena cobertura del sistema de posicionamiento, pero luego corta él solo de forma programada.\n\n## Altura de corte, cesta y peso\n\nLos niveles de altura de corte permiten dejar el césped más alto en verano para que no se queme. La cesta grande ahorra viajes al contenedor. El peso importa si tienes que subir escalones o guardarlo en un trastero: hay más de 8 kg de diferencia entre el más ligero y el más pesado de la guía.\n\n## Errores comunes\n\nComprar el más pequeño para un jardín grande y acabar dando el doble de pasadas, o no comprobar que un modelo a batería la incluye. En los robots, no revisar si la app y la antena llegan bien a todas las zonas del jardín.\n\n## Cuándo comprar\n\nLos cortacéspedes suelen tener buenas ofertas al final del invierno y en el Prime Day, y también al acabar la temporada, en otoño. Sigue esas fechas en [eventos](/eventos).",
+  "faq": [
+    {
+      "q": "¿Puedo usar la batería de mi taladro Einhell en el cortacésped?",
+      "a_md": "El RASARRO funciona con dos baterías Power X-Change a la vez. El GE-CM 18/30 Li-Solo se vende sin batería (versión Solo); por su denominación es del sistema de 18 V de Einhell, pero confirma la compatibilidad en la ficha del fabricante."
+    },
+    {
+      "q": "¿El robot Navimow necesita cable perimetral?",
+      "a_md": "No. Según su ficha, los límites del jardín se marcan de forma virtual con el móvil y se orienta con RTK y una cámara, así que no hay que enterrar cable."
+    },
+    {
+      "q": "¿Qué mantenimiento necesita un cortacésped?",
+      "a_md": "Limpia los restos de hierba de la cuchilla y la carcasa después de cada uso, siempre desconectado o sin batería, y revisa el afilado de la cuchilla al empezar cada temporada."
+    }
+  ],
+  "items": [
+    {
+      "position": 1,
+      "asin": "B0DN5YD69K",
+      "name": "Bosch UniversalRotak 34-405",
+      "award": "Mejor en general",
+      "summary_md": "Para un jardín mediano con enchufe cerca, es la opción más redonda. Tiene un motor de 1300 W, 34 cm de ancho de corte y una cesta colectora de 40 litros, de modo que vacías menos veces. Bosch destaca que corta limpio en bordes y junto a muros, y las asas se pliegan para guardarlo en poco espacio. Llega sin necesidad de montaje. Como todos los de cable, tendrás que ir apartando el alargador mientras siegas.",
+      "pros": [
+        "Cesta colectora de 40 litros",
+        "Corta cerca de bordes y muros",
+        "Asas plegables y no requiere montaje"
+      ],
+      "cons": [
+        "Depende del cable y de un enchufe exterior",
+        "13,1 kg, más pesado que los Einhell pequeños"
+      ],
+      "specs": [
+        {"label": "Alimentación", "value": "Cable"},
+        {"label": "Potencia", "value": "1300 W"},
+        {"label": "Ancho de corte", "value": "34 cm"},
+        {"label": "Cesta", "value": "40 L"},
+        {"label": "Peso", "value": "13,1 kg"}
+      ]
+    },
+    {
+      "position": 2,
+      "asin": "B07L1KM4Q2",
+      "name": "Einhell RASARRO 36/38 con 2 baterías",
+      "award": "Para jardines medianos sin cables",
+      "summary_md": "Si quieres olvidarte del cable en un jardín de buen tamaño, este Einhell se recomienda para hasta 450 m². Funciona con dos baterías Power X-Change de 4,0 Ah, que vienen incluidas junto a un cargador doble. El motor es sin escobillas, corta 38 cm y la altura se ajusta en 6 niveles, de 25 a 75 mm. Lleva ruedas grandes tipo highwheeler para empujarlo mejor, aunque con 17,3 kg es el más pesado de la lista.",
+      "pros": [
+        "Baterías y cargador doble incluidos",
+        "6 alturas de corte, de 25 a 75 mm",
+        "Baterías compatibles con todo Einhell Power X-Change"
+      ],
+      "cons": [
+        "17,3 kg, el más pesado de la guía",
+        "Piezas de recambio garantizadas solo 2 años según la ficha"
+      ],
+      "specs": [
+        {"label": "Alimentación", "value": "2 baterías Power X-Change de 4,0 Ah"},
+        {"label": "Ancho de corte", "value": "38 cm"},
+        {"label": "Altura de corte", "value": "25-75 mm, 6 niveles"},
+        {"label": "Superficie recomendada", "value": "Hasta 450 m²"},
+        {"label": "Peso", "value": "17,3 kg"}
+      ]
+    },
+    {
+      "position": 3,
+      "asin": "B0CXDNFZLL",
+      "name": "Segway Navimow i105E",
+      "award": "Para no volver a segar",
+      "summary_md": "El robot de la guía, para jardines de hasta 600 m² según Segway. No necesita cable perimetral: marcas los límites con el móvil y se orienta combinando RTK y una cámara de 140° que, según la ficha, reconoce más de 20 tipos de obstáculos. Desde la app gestionas varias zonas, horarios y dirección de corte. A cambio, corta solo 18 cm de ancho por pasada y es, con diferencia, la compra más cara de la lista.",
+      "pros": [
+        "Sin cable perimetral que enterrar",
+        "App con varias zonas y horarios",
+        "Detección de obstáculos por cámara"
+      ],
+      "cons": [
+        "Muy por encima del resto en precio",
+        "Necesita instalar la antena y cobertura en todo el jardín"
+      ],
+      "specs": [
+        {"label": "Tipo", "value": "Robot cortacésped"},
+        {"label": "Superficie máxima", "value": "600 m²"},
+        {"label": "Ancho de corte", "value": "18 cm"},
+        {"label": "Navegación", "value": "RTK y cámara de 140°"},
+        {"label": "Peso", "value": "10,9 kg"}
+      ]
+    },
+    {
+      "position": 4,
+      "asin": "B0853SGPMB",
+      "name": "Einhell GC-EM 1232",
+      "award": "Si quieres gastar lo mínimo",
+      "summary_md": "El más barato de la lista y suficiente para césped de hasta 300 m² si tienes enchufe a mano. Corta 32 cm de ancho, regula la altura en 3 niveles con una sola rueda y recoge en un cajón de 30 litros. La guía se pliega para guardarlo, pesa 9,2 kg y la carcasa es de plástico resistente a golpes. Requiere un pequeño montaje al sacarlo de la caja y tiene menos ajustes de altura que los modelos más completos.",
+      "pros": [
+        "El más económico de la guía",
+        "Ligero, 9,2 kg",
+        "Guía plegable para guardarlo"
+      ],
+      "cons": [
+        "Solo 3 alturas de corte",
+        "Cable y montaje inicial"
+      ],
+      "specs": [
+        {"label": "Alimentación", "value": "Cable"},
+        {"label": "Ancho de corte", "value": "32 cm"},
+        {"label": "Cajón de recogida", "value": "30 L"},
+        {"label": "Superficie recomendada", "value": "Hasta 300 m²"},
+        {"label": "Peso", "value": "9,2 kg"}
+      ]
+    },
+    {
+      "position": 5,
+      "asin": "B078GWJ2N8",
+      "name": "Einhell GE-CM 18/30 Li (sin batería)",
+      "award": "Para patios pequeños",
+      "summary_md": "Pensado para céspedes urbanos de hasta 150 m², es el más ligero de la guía con 8,87 kg y tiene asa de transporte integrada, útil si lo guardas en un trastero o hay escalones. Corta 30 cm y ajusta la altura en 3 etapas. Ojo: es la versión Solo, sin batería ni cargador. Tiene sentido si ya tienes baterías Einhell compatibles de otras herramientas (confírmalo en la ficha del fabricante); si no, súmalas al presupuesto.",
+      "pros": [
+        "El más ligero, 8,87 kg",
+        "Asa de transporte integrada",
+        "Aprovecha baterías Einhell compatibles que ya tengas"
+      ],
+      "cons": [
+        "Se vende sin batería ni cargador",
+        "Solo para superficies pequeñas, hasta 150 m²"
+      ],
+      "specs": [
+        {"label": "Batería", "value": "No incluida (versión Solo)"},
+        {"label": "Ancho de corte", "value": "30 cm"},
+        {"label": "Altura de corte", "value": "3 niveles"},
+        {"label": "Superficie recomendada", "value": "Hasta 150 m²"},
+        {"label": "Peso", "value": "8,87 kg"}
+      ]
+    }
+  ]
+}

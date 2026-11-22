@@ -1,0 +1,140 @@
+{
+  "slug": "juegos-de-mesa-familiares",
+  "title": "Juegos de mesa para toda la familia",
+  "subtitle": "Cinco juegos de mesa para las sobremesas de Navidad y las tardes de fin de semana: estrategia, palabras, imaginación y preguntas para todas las edades.",
+  "category": "Juguetes",
+  "reading_minutes": 6,
+  "intro_md": "Las fiestas son el momento de sacar un juego de mesa después de comer y tener a abuelos, primos y peques alrededor de la misma mesa. Para que funcione, el juego tiene que explicarse en cinco minutos, no dejar a nadie fuera y apetecer repetirlo.\n\nHemos elegido cinco títulos a partir de sus fichas y de las opiniones públicas de los compradores, buscando estilos distintos: dos clásicos de estrategia que ganaron el Spiel des Jahres, el premio alemán al juego del año, un juego de palabras por equipos, uno de imaginación con cartas ilustradas y una edición familiar del juego de preguntas de toda la vida.\n\nEn cada uno te contamos para cuántos jugadores es y, cuando la ficha lo indica, desde qué edad y cuánto dura una partida. Si buscas más ideas para regalar, en los [chollos de juguetes](/chollos/juguetes) vamos publicando las rebajas.",
+  "how_to_choose_md": "## Cuántos sois normalmente\n\nEs lo primero que hay que mirar. Algunos juegos solo funcionan entre tres y cuatro personas; otros, sobre todo los de equipos, admiten hasta ocho y son mejores cuanto más gente hay. Si en Navidad os juntáis diez pero el resto del año sois tres, piensa en cuál de los dos escenarios vas a jugar más.\n\n## La edad del más pequeño\n\nLa edad recomendada de la caja es orientativa, pero conviene respetarla en los juegos de estrategia: un niño de seis años se aburre en una partida larga de negociación. En los de imaginación o preguntas con tarjetas infantiles, los peques pueden jugar antes y en igualdad.\n\n## Duración y reglas\n\nUn juego de quince minutos se presta a echar varias partidas seguidas; uno de una hora pide sentarse con calma. Para una familia que no suele jugar, empieza por reglas cortas y deja los juegos más profundos para cuando le hayáis cogido el gusto. Antes de la primera partida, que alguien lea el reglamento con calma: explicar las reglas mientras se juega es la forma más rápida de que la mesa pierda el interés.\n\n## Errores comunes\n\nComprar un juego porque es famoso sin mirar el número de jugadores es el fallo más habitual. Otro: elegir algo demasiado competitivo para una mesa con niños pequeños. Los juegos cooperativos o por equipos reducen los enfados.\n\n## Cuándo comprar\n\nLos juegos de mesa suelen bajar en Black Friday y en las semanas previas a Reyes, aunque los más vendidos también se agotan. Si es un regalo, mejor no apurar; revisa el calendario de [eventos de ofertas](/eventos).",
+  "faq": [
+    {
+      "q": "¿Están en castellano?",
+      "a_md": "Carcassonne, Dixit, Trivial y Código Secreto indican en su ficha la edición en castellano; en Catan, compruébalo en la ficha del vendedor. Si compras a un vendedor externo, revisa en la ficha que no sea una versión importada."
+    },
+    {
+      "q": "¿Se pueden ampliar con expansiones?",
+      "a_md": "La ficha de Dixit indica que tiene expansiones que se mezclan con el juego base; para el resto, consulta el catálogo de la editorial. No hacen falta para disfrutar del juego base, pero alargan su vida cuando ya lo conocéis bien."
+    },
+    {
+      "q": "¿Qué hago si falta una pieza?",
+      "a_md": "Si lo acabas de recibir, puedes pedir la devolución o el cambio dentro del plazo de Amazon. Fuera de plazo, las editoriales suelen tener un servicio de reposición de piezas a través de su web."
+    }
+  ],
+  "items": [
+    {
+      "position": 1,
+      "asin": "B00W5LCL8G",
+      "name": "Carcassonne",
+      "award": "Mejor en general",
+      "summary_md": "Un clásico de colocación de losetas que ganó el Spiel des Jahres en 2001 y que sigue siendo una buena puerta de entrada a los juegos modernos. Cada turno colocas una pieza y vas formando ciudades, caminos y monasterios, así que el tablero es diferente en cada partida. Admite de dos a cinco jugadores, lo que lo hace igual de bueno en pareja que en familia. Se aprende en una partida. Lo que pega: con niños pequeños la parte de contar puntos puede necesitar ayuda.",
+      "pros": [
+        "De 2 a 5 jugadores",
+        "Tablero distinto en cada partida",
+        "Reglas sencillas de explicar"
+      ],
+      "cons": [
+        "El recuento de puntos lía al principio",
+        "Con cinco jugadores se alargan las esperas"
+      ],
+      "specs": [
+        {"label": "Jugadores", "value": "2 a 5"},
+        {"label": "Tipo", "value": "Colocación de losetas"},
+        {"label": "Premio", "value": "Spiel des Jahres 2001"},
+        {"label": "Componentes", "value": "Losetas, cartas, fichas y tablero"},
+        {"label": "Idioma", "value": "Castellano"}
+      ]
+    },
+    {
+      "position": 2,
+      "asin": "B006CZ0LGA",
+      "name": "Catan",
+      "award": "Para los que quieren estrategia",
+      "summary_md": "Uno de los juegos de estrategia más conocidos, ganador del Spiel des Jahres en 1995. Los jugadores colonizan una isla, reúnen recursos y negocian entre ellos, así que es tan importante la estrategia como saber hablar en la mesa. Está pensado para tres o cuatro jugadores a partir de 10 años y cada partida dura alrededor de una hora. Encaja muy bien en familias con adolescentes. Lo que pega: no se puede jugar en pareja con el juego base y es largo para los más pequeños.",
+      "pros": [
+        "Mezcla estrategia y negociación",
+        "Muy rejugable",
+        "Ideal con adolescentes y adultos"
+      ],
+      "cons": [
+        "Solo de 3 a 4 jugadores",
+        "Partidas de una hora o más"
+      ],
+      "specs": [
+        {"label": "Jugadores", "value": "3 a 4"},
+        {"label": "Edad", "value": "+10 años"},
+        {"label": "Duración", "value": "60-75 min"},
+        {"label": "Género", "value": "Estrategia"},
+        {"label": "Premio", "value": "Spiel des Jahres 1995"}
+      ]
+    },
+    {
+      "position": 3,
+      "asin": "B092R6L3T3",
+      "name": "Dixit",
+      "award": "Para los más creativos",
+      "summary_md": "Un juego de imaginación en el que el narrador elige una de sus cartas ilustradas, dice una frase o una palabra y el resto intenta despistar con cartas que encajen con esa pista. Esta edición renovada trae 84 cartas grandes, 8 diales de votación y 8 conejos de madera como marcadores. Admite de tres a ocho jugadores y la partida ronda la media hora. Funciona muy bien en mesas con edades mezcladas porque no hace falta saber nada. Lo que pega: con jugadores muy cuadriculados pierde gracia.",
+      "pros": [
+        "De 3 a 8 jugadores",
+        "No premia saber más, sino imaginar",
+        "Componentes de madera y cartas grandes"
+      ],
+      "cons": [
+        "Necesita al menos tres jugadores",
+        "Con el tiempo las cartas se repiten sin expansiones"
+      ],
+      "specs": [
+        {"label": "Jugadores", "value": "3 a 8"},
+        {"label": "Duración", "value": "30 min"},
+        {"label": "Cartas", "value": "84 ilustradas"},
+        {"label": "Componentes", "value": "8 diales y 8 conejos de madera"},
+        {"label": "Género", "value": "Creativo"}
+      ]
+    },
+    {
+      "position": 4,
+      "asin": "B07D3Z1S7H",
+      "name": "Trivial Pursuit Edición Familiar",
+      "award": "Para mezclar edades",
+      "summary_md": "La versión del Trivial pensada para que niños y adultos jueguen en igualdad: trae tarjetas de preguntas separadas para cada grupo, en total 2400 preguntas repartidas en seis categorías. Se puede jugar uno contra uno o por equipos, y añade el desafío Duelo, en el que dos jugadores compiten a la vez por un quesito. Es una apuesta segura para las reuniones grandes de las fiestas. Lo que pega: cuando se repiten las preguntas pierde interés y alguien tiene que hacer de lector.",
+      "pros": [
+        "Tarjetas separadas para niños y adultos",
+        "2400 preguntas en 6 categorías",
+        "Se juega por equipos"
+      ],
+      "cons": [
+        "Las preguntas acaban repitiéndose",
+        "Poco atractivo si no os gusta el formato concurso"
+      ],
+      "specs": [
+        {"label": "Preguntas", "value": "2400"},
+        {"label": "Categorías", "value": "6"},
+        {"label": "Edad", "value": "A partir de 8 años"},
+        {"label": "Modo", "value": "Individual o por equipos"},
+        {"label": "Idioma", "value": "Español"}
+      ]
+    },
+    {
+      "position": 5,
+      "asin": "B019M2EA3Y",
+      "name": "Código Secreto",
+      "award": "Para grupos grandes",
+      "summary_md": "Un juego de palabras y deducción por equipos en el que todo gira en torno a dar pistas y adivinar qué quiso decir tu compañero. Admite de dos a ocho jugadores, las partidas duran unos quince minutos y se recomienda a partir de 8 años, así que cuesta poco enganchar a toda la familia y echar varias seguidas. Es además el más barato de la guía. Lo que pega: depende mucho del vocabulario, así que los más pequeños pueden quedarse atrás frente a los adultos.",
+      "pros": [
+        "De 2 a 8 jugadores por equipos",
+        "Partidas de 15 minutos",
+        "El más barato de la guía"
+      ],
+      "cons": [
+        "Exige vocabulario, difícil para los más pequeños",
+        "En pareja pierde mucha gracia"
+      ],
+      "specs": [
+        {"label": "Jugadores", "value": "2 a 8"},
+        {"label": "Duración", "value": "15 min"},
+        {"label": "Edad", "value": "+8 años"},
+        {"label": "Tipo", "value": "Palabras y deducción por equipos"},
+        {"label": "Edición", "value": "Española"}
+      ]
+    }
+  ]
+}

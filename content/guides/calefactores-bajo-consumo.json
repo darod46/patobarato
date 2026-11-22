@@ -1,0 +1,140 @@
+{
+  "slug": "calefactores-bajo-consumo",
+  "title": "Calefactores y radiadores de bajo consumo",
+  "subtitle": "Calefactores cerámicos, de torre y radiadores de aceite para calentar una habitación concreta sin disparar la factura ni encender toda la calefacción.",
+  "category": "Hogar",
+  "reading_minutes": 6,
+  "intro_md": "En pleno enero, encender la calefacción de toda la casa para estar en una sola habitación es tirar el dinero. Un buen aparato de apoyo calienta el despacho, el dormitorio o el salón justo cuando lo usas y se apaga cuando te vas.\n\nPara esta guía hemos revisado las fichas técnicas de cada modelo y lo que cuentan los compradores en sus opiniones públicas, y hemos elegido cinco aparatos que cubren los tres tipos que vas a encontrar: calefactores cerámicos, de torre y radiadores de aceite. Cada uno tiene su sitio, y elegir mal el tipo pesa más que elegir mal la marca.\n\nUn aviso honesto antes de empezar: «bajo consumo» es más una etiqueta comercial que una tecnología. Lo que de verdad ahorra es un buen termostato, el temporizador y usarlo en la habitación adecuada. Si quieres ver más ofertas de este tipo, pásate por [chollos de hogar](/chollos/hogar).",
+  "how_to_choose_md": "## Cerámico, de torre o de aceite\n\nLos **calefactores cerámicos** son pequeños, calientan en segundos y llevan ventilador. Son ideales para ratos cortos: el baño antes de ducharte o el escritorio mientras trabajas. Al apagarlos, el calor se va igual de rápido.\n\nLos **calefactores de torre** son la misma idea en formato vertical, con más potencia y normalmente oscilación, así que reparten mejor el aire en un cuarto mediano o un salón pequeño.\n\nLos **radiadores de aceite** no tienen ventilador: calientan el aceite interior y este va soltando calor despacio. Tardan más en notarse, pero no hacen ruido, no resecan tanto el ambiente y siguen templando un rato después de apagarse. Son la opción más adecuada para muchas horas seguidas o para dormir.\n\n## El mito del bajo consumo\n\nTodos los calefactores eléctricos convierten la electricidad en calor de forma muy parecida: 2000 W consumen 2000 W en cualquier marca. Lo que cambia la factura es cuánto tiempo están a máxima potencia. Por eso conviene que tenga termostato (para que se corte al llegar a la temperatura), varios niveles de potencia y, si puede ser, temporizador o modo eco.\n\n## Seguridad y tamaño de la habitación\n\nBusca siempre protección contra sobrecalentamiento y apagado si se vuelca, sobre todo con niños o mascotas. Para un dormitorio o despacho pequeño basta con 1500 W; para un salón de unos 20 m², mejor 2000 W. Un error común es comprar uno pequeño para una estancia grande y tenerlo siempre al máximo.\n\n## Cuándo comprar\n\nLos precios suben con la primera ola de frío. Las mejores ocasiones suelen ser el Black Friday y las rebajas de enero, y también el final del invierno, cuando las tiendas liquidan stock. Puedes seguir las fechas clave en [eventos](/eventos).",
+  "faq": [
+    {
+      "q": "¿Puedo dejar un radiador de aceite encendido toda la noche?",
+      "a_md": "Están pensados para uso prolongado, pero lo sensato es usar el termostato y, si lo tiene, el temporizador para que se ajuste solo. Déjalo siempre lejos de cortinas y ropa y enchufado directamente a la pared, no a una regleta."
+    },
+    {
+      "q": "¿Un calefactor de 2000 W me obliga a subir la potencia contratada?",
+      "a_md": "Depende de lo que tengas en marcha a la vez. Si sueles poner horno, lavadora y calefactor al mismo tiempo puede saltar el limitador; usarlo a media potencia o escalonar los electrodomésticos suele bastar."
+    },
+    {
+      "q": "¿Qué mantenimiento necesitan?",
+      "a_md": "Muy poco. En los cerámicos y de torre conviene quitar el polvo de las rejillas de vez en cuando con el aparato desenchufado. Los radiadores de aceite van sellados y no hay que rellenar nada."
+    }
+  ],
+  "items": [
+    {
+      "position": 1,
+      "asin": "B0CDQJVJ8Q",
+      "name": "Philips serie 5000 torre 2000 W",
+      "award": "Mejor en general",
+      "summary_md": "Para quien quiere un aparato que caliente bien un salón pequeño o un dormitorio grande y se pueda controlar desde el móvil. Ofrece potencia ajustable hasta 2000 W, oscilación de 60°, pantalla con la temperatura y conexión con la app Philips Air+, desde la que puedes programarlo aunque no estés en casa. Suma cinco medidas de seguridad, entre ellas antivuelco y apagado automático. La pega: lleva ventilador, así que no es tan silencioso como un radiador de aceite, y la app es otro paso más de configuración.",
+      "pros": [
+        "Control y programación desde la app Philips Air+",
+        "Oscilación de 60° para repartir el aire",
+        "Antivuelco, protección contra sobrecalentamiento y materiales ignífugos"
+      ],
+      "cons": [
+        "Con ventilador, se oye más que un radiador de aceite",
+        "El calor se va pronto al apagarlo"
+      ],
+      "specs": [
+        {"label": "Potencia", "value": "Hasta 2000 W"},
+        {"label": "Tipo", "value": "Torre"},
+        {"label": "Superficie recomendada", "value": "Hasta 20 m²"},
+        {"label": "Oscilación", "value": "60°"},
+        {"label": "Conectividad", "value": "App Philips Air+"}
+      ]
+    },
+    {
+      "position": 2,
+      "asin": "B0C9D4KL9D",
+      "name": "Dreo cerámico 1500 W",
+      "award": "Para el despacho o el dormitorio",
+      "summary_md": "Un calefactor cerámico compacto para tenerlo junto al escritorio o en el dormitorio. Usa un elemento PTC de 1500 W, tiene termostato, modo ECO, modo solo ventilador y un temporizador de hasta 12 horas, así que puedes dejarlo programado y olvidarte. Incluye sensor de inclinación, bloqueo infantil y memoria de la última configuración, y su motor sin escobillas está pensado para hacer poco ruido. La pega: con 1500 W se queda corto para un salón, y como todo cerámico, el calor desaparece en cuanto lo apagas.",
+      "pros": [
+        "Temporizador de 12 horas y modo ECO",
+        "Bloqueo infantil y sensor de inclinación",
+        "Asa para moverlo de una habitación a otra"
+      ],
+      "cons": [
+        "Potencia justa para estancias grandes",
+        "No guarda el calor tras apagarlo"
+      ],
+      "specs": [
+        {"label": "Potencia", "value": "1500 W"},
+        {"label": "Elemento calefactor", "value": "Cerámico (PTC)"},
+        {"label": "Temporizador", "value": "12 horas"},
+        {"label": "Modos", "value": "Potente, ECO y solo ventilador"},
+        {"label": "Seguridad", "value": "Antivuelco y bloqueo infantil"}
+      ]
+    },
+    {
+      "position": 3,
+      "asin": "B0FG2LVDSR",
+      "name": "Midea radiador de aceite 9 elementos",
+      "award": "La opción silenciosa",
+      "summary_md": "Si te molesta el zumbido del ventilador, este radiador de aceite es la alternativa. Tiene nueve elementos, tres niveles de potencia (800, 1200 y 2000 W) y termostato regulable entre 5 y 35 °C, todo con dos mandos giratorios sin pantalla. Al no tener ventilador no hace ruido, lo que lo hace buena opción para dormir o concentrarse. Lleva cuatro ruedas, asa, apagado si se vuelca y esquinas redondeadas. La pega: tarda más en notarse que un calefactor y no tiene temporizador ni mando a distancia.",
+      "pros": [
+        "Sin ventilador, funciona en silencio",
+        "Tres niveles de potencia para ajustar el consumo",
+        "Ruedas y asa para moverlo con facilidad"
+      ],
+      "cons": [
+        "Tarda más en calentar la habitación",
+        "Sin temporizador ni pantalla"
+      ],
+      "specs": [
+        {"label": "Potencia", "value": "800 / 1200 / 2000 W"},
+        {"label": "Tipo", "value": "Radiador de aceite"},
+        {"label": "Elementos", "value": "9"},
+        {"label": "Termostato", "value": "5–35 °C"},
+        {"label": "Medidas", "value": "57 × 36 × 22,6 cm"}
+      ]
+    },
+    {
+      "position": 4,
+      "asin": "B00ZUUEBOQ",
+      "name": "De'Longhi Radia S 2000 W",
+      "award": "Para uso prolongado",
+      "summary_md": "Pensado para quien necesita mantener caliente una estancia durante muchas horas, como un salón de hasta 20 m². Es un radiador de aceite de nueve elementos y 2000 W con tres niveles de potencia, termostato ambiente ajustable, termostato de seguridad y función antiheladas. Trae ruedas premontadas, asa frontal y un tambor para recoger el cable, detalles que se agradecen si lo guardas en verano. La pega: es el más caro de la lista y, como todo radiador de aceite, pesa y tarda en arrancar.",
+      "pros": [
+        "Termostato ambiente y función antiheladas",
+        "Ruedas premontadas y tambor de cable",
+        "Calor suave y constante, sin ventilador"
+      ],
+      "cons": [
+        "El más caro de la guía",
+        "Lento para calentar desde frío"
+      ],
+      "specs": [
+        {"label": "Potencia", "value": "2000 W"},
+        {"label": "Tipo", "value": "Radiador de aceite"},
+        {"label": "Elementos", "value": "9"},
+        {"label": "Niveles de potencia", "value": "3"},
+        {"label": "Superficie recomendada", "value": "Hasta 20 m²"}
+      ]
+    },
+    {
+      "position": 5,
+      "asin": "B075MND4SV",
+      "name": "Orbegozo FH 5127 2000 W",
+      "award": "Si quieres gastar lo mínimo",
+      "summary_md": "El más barato de la lista y el clásico calefactor de ventilador de toda la vida. Tiene dos posiciones de calor, 1000 y 2000 W, termostato ajustable y protección contra sobrecalentamiento, además de una función ventilador que sirve para refrescar en verano. Es la opción para un apoyo puntual: calentar el baño antes de la ducha o un cuarto que usas poco. La pega: no tiene temporizador, ni antivuelco indicado en la ficha, ni modo eco, y el ventilador se oye.",
+      "pros": [
+        "El más asequible de la guía",
+        "Dos potencias y termostato",
+        "Función ventilador para el verano"
+      ],
+      "cons": [
+        "Sin temporizador ni modo eco",
+        "Ruido de ventilador perceptible"
+      ],
+      "specs": [
+        {"label": "Potencia", "value": "1000 / 2000 W"},
+        {"label": "Tipo", "value": "Calefactor de ventilador"},
+        {"label": "Termostato", "value": "Ajustable"},
+        {"label": "Seguridad", "value": "Protección contra sobrecalentamiento"},
+        {"label": "Extras", "value": "Función ventilador y luz de encendido"}
+      ]
+    }
+  ]
+}

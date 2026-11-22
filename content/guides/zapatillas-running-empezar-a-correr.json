@@ -1,0 +1,140 @@
+{
+  "slug": "zapatillas-running-empezar-a-correr",
+  "title": "Zapatillas de running para empezar a correr",
+  "subtitle": "Cinco zapatillas de running asequibles de ASICS, New Balance, Nike y adidas para tus primeros kilómetros en asfalto, comparando amortiguación, ajuste y talla.",
+  "category": "Deporte",
+  "reading_minutes": 7,
+  "intro_md": "Para empezar a correr no necesitas las zapatillas con placa de carbono de los profesionales. Necesitas unas que amortigüen bien, que te sujeten el pie sin apretar y que aguanten tres o cuatro salidas por semana durante unos meses. Con eso, el resto lo ponen la constancia y un plan sencillo.\n\nEn esta guía hemos elegido cinco modelos de entrada de gama de ASICS, New Balance, Nike y adidas, pensados para asfalto y cinta. La selección sale de las fichas de producto de cada marca y de las opiniones públicas de quienes ya corren con ellas, con especial atención a un tema que da muchos disgustos: la talla.\n\nTodas las fichas enlazadas corresponden a la versión de hombre; la mayoría de estos modelos existe también en versión de mujer. Más material deportivo en [chollos de deporte](/chollos/deporte).",
+  "how_to_choose_md": "## La talla, lo primero\n\nPara correr, la zapatilla debe dejar aproximadamente un dedo de margen entre el dedo más largo y la puntera, porque el pie se hincha y se desplaza al correr. Varias marcas avisan de que algunos modelos tallan pequeño: en esta guía, la ficha de las ASICS Gel-Contend 9 y la de las adidas Duramo SL recomiendan pedir media talla o una talla más. Si dudas entre dos tallas, quédate con la grande. Y recuerda que el precio de una misma zapatilla cambia según la talla y el color que elijas.\n\n## Amortiguación\n\nSi pesas más de 80 kg o vas a correr sobre todo en asfalto, prioriza una buena amortiguación en el talón. Las espumas de entrada de gama (GEL, Fresh Foam, Cloudfoam, LIGHTMOTION) cumplen de sobra para tus primeros meses. Lo que más importa es que te resulten cómodas desde el primer día: si te rozan en la tienda, en el kilómetro 5 será peor.\n\n## El drop\n\nEl drop es la diferencia de altura entre el talón y la punta. Las zapatillas para principiantes suelen tener un drop medio o alto (8-12 mm), que reduce la carga en el gemelo y el tendón de Aquiles. Los drops bajos están pensados para corredores con más experiencia; si vienes del sofá, mejor no empezar por ahí.\n\n## Pisada y uso\n\nSon modelos de uso general, sin corrección específica de la pisada; la New Balance indica soporte neutro, el más habitual. Si te han dicho que pronas mucho o tienes molestias, consulta con un especialista antes de comprar. Y si vas a correr por montaña, busca un modelo de trail con suela de tacos.\n\n## Cuándo comprar\n\nLas zapatillas de running bajan en las rebajas de enero y verano, en el Black Friday y en el Prime Day. Puedes seguir esas fechas en [eventos](/eventos).",
+  "faq": [
+    {
+      "q": "¿Cada cuánto hay que cambiar las zapatillas de correr?",
+      "a_md": "Como referencia, entre 600 y 800 kilómetros, aunque depende de tu peso y del terreno. Si notas la suela muy gastada o la espuma aplastada, es momento de renovarlas."
+    },
+    {
+      "q": "¿Y si me equivoco de talla?",
+      "a_md": "En Amazon puedes cambiar o devolver el calzado dentro del plazo de devolución, siempre que no esté usado en la calle. Pruébatelas en casa con los calcetines de correr y dando unos pasos."
+    },
+    {
+      "q": "¿Puedo lavarlas en la lavadora?",
+      "a_md": "La ficha de las adidas Duramo SL indica que se pueden lavar a máquina, y otras de la guía figuran como lavables. Hazlo en frío, sin plantillas ni cordones, y déjalas secar al aire, nunca en la secadora."
+    }
+  ],
+  "items": [
+    {
+      "position": 1,
+      "asin": "B0D3VL3612",
+      "name": "ASICS Gel-Contend 9",
+      "award": "Mejor en general",
+      "summary_md": "Una zapatilla sencilla y bien equipada para empezar a correr. Lleva amortiguación GEL en la parte trasera del pie para suavizar el impacto, parte superior de malla jacquard que ventila, plantilla OrthoLite y ranuras flexibles en la suela. Las costuras sintéticas en los refuerzos ayudan a sujetar el pie. La pega está en la talla: la propia ficha avisa de que talla pequeño y aconseja pedir media talla o una más.",
+      "pros": [
+        "Amortiguación GEL en el talón",
+        "Plantilla OrthoLite",
+        "Suela con ranuras flexibles"
+      ],
+      "cons": [
+        "Talla pequeña según la propia ficha",
+        "Ficha en versión de hombre"
+      ],
+      "specs": [
+        {"label": "Amortiguación", "value": "GEL en la parte trasera"},
+        {"label": "Parte superior", "value": "Malla jacquard"},
+        {"label": "Plantilla", "value": "OrthoLite"},
+        {"label": "Suela", "value": "Caucho"},
+        {"label": "Talla", "value": "Pide media talla o una más"}
+      ]
+    },
+    {
+      "position": 2,
+      "asin": "B0D1LDXSBL",
+      "name": "New Balance 520v3",
+      "award": "Para rodar a diario",
+      "summary_md": "Pensada, según su ficha, para la carrera diaria y con soporte neutro, encaja con quien ya ha cogido el hábito y sale varias veces por semana. Su entresuela Fresh Foam busca una amortiguación suave y ligera, y la parte superior es de mesh técnico transpirable. Figura como acolchada, flexible, ligera y lavable. Para pies que necesitan corrección de la pisada no es la opción, porque es neutra.",
+      "pros": [
+        "Entresuela Fresh Foam",
+        "Mesh técnico transpirable",
+        "Diseñada para la carrera diaria"
+      ],
+      "cons": [
+        "Solo pisada neutra",
+        "Ficha en versión de hombre"
+      ],
+      "specs": [
+        {"label": "Amortiguación", "value": "Fresh Foam"},
+        {"label": "Parte superior", "value": "Mesh técnico transpirable"},
+        {"label": "Pisada", "value": "Neutra"},
+        {"label": "Cierre", "value": "Cordones"},
+        {"label": "Cuidado", "value": "Lavable"}
+      ]
+    },
+    {
+      "position": 3,
+      "asin": "B0CKRZNZBW",
+      "name": "adidas Runfalcon 5",
+      "award": "Para correr y para el día a día",
+      "summary_md": "Si buscas una zapatilla que valga para tus primeras salidas y también para llevar a diario, la Runfalcon 5 tiene mediasuela Cloudfoam, plantilla OrthoLite, empeine de malla y forro textil. La horma es clásica y figura como lavable. Su planteamiento es más de uso mixto que de entrenamiento serio, así que si vas a subir mucho el kilometraje compensa mirar un modelo más específico.",
+      "pros": [
+        "Mediasuela Cloudfoam y plantilla OrthoLite",
+        "Horma clásica",
+        "Lavable"
+      ],
+      "cons": [
+        "Más de uso mixto que de entrenamiento intenso",
+        "Ficha en versión de hombre"
+      ],
+      "specs": [
+        {"label": "Amortiguación", "value": "Cloudfoam"},
+        {"label": "Plantilla", "value": "OrthoLite"},
+        {"label": "Parte superior", "value": "Malla con forro textil"},
+        {"label": "Suela", "value": "Caucho"},
+        {"label": "Horma", "value": "Clásica"}
+      ]
+    },
+    {
+      "position": 4,
+      "asin": "B0C2QK52LC",
+      "name": "adidas Duramo SL",
+      "award": "Para quien busca ligereza",
+      "summary_md": "Una zapatilla ligera, con amortiguación LIGHTMOTION y forro textil, para quien quiere sentir el pie más suelto en carreras cortas o en la cinta del gimnasio. Su ficha indica que se puede lavar a máquina, algo práctico si corres con lluvia. Como en las ASICS, la ficha recomienda comprar una talla más grande, así que tenlo en cuenta antes de pedir tu número habitual.",
+      "pros": [
+        "Ligera, con amortiguación LIGHTMOTION",
+        "Se puede lavar a máquina",
+        "Suela de caucho"
+      ],
+      "cons": [
+        "La ficha recomienda una talla más",
+        "Menos datos técnicos que otras de la guía"
+      ],
+      "specs": [
+        {"label": "Amortiguación", "value": "LIGHTMOTION"},
+        {"label": "Forro", "value": "Textil"},
+        {"label": "Suela", "value": "Caucho"},
+        {"label": "Cuidado", "value": "Lavable a máquina"},
+        {"label": "Talla", "value": "Pide una talla más"}
+      ]
+    },
+    {
+      "position": 5,
+      "asin": "B0FBRG3ZPF",
+      "name": "Nike Revolution 8",
+      "award": "Para empezar sin complicarte",
+      "summary_md": "La entrada a las zapatillas de correr de Nike, sencilla y cómoda para tus primeras semanas. Lleva entresuela de espuma para una amortiguación sensible, parte superior de malla transpirable y suela de goma pensada para distintas superficies. En su ficha aparece como acolchada, flexible, ligera, antideslizante y lavable. No tiene tecnologías de amortiguación específicas como las otras marcas, así que encaja mejor con salidas cortas que con tiradas largas.",
+      "pros": [
+        "Malla transpirable",
+        "Suela de goma para varias superficies",
+        "Flexible y lavable"
+      ],
+      "cons": [
+        "Amortiguación más básica",
+        "Mejor para salidas cortas que para tiradas largas"
+      ],
+      "specs": [
+        {"label": "Amortiguación", "value": "Entresuela de espuma"},
+        {"label": "Parte superior", "value": "Malla transpirable"},
+        {"label": "Suela", "value": "Goma"},
+        {"label": "Cierre", "value": "Cordones"},
+        {"label": "Cuidado", "value": "Lavable"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,143 @@
+{
+  "slug": "moviles-menos-300",
+  "title": "Móviles por menos de 300 €",
+  "subtitle": "Cinco móviles Android asequibles de Xiaomi, realme, Motorola y Samsung, comparando batería, pantalla, resistencia al agua y conectividad 5G.",
+  "category": "Tecnología",
+  "reading_minutes": 7,
+  "intro_md": "En la gama media-baja hay móviles que cumplen de sobra para WhatsApp, redes, fotos del día a día, mapas y series en el metro. La clave está en saber dónde recorta cada fabricante: en unos es la memoria, en otros la resistencia al agua, el 5G o el cargador que no viene en la caja.\n\nEn esta guía tienes cinco modelos por debajo del tope de la guía, desde uno muy básico para gastar lo mínimo hasta otros con 256 GB, batería enorme o certificación contra agua y polvo. La selección se basa en las fichas técnicas de cada marca y en las opiniones públicas de los compradores, y en cada uno indicamos si es 5G cuando su ficha lo dice.\n\nSi lo vas a comprar para regalar o como primer móvil de un adolescente, mira sobre todo la memoria y la batería. Más ofertas en [chollos de tecnología](/chollos/tecnologia).",
+  "how_to_choose_md": "## 4G o 5G\n\nEl 5G da más velocidad donde hay cobertura y alarga la vida útil del móvil, porque las redes se irán moviendo hacia él. Aun así, para mensajería, redes y vídeo, un 4G sigue yendo bien. Revisa siempre el nombre exacto de la versión: un mismo modelo puede venderse en 4G y en 5G, y la diferencia no siempre salta a la vista en el título.\n\n## Memoria y almacenamiento\n\nCon 3-4 GB de RAM el móvil sirve para lo básico, pero se nota al cambiar entre apps. Con 6-8 GB va más suelto y envejece mejor. En almacenamiento, 64 GB se llenan enseguida con fotos y WhatsApp; 128 GB es lo razonable y 256 GB te olvidas.\n\n## Batería, carga y lo que trae la caja\n\nPor encima de 5000 mAh un móvil aguanta el día con holgura. Mira la potencia de carga rápida y comprueba si incluye cargador: cada vez más modelos traen solo el cable.\n\n## Resistencia y otros detalles\n\nLa certificación IP indica cuánto aguanta el agua y el polvo: IP65 soporta salpicaduras, IP69 chorros a presión. Un móvil sin certificación no tiene por qué estropearse con una gota, pero mejor no fiarse cerca del agua o con lluvia fuerte. Valora también el doble SIM si usas una línea personal y otra de trabajo, el jack de auriculares y los años de garantía.\n\n## Cuándo comprar\n\nLos móviles de esta gama bajan en el 11.11, el Black Friday y el Prime Day, y también cuando la marca lanza el sucesor. Si puedes esperar, sigue esas fechas en [eventos](/eventos).",
+  "faq": [
+    {
+      "q": "¿Funcionan con cualquier operador español?",
+      "a_md": "Sí, si es la versión europea libre: compruébalo en la ficha antes de comprar, junto con el tamaño de SIM que usa. Si surge algún problema de cobertura, puedes devolverlo dentro del plazo de devolución de Amazon."
+    },
+    {
+      "q": "¿Merece la pena el 5G si en mi zona apenas hay cobertura?",
+      "a_md": "Hoy no es necesario, pero si vas a usar el móvil tres o cuatro años, un modelo 5G te deja preparado para cuando la cobertura mejore."
+    },
+    {
+      "q": "¿Qué cargador uso si no viene en la caja?",
+      "a_md": "Cualquier cargador USB-C de calidad sirve; para aprovechar la carga rápida, busca uno con la potencia que indica el fabricante del móvil."
+    }
+  ],
+  "items": [
+    {
+      "position": 1,
+      "asin": "B0H4HBPMPR",
+      "name": "Redmi Note 17 6+256 GB",
+      "award": "Mejor en general",
+      "summary_md": "El más completo para un uso normal. Tiene una batería de 7700 mAh con carga de 45 W y carga inversa por cable, pantalla GOLED FHD+ de 6,99 pulgadas con Gorilla Glass 7i, certificación IP65 y cámara principal de 50 MP con frontal de 16 MP. Trae 256 GB y 4 años de garantía de Xiaomi sin activar nada. La pega: la ficha no indica si es 5G y el altavoz es mono.",
+      "pros": [
+        "Batería de 7700 mAh",
+        "256 GB y 4 años de garantía",
+        "Resistencia al agua y al polvo IP65"
+      ],
+      "cons": [
+        "La ficha no indica 5G",
+        "Altavoz mono"
+      ],
+      "specs": [
+        {"label": "Red", "value": "La ficha no lo indica"},
+        {"label": "Pantalla", "value": "6,99\" GOLED FHD+"},
+        {"label": "Memoria", "value": "6 GB + 256 GB"},
+        {"label": "Batería", "value": "7700 mAh, carga 45 W"},
+        {"label": "Cámaras", "value": "50 MP + 16 MP frontal"},
+        {"label": "Resistencia", "value": "IP65"}
+      ]
+    },
+    {
+      "position": 2,
+      "asin": "B0F6CHCC89",
+      "name": "realme 14T 5G 8+256 GB",
+      "award": "La más resistente",
+      "summary_md": "Para quien tiene el móvil siempre en la mano en la obra, en la playa o con niños cerca. Su certificación IP69 aguanta chorros de agua a presión e inmersión. Además es 5G con un Dimensity 6300, trae 8 GB de RAM y 256 GB, pantalla AMOLED de 6,67 pulgadas a 120 Hz, batería de 5130 mAh con carga de 45 W y jack de auriculares. Según la ficha es de una sola SIM, algo a tener en cuenta si usas dos líneas.",
+      "pros": [
+        "Certificación IP69",
+        "5G con 8 GB de RAM y 256 GB",
+        "Pantalla AMOLED a 120 Hz y jack de 3,5 mm"
+      ],
+      "cons": [
+        "Una sola SIM según la ficha",
+        "Batería menor que la del Redmi Note 17"
+      ],
+      "specs": [
+        {"label": "Red", "value": "5G"},
+        {"label": "Pantalla", "value": "6,67\" AMOLED, 120 Hz"},
+        {"label": "Procesador", "value": "MediaTek Dimensity 6300"},
+        {"label": "Memoria", "value": "8 GB + 256 GB"},
+        {"label": "Batería", "value": "5130 mAh, carga 45 W"},
+        {"label": "Resistencia", "value": "IP69"}
+      ]
+    },
+    {
+      "position": 3,
+      "asin": "B0F7RHTYD8",
+      "name": "Motorola Moto G56 5G 8/256 GB",
+      "award": "Para series y vídeos",
+      "summary_md": "Si ves mucho contenido en el móvil, el Moto G56 suma pantalla FHD+ de 6,72 pulgadas a 120 Hz y altavoces estéreo. Es 5G, con 8 GB de RAM, 256 GB, doble SIM, cámara de 50 MP con gran angular y batería de 5200 mAh con carga TurboPower. La trasera es de material vegano y el frontal, Gorilla Glass 7i. La pega: es el más caro de la guía y la ficha no indica certificación IP.",
+      "pros": [
+        "Altavoces estéreo",
+        "5G, 8 GB de RAM y 256 GB",
+        "Cámara con gran angular"
+      ],
+      "cons": [
+        "El más caro de la lista",
+        "Sin certificación IP indicada en la ficha"
+      ],
+      "specs": [
+        {"label": "Red", "value": "5G"},
+        {"label": "Pantalla", "value": "6,72\" FHD+, 120 Hz"},
+        {"label": "Memoria", "value": "8 GB + 256 GB"},
+        {"label": "Batería", "value": "5200 mAh, TurboPower"},
+        {"label": "Cámara", "value": "50 MP + gran angular"},
+        {"label": "SIM", "value": "Dual SIM"}
+      ]
+    },
+    {
+      "position": 4,
+      "asin": "B0FJSB3FH1",
+      "name": "Samsung Galaxy A17 5G 4+128 GB",
+      "award": "Si prefieres Samsung",
+      "summary_md": "Para quien quiere quedarse en Samsung por costumbre o por el resto de dispositivos de casa. Es 5G, con procesador Exynos 1330, 4 GB de RAM y 128 GB, doble SIM, lector de huellas y USB-C. La ficha de Amazon es muy escueta y no detalla pantalla ni batería, y además indica que no es resistente al agua. Con 4 GB de RAM va bien para lo habitual, pero se queda por detrás de los otros 5G de la guía en memoria.",
+      "pros": [
+        "5G y doble SIM",
+        "128 GB de almacenamiento",
+        "Lector de huellas"
+      ],
+      "cons": [
+        "No resistente al agua según la ficha",
+        "4 GB de RAM y ficha con pocos datos"
+      ],
+      "specs": [
+        {"label": "Red", "value": "5G"},
+        {"label": "Procesador", "value": "Exynos 1330"},
+        {"label": "Memoria", "value": "4 GB + 128 GB"},
+        {"label": "SIM", "value": "Dual SIM nano"},
+        {"label": "Desbloqueo", "value": "Huella dactilar"}
+      ]
+    },
+    {
+      "position": 5,
+      "asin": "B0F3J3QQTK",
+      "name": "Xiaomi Redmi A5 3+64 GB",
+      "award": "Si quieres gastar lo mínimo",
+      "summary_md": "Un móvil básico para llamadas, WhatsApp y poco más, o como teléfono de repuesto o para una persona mayor. Tiene una pantalla grande de 6,88 pulgadas a 120 Hz, batería de 5200 mAh, cámara dual de 32 MP, doble SIM y lector de huellas. La ficha no menciona 5G. Los límites son claros: 3 GB de RAM, 64 GB de almacenamiento y cargador no incluido.",
+      "pros": [
+        "Doble SIM y lector de huellas",
+        "Pantalla de 6,88\" a 120 Hz",
+        "Batería de 5200 mAh"
+      ],
+      "cons": [
+        "3 GB de RAM y 64 GB, justo para apps pesadas",
+        "Cargador no incluido"
+      ],
+      "specs": [
+        {"label": "Red", "value": "La ficha no lo indica"},
+        {"label": "Pantalla", "value": "6,88\", 120 Hz"},
+        {"label": "Memoria", "value": "3 GB + 64 GB"},
+        {"label": "Batería", "value": "5200 mAh"},
+        {"label": "Cámara", "value": "Dual de 32 MP"}
+      ]
+    }
+  ]
+}

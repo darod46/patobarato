@@ -1,0 +1,140 @@
+{
+  "slug": "tablets-menos-200",
+  "title": "Tablets por menos de 200 €",
+  "subtitle": "Cinco tablets Android asequibles para series, estudiar, leer o dejar a los niños, comparando pantalla, batería, memoria y lo que trae la caja.",
+  "category": "Tecnología",
+  "reading_minutes": 7,
+  "intro_md": "Una tablet sencilla da para mucho: ver series en la cama, videollamadas con la familia, recetas en la cocina, apuntes de clase o los dibujos de los peques en un viaje. Para eso no hace falta gastar lo que cuesta un iPad Pro, pero sí elegir bien, porque en esta gama las diferencias de pantalla y batería se notan.\n\nEn esta guía comparamos cinco modelos de Xiaomi, TCL, HONOR, Lenovo y Samsung, todos por debajo del tope de la guía. Nos basamos en las fichas técnicas y en las opiniones públicas de los compradores, prestando atención a lo que de verdad cambia el día a día: la calidad de la pantalla, cuánto aguanta la batería y si te vas a quedar sin espacio.\n\nLas de HONOR, Lenovo y Samsung son versiones Wi-Fi; en el resto, la ficha no lo especifica. Más ofertas de este tipo en [chollos de tecnología](/chollos/tecnologia).",
+  "how_to_choose_md": "## Pantalla: tamaño, resolución y hercios\n\nPara series y lectura, la pantalla es lo primero. Por encima de 1920 x 1200 el texto se ve nítido; por debajo, se nota en letras pequeñas. Los 90 o 120 Hz hacen que el desplazamiento sea más suave. El tamaño va en gustos: 8-9 pulgadas para llevar a todas partes, 11 pulgadas para ver películas o estudiar con documentos a pantalla partida. Las pantallas tipo papel, como NXTPAPER, cansan menos la vista al leer.\n\n## Memoria y almacenamiento\n\nCon 4 GB de RAM va bien para navegar, vídeo y apps sencillas; si abres varias cosas a la vez o juegas, 8 GB se nota. En almacenamiento, 64 GB se llenan rápido con apps y descargas de series; comprueba si tiene ranura microSD para ampliar.\n\n## Batería y cargador\n\nFíjate en los mAh y, mejor aún, en las horas de vídeo que indica el fabricante. Revisa también qué trae la caja: algunas incluyen cargador y otras solo el cable, así que tendrás que usar uno que ya tengas.\n\n## Errores comunes\n\nElegir solo por el procesador sin mirar la pantalla, o comprar la versión de 64 GB para descargar series de viaje. Tampoco te fíes de la palabra «2K» sin más: compara la resolución en píxeles. Y si es para un niño, valora que venga con funda.\n\n## Cuándo comprar\n\nLas tablets de esta gama bajan mucho en el Black Friday, el Prime Day y la vuelta al cole. Si puedes esperar, sigue esas fechas en [eventos](/eventos) y revisa los [cupones](/cupones) de las marcas.",
+  "faq": [
+    {
+      "q": "¿Puedo meter una tarjeta SIM para usar datos móviles?",
+      "a_md": "La HONOR, la Lenovo y la Samsung de esta guía son versiones Wi-Fi; en la Redmi Pad 2 y la TCL la ficha no lo especifica, así que compruébalo antes de comprar si necesitas datos. Con una versión Wi-Fi puedes compartir datos desde el móvil."
+    },
+    {
+      "q": "¿Se puede ampliar la memoria?",
+      "a_md": "La Samsung Galaxy Tab A9 indica ranura microSD de hasta 1 TB, la HONOR Pad X8a se anuncia ampliable hasta 1 TB y la Lenovo Tab incluye bandeja para microSD. Es la forma más barata de ganar espacio para fotos y vídeos descargados."
+    },
+    {
+      "q": "¿Sirven para que estudie un niño o un adolescente?",
+      "a_md": "Sí para apuntes, vídeos y apps educativas. Para escribir mucho conviene sumar un teclado Bluetooth, y para los más pequeños una funda resistente y el control parental de Android."
+    }
+  ],
+  "items": [
+    {
+      "position": 1,
+      "asin": "B0GT9BW7DK",
+      "name": "Xiaomi Redmi Pad 2 9,7\" 4+64 GB",
+      "award": "Mejor en general",
+      "summary_md": "La más equilibrada para casi todo. Su pantalla 2K de 9,7 pulgadas a 120 Hz es muy fluida, el Snapdragon 6s Gen 2 va sobrado para el uso diario y la batería de 7600 mAh con carga de 18 W promete hasta 1,7 días. El cuerpo es de aluminio y Xiaomi da 4 años de garantía sin activar nada. Las pegas: solo 64 GB y, según la ficha, en la caja vienen el cable y el extractor de SIM, no el cargador.",
+      "pros": [
+        "Pantalla 2K a 120 Hz",
+        "4 años de garantía del fabricante",
+        "Cuerpo unibody de aluminio"
+      ],
+      "cons": [
+        "64 GB de almacenamiento",
+        "Sin cargador en la caja según la ficha"
+      ],
+      "specs": [
+        {"label": "Pantalla", "value": "9,7\" 2K, 120 Hz"},
+        {"label": "Procesador", "value": "Snapdragon 6s Gen 2"},
+        {"label": "Memoria", "value": "4 GB + 64 GB"},
+        {"label": "Batería", "value": "7600 mAh, carga 18 W"},
+        {"label": "Garantía", "value": "4 años"}
+      ]
+    },
+    {
+      "position": 2,
+      "asin": "B0F7Q912Q4",
+      "name": "TCL NXTPAPER 11 Plus 8+256 GB",
+      "award": "Para leer y estudiar",
+      "summary_md": "La opción para quien lee mucho o estudia con PDF. Su pantalla NXTPAPER 4.0 de 11,45 pulgadas y 2.2K imita el papel para cansar menos la vista. Es también la que más memoria trae: 8 GB de RAM y 256 GB de almacenamiento, con un Helio G100, cuatro altavoces, cámaras de 8 MP delante y detrás y Android 15. Incluye cargador de 33 W. La pega: está cerca del tope de la guía y la ficha no indica la capacidad de la batería.",
+      "pros": [
+        "8 GB de RAM y 256 GB de almacenamiento",
+        "Pantalla tipo papel para leer más rato",
+        "Cargador de 33 W en la caja"
+      ],
+      "cons": [
+        "Cerca del tope de precio de la guía",
+        "La ficha no indica la batería"
+      ],
+      "specs": [
+        {"label": "Pantalla", "value": "11,45\" 2.2K NXTPAPER 4.0"},
+        {"label": "Procesador", "value": "MediaTek Helio G100"},
+        {"label": "Memoria", "value": "8 GB + 256 GB"},
+        {"label": "Cámaras", "value": "8 MP frontal y trasera"},
+        {"label": "Sistema", "value": "Android 15"}
+      ]
+    },
+    {
+      "position": 3,
+      "asin": "B0HDSL1PCD",
+      "name": "HONOR Pad X8a 11\" 4+64 GB",
+      "award": "Mejor relación calidad-precio",
+      "summary_md": "Mucha pantalla y mucha batería por poco dinero. Tiene 11 pulgadas a 90 Hz con resolución 1920 x 1200 y certificaciones de luz azul reducida, y una batería de 8300 mAh que HONOR cifra en hasta 14 horas de vídeo. Pesa 495 g con 7,25 mm de grosor, cuerpo metálico y cuatro altavoces. MagicOS 8 permite dividir la pantalla hasta en 4 apps. La pega: el Snapdragon 680 va justo en juegos y 64 GB se quedan cortos si no amplías el almacenamiento.",
+      "pros": [
+        "Hasta 14 horas de vídeo según HONOR",
+        "11 pulgadas a 90 Hz",
+        "Almacenamiento ampliable hasta 1 TB"
+      ],
+      "cons": [
+        "Snapdragon 680, más justo en juegos",
+        "64 GB de almacenamiento"
+      ],
+      "specs": [
+        {"label": "Pantalla", "value": "11\" 1920 x 1200, 90 Hz"},
+        {"label": "Procesador", "value": "Snapdragon 680"},
+        {"label": "Memoria", "value": "4 GB + 64 GB"},
+        {"label": "Batería", "value": "8300 mAh"},
+        {"label": "Peso y grosor", "value": "495 g, 7,25 mm"}
+      ]
+    },
+    {
+      "position": 4,
+      "asin": "B0DT4XFFN6",
+      "name": "Lenovo Tab 10,1\" con funda",
+      "award": "Para familias",
+      "summary_md": "Una buena tablet para compartir en casa o dejar a los niños, porque viene con funda transparente y cargador de 20 W. La pantalla WUXGA de 10,1 pulgadas va bien para dibujos y series, los dos altavoces tienen Dolby Atmos y el Helio G85 basta para apps y juegos sencillos. Lenovo indica hasta 9,5 horas de YouTube con su batería de 5100 mAh. La pega: su pantalla va a 60 Hz y la batería, de 5100 mAh, es más pequeña que la de la Redmi o la HONOR.",
+      "pros": [
+        "Funda transparente y cargador incluidos",
+        "Altavoces con Dolby Atmos",
+        "Ranura microSD"
+      ],
+      "cons": [
+        "Batería de 5100 mAh",
+        "Pantalla a 60 Hz"
+      ],
+      "specs": [
+        {"label": "Pantalla", "value": "10,1\" WUXGA, 60 Hz"},
+        {"label": "Procesador", "value": "MediaTek Helio G85"},
+        {"label": "Memoria", "value": "4 GB + 64 GB"},
+        {"label": "Batería", "value": "5100 mAh, hasta 9,5 h de vídeo"},
+        {"label": "Conectividad", "value": "Wi-Fi 5, Bluetooth 5.3"}
+      ]
+    },
+    {
+      "position": 5,
+      "asin": "B0CN5LBKLL",
+      "name": "Samsung Galaxy Tab A9 8,7\"",
+      "award": "La más compacta",
+      "summary_md": "Para quien quiere una tablet pequeña que quepa en el bolso y una marca con buen soporte. Tiene pantalla LCD de 8,7 pulgadas, 4 GB de RAM, 64 GB ampliables con microSD hasta 1 TB y la capa One UI de Samsung sobre Android 13. Trae cargador en la caja. Su resolución de 800 x 1340 es la más baja de la guía y se nota al leer letra pequeña, y su precio está cerca del tope de la guía.",
+      "pros": [
+        "Tamaño compacto de 8,7 pulgadas",
+        "MicroSD hasta 1 TB",
+        "Incluye cargador"
+      ],
+      "cons": [
+        "Resolución de 800 x 1340, la más baja",
+        "Sale de fábrica con Android 13"
+      ],
+      "specs": [
+        {"label": "Pantalla", "value": "8,7\" LCD 800 x 1340, 60 Hz"},
+        {"label": "Memoria", "value": "4 GB + 64 GB"},
+        {"label": "Ampliación", "value": "MicroSD hasta 1 TB"},
+        {"label": "Cámaras", "value": "8 MP y 2 MP"},
+        {"label": "Sistema", "value": "Android 13, One UI 5.1.1"}
+      ]
+    }
+  ]
+}

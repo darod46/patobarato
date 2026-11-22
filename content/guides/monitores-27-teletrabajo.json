@@ -1,0 +1,141 @@
+{
+  "slug": "monitores-27-teletrabajo",
+  "title": "Monitores de 27\" para teletrabajo y estudio",
+  "subtitle": "Cinco monitores de 27 pulgadas, de Full HD a QHD, para trabajar o estudiar en casa con más espacio y menos fatiga visual.",
+  "category": "Tecnología",
+  "reading_minutes": 6,
+  "intro_md": "Pasar ocho horas mirando la pantalla de un portátil acaba pasando factura: la espalda se encorva, las ventanas no caben y los ojos se cansan. Un monitor de 27 pulgadas es una de las mejoras más rentables que puedes hacerle a tu rincón de trabajo o estudio.\n\nEn esta guía tienes cinco modelos con enfoques distintos: desde uno muy básico para salir del paso hasta uno con USB-C que carga el portátil con un solo cable, pasando por opciones QHD y uno que sirve también para jugar. Los hemos seleccionado a partir de sus fichas técnicas y de las opiniones públicas de los compradores, fijándonos en resolución, conexiones y funciones de cuidado visual.\n\nSi quieres completar el escritorio, en [chollos de tecnología](/chollos/tecnologia) encontrarás teclados, ratones y soportes.",
+  "how_to_choose_md": "## Full HD o QHD a 27 pulgadas\n\nEs la decisión más importante. A 27 pulgadas, la resolución **Full HD (1920 × 1080)** se queda algo justa: el texto se ve menos nítido y caben menos cosas en pantalla. La **QHD (2560 × 1440)** da bastante más espacio para tener dos ventanas lado a lado, hojas de cálculo grandes o código, y se nota en la nitidez de las letras. Si trabajas muchas horas con texto, compensa dar el salto.\n\n## Conexiones: el USB-C cambia el día a día\n\nComprueba qué salidas tiene tu ordenador. Un monitor con **USB-C con carga** permite conectar el portátil con un solo cable que lleva imagen, datos y alimentación, y si además tiene hub USB puedes enchufar ahí teclado y ratón. Si tu equipo solo tiene HDMI, casi todos los modelos de la guía te sirven (el ASUS no detalla sus conexiones en la ficha), pero revisa que el cable venga incluido.\n\n## Cuidado de la vista y ergonomía\n\nPara muchas horas de uso, busca **sin parpadeo** (flicker free) y **filtro de luz azul**, y una pantalla **mate** que evite reflejos. La altura también importa: la parte superior de la pantalla debería quedar a la altura de los ojos. Si el pie no se ajusta, un brazo con anclaje VESA o un elevador lo resuelven.\n\n## Errores comunes y cuándo comprar\n\nUn error habitual es pagar por 144 Hz o más si solo vas a trabajar: para ofimática no se nota, salvo que también juegues. Los monitores bajan de precio en el Black Friday, el Prime Day y la vuelta al cole de septiembre. Puedes seguir las fechas en [eventos](/eventos).",
+  "faq": [
+    {
+      "q": "¿Puedo conectar mi portátil con un solo cable?",
+      "a_md": "Solo si tu portátil tiene USB-C con salida de vídeo y el monitor también lo admite, como el Philips 27E1N1600AE de esta guía. Con HDMI necesitarás además el cargador del portátil."
+    },
+    {
+      "q": "¿Sirve para un MacBook?",
+      "a_md": "Sí. Los MacBook recientes se conectan por USB-C o con un adaptador USB-C a HDMI. Con un modelo QHD, el texto se verá más nítido que en uno Full HD."
+    },
+    {
+      "q": "¿Qué hago si el monitor llega con un píxel muerto?",
+      "a_md": "Revisa la política de píxeles del fabricante y el plazo de devolución de la tienda. En la mayoría de compras online puedes devolverlo en los primeros días sin dar explicaciones."
+    }
+  ],
+  "items": [
+    {
+      "position": 1,
+      "asin": "B0D1RCQVKN",
+      "name": "Philips 27E1N1600AE QHD USB-C",
+      "award": "Mejor en general",
+      "summary_md": "El monitor para quien trabaja con portátil y quiere un escritorio ordenado. Con un solo cable USB-C ves la imagen, transfieres datos y cargas el portátil con hasta 65 W, y su hub USB con dos puertos te permite enchufar teclado y ratón al monitor. Es QHD, tiene 350 cd/m² de brillo, contraste de 1500:1, pantalla mate, FreeSync y modos sin parpadeo y de luz azul reducida. La pega: es el más caro de la guía y su HDMI es 1.4.",
+      "pros": [
+        "USB-C con carga de hasta 65 W",
+        "Hub USB para teclado y ratón",
+        "Resolución QHD y 350 cd/m² de brillo"
+      ],
+      "cons": [
+        "El más caro de la lista",
+        "HDMI 1.4, no 2.0"
+      ],
+      "specs": [
+        {"label": "Tamaño", "value": "27\""},
+        {"label": "Resolución", "value": "QHD"},
+        {"label": "Brillo", "value": "350 cd/m²"},
+        {"label": "Contraste", "value": "1500:1"},
+        {"label": "Conexiones", "value": "HDMI 1.4, USB-C (65 W) y hub USB"}
+      ]
+    },
+    {
+      "position": 2,
+      "asin": "B0F9YSJJG2",
+      "name": "Philips 27E2N1500L QHD",
+      "award": "Mejor relación calidad-precio",
+      "summary_md": "Para quien quiere la nitidez de la resolución 2560 × 1440 sin pagar por el USB-C. Es un panel IPS de 27 pulgadas con pantalla mate, compatible con HDR10, sin parpadeo y con sincronización adaptativa. Tiene entrada HDMI y DisplayPort, así que encaja con la mayoría de ordenadores de sobremesa y portátiles. Su frecuencia de 75 Hz es de sobra para trabajar y estudiar. La pega: no carga el portátil ni tiene hub USB, y para juegos rápidos se queda corto.",
+      "pros": [
+        "Resolución QHD a buen precio",
+        "HDMI y DisplayPort",
+        "Pantalla mate y sin parpadeo"
+      ],
+      "cons": [
+        "Sin USB-C ni hub USB",
+        "75 Hz, justo para juegos"
+      ],
+      "specs": [
+        {"label": "Tamaño", "value": "27\""},
+        {"label": "Resolución", "value": "2560 × 1440"},
+        {"label": "Frecuencia", "value": "75 Hz"},
+        {"label": "Contraste", "value": "1000:1"},
+        {"label": "HDR", "value": "HDR10"}
+      ]
+    },
+    {
+      "position": 3,
+      "asin": "B0DJTDVCVT",
+      "name": "ASUS VY279HGR",
+      "award": "Para cuidar la vista",
+      "summary_md": "Pensado para jornadas largas delante de la pantalla. Su paquete Eye Care Plus incluye un recordatorio de descanso para gestionar el tiempo de pantalla y un modo que ayuda a distinguir colores a personas con alteraciones en su percepción. Es un IPS Full HD de 27 pulgadas a 120 Hz con pantalla mate, contraste de 2000:1 y Adaptive Sync, y los marcos y botones llevan un tratamiento antibacteriano. La pega: la resolución Full HD a 27 pulgadas muestra el texto menos nítido que un QHD.",
+      "pros": [
+        "Recordatorio de descanso integrado",
+        "120 Hz y contraste de 2000:1",
+        "Tratamiento antibacteriano en marcos y botones"
+      ],
+      "cons": [
+        "Full HD, menos espacio útil que un QHD",
+        "La ficha no detalla las conexiones"
+      ],
+      "specs": [
+        {"label": "Tamaño", "value": "27\""},
+        {"label": "Resolución", "value": "Full HD"},
+        {"label": "Frecuencia", "value": "120 Hz"},
+        {"label": "Contraste", "value": "2000:1"},
+        {"label": "Brillo", "value": "250 cd/m²"}
+      ]
+    },
+    {
+      "position": 4,
+      "asin": "B0F5BTTM66",
+      "name": "AOC Q27G42ZE QHD 260 Hz",
+      "award": "Si también juegas",
+      "summary_md": "Para quien teletrabaja de día y juega por la noche. Combina resolución QHD, cómoda para trabajar con varias ventanas, con un panel Fast IPS de 260 Hz compatible con G-Sync y Adaptive Sync, algo que en ofimática no se nota pero en juegos sí. Tiene HDR10, filtro de luz azul y pantalla mate. La pega: para trabajar solo, estás pagando por una frecuencia que no vas a aprovechar, y no tiene USB-C para conectar el portátil con un solo cable.",
+      "pros": [
+        "260 Hz y compatibilidad con G-Sync",
+        "Resolución QHD",
+        "Panel Fast IPS con filtro de luz azul"
+      ],
+      "cons": [
+        "Sus 260 Hz no aportan nada en ofimática",
+        "Sin USB-C"
+      ],
+      "specs": [
+        {"label": "Tamaño", "value": "27\""},
+        {"label": "Resolución", "value": "QHD (1440p)"},
+        {"label": "Frecuencia", "value": "260 Hz"},
+        {"label": "Panel", "value": "Fast IPS"},
+        {"label": "HDR", "value": "HDR10"}
+      ]
+    },
+    {
+      "position": 5,
+      "asin": "B0CX9CVS9Q",
+      "name": "Philips 27E1N1100A Full HD",
+      "award": "Si quieres gastar lo mínimo",
+      "summary_md": "El más barato de la lista y una solución sencilla para estudiar o trabajar con un ordenador antiguo. Es un IPS Full HD de 27 pulgadas a 120 Hz con pantalla mate, FreeSync, modos sin parpadeo y de luz azul reducida, y dos altavoces de 2 W. Tiene entrada HDMI y VGA, útil si tu equipo tiene años, y admite anclaje VESA 100 × 100 para colgarlo de un brazo. La pega: a 27 pulgadas, el Full HD se nota menos nítido con texto pequeño.",
+      "pros": [
+        "El más asequible de la guía",
+        "Entrada VGA para equipos antiguos",
+        "Altavoces integrados y anclaje VESA"
+      ],
+      "cons": [
+        "Full HD, texto menos nítido a 27 pulgadas",
+        "Solo HDMI 1.4 y VGA"
+      ],
+      "specs": [
+        {"label": "Tamaño", "value": "27\""},
+        {"label": "Resolución", "value": "Full HD"},
+        {"label": "Frecuencia", "value": "120 Hz"},
+        {"label": "Conexiones", "value": "HDMI 1.4 y VGA"},
+        {"label": "Altavoces", "value": "2 × 2 W"},
+        {"label": "VESA", "value": "100 × 100"}
+      ]
+    }
+  ]
+}

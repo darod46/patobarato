@@ -1,0 +1,141 @@
+{
+  "slug": "barbacoas-y-planchas-electricas",
+  "title": "Barbacoas y planchas eléctricas",
+  "subtitle": "Para quien quiere cocinar a la brasa o a la plancha en casa, la terraza o el balcón: comparamos carbón, barbacoas eléctricas y planchas.",
+  "category": "Hogar",
+  "reading_minutes": 6,
+  "intro_md": "Con el buen tiempo apetece sacar la comida fuera, pero no todo el mundo tiene un jardín. Por eso en esta guía mezclamos tres tipos de aparato: una barbacoa de carbón para quien tiene terraza o patio, dos barbacoas eléctricas de sobremesa que encajan en un balcón y dos planchas eléctricas que puedes usar en la cocina o sacar a la mesa.\n\nLa selección se ha hecho a partir de las fichas técnicas de cada modelo y de las opiniones públicas de quienes ya los usan. No hay un ganador absoluto: depende de dónde vas a cocinar, para cuántos y de si el sabor a brasa es para ti innegociable.\n\nSi lo tuyo es la plancha de los domingos, cualquiera de las eléctricas te sirve todo el año. Si sueñas con el olor a carbón, vete primero al apartado de dónde puedes usar cada una.",
+  "how_to_choose_md": "## Carbón, eléctrica o plancha\n\nLa barbacoa de carbón da el sabor ahumado de toda la vida, pero necesita espacio al aire libre, tiempo para que las brasas estén listas y recoger la ceniza después. La barbacoa eléctrica de sobremesa se enciende con un botón, no hace brasa y suele tener rejilla o superficie mixta; es la opción natural para un balcón. La plancha eléctrica es lo más versátil: sirve para carne, pescado, verduras o huevos, y se usa igual en la cocina que en la mesa del comedor.\n\n## Balcón o terraza: qué tener en cuenta\n\nSi vives en un piso, antes de comprar conviene consultar las normas de tu comunidad sobre barbacoas en balcones y terrazas. A partir de ahí, una eléctrica genera mucho menos humo que una de carbón, y los modelos con bandeja de agua o protector contra el viento ayudan a que no salga volando ni la grasa ni el calor.\n\n## Superficie y potencia\n\nMira los centímetros de la superficie de cocinado y piensa para cuántos vas a cocinar: para dos personas sobra con una plancha mediana, para una reunión familiar necesitas algo grande. La potencia influye en lo rápido que calienta y en cómo recupera la temperatura al poner comida fría; entre 2000 y 3000 W es lo habitual en esta guía.\n\n## Limpieza\n\nEs uno de los puntos que más pesan en el día a día. Placas extraíbles, revestimiento antiadherente y bandeja recogegotas marcan la diferencia entre limpiar en cinco minutos o dejarlo para mañana. En el carbón, la limpieza es la parte menos agradecida.\n\n## Cuándo comprar\n\nLas barbacoas suben de demanda en cuanto llega el calor, así que comprar a finales de primavera, en Prime Day o en las rebajas de verano suele salir mejor que esperar a julio. Las planchas, en cambio, aparecen a menudo en [los chollos de hogar](/chollos/hogar) durante todo el año.",
+  "faq": [
+    {
+      "q": "¿Puedo usar una barbacoa eléctrica dentro de casa?",
+      "a_md": "Depende del modelo: la Severin, por ejemplo, indica en su ficha que es apta para interior y exterior. Las planchas de esta guía están pensadas para usarse en la cocina o en la mesa."
+    },
+    {
+      "q": "¿La barbacoa de carbón se puede usar en un balcón?",
+      "a_md": "Lo primero es consultar las normas de tu comunidad. Además del humo, piensa en el espacio que necesitas alrededor y en dónde apagarás y tirarás las brasas."
+    },
+    {
+      "q": "¿Cómo se limpia una plancha antiadherente sin estropearla?",
+      "a_md": "Mejor cuando todavía está templada, con un paño húmedo o una esponja que no raye. Evita estropajos metálicos y utensilios de metal, que acaban dañando el revestimiento."
+    }
+  ],
+  "items": [
+    {
+      "position": 1,
+      "asin": "B09ZB7NF31",
+      "name": "Cecotec PerfectRoast 3000 Inox",
+      "award": "Mejor en general",
+      "summary_md": "Es la eléctrica más completa de la lista y la que mejor resuelve una comida para varios. Tiene 3000 W, una superficie de 30 x 50 cm mitad grill y mitad plancha, y dos zonas con termostato independiente y 6 niveles cada una, así que puedes hacer la carne a fuego fuerte y las verduras a fuego suave a la vez. La placa es extraíble y antiadherente, y lleva un protector contra el viento plegable de acero inoxidable. Es grande: necesitas sitio en la mesa o en la terraza.",
+      "pros": [
+        "Dos zonas con temperatura independiente",
+        "Superficie mixta de grill y plancha",
+        "Placa extraíble y protector contra el viento"
+      ],
+      "cons": [
+        "Ocupa bastante en la mesa",
+        "Necesita un enchufe que aguante 3000 W"
+      ],
+      "specs": [
+        {"label": "Potencia", "value": "3000 W"},
+        {"label": "Superficie", "value": "30 x 50 cm"},
+        {"label": "Zonas", "value": "2, con termostato propio"},
+        {"label": "Niveles de temperatura", "value": "6 por zona"},
+        {"label": "Placa", "value": "Aluminio fundido antiadherente, extraíble"}
+      ]
+    },
+    {
+      "position": 2,
+      "asin": "B09N2BTWR5",
+      "name": "Severin barbacoa de sobremesa 2200 W",
+      "award": "La opción para balcón",
+      "summary_md": "Si tienes un balcón y quieres algo parecido a una barbacoa sin brasas, esta Severin es la candidata natural. Su bandeja recogegotas lleva agua para que la grasa no se queme ni haga humo, y la carcasa SafeTouch evita que las zonas que tocas se calienten en exceso. La temperatura se regula con un dial con anillo LED, la rejilla es de acero inoxidable y las piezas se desmontan para limpiar. La ficha indica que es apta para interior y exterior. A cambio, tiene una sola zona de cocinado y la ficha no indica la superficie de la rejilla.",
+      "pros": [
+        "Bandeja con agua que reduce el humo",
+        "Carcasa que no se calienta al tacto",
+        "Apta para interior y exterior"
+      ],
+      "cons": [
+        "Una sola zona de cocinado",
+        "La ficha no indica la superficie de la rejilla"
+      ],
+      "specs": [
+        {"label": "Potencia", "value": "2200 W"},
+        {"label": "Rejilla", "value": "Acero inoxidable"},
+        {"label": "Control", "value": "Dial con anillo LED"},
+        {"label": "Uso", "value": "Interior y exterior"},
+        {"label": "Extras", "value": "Protector contra el viento, bandeja con agua"}
+      ]
+    },
+    {
+      "position": 3,
+      "asin": "B002S2QIWM",
+      "name": "Weber Compact Kettle (carbón)",
+      "award": "Para quien quiere sabor a brasa",
+      "summary_md": "La única de carbón de la guía y la que tienes que elegir si el sabor ahumado no es negociable. Tiene cuba y tapa de acero vitrificado, parrilla de acero cromado y una superficie de cocción de 44,5 cm de diámetro, que da para una comida en familia. El sistema One-Touch facilita retirar la ceniza al terminar, y el soporte de tres patas con ruedas permite moverla por la terraza o el jardín. Lo que pega: necesita espacio al aire libre y tiempo para encender el carbón, y llega para montar.",
+      "pros": [
+        "Cuba y tapa de acero vitrificado",
+        "Sistema One-Touch para retirar la ceniza",
+        "Tres patas con ruedas para moverla"
+      ],
+      "cons": [
+        "Solo para exteriores con espacio",
+        "Requiere montaje"
+      ],
+      "specs": [
+        {"label": "Combustible", "value": "Carbón"},
+        {"label": "Superficie de cocción", "value": "44,5 cm de diámetro"},
+        {"label": "Parrilla", "value": "Acero cromado"},
+        {"label": "Cuba y tapa", "value": "Acero vitrificado"},
+        {"label": "Limpieza de ceniza", "value": "Sistema One-Touch"},
+        {"label": "Soporte", "value": "Tres patas con ruedas"}
+      ]
+    },
+    {
+      "position": 4,
+      "asin": "B09WHMH2S1",
+      "name": "Tefal Giant Plancha XL 2300 W",
+      "award": "Para familias numerosas",
+      "summary_md": "Cuando la comida es para mucha gente, esta plancha de Tefal es la que mejor encaja. El fabricante la plantea para preparar comidas para hasta 12 comensales y mide algo más de 61 cm de largo, así que cabe un buen surtido de carne, verdura y marisco de una tacada. Tiene 2300 W, termostato con 5 niveles y revestimiento antiadherente. Pesa 3,2 kg, lo que es razonable para moverla a la mesa, pero piensa dónde la vas a guardar: no es pequeña.",
+      "pros": [
+        "Superficie pensada para hasta 12 personas",
+        "Termostato con 5 niveles",
+        "Antiadherente fácil de limpiar"
+      ],
+      "cons": [
+        "Necesita bastante sitio para guardarla",
+        "Sin zona de grill indicada en la ficha"
+      ],
+      "specs": [
+        {"label": "Potencia", "value": "2300 W"},
+        {"label": "Comensales", "value": "Hasta 12"},
+        {"label": "Niveles", "value": "5"},
+        {"label": "Medidas", "value": "61,3 x 35,1 x 7,5 cm"},
+        {"label": "Peso", "value": "3,2 kg"}
+      ]
+    },
+    {
+      "position": 5,
+      "asin": "B01HMK4F42",
+      "name": "Jata GR558 2500 W",
+      "award": "Si quieres gastar lo mínimo",
+      "summary_md": "La opción más barata de la lista y una plancha de las de siempre. Tiene 2500 W y una superficie de 46 x 28 cm, suficiente para dos o tres personas. Su sistema Super Diet inclina ligeramente la plancha para que la grasa y las salsas se vayan hacia un lado. Una vez apagada mantiene el calor y las asas no se calientan, así que puedes llevarla a la mesa. La marca destaca su revestimiento libre de PFOA. No tiene termostato regulable: la ficha indica un solo ajuste.",
+      "pros": [
+        "Inclinación para escurrir la grasa",
+        "Asas frías para llevarla a la mesa",
+        "Libre de PFOA según el fabricante"
+      ],
+      "cons": [
+        "Sin regulación de temperatura",
+        "Superficie justa para más de tres personas"
+      ],
+      "specs": [
+        {"label": "Potencia", "value": "2500 W"},
+        {"label": "Superficie", "value": "46 x 28 cm"},
+        {"label": "Ajustes", "value": "1"},
+        {"label": "Sistema", "value": "Super Diet (plancha inclinada)"},
+        {"label": "Tensión", "value": "230 V"}
+      ]
+    }
+  ]
+}

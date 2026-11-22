@@ -1,0 +1,140 @@
+{
+  "slug": "ventiladores-silenciosos-verano",
+  "title": "Ventiladores silenciosos para el verano",
+  "subtitle": "Para quien quiere dormir o teletrabajar fresco sin ruido de fondo: comparamos ventiladores de pie, circuladores y una torre compacta.",
+  "category": "Hogar",
+  "reading_minutes": 6,
+  "intro_md": "Un ventilador que refresca pero no te deja dormir es medio ventilador. En esta guía nos hemos centrado en modelos que cuidan el ruido: casi todos llevan motor de corriente continua (DC), que gira más suave a baja velocidad, y varios tienen modos específicos para la noche.\n\nHay de todo: un circulador con app, un ventilador de pie con muchas velocidades, otro pensado para el dormitorio, uno potente para el salón y una torre pequeña para la mesa o la mesilla. La selección se ha hecho a partir de las fichas técnicas de cada fabricante y de las opiniones públicas de los compradores, que en esta categoría hablan mucho del ruido real.\n\nUn aviso antes de empezar: los decibelios que anuncian las marcas no siempre se miden igual. Más abajo te explicamos cómo leerlos sin llevarte sorpresas.",
+  "how_to_choose_md": "## Motor DC o motor convencional\n\nLos ventiladores con motor DC consumen menos y permiten muchas más velocidades, así que puedes dejarlos en un punto muy bajo que apenas se oye. Para el dormitorio son la opción más cómoda. Los motores convencionales suelen ser más sencillos, pero a velocidad mínima tienden a sonar algo más.\n\n## Cómo leer los decibelios\n\nCasi todas las fichas dan el ruido a la velocidad más baja, que es el dato más favorable. Además, cada marca mide a su manera y a veces la propia ficha de Amazon muestra cifras distintas a las del texto del vendedor. Úsalo como orientación para comparar dentro de la misma marca, y fíjate en las opiniones de los compradores sobre el ruido a velocidad media, que es la que más se usa.\n\n## Circulador, pie o torre\n\nUn circulador mueve el aire de toda la habitación y llega más lejos; va bien en salones o para combinarlo con el aire acondicionado. El ventilador de pie clásico da una corriente más directa y suele ser regulable en altura. La torre ocupa poco y se coloca en cualquier rincón o mesa, aunque mueve menos aire.\n\n## Detalles que se agradecen\n\nMando a distancia y temporizador para no levantarte de la cama, pantalla que se pueda apagar, oscilación regulable y rejillas desmontables para limpiar las aspas. Si te gusta automatizar la casa, un modelo con app te deja programarlo desde el móvil.\n\n## Cuándo comprar\n\nLos ventiladores se encarecen en cuanto llega la primera ola de calor. Comprarlo en primavera o aprovechar Prime Day suele salir mejor; puedes seguir las ofertas en [los chollos de hogar](/chollos/hogar).",
+  "faq": [
+    {
+      "q": "¿Cuánto consume un ventilador si lo dejo toda la noche?",
+      "a_md": "Poco, sobre todo los de motor DC a baja velocidad. Fíjate en la potencia de la ficha: la torre Levoit indica un máximo de 7,5 W y el Cecotec, 28 W."
+    },
+    {
+      "q": "¿Cómo se limpian las aspas?",
+      "a_md": "Desenchúfalo y retira la rejilla frontal si el modelo lo permite; el DREO, por ejemplo, deja desmontar aspa y rejillas. Un paño húmedo basta, y conviene hacerlo un par de veces por temporada."
+    },
+    {
+      "q": "¿Necesito la app para usar el Xiaomi?",
+      "a_md": "No para lo básico, pero el control de sus 100 niveles de velocidad se hace desde la app Xiaomi Home, según la ficha."
+    }
+  ],
+  "items": [
+    {
+      "position": 1,
+      "asin": "B0F55DJ6QB",
+      "name": "Xiaomi Smart Ventilador de Pie 2 en 1",
+      "award": "Mejor en general",
+      "summary_md": "Es el más versátil de la guía. Funciona como circulador, mueve 1440 m³/h con un alcance de 13 metros y oscila en 3D: 120° en horizontal y 100° en vertical. Se puede usar de pie o sobre una mesa, y su motor DC marca 27,9 dB a la velocidad más baja según el fabricante. Desde la app Xiaomi Home ajustas hasta 100 niveles de velocidad. Quien no quiera depender del móvil puede echar en falta un control más directo de todo desde el propio aparato.",
+      "pros": [
+        "Oscilación horizontal y vertical",
+        "De mesa o de pie",
+        "100 niveles de velocidad desde la app"
+      ],
+      "cons": [
+        "Parte del control depende de la app",
+        "Consume 50 W, más que la torre Levoit"
+      ],
+      "specs": [
+        {"label": "Caudal", "value": "1440 m³/h"},
+        {"label": "Alcance", "value": "13 m"},
+        {"label": "Oscilación", "value": "120° horizontal, 100° vertical"},
+        {"label": "Velocidades", "value": "100 (app)"},
+        {"label": "Potencia", "value": "50 W"}
+      ]
+    },
+    {
+      "position": 2,
+      "asin": "B0DQDTY7SH",
+      "name": "DREO ventilador de pie con motor DC",
+      "award": "La opción silenciosa para dormir",
+      "summary_md": "Pensado para el dormitorio. El fabricante habla de 20 dB a baja velocidad, aunque la ficha técnica indica 28,2 dB; en cualquier caso, es de los más tranquilos de la lista, y permite silenciar los pitidos de los botones. Tiene 8 velocidades, modo automático, oscilación de 90° y un cabezal que se inclina hasta 105°. La altura va de 96 a 106 cm, y la rejilla y el aspa se desmontan para limpiarlos. Trae mando a distancia. Su recorrido de altura es corto si lo quieres por encima de una cama alta.",
+      "pros": [
+        "Muy tranquilo a baja velocidad",
+        "Aspa y rejillas desmontables",
+        "Modo automático y mando a distancia"
+      ],
+      "cons": [
+        "Poco margen de altura (96-106 cm)",
+        "Oscilación limitada a 90°"
+      ],
+      "specs": [
+        {"label": "Motor", "value": "DC"},
+        {"label": "Velocidades", "value": "8"},
+        {"label": "Oscilación", "value": "90°"},
+        {"label": "Altura", "value": "96-106 cm"},
+        {"label": "Caudal", "value": "1444 m³/h"}
+      ]
+    },
+    {
+      "position": 3,
+      "asin": "B092J7CGXT",
+      "name": "Cecotec EnergySilence 1030 SmartExtreme",
+      "award": "Mejor relación calidad-precio",
+      "summary_md": "Un ventilador de pie clásico, con aspas de 40 cm, pero con motor DC de 28 W. Lo que más llama la atención son sus 24 velocidades y tres modos (Eco, Sleep y Turbo), que permiten afinar mucho el caudal. Trae mando a distancia, pantalla LED, temporizador de hasta 18 horas y una barra telescópica que va de 115 a 135 cm. La ficha no da una cifra de ruido, así que en ese punto toca fiarse de las opiniones de los compradores.",
+      "pros": [
+        "24 velocidades y modo Sleep",
+        "Temporizador de hasta 18 horas",
+        "Altura de 115 a 135 cm"
+      ],
+      "cons": [
+        "La ficha no indica decibelios",
+        "Formato clásico, menos alcance que un circulador"
+      ],
+      "specs": [
+        {"label": "Motor", "value": "DC, 28 W"},
+        {"label": "Diámetro", "value": "40 cm, 10 aspas"},
+        {"label": "Velocidades", "value": "24"},
+        {"label": "Temporizador", "value": "Hasta 18 h"},
+        {"label": "Altura", "value": "115-135 cm"}
+      ]
+    },
+    {
+      "position": 4,
+      "asin": "B01891LZBY",
+      "name": "Rowenta Turbo Silence Extreme VU5640",
+      "award": "Para salones grandes",
+      "summary_md": "Si buscas mover mucho aire en una estancia amplia, este Rowenta es el que más empuje tiene en la ficha: 70 W, cinco palas y hasta 72 m³ por minuto a máxima velocidad según el fabricante. Incluye el modo Silent Night para la noche y Turbo Boost para enfriar rápido, con oscilación automática de 120°. A velocidad mínima marca 45 dB, más que los demás modelos que indican ruido, así que encaja mejor en el salón que junto a la cama. Se maneja con botones en el propio aparato.",
+      "pros": [
+        "Mucho caudal para estancias amplias",
+        "Modos Silent Night y Turbo Boost",
+        "Oscilación de 120°"
+      ],
+      "cons": [
+        "45 dB a velocidad mínima",
+        "La ficha no menciona mando a distancia"
+      ],
+      "specs": [
+        {"label": "Potencia", "value": "70 W"},
+        {"label": "Palas", "value": "5"},
+        {"label": "Velocidades", "value": "4"},
+        {"label": "Ruido mínimo", "value": "45 dB(A)"},
+        {"label": "Oscilación", "value": "120°"}
+      ]
+    },
+    {
+      "position": 5,
+      "asin": "B0CX1HCVYB",
+      "name": "Levoit torre compacta LTF-F132",
+      "award": "La más compacta",
+      "summary_md": "Una torre pequeña para la mesilla, el escritorio o una habitación pequeña. Consume como máximo 7,5 W y el fabricante indica entre 20 y 43 dB según la velocidad, con opción de apagar pitidos y pantalla. Tiene 4 velocidades más una turbo, oscilación regulable a 30°, 60° o 90°, mando a distancia y temporizador de hasta 12 horas. Es la opción más barata de la guía. Por tamaño, no esperes que refresque un salón entero: su aire es más concentrado.",
+      "pros": [
+        "Ocupa muy poco",
+        "Consumo máximo de 7,5 W",
+        "Pitidos y pantalla desactivables"
+      ],
+      "cons": [
+        "Poco caudal para estancias grandes",
+        "Pensado para uso cercano"
+      ],
+      "specs": [
+        {"label": "Formato", "value": "Torre compacta"},
+        {"label": "Potencia", "value": "7,5 W"},
+        {"label": "Ruido", "value": "20-43 dB"},
+        {"label": "Velocidades", "value": "4 + turbo"},
+        {"label": "Temporizador", "value": "Hasta 12 h"}
+      ]
+    }
+  ]
+}

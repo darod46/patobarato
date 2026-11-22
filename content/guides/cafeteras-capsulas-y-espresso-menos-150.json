@@ -1,0 +1,140 @@
+{
+  "slug": "cafeteras-capsulas-y-espresso-menos-150",
+  "title": "Cafeteras de cápsulas y espresso por menos de 150 €",
+  "subtitle": "Cuatro cafeteras de cápsulas de los tres grandes sistemas y una espresso manual para quien quiere buen café en casa sin gastar de más.",
+  "category": "Hogar",
+  "reading_minutes": 6,
+  "intro_md": "Elegir cafetera parece sencillo hasta que te das cuenta de que, en realidad, estás eligiendo qué cápsulas vas a comprar durante años. Nespresso, Dolce Gusto y Tassimo no son compatibles entre sí, y cada sistema tiene su estilo: más espresso puro, más bebidas con leche o más variedad de marcas.\n\nEn esta guía reunimos cuatro cafeteras de cápsulas de esos tres sistemas y una espresso manual para café molido, todas por debajo del tope de la guía. Las hemos elegido a partir de sus fichas técnicas y de lo que cuentan los compradores en sus opiniones públicas, fijándonos en lo que importa en el día a día: rapidez, tamaño, facilidad de limpieza y qué bebidas puedes preparar.\n\nSi ya sabes qué sistema quieres y solo buscas el mejor momento para comprar, pásate por [chollos de hogar](/chollos/hogar).",
+  "how_to_choose_md": "## Cápsulas o espresso manual\n\nUna **cafetera de cápsulas** es rápida, limpia y siempre da el mismo resultado: metes la cápsula, pulsas un botón y listo. A cambio, cada café cuesta más y dependes de un formato concreto. Una **espresso manual** con portafiltros te deja usar el café molido que quieras y sale más barata por taza, pero requiere algo de práctica, más limpieza y un par de minutos más cada mañana.\n\n## Los tres sistemas de cápsulas\n\n- **Nespresso Original**: centrado en el espresso y el café solo. Es el sistema con más cápsulas compatibles de otras marcas en el supermercado.\n- **Dolce Gusto**: muy orientado a bebidas con leche, cafés largos y bebidas frías, con cápsulas de leche incluidas en muchas recetas.\n- **Tassimo**: lee un código en cada cápsula y ajusta la preparación sola; tiene mucha variedad de bebidas, incluido chocolate y té.\n\nAntes de decidirte, mira qué cápsulas encuentras en tu súper habitual. Es lo que más va a pesar en el gasto a largo plazo.\n\n## Detalles que marcan la diferencia\n\nFíjate en el tamaño del depósito si sois varios en casa, en si la cantidad de café es programable y en el apagado automático. Si te gusta el café con leche en taza grande, comprueba que la bandeja se pueda bajar o abatir. Un error común es comprar la cafetera más pequeña y descubrir que tu taza no cabe.\n\n## Cuándo comprar\n\nLas cafeteras de cápsulas bajan mucho en el Black Friday, el Prime Day y antes del Día del Padre. Muchas veces vienen con cápsulas de regalo, así que compara el paquete completo. Revisa también los [cupones](/cupones) disponibles.",
+  "faq": [
+    {
+      "q": "¿Puedo usar cápsulas de otras marcas en una Nespresso?",
+      "a_md": "Sí, en las cafeteras Nespresso Original funcionan las cápsulas compatibles que venden muchas marcas en el supermercado. En Dolce Gusto y Tassimo la oferta de compatibles es más reducida."
+    },
+    {
+      "q": "¿Cada cuánto hay que descalcificar la cafetera?",
+      "a_md": "Depende de la dureza del agua, pero como referencia, cada dos o tres meses con uso diario. Usar agua filtrada alarga el intervalo y mejora el sabor."
+    },
+    {
+      "q": "¿La Stilosa sirve para cápsulas?",
+      "a_md": "Solo para monodosis E.S.E., las pastillas de papel con café molido. No admite cápsulas de Nespresso, Dolce Gusto ni Tassimo."
+    }
+  ],
+  "items": [
+    {
+      "position": 1,
+      "asin": "B01ITGGKBY",
+      "name": "Nespresso Citiz EN167 de De'Longhi",
+      "award": "Mejor en general",
+      "summary_md": "Para quien quiere un espresso consistente cada mañana y no renunciar al café con leche en taza grande. Tiene bomba de 19 bares, calentamiento Thermoblock y cantidad de café automática y programable. Su punto fuerte es el soporte de tazas abatible con dos posiciones, una para espresso y otra para vaso alto. Viene con 14 cápsulas para empezar. La pega: es la más cara de la guía y no tiene espumador de leche.",
+      "pros": [
+        "Soporte de tazas abatible con dos alturas",
+        "Cantidad de café programable",
+        "Incluye 14 cápsulas para empezar"
+      ],
+      "cons": [
+        "La más cara de la lista",
+        "Sin espumador de leche"
+      ],
+      "specs": [
+        {"label": "Sistema", "value": "Nespresso Original"},
+        {"label": "Presión", "value": "19 bares"},
+        {"label": "Calentamiento", "value": "Thermoblock"},
+        {"label": "Potencia", "value": "1260 W"},
+        {"label": "Soporte de tazas", "value": "Abatible, dos posiciones"}
+      ]
+    },
+    {
+      "position": 2,
+      "asin": "B00G5YOVZA",
+      "name": "Nespresso Inissia EN80 de De'Longhi",
+      "award": "Mejor relación calidad-precio",
+      "summary_md": "La forma más directa de entrar en el sistema Nespresso. Está lista en unos 25 segundos gracias al Thermoblock, tiene bomba de 19 bares, cantidad de café programable con Flow Stop y expulsa la cápsula usada sola. Se apaga a los nueve minutos sin uso y su depósito extraíble es de 0,7 litros. Es ideal para una o dos personas que toman sobre todo espresso o café solo. La pega: el depósito se queda corto si sois muchos en casa y no tiene espumador.",
+      "pros": [
+        "Lista en unos 25 segundos",
+        "Cantidad de café programable",
+        "Expulsión automática de cápsulas"
+      ],
+      "cons": [
+        "Depósito de solo 0,7 litros",
+        "Sin espumador de leche"
+      ],
+      "specs": [
+        {"label": "Sistema", "value": "Nespresso Original"},
+        {"label": "Presión", "value": "19 bares"},
+        {"label": "Depósito", "value": "0,7 L"},
+        {"label": "Calentamiento", "value": "Thermoblock (25 s)"},
+        {"label": "Autoapagado", "value": "9 minutos"}
+      ]
+    },
+    {
+      "position": 3,
+      "asin": "B0H2W6LBJ6",
+      "name": "Dolce Gusto Mini Me 2 de De'Longhi",
+      "award": "Para bebidas frías y con leche",
+      "summary_md": "La opción si en casa se toman cafés con leche, cafés largos o bebidas frías en verano. Funciona en modo frío y caliente, tiene bomba de 15 bares y un control LED con el que ajustas la cantidad de cada bebida. Su depósito extraíble es de 0,8 litros, se apaga a los cinco minutos sin uso y este pack incluye tres cajas de cápsulas para empezar. La pega: las cápsulas compatibles de otras marcas son menos habituales que en Nespresso.",
+      "pros": [
+        "Prepara bebidas frías y calientes",
+        "Incluye tres packs de cápsulas",
+        "Depósito de 0,8 litros"
+      ],
+      "cons": [
+        "Menos cápsulas compatibles en el súper",
+        "Se apaga a los cinco minutos, algo pronto si preparas varias"
+      ],
+      "specs": [
+        {"label": "Sistema", "value": "Dolce Gusto"},
+        {"label": "Presión", "value": "15 bares"},
+        {"label": "Depósito", "value": "0,8 L"},
+        {"label": "Control", "value": "LED, cantidad ajustable"},
+        {"label": "Autoapagado", "value": "5 minutos"}
+      ]
+    },
+    {
+      "position": 4,
+      "asin": "B086RF6YJQ",
+      "name": "De'Longhi Stilosa espresso manual",
+      "award": "Para usar café molido",
+      "summary_md": "Para quien quiere olvidarse de las cápsulas y preparar espresso con el café molido que prefiera. Admite una o dos tazas y también monodosis E.S.E., tiene caldera de acero inoxidable con dos termostatos independientes para agua y vapor, y un espumador de leche para hacer capuchinos. Trae dos bandejas de goteo para tazas de entre 80 y 110 mm. La pega: tiene curva de aprendizaje, hay que limpiar el portafiltros cada vez y lleva más tiempo que una de cápsulas.",
+      "pros": [
+        "Café molido o monodosis E.S.E.",
+        "Espumador de leche para capuchinos",
+        "Dos termostatos para agua y vapor"
+      ],
+      "cons": [
+        "Requiere práctica para sacar un buen espresso",
+        "Más limpieza que una de cápsulas"
+      ],
+      "specs": [
+        {"label": "Tipo", "value": "Espresso manual"},
+        {"label": "Presión", "value": "15 bares"},
+        {"label": "Café", "value": "Molido y monodosis E.S.E."},
+        {"label": "Caldera", "value": "Acero inoxidable"},
+        {"label": "Altura de taza", "value": "80 a 110 mm"}
+      ]
+    },
+    {
+      "position": 5,
+      "asin": "B0DFWH1QM5",
+      "name": "Bosch Tassimo Style TAS113E",
+      "award": "Si quieres gastar lo mínimo",
+      "summary_md": "La más barata de la lista y una de las más estrechas: mide unos 17 cm de ancho, así que cabe en cocinas pequeñas. Funciona con un solo botón y la tecnología Intellibrew ajusta la preparación a cada cápsula, con acceso a hasta 70 bebidas distintas del catálogo Tassimo. Tiene depósito extraíble y clasificación energética A+. La pega: no es una espresso de bomba como las demás, y el catálogo de cápsulas depende casi por completo de la marca.",
+      "pros": [
+        "Ancho de solo unos 17 cm",
+        "Funcionamiento con un solo botón",
+        "Hasta 70 bebidas distintas"
+      ],
+      "cons": [
+        "No prepara espresso a alta presión",
+        "Pocas cápsulas de otras marcas"
+      ],
+      "specs": [
+        {"label": "Sistema", "value": "Tassimo"},
+        {"label": "Potencia", "value": "1400 W"},
+        {"label": "Medidas", "value": "32 × 17,1 × 26,5 cm"},
+        {"label": "Peso", "value": "2,5 kg"},
+        {"label": "Clase energética", "value": "A+"}
+      ]
+    }
+  ]
+}

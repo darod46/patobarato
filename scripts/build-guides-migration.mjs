@@ -1,0 +1,68 @@
+#!/usr/bin/env node
+// Builds a Supabase migration from content/guides/*.json (one guide per file) and
+// content/guides/_calendar.json (publication Mondays). Idempotent: guides upsert by slug and
+// their items are replaced. Usage: node scripts/build-guides-migration.mjs > supabase/migrations/<version>_guides_calendar.sql
+import { readFileSync, readdirSync } from 'node:fs'
+import { join } from 'node:path'
+
+const DIR = join(process.cwd(), 'content', 'guides')
+const calendar = JSON.parse(readFileSync(join(DIR, '_calendar.json'), 'utf8'))
+const TAG = '$pb$'
+
+/** 07:00 Europe/Madrid for a calendar day: CET (UTC+1) until the last Sunday of March, CEST (UTC+2) after. */
+export function publishedAt(day) {
+  const [y, m, d] = day.split('-').map(Number)
+  const lastSundayMarch = new Date(Date.UTC(y, 2, 31))
+  lastSundayMarch.setUTCDate(31 - lastSundayMarch.getUTCDay())
+  const lastSundayOctober = new Date(Date.UTC(y, 9, 31))
+  lastSundayOctober.setUTCDate(31 - lastSundayOctober.getUTCDay())
+  const date = new Date(Date.UTC(y, m - 1, d))
+  const summer = date >= lastSundayMarch && date < lastSundayOctober
+  return `${day}T${summer ? '05' : '06'}:00:00Z`
+}
+
+function q(text) {
+  if (text.includes(TAG)) throw new Error(`text contains ${TAG}`)
+  return `${TAG}${text}${TAG}`
+}
+const arr = (items) => `array[${items.map(q).join(', ')}]::text[]`
+const json = (value) => `${q(JSON.stringify(value))}::jsonb`
+
+export function guideSql(entry, guide) {
+  if (guide.title.length > 60) throw new Error(`${guide.slug}: title longer than 60 chars`)
+  if (guide.items.length < 4 || guide.items.length > 5) throw new Error(`${guide.slug}: ${guide.items.length} items`)
+  const bySlug = `(select id from guides where slug = ${q(guide.slug)})`
+  const lines = [
+    `-- ${entry.week}. ${guide.slug} → ${entry.monday}`,
+    `insert into guides (slug, title, subtitle, category, intro_md, how_to_choose_md, faq, reading_minutes, status, published_at)`,
+    `values (${q(guide.slug)}, ${q(guide.title)}, ${q(guide.subtitle)}, ${q(guide.category)}, ${q(guide.intro_md)}, ${q(guide.how_to_choose_md)}, ${json(guide.faq)}, ${guide.reading_minutes}, 'published', ${q(publishedAt(entry.monday))}::timestamptz)`,
+    `on conflict (slug) do update set title = excluded.title, subtitle = excluded.subtitle, category = excluded.category, intro_md = excluded.intro_md, how_to_choose_md = excluded.how_to_choose_md, faq = excluded.faq, reading_minutes = excluded.reading_minutes, status = 'published', published_at = excluded.published_at, updated_at = now();`,
+    `delete from guide_items where guide_id = ${bySlug};`,
+  ]
+  for (const item of [...guide.items].sort((a, b) => a.position - b.position)) {
+    lines.push(
+      `insert into guide_items (guide_id, position, name, award, summary_md, pros, cons, specs)`,
+      `values (${bySlug}, ${item.position}, ${q(item.name)}, ${q(item.award)}, ${q(item.summary_md)}, ${arr(item.pros)}, ${arr(item.cons)}, ${json(item.specs)});`,
+      `insert into guide_item_stores (guide_item_id, store, external_id, url, position)`,
+      `values ((select i.id from guide_items i where i.guide_id = ${bySlug} and i.position = ${item.position}), 'amazon', ${q(item.asin)}, ${q(`https://www.amazon.es/dp/${item.asin}`)}, 0);`,
+    )
+  }
+  return lines.join('\n')
+}
+
+export function build() {
+  const out = ['-- Guías programadas: 24 guías de compra, una cada lunes (generado por scripts/build-guides-migration.mjs).', '']
+  const files = new Set(readdirSync(DIR).filter((f) => f.endsWith('.json') && !f.startsWith('_')))
+  for (const entry of calendar) {
+    const file = `${entry.slug}.json`
+    if (!files.has(file)) throw new Error(`missing content/guides/${file}`)
+    const guide = JSON.parse(readFileSync(join(DIR, file), 'utf8'))
+    if (guide.slug !== entry.slug) throw new Error(`${file}: slug mismatch`)
+    out.push(guideSql(entry, guide), '')
+  }
+  return out.join('\n')
+}
+
+if (process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/^.*\//, ''))) {
+  process.stdout.write(build())
+}

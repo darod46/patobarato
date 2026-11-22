@@ -1,0 +1,140 @@
+{
+  "slug": "aspiradores-escoba-sin-cable-menos-200",
+  "title": "Aspiradores escoba sin cable por menos de 200 €",
+  "subtitle": "Cinco aspiradores escoba sin cable para pisos y casas con mascotas, comparando autonomía, succión, ruido y si además friegan.",
+  "category": "Hogar",
+  "reading_minutes": 7,
+  "intro_md": "Un aspirador escoba sin cable cambia la rutina de limpieza: lo descuelgas, pasas por la cocina en dos minutos y lo vuelves a dejar en su sitio. No hace falta irse a la gama más cara para tener uno que aguante una casa entera con una carga.\n\nEn esta guía hemos reunido cinco modelos por debajo del tope de la guía con planteamientos distintos: uno de marca de toda la vida con piezas de recambio garantizadas, uno con mucha autonomía y contador en pantalla, uno que aspira y friega a la vez, un aspirador-fregona pensado para suelo duro y uno muy económico que se convierte en aspirador de mano. La selección se basa en las fichas técnicas de cada fabricante y en las opiniones públicas de quienes ya los usan en casa.\n\nSi tienes perro o gato, fíjate sobre todo en el cepillo anti-enredos; si vives en un piso con parqué o baldosa, quizá te compense uno que también friegue. Más ofertas de este tipo en [chollos de hogar](/chollos/hogar).",
+  "how_to_choose_md": "## Autonomía real, no la de la caja\n\nLos minutos que anuncia el fabricante casi siempre se miden en el modo más suave y, a veces, sin el cepillo motorizado puesto. En potencia máxima la batería puede durar la mitad o menos. Para un piso de 70-90 m² sobran 30-35 minutos reales; si tu casa es más grande o tienes alfombras, busca modelos que anuncien 60 minutos o más y, si puedes, batería extraíble para cambiarla o sustituirla con los años.\n\n## Succión y cepillo\n\nLa succión se expresa en kPa o Pa, pero cada marca la mide a su manera, así que úsala como orientación y no como dato absoluto. Pesa igual o más el cepillo: los rodillos anti-enredo evitan tener que cortar pelos con tijeras cada semana, y la luz en el cabezal ayuda a ver el polvo debajo de muebles. Si tienes mascotas, que el cepillo esté pensado para pelo es casi obligatorio.\n\n## Ruido, peso y comodidad\n\nMira los decibelios de la ficha: entre 55 y 65 dB es un ruido llevadero; por encima de 75 dB molesta si hay niños durmiendo. También cuenta que se sostenga solo (autoportante), que el tubo se doble para llegar bajo el sofá y el peso en modo de mano si vas a limpiar el coche o las escaleras.\n\n## ¿Aspirar y fregar?\n\nLos modelos que friegan ahorran una pasada en suelos de baldosa o tarima, pero exigen vaciar y limpiar el depósito de agua sucia. Los aspiradores-fregona tipo Dreame están pensados para suelo duro; no sustituyen del todo a un aspirador en alfombras gruesas o sofás.\n\n## Cuándo comprar\n\nLos aspiradores sin cable suelen bajar de precio en el Black Friday, Prime Day y las rebajas de enero. Si no tienes prisa, sigue las fechas en [eventos](/eventos) y revisa los [cupones](/cupones) activos.",
+  "faq": [
+    {
+      "q": "¿Se puede cambiar la batería cuando pierda capacidad?",
+      "a_md": "Depende del modelo. El VACTechPro indica batería extraíble en su ficha; en los demás conviene consultar con el fabricante si venden la batería como recambio antes de comprar."
+    },
+    {
+      "q": "¿Cada cuánto hay que limpiar el filtro?",
+      "a_md": "Como norma general, vacía el depósito después de cada uso y lava o sacude el filtro cada dos o tres semanas, dejándolo secar del todo antes de volver a montarlo. El Rowenta avisa en pantalla cuando toca."
+    },
+    {
+      "q": "¿Sirven para alfombras de pelo largo?",
+      "a_md": "Los aspiradores con cepillo motorizado se defienden bien en alfombras de pelo corto o medio. En pelo largo gastan más batería y pueden enredarse; los aspiradores-fregona como el Dreame no están pensados para ellas."
+    }
+  ],
+  "items": [
+    {
+      "position": 1,
+      "asin": "B0GSVRWSHD",
+      "name": "Rowenta X-Pert 6.80 Flex Animal Care",
+      "award": "Mejor en general",
+      "summary_md": "La opción más equilibrada si quieres una marca conocida y que dure años. Anuncia hasta 60 minutos por carga, pantalla con el modo de succión y la batería restante, y aviso cuando toca limpiar el filtro. El tubo Flex se dobla para llegar bajo los muebles sin agacharte y trae cepillo turbo para pelo de mascota. Rowenta garantiza piezas de recambio durante 15 años. La pega: es el más ruidoso de la lista según su ficha.",
+      "pros": [
+        "Hasta 60 minutos de funcionamiento por carga",
+        "Tubo flexible y luces LED para limpiar bajo los muebles",
+        "Piezas de recambio disponibles durante 15 años"
+      ],
+      "cons": [
+        "82 dB declarados, el más ruidoso de la guía",
+        "No friega"
+      ],
+      "specs": [
+        {"label": "Autonomía", "value": "Hasta 60 min"},
+        {"label": "Peso en modo mano", "value": "1,4 kg"},
+        {"label": "Tensión", "value": "18 V"},
+        {"label": "Ruido", "value": "82 dB"},
+        {"label": "Recambios", "value": "15 años"}
+      ]
+    },
+    {
+      "position": 2,
+      "asin": "B0G4VNL2W9",
+      "name": "Ultenic U18Pro 55 kPa",
+      "award": "Más autonomía",
+      "summary_md": "Para casas grandes o para quien no quiere estar pendiente de la batería. Anuncia 80 minutos de autonomía y una pantalla LED que muestra los minutos que quedan en tiempo real. Tiene tres niveles de potencia, depósito de 1,6 litros, filtro HEPA y cepillo anti-enredos pensado para pelo de mascota. Se sostiene solo y se carga en su soporte de pared. No friega, y como en todos, la autonomía máxima es en el modo más bajo.",
+      "pros": [
+        "80 minutos anunciados con contador en pantalla",
+        "Depósito de 1,6 L",
+        "Autoportante y con soporte de carga a la pared"
+      ],
+      "cons": [
+        "En potencia máxima la autonomía baja bastante",
+        "Marca menos conocida que Rowenta"
+      ],
+      "specs": [
+        {"label": "Autonomía", "value": "Hasta 80 min"},
+        {"label": "Succión", "value": "55 kPa"},
+        {"label": "Depósito", "value": "1,6 L"},
+        {"label": "Ruido", "value": "62 dB"},
+        {"label": "Niveles de potencia", "value": "3"}
+      ]
+    },
+    {
+      "position": 3,
+      "asin": "B0GPWHRFX6",
+      "name": "Proscenic P20 aspira y friega",
+      "award": "Aspira y friega en una pasada",
+      "summary_md": "Si en casa domina la baldosa o la tarima, este Proscenic aspira y friega a la vez gracias a un depósito de agua externo. Su ficha indica motor sin escobillas de 680 W, 70 kPa de succión y un sensor que ajusta la potencia según la suciedad. Es autoportante, la boquilla se inclina 180° para colarse bajo la cama y tiene luz verde para ver el polvo. Los 70 minutos se anuncian sin el cepillo motorizado, así que con él durará menos.",
+      "pros": [
+        "Aspira y friega a la vez",
+        "Potencia autoajustable con sensor de suciedad",
+        "59 dB declarados, de los más silenciosos"
+      ],
+      "cons": [
+        "Los 70 minutos son sin cepillo motorizado",
+        "Hay que limpiar también el depósito de agua"
+      ],
+      "specs": [
+        {"label": "Succión", "value": "70 kPa"},
+        {"label": "Motor", "value": "680 W sin escobillas"},
+        {"label": "Autonomía", "value": "Hasta 70 min"},
+        {"label": "Depósito", "value": "1,5 L"},
+        {"label": "Ruido", "value": "59 dB"}
+      ]
+    },
+    {
+      "position": 4,
+      "asin": "B0DV5RRL9F",
+      "name": "Dreame H12 Pro FlexReach",
+      "award": "Para suelo duro",
+      "summary_md": "No es una escoba clásica sino un aspirador-fregona en seco y húmedo, para quien quiere dejar el cubo y la fregona. Friega con agua limpia en cada pasada, se tumba hasta 180° para entrar en huecos de 14 cm y, al terminar, se lava el rodillo a 90 °C y lo seca con aire caliente. Indica 18.000 Pa de succión y limpieza de borde a borde en ambos lados. Su terreno es el suelo duro; para sofás o coche necesitarás otro aparato.",
+      "pros": [
+        "Autolimpieza del rodillo con agua caliente y secado",
+        "Se tumba del todo para fregar bajo los muebles",
+        "Limpia pegado al rodapié por ambos lados"
+      ],
+      "cons": [
+        "Pensado para suelo duro, no para tapicerías",
+        "Depósito de 780 ml"
+      ],
+      "specs": [
+        {"label": "Tipo", "value": "Aspirador-fregona seco y húmedo"},
+        {"label": "Succión", "value": "18.000 Pa"},
+        {"label": "Autonomía", "value": "50 min"},
+        {"label": "Autolimpieza", "value": "Agua y secado a 90 °C"},
+        {"label": "Ruido", "value": "76 dB"}
+      ]
+    },
+    {
+      "position": 5,
+      "asin": "B0D1KCLVPX",
+      "name": "VACTechPro 35 kPa",
+      "award": "Si quieres gastar lo mínimo",
+      "summary_md": "El más barato de la lista y una buena opción para un piso pequeño o como segundo aspirador para el coche y los sofás. Se convierte en aspirador de mano con boquilla para rendijas y combinada, tiene luz verde en el cepillo, filtro HEPA y batería extraíble. La autonomía es corta: hasta 35 minutos en modo ECO y 18 en máximo. A cambio, es el más silencioso según las fichas.",
+      "pros": [
+        "El más económico de la guía",
+        "Batería extraíble",
+        "52 dB declarados, el más silencioso"
+      ],
+      "cons": [
+        "Solo 18 minutos en potencia máxima",
+        "Solo dos niveles de potencia"
+      ],
+      "specs": [
+        {"label": "Succión", "value": "35 kPa"},
+        {"label": "Autonomía", "value": "35 min ECO / 18 min MAX"},
+        {"label": "Depósito", "value": "1,5 L"},
+        {"label": "Filtro", "value": "HEPA"},
+        {"label": "Ruido", "value": "52 dB"}
+      ]
+    }
+  ]
+}

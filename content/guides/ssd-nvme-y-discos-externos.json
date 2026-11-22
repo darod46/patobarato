@@ -1,0 +1,140 @@
+{
+  "slug": "ssd-nvme-y-discos-externos",
+  "title": "SSD NVMe y discos externos de 1 y 2 TB",
+  "subtitle": "Dos SSD NVMe para dar vida a tu portátil o PC y tres discos externos de 2 TB para copias de seguridad y viajes.",
+  "category": "Tecnología",
+  "reading_minutes": 6,
+  "intro_md": "Pocas mejoras se notan tanto como cambiar el disco de un ordenador que arranca lento, y pocas cosas duelen tanto como perder las fotos de diez años porque no había copia. Esta guía cubre las dos necesidades: dos SSD NVMe internos de 1 TB para acelerar o ampliar un portátil o un PC, y tres discos duros externos de 2 TB para guardar copias de seguridad o llevarte tus archivos de un sitio a otro.\n\nNo son productos intercambiables, así que antes de mirar modelos conviene tener claro para qué lo quieres. Hemos seleccionado los cinco a partir de sus fichas técnicas y de las opiniones públicas de los compradores, y en el apartado de cómo elegir te explicamos qué comprobar en tu equipo antes de pedir nada.\n\nSi buscas más ofertas de almacenamiento, echa un vistazo a [chollos de tecnología](/chollos/tecnologia).",
+  "how_to_choose_md": "## SSD interno o disco externo\n\nUn **SSD NVMe** va dentro del ordenador, en una ranura M.2, y sustituye o complementa al disco principal. Es lo que hace que el sistema arranque en segundos y los programas abran al momento. Un **disco externo** se conecta por USB y sirve para guardar copias, mover archivos entre equipos o ampliar el espacio de una consola. Los tres externos de esta guía son discos duros mecánicos: más lentos que un SSD, pero con mucho más espacio por el mismo dinero.\n\n## Comprueba tu ranura M.2 antes de comprar\n\nEl error más común es comprar un SSD que no cabe o no encaja. Mira en el manual de tu portátil o placa base si tiene ranura M.2 compatible con NVMe y de qué tamaño (el habitual es 2280, 22 mm de ancho y 80 de largo). Un SSD PCIe 4.0 funciona en una ranura PCIe 3.0, pero a la velocidad de esta última, así que si tu equipo es de hace unos años, un modelo Gen3 rinde casi igual y suele costar menos.\n\n## Qué mirar en un disco externo\n\nPara copias de seguridad, fíjate en que incluya software para programarlas y, si guardas documentos personales, en el cifrado por hardware. Si lo vas a llevar en la mochila, la resistencia a golpes importa más que la velocidad. Revisa también el conector y qué cable viene en la caja: no todos traen adaptador para USB-C o USB-A.\n\n## La regla de las copias\n\nUna sola copia no basta. Lo ideal es tener los datos en el ordenador, en un disco externo y, si puedes, en la nube o en otro disco guardado fuera de casa.\n\n## Cuándo comprar\n\nEl almacenamiento baja de precio con frecuencia en el Black Friday, el Prime Day y las rebajas. Puedes seguir las fechas en [eventos](/eventos).",
+  "faq": [
+    {
+      "q": "¿Cómo paso mi sistema al nuevo SSD sin reinstalar?",
+      "a_md": "Puedes clonar el disco antiguo con un programa de clonado y un adaptador USB para NVMe, o instalar el sistema desde cero, que suele dar menos problemas. Haz siempre una copia de seguridad antes de empezar."
+    },
+    {
+      "q": "¿Puedo usar un disco externo en Mac y en Windows a la vez?",
+      "a_md": "Sí, si lo formateas en exFAT, que leen y escriben ambos sistemas. Ten en cuenta que formatear borra todo lo que haya en el disco."
+    },
+    {
+      "q": "¿Qué pasa si el disco falla dentro de la garantía?",
+      "a_md": "El fabricante sustituye la unidad, pero no recupera los datos salvo que el modelo incluya un servicio de recuperación, como el LaCie de esta guía. Por eso conviene tener más de una copia."
+    }
+  ],
+  "items": [
+    {
+      "position": 1,
+      "asin": "B0DBR3DZWG",
+      "name": "Kingston NV3 1 TB PCIe 4.0",
+      "award": "Para acelerar un PC moderno",
+      "summary_md": "La opción para quien tiene un portátil o un PC con ranura M.2 compatible con PCIe 4.0 y quiere aprovecharla. Anuncia hasta 6000 MB/s de lectura y 5000 MB/s de escritura, en formato M.2 2280, el más habitual en placas base y portátiles. Es buena opción para el disco principal, donde se nota más el arranque y la carga de programas y juegos. La pega: en equipos con ranura PCIe 3.0 no alcanza esa velocidad, y la ficha no detalla los años de garantía.",
+      "pros": [
+        "Hasta 6000 MB/s de lectura y 5000 MB/s de escritura",
+        "Formato M.2 2280, el más extendido",
+        "Encaja en portátiles finos y PC compactos"
+      ],
+      "cons": [
+        "En ranuras PCIe 3.0 rinde como un Gen3",
+        "La ficha no indica la garantía"
+      ],
+      "specs": [
+        {"label": "Capacidad", "value": "1 TB"},
+        {"label": "Interfaz", "value": "NVMe PCIe 4.0 x4"},
+        {"label": "Formato", "value": "M.2 2280"},
+        {"label": "Lectura", "value": "Hasta 6000 MB/s"},
+        {"label": "Escritura", "value": "Hasta 5000 MB/s"}
+      ]
+    },
+    {
+      "position": 2,
+      "asin": "B08M49JGKB",
+      "name": "PNY CS1030 1 TB PCIe 3.0",
+      "award": "Para ampliar el portátil",
+      "summary_md": "Pensado para dar una segunda vida a un portátil de hace unos años que aún tiene disco SATA o un SSD pequeño. Es un NVMe PCIe Gen3 x4 en formato M.2 2280 con hasta 2100 MB/s de lectura y 1700 MB/s de escritura, de sobra para notar el cambio frente a un disco duro tradicional. La marca destaca su bajo consumo, útil en portátiles, y ofrece cinco años de garantía o hasta el límite de escritura (TBW). La pega: en un equipo con PCIe 4.0 se queda lejos del Kingston.",
+      "pros": [
+        "Garantía de cinco años o TBW",
+        "Bajo consumo, pensado para portátiles",
+        "Gran salto frente a un disco SATA o mecánico"
+      ],
+      "cons": [
+        "Más lento que los modelos PCIe 4.0",
+        "La garantía acaba antes si llegas al límite de escritura (TBW)"
+      ],
+      "specs": [
+        {"label": "Capacidad", "value": "1 TB"},
+        {"label": "Interfaz", "value": "NVMe PCIe 3.0 x4"},
+        {"label": "Formato", "value": "M.2 2280"},
+        {"label": "Lectura", "value": "Hasta 2100 MB/s"},
+        {"label": "Escritura", "value": "Hasta 1700 MB/s"},
+        {"label": "Garantía", "value": "5 años o TBW"}
+      ]
+    },
+    {
+      "position": 3,
+      "asin": "B07VTFN6HM",
+      "name": "WD My Passport 2 TB",
+      "award": "Para copias de seguridad",
+      "summary_md": "El disco externo para quien quiere hacer copias de seguridad sin pensar en ellas. Incluye software para programarlas de forma automática, protección con contraseña y cifrado por hardware AES de 256 bits, útil si guardas documentos personales o de trabajo. Se conecta por USB 3.2 Gen 1 (5 Gb/s), trae el cable en la caja, viene formateado para Windows, ChromeOS y macOS y tiene tres años de garantía. La pega: es un disco mecánico de 5400 rpm, así que copiar grandes volúmenes lleva su tiempo.",
+      "pros": [
+        "Software de copia de seguridad programable",
+        "Contraseña y cifrado AES de 256 bits por hardware",
+        "Tres años de garantía"
+      ],
+      "cons": [
+        "Disco mecánico, más lento que un SSD",
+        "Hay que instalar software para cifrar"
+      ],
+      "specs": [
+        {"label": "Capacidad", "value": "2 TB"},
+        {"label": "Conexión", "value": "USB 3.2 Gen 1 (5 Gb/s)"},
+        {"label": "Tipo", "value": "Disco duro de 2,5\" a 5400 rpm"},
+        {"label": "Seguridad", "value": "Contraseña y cifrado AES 256 bits"},
+        {"label": "Garantía", "value": "3 años"}
+      ]
+    },
+    {
+      "position": 4,
+      "asin": "B00IRV005E",
+      "name": "LaCie Rugged Mini 2 TB",
+      "award": "Para llevar en la mochila",
+      "summary_md": "Para quien mueve sus archivos de un sitio a otro y no quiere preocuparse por un golpe. Según la ficha, resiste caídas de hasta 1,2 m y presiones de hasta 1000 kg, e incluye software de respaldo automático con cifrado AES de 256 bits. Suma dos años de garantía y dos años de servicio de recuperación de datos, algo poco habitual. La pega: incluye cable Micro B a USB-C, pero no el de USB-A, y su velocidad es la de un disco mecánico.",
+      "pros": [
+        "Resiste caídas de hasta 1,2 m",
+        "Servicio de recuperación de datos durante dos años",
+        "Cifrado AES de 256 bits y copias automáticas"
+      ],
+      "cons": [
+        "No incluye cable USB-A",
+        "Conector Micro B en el disco"
+      ],
+      "specs": [
+        {"label": "Capacidad", "value": "2 TB"},
+        {"label": "Conexión", "value": "USB-C (cable Micro B a USB-C)"},
+        {"label": "Resistencia", "value": "Caídas de 1,2 m y 1000 kg de presión"},
+        {"label": "Seguridad", "value": "Cifrado AES 256 bits"},
+        {"label": "Garantía", "value": "2 años + recuperación de datos"}
+      ]
+    },
+    {
+      "position": 5,
+      "asin": "B0BGXZRKQN",
+      "name": "Toshiba Canvio Partner 2 TB",
+      "award": "Para usar sin instalar nada",
+      "summary_md": "El disco externo más sencillo de la lista: lo enchufas al USB y lo usas, sin programas ni controladores. Se conecta por USB de hasta 5 Gbps, es compatible con Mac y Windows y, según la ficha, incorpora sensores de impacto para proteger los datos. Es buena opción para ampliar espacio o guardar una copia manual de fotos y documentos. La pega: la ficha no menciona software de copia programada ni cifrado, y la descripción del vendedor está en francés.",
+      "pros": [
+        "Listo para usar sin software",
+        "Compatible con Mac y Windows",
+        "Sensores de impacto según la ficha"
+      ],
+      "cons": [
+        "La ficha no menciona software de copias ni cifrado",
+        "Descripción del vendedor en francés"
+      ],
+      "specs": [
+        {"label": "Capacidad", "value": "2 TB"},
+        {"label": "Conexión", "value": "USB 3.2 (hasta 5 Gbps)"},
+        {"label": "Tipo", "value": "Disco duro de 2,5\" a 5400 rpm"},
+        {"label": "Compatibilidad", "value": "Mac y Windows"}
+      ]
+    }
+  ]
+}

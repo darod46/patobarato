@@ -1,0 +1,139 @@
+{
+  "slug": "equipo-senderismo-para-empezar",
+  "title": "Equipo de senderismo: botas, mochila y bastones",
+  "subtitle": "Para quien empieza en el monte y quiere un equipo básico: calzado de hombre y mujer, dos mochilas de 30 litros y bastones plegables.",
+  "category": "Deporte",
+  "reading_minutes": 6,
+  "intro_md": "Para empezar a hacer rutas no necesitas una tienda de montaña entera. Con un buen calzado, una mochila de día que no te destroce la espalda y, si tus rodillas lo piden, un par de bastones, tienes cubiertas casi todas las excursiones de fin de semana.\n\nEn esta guía no comparamos cinco productos iguales: cada uno cumple un papel en el equipo. Hay unas botas de caña media para hombre, unas zapatillas de senderismo para mujer, dos mochilas de 30 litros (una más completa y otra para gastar poco) y unos bastones plegables. La selección está hecha a partir de las fichas técnicas de cada producto y de las opiniones públicas de quienes ya los han comprado.\n\nSi te estás iniciando, empieza por el calzado y la mochila, sal unas cuantas veces y decide después si te compensan los bastones. Y echa un ojo a [los chollos de deporte](/chollos/deporte), que este material baja de precio a menudo.",
+  "how_to_choose_md": "## Calzado: bota o zapatilla\n\nLa bota de caña media sujeta mejor el tobillo y protege más en terreno suelto o con piedras, así que es buena idea si llevas peso o vas a pisar pedreras. La zapatilla de senderismo pesa menos y se agradece en caminos marcados y rutas largas sin grandes desniveles. En los dos casos, si sales en otoño o invierno, busca membrana impermeable (Gore-Tex o similar): unos pies mojados arruinan cualquier excursión.\n\n## La talla y el estreno\n\nEl error más común es comprar la talla justa. Al bajar, el pie se desplaza hacia delante y los dedos chocan con la puntera. Pruébatelas por la tarde, con el calcetín que vas a usar, y deja casi un dedo de margen. Y nunca estrenes calzado en una ruta larga: hazle antes unos paseos cortos.\n\n## Mochila de día: litros y espalda\n\nPara excursiones de un día, 20-30 litros sobran: agua, comida, un cortavientos y el botiquín. Más que la capacidad, mira el sistema de espalda (acolchado o con malla transpirable), que tenga cinturón para pasar parte del peso a la cadera y si admite bolsa de hidratación. Una mochila sin cinturón se nota en los hombros a partir de la segunda hora.\n\n## Bastones: cuándo merecen la pena\n\nLos bastones reparten el esfuerzo con los brazos y quitan carga a las rodillas en las bajadas. Si tienes molestias o haces rutas con mucho desnivel, notarás la diferencia. Elige la medida según tu estatura y, si viajas, mejor plegables que telescópicos, porque caben en la mochila.\n\n## Cuándo comprar\n\nEl material de montaña suele rebajarse al final de cada temporada y en eventos como el Black Friday o Prime Day. Si no tienes prisa, echa un ojo a [los próximos eventos de ofertas](/eventos) y compra el calzado con tiempo para domarlo antes de las rutas largas del verano.",
+  "faq": [
+    {
+      "q": "¿Puedo usar zapatillas de running para hacer senderismo?",
+      "a_md": "En pistas y caminos fáciles, sí. En cuanto hay piedra suelta, barro o desnivel, la suela de una zapatilla de senderismo agarra más y protege mejor el pie."
+    },
+    {
+      "q": "¿Cuántos litros de mochila necesito para una ruta de un día?",
+      "a_md": "Entre 20 y 30 litros es lo habitual. Las dos mochilas de esta guía tienen 30 litros, suficiente para agua, comida, una capa de abrigo y un pequeño botiquín."
+    },
+    {
+      "q": "¿Qué medida de bastón me corresponde?",
+      "a_md": "Depende de tu estatura. Los Trekology se venden en dos tallas y la ficha indica que la de 100-120 cm está pensada para personas de entre 150 y 178 cm; con el bastón apoyado, el codo debe quedar en ángulo recto."
+    }
+  ],
+  "items": [
+    {
+      "position": 1,
+      "asin": "B0CLW1PYJD",
+      "name": "Columbia Crestwood Mid Waterproof (hombre)",
+      "award": "Las botas de base para hombre",
+      "summary_md": "Si vas a empezar con unas botas de verdad, este modelo de Columbia es un buen punto de partida. Son de caña media, así que abrazan algo más el tobillo que una zapatilla, y la versión Waterproof está pensada para no calar en charcos y hierba mojada. La ficha destaca la suela antideslizante y el cierre de cordones de toda la vida. Encajan en rutas de otoño e invierno y en senderos con piedra. A cambio, pesan y abrigan más que una zapatilla, algo que se nota en pleno verano.",
+      "pros": [
+        "Caña media que protege el tobillo",
+        "Versión impermeable para días húmedos",
+        "Suela antideslizante según la ficha"
+      ],
+      "cons": [
+        "Más calurosas que una zapatilla en verano",
+        "La ficha de Amazon da poca información técnica"
+      ],
+      "specs": [
+        {"label": "Tipo", "value": "Bota de caña media"},
+        {"label": "Impermeable", "value": "Sí (Waterproof)"},
+        {"label": "Suela", "value": "Antideslizante"},
+        {"label": "Cierre", "value": "Cordones"},
+        {"label": "Temporada", "value": "Otoño/invierno"}
+      ]
+    },
+    {
+      "position": 2,
+      "asin": "B09N3Q6XVV",
+      "name": "Salomon X Ultra Pioneer Gore-Tex (mujer)",
+      "award": "La zapatilla para rutas de mujer",
+      "summary_md": "Para quien prefiere ir ligera y no quiere sentir el peso de una bota, esta zapatilla de senderismo de Salomon para mujer es la pieza que encaja. Lleva membrana Gore-Tex, así que es una buena compañera para caminos con barro o rocío por la mañana. Ten en cuenta que, al no tener caña, sujeta menos el tobillo en terreno muy suelto, y que la ficha de Amazon apenas detalla sus características técnicas.",
+      "pros": [
+        "Formato zapatilla, más cómoda en caminos",
+        "Membrana Gore-Tex",
+        "Modelo específico de mujer"
+      ],
+      "cons": [
+        "Sin caña: sujeta menos el tobillo",
+        "Ficha de Amazon con muy pocos datos"
+      ],
+      "specs": [
+        {"label": "Tipo", "value": "Zapatilla de senderismo"},
+        {"label": "Membrana", "value": "Gore-Tex"},
+        {"label": "Modelo", "value": "X Ultra Pioneer"},
+        {"label": "Público", "value": "Mujer"}
+      ]
+    },
+    {
+      "position": 3,
+      "asin": "B0C5M35GLP",
+      "name": "Salomon Trailblazer 30",
+      "award": "Mochila de día para monte y ciudad",
+      "summary_md": "La Trailblazer 30 es la mochila que puedes usar el sábado en la sierra y el lunes para ir a trabajar. Tiene 30 litros, un bolsillo en la espalda para lo que no quieres perder y bolsillos laterales elásticos para la botella. La espalda va acolchada, lleva cinturón y correas de compresión para que la carga no baile. Es ligera y sencilla: un solo compartimento principal y tres bolsillos. Si te gusta tener todo muy organizado o vas a usar bolsa de hidratación, la Skysper ofrece más divisiones.",
+      "pros": [
+        "Espalda acolchada y cinturón",
+        "Correas de compresión para fijar la carga",
+        "Sirve tanto para rutas como para el día a día"
+      ],
+      "cons": [
+        "Un solo compartimento principal",
+        "La ficha no menciona compatibilidad con hidratación"
+      ],
+      "specs": [
+        {"label": "Capacidad", "value": "30 L"},
+        {"label": "Bolsillos", "value": "3"},
+        {"label": "Resistencia al agua", "value": "Resistente al agua"},
+        {"label": "Cierre", "value": "Cremallera"},
+        {"label": "Arnés", "value": "Espalda acolchada, cinturón y compresión"}
+      ]
+    },
+    {
+      "position": 4,
+      "asin": "B0DNZ6FFN6",
+      "name": "Skysper 30 L",
+      "award": "Si quieres gastar lo mínimo en mochila",
+      "summary_md": "La Skysper es la alternativa económica de la guía y no va escasa de detalles. Tiene 30 litros repartidos en varios compartimentos, compatible con sistema de hidratación, y está hecha en nailon ripstop 210D y poliéster 600D. La espalda lleva malla transpirable con ranuras de ventilación, y añade cinturón desmontable, correa de pecho, silbato y elementos reflectantes. El fabricante recomienda no pasar de 8 kg de carga, así que es para rutas de un día, no para travesías con mucho peso.",
+      "pros": [
+        "Compatible con bolsa de hidratación",
+        "Espalda de malla ventilada",
+        "Silbato, correa de pecho y reflectantes"
+      ],
+      "cons": [
+        "Carga máxima recomendada de 8 kg",
+        "Marca menos conocida que Salomon"
+      ],
+      "specs": [
+        {"label": "Capacidad", "value": "30 L"},
+        {"label": "Material", "value": "Nailon ripstop 210D y poliéster 600D"},
+        {"label": "Compartimentos", "value": "4"},
+        {"label": "Hidratación", "value": "Compatible"},
+        {"label": "Carga máx. recomendada", "value": "8 kg"}
+      ]
+    },
+    {
+      "position": 5,
+      "asin": "B07Q6BZQZC",
+      "name": "Trekology Trek-Z (pareja)",
+      "award": "Bastones para cuidar las rodillas",
+      "summary_md": "Los bastones son la pieza que menos gente compra al principio y la que más se agradece en las bajadas. Los Trek-Z se venden por parejas, son de aluminio y se pliegan en tres tramos hasta 38 cm, así que caben dentro de la mochila o en la maleta. Se ajustan con un cierre de doble clic en un rango de 20 cm, y la empuñadura es de EVA. Hay dos tallas según tu estatura; elige bien, porque cada una tiene su propio rango de longitud.",
+      "pros": [
+        "Plegados ocupan 38 cm",
+        "Ajuste rápido con cierre de doble clic",
+        "Se venden en pareja"
+      ],
+      "cons": [
+        "Hay que elegir bien la talla según estatura",
+        "Plegables: algo menos rígidos que uno de una pieza"
+      ],
+      "specs": [
+        {"label": "Unidades", "value": "2 bastones"},
+        {"label": "Material", "value": "Aluminio"},
+        {"label": "Longitud", "value": "100-120 cm (estatura 150-178 cm)"},
+        {"label": "Plegado", "value": "38 cm"},
+        {"label": "Peso por bastón", "value": "294 g (talla 100-120 cm)"}
+      ]
+    }
+  ]
+}
