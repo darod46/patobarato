@@ -88,6 +88,19 @@ describe('Hero', () => {
     expect(screen.getByRole('link', { name: 'Recibirlos en Telegram' })).toHaveAttribute('href', 'https://t.me/patobarato')
   })
 
+  it('shows the subscriber count under the Telegram button when known', () => {
+    render(<Hero highlights={none} storeNames={['Amazon']} members="1.240" />)
+    expect(screen.getByText('1.240 suscriptores · gratis')).toBeInTheDocument()
+  })
+
+  it('shows no subscriber line without a count', () => {
+    const { unmount } = render(<Hero highlights={none} storeNames={['Amazon']} members={null} />)
+    expect(screen.queryByText(/suscriptores/)).toBeNull()
+    unmount()
+    render(<Hero highlights={none} storeNames={['Amazon']} />)
+    expect(screen.queryByText(/suscriptores/)).toBeNull()
+  })
+
   it('keeps the deals button without an event in progress', () => {
     render(<Hero highlights={none} storeNames={['Amazon']} activeEvent={null} />)
     expect(screen.getByRole('link', { name: 'Ver chollos de hoy' })).toHaveAttribute('href', '/#chollos')

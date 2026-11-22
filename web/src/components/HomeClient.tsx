@@ -5,6 +5,7 @@ import * as api from '../lib/deals'
 import { storeNames } from '../lib/stores'
 import type { StoreStats } from '../lib/stores-data'
 import { getSupabase } from '../lib/supabase'
+import { formatMembers, type ChannelLive } from '../lib/telegram'
 import type { Coupon, Deal, SiteEvent } from '../lib/types'
 import { AboutBlock } from './AboutBlock'
 import { AnnouncementBar } from './AnnouncementBar'
@@ -38,6 +39,8 @@ type Props = {
   activeEvent?: SiteEvent | null
   /** Newest publication date for the announcement bar; null when unknown. */
   latestPublishedAt?: string | null
+  /** Live Telegram channel activity (figures and latest posts); nothing extra renders when null. */
+  live?: ChannelLive | null
 }
 
 // Bound lazily so the Supabase client (and its env vars) is only needed when actually fetching.
@@ -56,6 +59,7 @@ export function HomeClient({
   upcoming = [],
   activeEvent = null,
   latestPublishedAt = null,
+  live = null,
 }: Props) {
   const clock = useClock(now)
   const renderTime = new Date(now)
@@ -70,7 +74,12 @@ export function HomeClient({
           latestPublishedAt={latestPublishedAt}
           now={renderTime}
         />
-        <Hero highlights={highlights} storeNames={storeNames(stores.map((s) => s.store))} activeEvent={activeEvent} />
+        <Hero
+          highlights={highlights}
+          storeNames={storeNames(stores.map((s) => s.store))}
+          activeEvent={activeEvent}
+          members={formatMembers(live?.stats.members ?? null)}
+        />
         <StoresBlock stores={stores} />
         <section id="chollos" className="mx-auto max-w-[1200px] scroll-mt-32 px-4 pt-8 pb-12 md:px-8 md:pt-12">
           <h2 className="font-display text-2xl font-bold tracking-[-0.02em] md:text-[32px]">Chollos de hoy</h2>
@@ -81,7 +90,7 @@ export function HomeClient({
         <HowItWorks />
         {upcoming.length > 0 && <EventsBlock next={upcoming[0]} upcoming={upcoming} now={renderTime} />}
         <AboutBlock />
-        <TelegramBlock fetchLatestDeal={fetchLatestDeal} />
+        <TelegramBlock fetchLatestDeal={fetchLatestDeal} live={live} now={clock} />
       </main>
       <Footer year={renderTime.getUTCFullYear()} stores={stores.map((s) => s.store)} />
     </div>

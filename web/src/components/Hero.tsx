@@ -31,9 +31,11 @@ type Props = {
   storeNames: string[]
   /** Event in progress: the primary button then leads to its page. */
   activeEvent?: SiteEvent | null
+  /** Formatted channel subscriber count (see `formatMembers`); no line when null. */
+  members?: string | null
 }
 
-export function Hero({ highlights, storeNames, activeEvent = null }: Props) {
+export function Hero({ highlights, storeNames, activeEvent = null, members = null }: Props) {
   const { topDiscountPct, topDiscountTitle, latestCouponTitle, hasLowest } = highlights
   return (
     <section className="bg-gradient-to-b from-warm to-white">
@@ -58,13 +60,16 @@ export function Hero({ highlights, storeNames, activeEvent = null }: Props) {
               {activeEvent && <Zap size={18} aria-hidden="true" />}
               {activeEvent ? `Chollos del ${activeEvent.name}` : 'Ver chollos de hoy'}
             </a>
-            <TelegramCta
-              placement="hero"
-              className={`inline-flex h-13 items-center justify-center gap-2 rounded-xl border border-[#d7dae0] bg-white px-6 text-base font-semibold text-ink hover:bg-surface ${FOCUS}`}
-            >
-              <Send size={18} aria-hidden="true" />
-              Recibirlos en Telegram
-            </TelegramCta>
+            <div className="flex flex-col gap-1.5">
+              <TelegramCta
+                placement="hero"
+                className={`inline-flex h-13 items-center justify-center gap-2 rounded-xl border border-[#d7dae0] bg-white px-6 text-base font-semibold text-ink hover:bg-surface ${FOCUS}`}
+              >
+                <Send size={18} aria-hidden="true" />
+                Recibirlos en Telegram
+              </TelegramCta>
+              {members && <p className="text-center text-[13px] text-muted">{members} suscriptores · gratis</p>}
+            </div>
           </div>
           <ul className="flex flex-col gap-2 text-sm text-muted sm:flex-row sm:flex-wrap sm:gap-x-6">
             {GUARANTEES.map((text) => (

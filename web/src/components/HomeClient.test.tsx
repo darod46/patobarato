@@ -138,6 +138,25 @@ it('renders no bar and no calendar when no events are given', () => {
   expect(container.querySelector('section#eventos')).toBeNull()
 })
 
+it('passes the live channel data to the Telegram block and the hero', () => {
+  const live = {
+    stats: { members: 12400, checkedAt: '2026-11-04T11:00:00Z', postedToday: 3, lastPostedAt: '2026-11-04T11:50:00Z' },
+    posts: [{ productId: 1, title: 'Freidora Cosori', price: 79, messageId: 55, publishedAt: '2026-11-04T11:50:00Z' }],
+  }
+  // The server render uses the page's render time, so hydration matches.
+  const html = renderToString(<HomeClient {...props} live={live} />)
+  expect(html).toContain('Último chollo hace 10 min')
+  render(<HomeClient {...props} live={live} />)
+  expect(screen.getByText('12.400 suscriptores · gratis')).toBeInTheDocument()
+  expect(screen.getByText('3 chollos hoy')).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: /Freidora Cosori/ })).toHaveAttribute('href', 'https://t.me/patobarato/55')
+})
+
+it('renders no live channel data without it', () => {
+  render(<HomeClient {...props} live={null} />)
+  expect(screen.queryByText(/suscriptores|chollos hoy|Último chollo|Últimos en el canal/)).toBeNull()
+})
+
 it('passes the event in progress to the hero', () => {
   const bf = siteEvent({ id: 2, slug: 'black-friday', name: 'Black Friday', startsOn: '2026-11-27', endsOn: '2026-11-29' })
   render(<HomeClient {...props} now="2026-11-28T10:00:00Z" event={bf} upcoming={[bf]} activeEvent={bf} />)

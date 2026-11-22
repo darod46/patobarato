@@ -9,6 +9,7 @@ import { fetchStores } from '../lib/stores-data'
 import { homeMetadata, jsonLdScript, siteJsonLd } from '../lib/seo'
 import { getSupabase } from '../lib/supabase'
 import { optional } from '../lib/optional'
+import { fetchChannelRecent, fetchChannelStats } from '../lib/telegram'
 
 // Listings are regenerated at most every 60 s. Requests with `?q=`, `?tag=`, `?orden=` or `?tienda=` are
 // redirected (308) to `/buscar` or `/chollos` (see next.config), so this page never depends on the query string.
@@ -26,12 +27,16 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function HomePage() {
   const now = new Date()
   // Each part degrades on its own: without deals the carousel shows an honest fallback.
-  const [page, coupons, stores, latest, events] = await Promise.all([
+  const [page, coupons, stores, latest, events, live] = await Promise.all([
     optional('home', () => fetchDeals(getSupabase(), { page: 0 })),
     loadCoupons(),
     loadStores(),
     optional('home', () => fetchLatestDeal(getSupabase())),
     optional('home-events', () => fetchEvents(getSupabase())),
+    optional('home-channel', async () => ({
+      stats: await fetchChannelStats(getSupabase()),
+      posts: await fetchChannelRecent(getSupabase(), 3),
+    })),
   ])
   const couponList = coupons ?? []
   return (
@@ -47,6 +52,7 @@ export default async function HomePage() {
         upcoming={events ? upcomingEvents(now, 4, events) : []}
         activeEvent={events ? activeEvent(now, events) : null}
         latestPublishedAt={latest?.publishedAt ?? null}
+        live={live ?? null}
       />
     </>
   )
