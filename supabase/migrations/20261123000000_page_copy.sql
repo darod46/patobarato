@@ -380,7 +380,7 @@ values (
 
 No publicamos cualquier rebaja. Antes de que un chollo aparezca en PatoBarato, se cumplen estos criterios:
 
-- **Precio comprobado en la tienda.** El precio que publicamos es el que vemos en la tienda o en el canal de origen en el momento de publicarlo; si cambia después, la ficha lo indica cuando volvemos a comprobarlo.
+- **Precio comprobado en la tienda.** El precio que publicamos es el que vemos en la tienda o en el canal de origen en el momento de publicarlo.
 - **Precio anterior real.** Solo mostramos un precio tachado cuando lo conocemos; si no lo sabemos, no lo inventamos.
 - **Mínimo histórico registrado.** La etiqueta «Mínimo histórico» aparece cuando el precio es el más bajo que PatoBarato ha registrado para ese producto.
 - **Cupón verificado.** Si un chollo necesita cupón, comprobamos que funciona antes de publicarlo.
