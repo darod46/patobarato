@@ -137,3 +137,49 @@ it('without stats omits the coupon count when the list may be truncated', () => 
   noStats({ deals: [deal(1)], hasMore: false }, many)
   expect(screen.getByText(/^Decathlon · 1 chollo$/)).toBeInTheDocument()
 })
+
+it('with an intro renders the copy h1, intro and live count in place of the plain heading', () => {
+  render(
+    <StoreClient
+      store="aliexpress"
+      now="2026-11-04T12:00:00Z"
+      initialDeals={{ q: '', tag: null, store: 'aliexpress', sort: 'recientes', deals: [deal(1)], hasMore: false }}
+      initialTags={[]}
+      stores={stores}
+      coupons={[]}
+      fetchDeals={vi.fn()}
+      intro={{
+        copy: {
+          kind: 'store', slug: 'aliexpress', title: 'T', h1: 'AliExpress, cazado por el pato',
+          introMd: 'Hay {deals} chollos activos.', faq: [], updatedAt: '2026-11-20T10:00:00Z',
+        },
+        values: { deals: 12 },
+        nextEvent: null,
+      }}
+    />,
+  )
+  expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
+  expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('AliExpress, cazado por el pato')
+  expect(screen.getByText('Hay 12 chollos activos.')).toBeInTheDocument()
+})
+
+it('with an intro and no copy uses the default store h1', () => {
+  render(
+    <StoreClient
+      store="decathlon"
+      now="2026-11-04T12:00:00Z"
+      initialTags={[]}
+      stores={[]}
+      coupons={[]}
+      initialDeals={{ q: '', tag: null, store: 'decathlon', sort: 'recientes', deals: [], hasMore: false }}
+      fetchDeals={vi.fn()}
+      intro={{ copy: null, values: { deals: null }, nextEvent: null }}
+    />,
+  )
+  expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Chollos de Decathlon')
+})
+
+it('says honestly that the store has no active deals', async () => {
+  noStats({ deals: [], hasMore: false }, [])
+  expect(await screen.findByText('Ahora mismo no hay chollos activos de Decathlon.')).toBeInTheDocument()
+})

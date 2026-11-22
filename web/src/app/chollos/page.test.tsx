@@ -119,6 +119,18 @@ describe('/chollos', () => {
     }
   })
 
+  it('drops the {deals} sentence when there are no deals (0 is no value)', async () => {
+    vi.mocked(deals.fetchDeals).mockResolvedValue({ deals: [], hasMore: false })
+    vi.mocked(storesData.fetchStores).mockResolvedValueOnce([])
+    vi.mocked(pageCopy.fetchPageCopy).mockResolvedValueOnce({
+      kind: 'static', slug: 'chollos', title: 'Chollos de hoy', h1: 'Los chollos de hoy',
+      introMd: 'Cazamos chollos. Hay {deals} chollos activos.', faq: [], updatedAt: '2026-11-01T00:00:00Z',
+    })
+    render(await DealsPage())
+    expect(screen.getByText('Cazamos chollos.')).toBeInTheDocument()
+    expect(document.body.textContent).not.toMatch(/Hay 0|\{deals\}/)
+  })
+
   it('renders the default heading when the copy and events reads fail', async () => {
     vi.mocked(deals.fetchDeals).mockResolvedValue({ deals: [], hasMore: false })
     vi.mocked(pageCopy.fetchPageCopy).mockRejectedValueOnce(new Error('down'))

@@ -2,8 +2,11 @@ import { render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fetchDeals } from '../../../lib/deals'
 import { fetchCoupons } from '../../../lib/coupons'
+import { fetchEvents } from '../../../lib/events-data'
+import { fetchPageCopy } from '../../../lib/page-copy'
 import { fetchStores } from '../../../lib/stores-data'
-import type { Deal } from '../../../lib/types'
+import type { Deal, PageCopy } from '../../../lib/types'
+import { siteEvent } from '../../../test-utils/siteEvent'
 import StorePage, { generateMetadata } from './page'
 
 const deal = (id: number): Deal => ({
@@ -26,6 +29,17 @@ const deal = (id: number): Deal => ({
   priceBeforeCoupon: false,
 })
 
+const copy = (over: Partial<PageCopy> = {}): PageCopy => ({
+  kind: 'store',
+  slug: 'aliexpress',
+  title: 'Chollos de AliExpress en España',
+  h1: 'Chollos de AliExpress',
+  introMd: 'Comprar en AliExpress desde España. Hay {deals} chollos activos.',
+  faq: [],
+  updatedAt: '2026-11-20T10:00:00Z',
+  ...over,
+})
+
 vi.mock('../../../lib/supabase', () => ({ getSupabase: () => ({}) }))
 vi.mock('../../../lib/deals', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../../lib/deals')>()),
@@ -34,10 +48,19 @@ vi.mock('../../../lib/deals', async (importOriginal) => ({
 }))
 vi.mock('../../../lib/coupons', () => ({ MAX_STORE_COUPONS: 50, fetchCoupons: vi.fn(async () => []) }))
 vi.mock('../../../lib/stores-data', () => ({ fetchStores: vi.fn() }))
+vi.mock('../../../lib/events-data', () => ({ fetchEvents: vi.fn() }))
+vi.mock('../../../lib/page-copy', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../../lib/page-copy')>()),
+  fetchPageCopy: vi.fn(),
+}))
 
 const params = (store: string) => ({ params: Promise.resolve({ store }) })
+const down = async () => {
+  throw new Error('down')
+}
 
 beforeEach(() => {
+  vi.spyOn(console, 'error').mockImplementation(() => {})
   vi.mocked(fetchDeals).mockReset().mockResolvedValue({ deals: [deal(1)], hasMore: false })
   vi.mocked(fetchStores)
     .mockReset()
@@ -45,6 +68,8 @@ beforeEach(() => {
       { store: 'amazon', deals: 5, coupons: 0 },
       { store: 'aliexpress', deals: 2, coupons: 1 },
     ])
+  vi.mocked(fetchPageCopy).mockReset().mockResolvedValue(null)
+  vi.mocked(fetchEvents).mockReset().mockResolvedValue([])
 })
 
 describe('StorePage', () => {
@@ -55,25 +80,99 @@ describe('StorePage', () => {
     expect((meta as { digest?: string }).digest).toBe('NEXT_HTTP_ERROR_FALLBACK;404')
   })
 
-  it('is noindex with fewer than 3 deals and titled after the store', async () => {
+  it('is noindex with fewer than 3 deals and no copy, titled after the store', async () => {
     const meta = await generateMetadata(params('aliexpress'))
-    expect(meta.title).toBe('Chollos de AliExpress hoy · PatoBarato')
+    expect(meta.title).toBe('Chollos de AliExpress hoy: 2 ofertas · PatoBarato')
+    expect(meta.alternates?.canonical).toBe('/tiendas/aliexpress')
     expect(meta.robots).toEqual({ index: false, follow: true })
+  })
+
+  it('is indexable with copy even without deals, and says so honestly', async () => {
+    vi.mocked(fetchDeals).mockResolvedValue({ deals: [], hasMore: false })
+    vi.mocked(fetchStores).mockResolvedValue([{ store: 'amazon', deals: 5, coupons: 0 }])
+    vi.mocked(fetchPageCopy).mockResolvedValue(copy())
+    const meta = await generateMetadata(params('aliexpress'))
+    expect(meta.robots).toBeUndefined()
+    expect(meta.title).toBe('Chollos de AliExpress en España · PatoBarato')
+    render(await StorePage(params('aliexpress')))
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Chollos de AliExpress')
+    expect(screen.getByText('Comprar en AliExpress desde España.')).toBeInTheDocument()
+    // 0 deals is no value: the {deals} sentence is dropped, never "0 chollos activos".
+    expect(document.body.textContent).not.toMatch(/\{deals\}|0 chollos activos/)
+    expect(await screen.findByText('Ahora mismo no hay chollos activos de AliExpress.')).toBeInTheDocument()
+  })
+
+  it('renders a store without copy and without deals, but noindex', async () => {
+    vi.mocked(fetchDeals).mockResolvedValue({ deals: [], hasMore: false })
+    vi.mocked(fetchStores).mockResolvedValue([{ store: 'amazon', deals: 5, coupons: 0 }])
+    expect((await generateMetadata(params('decathlon'))).robots).toEqual({ index: false, follow: true })
+    render(await StorePage(params('decathlon')))
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Chollos de Decathlon')
+    expect(await screen.findByText('Ahora mismo no hay chollos activos de Decathlon.')).toBeInTheDocument()
+  })
+
+  it('is indexable from 3 deals without copy', async () => {
+    vi.mocked(fetchStores).mockResolvedValue([{ store: 'aliexpress', deals: 3, coupons: 0 }])
+    expect((await generateMetadata(params('aliexpress'))).robots).toBeUndefined()
+  })
+
+  it('fills the live count into the copy', async () => {
+    vi.mocked(fetchPageCopy).mockResolvedValue(copy())
+    render(await StorePage(params('aliexpress')))
+    expect(screen.getByText(/Hay 2 chollos activos\./)).toBeInTheDocument()
+  })
+
+  it('never states a partial page as the live count in the copy', async () => {
+    vi.mocked(fetchStores).mockImplementation(down)
+    vi.mocked(fetchDeals).mockResolvedValue({ deals: [deal(1), deal(2), deal(3)], hasMore: true })
+    vi.mocked(fetchPageCopy).mockResolvedValue(copy())
+    expect((await generateMetadata(params('aliexpress'))).robots).toBeUndefined()
+    render(await StorePage(params('aliexpress')))
+    expect(screen.getByText('Comprar en AliExpress desde España.')).toBeInTheDocument()
+    expect(document.body.textContent).not.toMatch(/Hay 3 chollos/)
+  })
+
+  it('treats a failed copy read as no copy', async () => {
+    vi.mocked(fetchPageCopy).mockImplementation(down)
+    vi.mocked(fetchStores).mockResolvedValue([{ store: 'aliexpress', deals: 4, coupons: 0 }])
+    const meta = await generateMetadata(params('aliexpress'))
+    expect(meta.title).toBe('Chollos de AliExpress hoy: 4 ofertas · PatoBarato')
+    expect(meta.robots).toBeUndefined()
+  })
+
+  it('rejects (never 404 or noindex) when the deals read fails', async () => {
+    vi.mocked(fetchDeals).mockImplementation(down)
+    await expect(generateMetadata(params('aliexpress'))).rejects.toThrow('down')
+    await expect(StorePage(params('aliexpress'))).rejects.toThrow('down')
+  })
+
+  it('links the next event within the announce window and survives an events failure', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-11-20T10:00:00Z'))
+    try {
+      vi.mocked(fetchEvents).mockResolvedValue([siteEvent({ slug: 'black-friday', name: 'Black Friday', startsOn: '2026-11-27', endsOn: '2026-11-29' })])
+      const { unmount } = render(await StorePage(params('aliexpress')))
+      expect(screen.getByRole('link', { name: 'Black Friday 2026' })).toHaveAttribute('href', '/eventos/black-friday')
+      unmount()
+      vi.mocked(fetchEvents).mockImplementation(down)
+      render(await StorePage(params('aliexpress')))
+      expect(screen.queryByText(/Próximo evento/)).not.toBeInTheDocument()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('renders the heading, the real counts and the breadcrumb JSON-LD', async () => {
     const { container } = render(await StorePage(params('aliexpress')))
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Chollos de AliExpress')
     expect(screen.getByText('AliExpress · 2 chollos · 1 cupón')).toBeInTheDocument()
-    const ld = JSON.parse(container.querySelector('script[type="application/ld+json"]')!.textContent!)
-    expect(JSON.stringify(ld)).toContain('/tiendas/aliexpress')
-    expect(JSON.stringify(ld)).toContain('BreadcrumbList')
+    const ld = [...container.querySelectorAll('script[type="application/ld+json"]')].map((s) => s.textContent).join()
+    expect(ld).toContain('/tiendas/aliexpress')
+    expect(ld).toContain('BreadcrumbList')
   })
 
   it('falls back to the first-page length when the store stats fail and there are no more pages', async () => {
-    vi.mocked(fetchStores).mockImplementation(async () => {
-      throw new Error('down')
-    })
+    vi.mocked(fetchStores).mockImplementation(down)
     vi.mocked(fetchDeals).mockResolvedValue({ deals: [deal(1), deal(2), deal(3)], hasMore: false })
     expect((await generateMetadata(params('aliexpress'))).robots).toBeUndefined()
     render(await StorePage(params('aliexpress')))
@@ -81,12 +180,8 @@ describe('StorePage', () => {
   })
 
   it('omits the coupon count when stats and coupons both fail', async () => {
-    vi.mocked(fetchStores).mockImplementation(async () => {
-      throw new Error('down')
-    })
-    vi.mocked(fetchCoupons).mockImplementationOnce(async () => {
-      throw new Error('down')
-    })
+    vi.mocked(fetchStores).mockImplementation(down)
+    vi.mocked(fetchCoupons).mockImplementationOnce(down)
     render(await StorePage(params('aliexpress')))
     expect(screen.getByText('AliExpress · 1 chollo')).toBeInTheDocument()
     expect(document.body.textContent).not.toMatch(/0 cupones/)

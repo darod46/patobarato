@@ -7,10 +7,10 @@ import { renderCopy, pageTitle, type CopyValues } from './page-copy'
 import { stripMarkdown } from './text'
 import type { StoreStats } from './stores-data'
 import type { Deal, Guide, PageCopy, PageCopyKind, SiteEvent } from './types'
-import { SITE_URL, parseTagParam, productPath, tagPath } from './urls'
+import { SITE_URL, productPath } from './urls'
 
 export const MAX_DESCRIPTION = 160
-/** Hashtag pages with fewer deals than this are kept out of the index. */
+/** Category and store pages with fewer deals than this and no editorial copy are kept out of the index. */
 export const MIN_INDEXABLE_DEALS = 3
 
 const NOINDEX = { index: false, follow: true }
@@ -159,69 +159,6 @@ export function listingMetadata(m: ListingMeta): Metadata {
     twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
     ...(!m.indexable && { robots: NOINDEX }),
   }
-}
-
-/** @deprecated Use `listingMetadata`; removed once the pages are rewired. */
-export function hashtagMetadata(tag: string, count: number): Metadata {
-  return listingMetadata({
-    kind: 'category', slug: tag, path: tagPath(tag), copy: null, values: {}, indexable: count >= MIN_INDEXABLE_DEALS,
-    fallbackDescription: `Los últimos chollos de #${tag} en Amazon, cazados por PatoBarato con su precio, el precio anterior y el cupón si lo hay.`,
-  })
-}
-
-/** @deprecated Use `listingMetadata`; removed once the pages are rewired. */
-export function dealsMetadata(params: { tag?: string; stores?: StoreStats[] }): Metadata {
-  const tag = params.tag ? parseTagParam(params.tag) : null
-  const stores = params.stores ?? []
-  const fallbackDescription = stores.length
-    ? storeCopy(stores).description
-    : 'Los últimos chollos cazados por PatoBarato, con su precio, el precio anterior y el cupón si lo hay.'
-  return listingMetadata(
-    tag
-      ? { kind: 'category', slug: tag, path: tagPath(tag), copy: null, values: {}, indexable: true, fallbackDescription }
-      : { kind: 'static', slug: 'chollos', path: '/chollos', copy: null, values: {}, indexable: true, fallbackDescription },
-  )
-}
-
-/** @deprecated Use `listingMetadata`; removed once the pages are rewired. */
-export function storeMetadata(store: string, deals: number): Metadata {
-  const { name, slug } = storeInfo(store)
-  return listingMetadata({
-    kind: 'store', slug, path: `/tiendas/${slug}`, copy: null, values: {}, indexable: deals >= MIN_INDEXABLE_DEALS,
-    fallbackDescription: `Los últimos chollos y cupones de ${name} cazados por PatoBarato, con su precio, el precio anterior y el cupón si lo hay.`,
-  })
-}
-
-/** @deprecated Use `listingMetadata`; removed once the pages are rewired. */
-export function storesMetadata(count: number): Metadata {
-  return listingMetadata({
-    kind: 'static', slug: 'tiendas', path: '/tiendas', copy: null, values: {}, indexable: count >= 2,
-    fallbackDescription: 'Las tiendas de las que PatoBarato publica chollos y cupones, con lo que hay ahora en cada una.',
-  })
-}
-
-/** @deprecated Use `listingMetadata`; removed once the pages are rewired. */
-export function couponsMetadata(count: number): Metadata {
-  return listingMetadata({
-    kind: 'static', slug: 'cupones', path: '/cupones', copy: null, values: {}, indexable: count > 0,
-    fallbackDescription: 'Códigos de descuento vigentes, con sus condiciones y caducidad, comprobados por PatoBarato.',
-  })
-}
-
-/** @deprecated Use `listingMetadata`; removed once the pages are rewired. */
-export function guidesMetadata(count: number): Metadata {
-  return listingMetadata({
-    kind: 'static', slug: 'guias', path: '/guias', copy: null, values: {}, indexable: count > 0,
-    fallbackDescription: 'Guías de compra con los mejores productos, sus precios revisados y los cupones que aplican, por PatoBarato.',
-  })
-}
-
-/** @deprecated Use `listingMetadata`; removed once the pages are rewired. */
-export function eventsMetadata(): Metadata {
-  return listingMetadata({
-    kind: 'static', slug: 'eventos', path: '/eventos', copy: null, values: {}, indexable: true,
-    fallbackDescription: 'El calendario de eventos de compras del año, con sus fechas, los chollos y los cupones de cada uno.',
-  })
 }
 
 /** AboutPage and Organization structured data for `/sobre-nosotros`. */

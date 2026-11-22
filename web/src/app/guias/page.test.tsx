@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fetchGuides } from '../../lib/guides-data'
+import { fetchPageCopy } from '../../lib/page-copy'
 import { fetchStores } from '../../lib/stores-data'
 import type { GuideSummary } from '../../lib/types'
 import GuidesPage, { generateMetadata } from './page'
@@ -8,6 +9,10 @@ import GuidesPage, { generateMetadata } from './page'
 vi.mock('../../lib/supabase', () => ({ getSupabase: () => ({}) }))
 vi.mock('../../lib/guides-data', () => ({ fetchGuides: vi.fn() }))
 vi.mock('../../lib/stores-data', () => ({ fetchStores: vi.fn() }))
+vi.mock('../../lib/page-copy', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../lib/page-copy')>()),
+  fetchPageCopy: vi.fn(),
+}))
 
 const guide = (over: Partial<GuideSummary> = {}): GuideSummary => ({
   slug: 'mejores-freidoras',
@@ -27,6 +32,8 @@ beforeEach(() => {
   vi.mocked(fetchGuides).mockReset()
   vi.mocked(fetchStores).mockReset()
   vi.mocked(fetchStores).mockResolvedValue([])
+  vi.mocked(fetchPageCopy).mockReset().mockResolvedValue(null)
+  vi.spyOn(console, 'error').mockImplementation(() => {})
 })
 
 describe('GuidesPage', () => {
@@ -40,19 +47,36 @@ describe('GuidesPage', () => {
     expect(screen.getAllByText('Cocina')[0]).toBeInTheDocument()
   })
 
-  it.each([
-    ['empty', () => vi.mocked(fetchGuides).mockResolvedValue([])],
-    ['failing', () => vi.mocked(fetchGuides).mockImplementation(async () => { throw new Error('down') })],
-  ])('shows an honest empty state when the fetch is %s', async (_n, setup) => {
-    setup()
+  it('is indexable with no guides and keeps the copy and the honest empty state', async () => {
+    vi.mocked(fetchGuides).mockResolvedValue([])
+    vi.mocked(fetchPageCopy).mockResolvedValue({
+      kind: 'static',
+      slug: 'guias',
+      title: 'Guías de compra: comparativas',
+      h1: 'Guías de compra del pato',
+      introMd: 'Comparamos varios modelos de cada producto.',
+      faq: [],
+      updatedAt: '2026-11-20T10:00:00Z',
+    })
+    const meta = await generateMetadata()
+    expect(meta.robots).toBeUndefined()
+    expect(meta.title).toBe('Guías de compra: comparativas · PatoBarato')
+    expect(meta.alternates?.canonical).toBe('/guias')
     render(await GuidesPage())
+    expect(screen.getByRole('heading', { level: 1, name: 'Guías de compra del pato' })).toBeInTheDocument()
+    expect(screen.getByText('Comparamos varios modelos de cada producto.')).toBeInTheDocument()
     expect(screen.getByText('Todavía no hay guías publicadas')).toBeInTheDocument()
   })
 
-  it('is noindex with zero guides and indexable otherwise', async () => {
-    vi.mocked(fetchGuides).mockResolvedValue([])
-    expect((await generateMetadata()).robots).toEqual({ index: false, follow: true })
+  it('uses the default h1 without copy and still renders when the stores read fails', async () => {
     vi.mocked(fetchGuides).mockResolvedValue([guide()])
-    expect((await generateMetadata()).robots).toBeUndefined()
+    vi.mocked(fetchStores).mockImplementation(async () => { throw new Error('down') })
+    render(await GuidesPage())
+    expect(screen.getByRole('heading', { level: 1, name: 'Guías de compra' })).toBeInTheDocument()
+  })
+
+  it('rejects (never an empty page) when the guides read fails', async () => {
+    vi.mocked(fetchGuides).mockImplementation(async () => { throw new Error('down') })
+    await expect(GuidesPage()).rejects.toThrow('down')
   })
 })

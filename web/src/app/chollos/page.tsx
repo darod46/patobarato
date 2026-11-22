@@ -23,11 +23,13 @@ const first = (value: string | string[] | undefined) => (Array.isArray(value) ? 
 const loadStores = cache(() => optional('chollos', () => fetchStores(getSupabase())))
 const loadCopy = cache(async () => (await optional('chollos', () => fetchPageCopy(getSupabase(), 'static', 'chollos'))) ?? null)
 
-/** Live totals from `web_stores`; `deals` is null when the read failed (marker sentences are dropped). */
+/** Live totals from `web_stores`; `deals` is null when the read failed or is 0 (marker sentences are dropped). */
 function copyValues(stores: StoreStats[] | undefined): CopyValues {
   if (!stores) return { deals: null }
+  const total = stores.reduce((sum, s) => sum + s.deals, 0)
   return {
-    deals: stores.reduce((sum, s) => sum + s.deals, 0),
+    // 0 is no value: a "{deals} chollos" sentence is dropped rather than claiming none.
+    deals: total > 0 ? total : null,
     stores: stores.filter((s) => s.deals > 0).map((s) => s.store),
   }
 }

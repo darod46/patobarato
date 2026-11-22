@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { formatPrice } from './format'
 import { siteEvent } from '../test-utils/siteEvent'
-import { OG_IMAGE, aboutJsonLd, legalMetadata, listingMetadata, withHreflang, breadcrumbJsonLd, eventJsonLd, eventMetadata, eventsMetadata, faqJsonLd, couponsMetadata, guideJsonLd, guideMetadata, guidesMetadata, dealsMetadata, searchMetadata, hashtagMetadata, homeMetadata, productJsonLd, productMetadata, siteJsonLd, storeMetadata, storesMetadata, jsonLdScript } from './seo'
+import { OG_IMAGE, aboutJsonLd, legalMetadata, listingMetadata, withHreflang, breadcrumbJsonLd, eventJsonLd, eventMetadata, faqJsonLd, guideJsonLd, guideMetadata, searchMetadata, homeMetadata, productJsonLd, productMetadata, siteJsonLd, jsonLdScript } from './seo'
 import type { Deal, Guide } from './types'
 import { SITE_URL, productPath } from './urls'
 
@@ -108,31 +108,6 @@ describe('productMetadata', () => {
   })
 })
 
-describe('hashtagMetadata', () => {
-  it('builds title, description and canonical, indexable from 3 deals', () => {
-    const meta = hashtagMetadata('hogar', 3)
-    expect(meta.title).toBe('Chollos de hogar · PatoBarato')
-    expect(meta.description).toContain('hogar')
-    expect(meta.alternates?.canonical).toBe('/chollos/hogar')
-    expect(meta.openGraph?.url).toBe('/chollos/hogar')
-    expect(meta.robots).toBeUndefined()
-  })
-
-  it('is noindex below 3 deals and encodes the canonical', () => {
-    const meta = hashtagMetadata('niños', 2)
-    expect(meta.title).toBe('Chollos de niños · PatoBarato')
-    expect(meta.alternates?.canonical).toBe('/chollos/ni%C3%B1os')
-    expect(meta.robots).toEqual({ index: false, follow: true })
-  })
-
-  it('keeps the default Open Graph image', () => {
-    const meta = hashtagMetadata('hogar', 3)
-    expect(OG_IMAGE).toEqual({ url: '/og.png', width: 1200, height: 630, alt: 'PatoBarato · El pato que caza los chollos de Amazon antes de que vuelen' })
-    expect(meta.openGraph?.images).toEqual([OG_IMAGE])
-    expect(meta.twitter).toMatchObject({ card: 'summary_large_image', images: ['/og.png'] })
-  })
-})
-
 describe('homeMetadata', () => {
   it('has only the canonical without stores', () => {
     expect(homeMetadata({})).toEqual({ alternates: withHreflang('/') })
@@ -172,37 +147,6 @@ describe('homeMetadata with stores', () => {
     expect(homeMetadata({ stores: [st('amazon', 5, 0), st('aliexpress', 2, 0)] }).title).toBe('PatoBarato · Chollos de Amazon y otras tiendas')
     expect(homeMetadata({ stores: [st('aliexpress', 0, 3)] }).title).toBe('PatoBarato · Chollos y cupones de Amazon y otras tiendas')
     expect(homeMetadata({ stores: [st('amazon', 5, 0)] }).description).not.toContain('cupones')
-  })
-})
-
-describe('couponsMetadata', () => {
-  it('is indexable only with coupons', () => {
-    expect(couponsMetadata(3)).toMatchObject({ title: 'Cupones de descuento vigentes · PatoBarato', alternates: { canonical: '/cupones' } })
-    expect(couponsMetadata(3).robots).toBeUndefined()
-    expect(couponsMetadata(0).robots).toEqual({ index: false, follow: true })
-  })
-})
-
-describe('storeMetadata', () => {
-  it('titles, canonicalizes and indexes a store with 3 deals', () => {
-    const meta = storeMetadata('aliexpress', 3)
-    expect(meta.title).toBe('Chollos de AliExpress hoy · PatoBarato')
-    expect(meta.alternates?.canonical).toBe('/tiendas/aliexpress')
-    expect(meta.openGraph?.images).toEqual([OG_IMAGE])
-    expect(meta.robots).toBeUndefined()
-  })
-
-  it('is noindex below 3 deals', () => {
-    expect(storeMetadata('aliexpress', 2).robots).toEqual({ index: false, follow: true })
-  })
-})
-
-describe('storesMetadata', () => {
-  it('is noindex below two stores', () => {
-    expect(storesMetadata(1).robots).toEqual({ index: false, follow: true })
-    expect(storesMetadata(2).robots).toBeUndefined()
-    expect(storesMetadata(2).title).toBe('Tiendas con chollos · PatoBarato')
-    expect(storesMetadata(2).alternates?.canonical).toBe('/tiendas')
   })
 })
 
@@ -252,15 +196,6 @@ describe('guideMetadata', () => {
   })
 })
 
-describe('guidesMetadata', () => {
-  it('is noindex only when there are no guides', () => {
-    expect(guidesMetadata(0).robots).toEqual({ index: false, follow: true })
-    expect(guidesMetadata(2).robots).toBeUndefined()
-    expect(guidesMetadata(2).title).toBe('Guías de compra · PatoBarato')
-    expect(guidesMetadata(2).alternates?.canonical).toBe('/guias')
-  })
-})
-
 describe('guideJsonLd', () => {
   it('returns Article, ItemList and FAQPage', () => {
     const url = `${SITE_URL}/guias/freidoras`
@@ -276,35 +211,6 @@ describe('guideJsonLd', () => {
   })
   it('omits FAQPage without questions', () => {
     expect(guideJsonLd({ ...guide, faq: [] }, 'u')).toHaveLength(2)
-  })
-})
-
-describe('dealsMetadata', () => {
-  const st = (store: string, deals: number, coupons: number) => ({ store, deals, coupons })
-
-  it('has a fixed title and canonical /chollos', () => {
-    const meta = dealsMetadata({})
-    expect(meta.title).toBe('Chollos de hoy · PatoBarato')
-    expect(meta.alternates?.canonical).toBe('/chollos')
-    expect(meta.robots).toBeUndefined()
-  })
-
-  it('is canonical on the hashtag page for a legacy ?tag= and ignores an invalid one', () => {
-    expect(dealsMetadata({ tag: 'Hogar' }).alternates?.canonical).toBe('/chollos/hogar')
-    expect(dealsMetadata({ tag: 'a b<' }).alternates?.canonical).toBe('/chollos')
-  })
-
-  it('takes no search term: the page is a pure listing and stays indexable', () => {
-    // @ts-expect-error `q` is not a parameter any more
-    expect(dealsMetadata({ q: 'lego' }).robots).toBeUndefined()
-  })
-
-  it('only claims coupons and other stores when the data shows them', () => {
-    expect(dealsMetadata({ stores: [st('amazon', 5, 0)] }).description).not.toMatch(/cupones|otras tiendas/)
-    expect(dealsMetadata({ stores: [st('amazon', 5, 2), st('aliexpress', 1, 0)] }).description).toBe(
-      'Los mejores chollos de Amazon y cupones de otras tiendas, seleccionados cada día por PatoBarato.',
-    )
-    expect(dealsMetadata({}).description).not.toMatch(/Amazon|cupones/)
   })
 })
 
@@ -335,13 +241,6 @@ describe('event SEO', () => {
     expect(m.description).toBe('El Black Friday llega con rebajas.')
     expect(m.alternates).toEqual(withHreflang('/eventos/black-friday'))
     expect(m.openGraph).toMatchObject({ type: 'website', images: [OG_IMAGE] })
-    expect(m.robots).toBeUndefined()
-  })
-
-  it('builds the events index metadata', () => {
-    const m = eventsMetadata()
-    expect(m.title).toBe('Eventos de compras: Black Friday, 11.11, Cyber Monday · PatoBarato')
-    expect(m.alternates).toEqual(withHreflang('/eventos'))
     expect(m.robots).toBeUndefined()
   })
 
