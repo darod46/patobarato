@@ -171,6 +171,8 @@ Hoy una guía se publica con SQL, hasta que exista el panel de administración:
 2. Añade los productos en `guide_items` (`guide_id`, `position`, `name`, `award`, `summary_md`, `pros`, `cons`, `specs`) y sus tiendas en `guide_item_stores` (`store`, `external_id` = ASIN o id de la tienda, `url` canónica, `note`).
 3. Cuando el contenido esté listo, pon `status = 'published'` y `published_at`. La guía aparece en `/guias`, y en el sitemap en cuanto sus precios estén frescos.
 
+Una guía con `status = 'published'` y un `published_at` futuro está programada: es invisible (las vistas `web_guides`, `web_guide_items` y `web_guides_by_product` la filtran con `published_at <= now()`) hasta esa hora y después aparece sola, con la caché ISR de 60 s.
+
 El ejemplo completo es `supabase/migrations/20261108000001_guides_seed.sql` (la guía de freidoras de aire, como borrador con los valores entre corchetes por rellenar).
 
 Los precios los actualiza el bot con la fuente `guide_prices` (cada 6 h, `every_minutes = 360`), que escribe en `product_prices` para los productos de las guías. Una guía sin precios frescos (menos de 48 h) se sirve igualmente, pero con `noindex` y con la fecha de comprobación visible; así no se indexa una guía con precios antiguos.
