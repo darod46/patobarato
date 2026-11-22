@@ -62,7 +62,7 @@ const search = await fetch(`${url}/rest/v1/rpc/web_catalog_search`, {
 const searchBody = await search.json().catch(() => null)
 if (search.status !== 200 || !Array.isArray(searchBody)) problems.push(`web_catalog_search: HTTP ${search.status}`)
 
-for (const view of ['web_events', 'web_event_promos']) {
+for (const view of ['web_events', 'web_event_promos', 'web_channel_stats', 'web_channel_recent']) {
   const r = await rest(`${view}?select=*&limit=1`)
   if (r.status !== 200 || !Array.isArray(r.body)) problems.push(`${view}: HTTP ${r.status}`)
 }
