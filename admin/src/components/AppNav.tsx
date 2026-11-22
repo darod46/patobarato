@@ -11,6 +11,7 @@ const LINKS = [
   { href: '/cupones', label: 'Cupones' },
   { href: '/guias', label: 'Guías' },
   { href: '/eventos', label: 'Eventos' },
+  { href: '/clics', label: 'Clics' },
 ]
 
 export function AppNav({ isOwner }: { isOwner: boolean }) {

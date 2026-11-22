@@ -28,6 +28,11 @@ describe('AppNav', () => {
     expect(screen.getByRole('link', { name: 'Usuarios' })).toHaveAttribute('href', '/usuarios')
   })
 
+  it('links to Clics', () => {
+    render(<AppNav isOwner={false} />)
+    expect(screen.getByRole('link', { name: 'Clics' })).toHaveAttribute('href', '/clics')
+  })
+
   it('signs out and goes to /login', async () => {
     render(<AppNav isOwner={false} />)
     await userEvent.click(screen.getByRole('button', { name: 'Salir' }))
