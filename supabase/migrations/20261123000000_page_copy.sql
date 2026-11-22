@@ -36,7 +36,7 @@ grant select on web_page_copy to anon, authenticated;
 insert into page_copy (kind, slug, title, h1, status, intro_md, faq)
 values (
   'category', 'hogar',
-  'Chollos de hogar hoy: ofertas en Amazon y AliExpress',
+  'Chollos de hogar hoy: Amazon y AliExpress',
   'Chollos de hogar',
   'published',
   $md$En esta sección reunimos los chollos para la casa: pequeño electrodoméstico, menaje de cocina, ropa de cama, almacenaje, iluminación, limpieza y todo lo que hace más cómodo el día a día. Las ofertas llegan de Amazon y AliExpress, y el bot las publica en cuanto las encuentra.
@@ -58,7 +58,7 @@ Ahora mismo seguimos {deals} chollos activos en esta categoría.$md$,
 insert into page_copy (kind, slug, title, h1, status, intro_md, faq)
 values (
   'category', 'belleza',
-  'Chollos de belleza hoy: ofertas en Amazon y AliExpress',
+  'Chollos de belleza hoy: Amazon y AliExpress',
   'Chollos de belleza',
   'published',
   $md$Aquí están los chollos de belleza y cuidado personal: cosmética facial y corporal, cuidado del cabello, perfumes, maquillaje, afeitado, depilación y pequeños aparatos como secadores, planchas o cepillos eléctricos. Publicamos las ofertas de Amazon y AliExpress que encuentra el bot, según aparecen.
@@ -80,7 +80,7 @@ Ahora mismo seguimos {deals} chollos activos en esta categoría.$md$,
 insert into page_copy (kind, slug, title, h1, status, intro_md, faq)
 values (
   'category', 'tecnologia',
-  'Chollos de tecnología hoy: ofertas en Amazon y AliExpress',
+  'Chollos de tecnología hoy: Amazon y AliExpress',
   'Chollos de tecnología',
   'published',
   $md$En tecnología publicamos ofertas en móviles, tablets, portátiles, auriculares, relojes inteligentes, discos SSD, memorias, cargadores, monitores y accesorios para el ordenador. El bot publica los chollos de Amazon y AliExpress en cuanto los detecta, así que conviene pasarse a menudo.
@@ -102,7 +102,7 @@ Ahora mismo seguimos {deals} chollos activos en esta categoría.$md$,
 insert into page_copy (kind, slug, title, h1, status, intro_md, faq)
 values (
   'category', 'juguetes',
-  'Chollos de juguetes hoy: ofertas en Amazon y AliExpress',
+  'Chollos de juguetes hoy: Amazon y AliExpress',
   'Chollos de juguetes',
   'published',
   $md$En esta categoría publicamos ofertas en juguetes, juegos de mesa, construcciones, puzles, muñecos, juguetes educativos y de exterior, además de material para manualidades. Los chollos llegan de Amazon y AliExpress y el bot los añade en cuanto los encuentra.
@@ -124,7 +124,7 @@ Ahora mismo seguimos {deals} chollos activos en esta categoría.$md$,
 insert into page_copy (kind, slug, title, h1, status, intro_md, faq)
 values (
   'category', 'alimentacion',
-  'Chollos de alimentación hoy: ofertas en Amazon y AliExpress',
+  'Chollos de alimentación: Amazon y AliExpress',
   'Chollos de alimentación',
   'published',
   $md$Aquí reunimos las ofertas en alimentación y bebida: despensa, café e infusiones, snacks, dulces, suplementos, bebidas y productos de droguería que se compran en la misma cesta. Llegan de Amazon y AliExpress, a menudo en packs, y el bot los publica según los encuentra.
@@ -146,7 +146,7 @@ Ahora mismo seguimos {deals} chollos activos en esta categoría.$md$,
 insert into page_copy (kind, slug, title, h1, status, intro_md, faq)
 values (
   'category', 'deporte',
-  'Chollos de deporte hoy: ofertas en Amazon y AliExpress',
+  'Chollos de deporte hoy: Amazon y AliExpress',
   'Chollos de deporte',
   'published',
   $md$Esta categoría recoge los chollos de deporte y aire libre: zapatillas y ropa técnica, material de gimnasio en casa, bicicletas y accesorios, camping, natación, pádel y pulsómetros. Las ofertas proceden de Amazon y AliExpress y el bot las publica en cuanto aparecen.
@@ -168,7 +168,7 @@ Ahora mismo seguimos {deals} chollos activos en esta categoría.$md$,
 insert into page_copy (kind, slug, title, h1, status, intro_md, faq)
 values (
   'category', 'moda',
-  'Chollos de moda hoy: ofertas en Amazon y AliExpress',
+  'Chollos de moda hoy: Amazon y AliExpress',
   'Chollos de moda',
   'published',
   $md$En moda publicamos ofertas en ropa, calzado, bolsos, mochilas, relojes, gafas de sol y complementos para mujer, hombre e infantil. Los chollos llegan de Amazon y AliExpress y el bot los va añadiendo a medida que los encuentra.
@@ -190,7 +190,7 @@ Ahora mismo seguimos {deals} chollos activos en esta categoría.$md$,
 insert into page_copy (kind, slug, title, h1, status, intro_md, faq)
 values (
   'category', 'bricolaje',
-  'Chollos de bricolaje hoy: ofertas en Amazon y AliExpress',
+  'Chollos de bricolaje hoy: Amazon y AliExpress',
   'Chollos de bricolaje',
   'published',
   $md$Aquí están los chollos de bricolaje, herramientas y jardín: taladros y atornilladores, sierras, herramienta manual, medición, organización del taller, iluminación, cortacéspedes, mangueras y riego. Las ofertas proceden de Amazon y AliExpress y el bot las publica en cuanto las detecta.
@@ -214,7 +214,7 @@ Ahora mismo seguimos {deals} chollos activos en esta categoría.$md$,
 insert into page_copy (kind, slug, title, h1, status, intro_md, faq)
 values (
   'store', 'amazon',
-  'Chollos de Amazon hoy: ofertas y cupones en Amazon.es',
+  'Chollos de Amazon.es hoy: ofertas y cupones',
   'Chollos de Amazon',
   'published',
   $md$En esta página están los chollos de Amazon.es que ha encontrado PatoBarato: ofertas de casi todas las categorías, desde tecnología y hogar hasta alimentación y juguetes. El bot revisa canales de chollos y publica cada oferta en cuanto la encuentra.
@@ -325,7 +325,7 @@ Los enlaces de las tiendas son de afiliado, como explicamos en [afiliados](/afil
 insert into page_copy (kind, slug, title, h1, status, intro_md, faq)
 values (
   'static', 'guias',
-  'Guías de compra: comparativas y qué mirar antes de comprar',
+  'Guías de compra: qué mirar antes de comprar',
   'Guías de compra',
   'published',
   $md$Las guías de compra de PatoBarato están pensadas para cuando no buscas una oferta concreta, sino saber qué comprar. En cada guía comparamos varios modelos de un mismo tipo de producto, explicamos para quién es cada uno y te contamos qué características importan y cuáles son solo marketing.
@@ -345,7 +345,7 @@ Las escribimos a partir de las fichas técnicas de cada modelo. Ninguna marca ni
 insert into page_copy (kind, slug, title, h1, status, intro_md, faq)
 values (
   'static', 'eventos',
-  'Eventos de compras: Black Friday, 11.11 y Cyber Monday',
+  'Eventos de compras: Black Friday y 11.11',
   'Eventos de compras',
   'published',
   $md$Algunas fechas concentran las mejores ofertas del año, y en esta página reunimos las que seguimos: Black Friday, el 11.11 de AliExpress y otras campañas como Cyber Monday, las rebajas de enero o Prime Day, que añadimos a medida que se acercan y las tiendas confirman sus fechas.
@@ -376,11 +376,15 @@ values (
   'published',
   $md$PatoBarato es un proyecto independiente hecho en España por un desarrollador aficionado a cazar chollos; no pertenece a ninguna tienda. Un bot revisa canales de chollos y la API de AliExpress, y publica las ofertas que pasan nuestros filtros en esta web y en el [canal de Telegram](https://t.me/patobarato).
 
+## Quién hay detrás
+
+PatoBarato lo mantiene un desarrollador español aficionado a cazar chollos; no tiene relación con ninguna tienda.
+
 ## Cómo elegimos los chollos
 
 No publicamos cualquier rebaja. Antes de que un chollo aparezca en PatoBarato, se cumplen estos criterios:
 
-- **Precio comprobado en la tienda.** El precio que publicamos es el que vemos en la tienda o en el canal de origen en el momento de publicarlo.
+- **Precio registrado al publicar.** El precio que publicamos es el que vemos en la tienda o en el canal de origen en el momento de publicarlo.
 - **Precio anterior real.** Solo mostramos un precio tachado cuando lo conocemos; si no lo sabemos, no lo inventamos.
 - **Mínimo histórico registrado.** La etiqueta «Mínimo histórico» aparece cuando el precio es el más bajo que PatoBarato ha registrado para ese producto.
 - **Cupón verificado.** Si un chollo necesita cupón, comprobamos que funciona antes de publicarlo.
@@ -388,7 +392,7 @@ No publicamos cualquier rebaja. Antes de que un chollo aparezca en PatoBarato, s
 
 ## Cómo ganamos dinero
 
-PatoBarato se financia con comisiones de afiliado de Amazon, AliExpress y las tiendas del programa Awin: si compras desde uno de nuestros enlaces, la tienda nos paga una pequeña parte de la venta. Tú pagas el mismo precio que si entraras directamente. Las tiendas nunca pagan por aparecer en la web ni por la posición de sus ofertas. Tienes todos los detalles en [afiliados](/afiliados).$md$,
+PatoBarato se financia con comisiones de afiliado de Amazon y AliExpress, y de otras tiendas cuando se incorporen: si compras desde uno de nuestros enlaces, la tienda nos paga una pequeña parte de la venta. Tú pagas el mismo precio que si entraras directamente. Las tiendas nunca pagan por aparecer en la web ni por la posición de sus ofertas. Tienes todos los detalles en [afiliados](/afiliados).$md$,
   $json$[
     {"q": "¿Quién está detrás de PatoBarato?", "a_md": "Un desarrollador español aficionado a cazar chollos. Es un proyecto independiente y no pertenece a ninguna tienda."},
     {"q": "¿Las tiendas pagan por aparecer en PatoBarato?", "a_md": "No. Ganamos una comisión de afiliado cuando compras desde nuestros enlaces, pero ninguna tienda paga por salir ni por su posición. Más detalles en [afiliados](/afiliados)."},

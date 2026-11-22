@@ -75,10 +75,12 @@ export function renderCopy(introMd: string, values: CopyValues): string {
   }
   let out = lines.join('\n').replace(/\n{3,}/g, '\n\n').trim()
   if (values.deals === 1) {
+    // `\b1` already starts at the digit (also inside **1**); only a closing bold can sit between it and the noun.
     out = out
-      .replace(/\b(\*{0,2}1\*{0,2}) chollos activos\b/g, '$1 chollo activo')
-      .replace(/\b(\*{0,2}1\*{0,2}) chollos\b/g, '$1 chollo')
-      .replace(/\b(\*{0,2}1\*{0,2}) ofertas\b/g, '$1 oferta')
+      .replace(/\b(1\*{0,2}) chollos activos\b/g, '$1 chollo activo')
+      .replace(/\b(1\*{0,2}) chollos\b/g, '$1 chollo')
+      .replace(/\b(1\*{0,2}) ofertas activas\b/g, '$1 oferta activa')
+      .replace(/\b(1\*{0,2}) ofertas\b/g, '$1 oferta')
   }
   return out
 }

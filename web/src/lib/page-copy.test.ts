@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { fakeClient } from '../test-utils/fakeClient'
 import { defaultH1, defaultTitle, fetchPageCopies, fetchPageCopy, pageTitle, renderCopy } from './page-copy'
@@ -39,6 +42,9 @@ describe('renderCopy', () => {
     expect(renderCopy('Seguimos {deals} chollos activos en esta categoría.', { deals: 1 })).toBe('Seguimos 1 chollo activo en esta categoría.')
     expect(renderCopy('Hay {deals} chollos hoy.', { deals: 1 })).toBe('Hay 1 chollo hoy.')
     expect(renderCopy('Hay {deals} ofertas hoy.', { deals: 1 })).toBe('Hay 1 oferta hoy.')
+    expect(renderCopy('Hay {deals} ofertas activas.', { deals: 1 })).toBe('Hay 1 oferta activa.')
+    expect(renderCopy('Hay **{deals}** ofertas activas.', { deals: 1 })).toBe('Hay **1** oferta activa.')
+    expect(renderCopy('Hay {deals} ofertas activas.', { deals: 21 })).toBe('Hay 21 ofertas activas.')
     expect(renderCopy('Hay {deals} chollos hoy.', { deals: 11 })).toBe('Hay 11 chollos hoy.')
   })
 })
@@ -94,5 +100,21 @@ describe('fetchPageCopy', () => {
     const all = await fetchPageCopies(f.client, 'category')
     expect(f.calls).toContainEqual(['eq', ['kind', 'category']])
     expect(all.map((c) => [c.slug, c.faq.length])).toEqual([['tecnologia', 1], ['hogar', 0]])
+  })
+})
+
+describe('page_copy seed', () => {
+  const migration = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), '../../../supabase/migrations/20261123000000_page_copy.sql'),
+    'utf8',
+  )
+  // Each seed row starts `values (\n  '<kind>', '<slug>',\n  '<title>',`.
+  const titles = [...migration.matchAll(/values \(\n\s+'(\w+)', '([^']+)',\n\s+'([^']*)',/g)].map((m) => ({ slug: m[2], title: m[3] }))
+
+  it('finds every seeded row', () => expect(titles).toHaveLength(16))
+
+  it.each(titles)('$slug: the title plus « · PatoBarato» fits in 60 characters', ({ title }) => {
+    expect(title.length).toBeLessThanOrEqual(47)
+    expect(pageTitle({ title } as PageCopy, 'static', 'x', {}).length).toBeLessThanOrEqual(60)
   })
 })
