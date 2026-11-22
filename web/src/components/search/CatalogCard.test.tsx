@@ -38,6 +38,20 @@ describe('CatalogCard', () => {
     expect(link).toHaveClass('min-h-11')
   })
 
+  it('has intrinsic dimensions and lazy loading, also for the placeholder', () => {
+    const { unmount } = render(<CatalogCard product={product()} />)
+    for (const img of [screen.getByRole('img')]) {
+      expect(img).toHaveAttribute('width', '320')
+      expect(img).toHaveAttribute('height', '320')
+      expect(img).toHaveAttribute('loading', 'lazy')
+    }
+    unmount()
+    render(<CatalogCard product={product({ imageUrl: null })} />)
+    expect(screen.getByRole('img')).toHaveAttribute('width', '320')
+    expect(screen.getByRole('img')).toHaveAttribute('height', '320')
+    expect(screen.getByRole('img')).toHaveAttribute('loading', 'lazy')
+  })
+
   it('falls back to the placeholder without image', () => {
     render(<CatalogCard product={product({ imageUrl: null })} />)
     expect(screen.getByRole('img')).toHaveAttribute('src', '/pato-placeholder.svg')

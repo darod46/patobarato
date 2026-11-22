@@ -53,6 +53,13 @@ describe('Hero', () => {
     }
   })
 
+  it('loads the mascot with high fetch priority and not lazily', () => {
+    render(<Hero highlights={none} storeNames={['Amazon']} />)
+    const img = screen.getByRole('img', { name: 'Mascota de PatoBarato, un pato superhéroe' })
+    expect(img).toHaveAttribute('fetchpriority', 'high')
+    expect(img).not.toHaveAttribute('loading', 'lazy')
+  })
+
   it('links to the deals section and Telegram', () => {
     render(<Hero highlights={none} storeNames={['Amazon']} />)
     expect(screen.getByRole('link', { name: 'Ver chollos de hoy' })).toHaveAttribute('href', '/#chollos')

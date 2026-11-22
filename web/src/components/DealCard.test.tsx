@@ -62,6 +62,9 @@ describe('DealCard', () => {
     expect(img).toHaveAttribute('src', full.imageUrl)
     expect(img).toHaveAttribute('alt', full.title)
     expect(img).not.toHaveAttribute('data-placeholder')
+    expect(img).toHaveAttribute('width', '320')
+    expect(img).toHaveAttribute('height', '320')
+    expect(img).toHaveAttribute('loading', 'lazy')
   })
 
   it('labels a price before coupon with "sin cupón"', () => {
@@ -90,6 +93,9 @@ describe('DealCard', () => {
     const { container } = render(<DealCard deal={minimal} now={now} />)
     expect(screen.getByRole('img')).toHaveAttribute('src', '/pato-placeholder.svg')
     expect(screen.getByRole('img')).toHaveAttribute('data-placeholder', 'true')
+    expect(screen.getByRole('img')).toHaveAttribute('width', '320')
+    expect(screen.getByRole('img')).toHaveAttribute('height', '320')
+    expect(screen.getByRole('img')).toHaveAttribute('loading', 'lazy')
     expect(container.textContent).not.toContain('%')
     expect(container.querySelector('s')).toBeNull()
     expect(screen.queryByTestId('coupon')).toBeNull()

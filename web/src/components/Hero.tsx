@@ -85,6 +85,7 @@ export function Hero({ highlights, storeNames, activeEvent = null }: Props) {
             alt="Mascota de PatoBarato, un pato superhéroe"
             width={360}
             height={360}
+            fetchPriority="high"
             className="relative h-[200px] w-[200px] object-contain md:h-[360px] md:w-[360px]"
           />
           {topDiscountPct !== null && topDiscountTitle && (

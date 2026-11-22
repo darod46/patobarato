@@ -27,6 +27,8 @@ export function DealCard({ deal, now }: Props) {
         <img
           src={src}
           alt={deal.title}
+          width={320}
+          height={320}
           loading="lazy"
           onError={() => setFailed(true)}
           data-placeholder={isPlaceholder || undefined}

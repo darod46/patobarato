@@ -20,6 +20,8 @@ export function CatalogCard({ product }: { product: CatalogProduct }) {
         <img
           src={src}
           alt={product.title}
+          width={320}
+          height={320}
           loading="lazy"
           referrerPolicy="no-referrer"
           onError={() => setFailed(true)}
