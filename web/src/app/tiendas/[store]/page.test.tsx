@@ -57,7 +57,7 @@ describe('StorePage', () => {
 
   it('is noindex with fewer than 3 deals and titled after the store', async () => {
     const meta = await generateMetadata(params('aliexpress'))
-    expect(meta.title).toBe('Chollos de AliExpress · PatoBarato')
+    expect(meta.title).toBe('Chollos de AliExpress hoy · PatoBarato')
     expect(meta.robots).toEqual({ index: false, follow: true })
   })
 

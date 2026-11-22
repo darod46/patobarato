@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { formatPrice } from './format'
 import { siteEvent } from '../test-utils/siteEvent'
-import { OG_IMAGE, breadcrumbJsonLd, eventJsonLd, eventMetadata, eventsMetadata, faqJsonLd, couponsMetadata, guideJsonLd, guideMetadata, guidesMetadata, dealsMetadata, searchMetadata, hashtagMetadata, homeMetadata, productJsonLd, productMetadata, siteJsonLd, storeMetadata, storesMetadata, jsonLdScript } from './seo'
+import { OG_IMAGE, aboutJsonLd, legalMetadata, listingMetadata, withHreflang, breadcrumbJsonLd, eventJsonLd, eventMetadata, eventsMetadata, faqJsonLd, couponsMetadata, guideJsonLd, guideMetadata, guidesMetadata, dealsMetadata, searchMetadata, hashtagMetadata, homeMetadata, productJsonLd, productMetadata, siteJsonLd, storeMetadata, storesMetadata, jsonLdScript } from './seo'
 import type { Deal, Guide } from './types'
 import { SITE_URL, productPath } from './urls'
 
@@ -135,7 +135,7 @@ describe('hashtagMetadata', () => {
 
 describe('homeMetadata', () => {
   it('has only the canonical without stores', () => {
-    expect(homeMetadata({})).toEqual({ alternates: { canonical: '/' } })
+    expect(homeMetadata({})).toEqual({ alternates: withHreflang('/') })
   })
 })
 
@@ -177,7 +177,7 @@ describe('homeMetadata with stores', () => {
 
 describe('couponsMetadata', () => {
   it('is indexable only with coupons', () => {
-    expect(couponsMetadata(3)).toMatchObject({ title: 'Cupones vigentes · PatoBarato', alternates: { canonical: '/cupones' } })
+    expect(couponsMetadata(3)).toMatchObject({ title: 'Cupones de descuento vigentes · PatoBarato', alternates: { canonical: '/cupones' } })
     expect(couponsMetadata(3).robots).toBeUndefined()
     expect(couponsMetadata(0).robots).toEqual({ index: false, follow: true })
   })
@@ -186,7 +186,7 @@ describe('couponsMetadata', () => {
 describe('storeMetadata', () => {
   it('titles, canonicalizes and indexes a store with 3 deals', () => {
     const meta = storeMetadata('aliexpress', 3)
-    expect(meta.title).toBe('Chollos de AliExpress · PatoBarato')
+    expect(meta.title).toBe('Chollos de AliExpress hoy · PatoBarato')
     expect(meta.alternates?.canonical).toBe('/tiendas/aliexpress')
     expect(meta.openGraph?.images).toEqual([OG_IMAGE])
     expect(meta.robots).toBeUndefined()
@@ -201,7 +201,7 @@ describe('storesMetadata', () => {
   it('is noindex below two stores', () => {
     expect(storesMetadata(1).robots).toEqual({ index: false, follow: true })
     expect(storesMetadata(2).robots).toBeUndefined()
-    expect(storesMetadata(2).title).toBe('Tiendas · PatoBarato')
+    expect(storesMetadata(2).title).toBe('Tiendas con chollos · PatoBarato')
     expect(storesMetadata(2).alternates?.canonical).toBe('/tiendas')
   })
 })
@@ -333,15 +333,15 @@ describe('event SEO', () => {
     const m = eventMetadata(bf)
     expect(m.title).toBe('Black Friday 2026: chollos, cupones y consejos | PatoBarato')
     expect(m.description).toBe('El Black Friday llega con rebajas.')
-    expect(m.alternates).toEqual({ canonical: '/eventos/black-friday' })
+    expect(m.alternates).toEqual(withHreflang('/eventos/black-friday'))
     expect(m.openGraph).toMatchObject({ type: 'website', images: [OG_IMAGE] })
     expect(m.robots).toBeUndefined()
   })
 
   it('builds the events index metadata', () => {
     const m = eventsMetadata()
-    expect(m.title).toBe('Eventos de compras: Black Friday, 11.11, Cyber Monday | PatoBarato')
-    expect(m.alternates).toEqual({ canonical: '/eventos' })
+    expect(m.title).toBe('Eventos de compras: Black Friday, 11.11, Cyber Monday · PatoBarato')
+    expect(m.alternates).toEqual(withHreflang('/eventos'))
     expect(m.robots).toBeUndefined()
   })
 
@@ -371,5 +371,74 @@ describe('event SEO', () => {
       '@type': 'FAQPage',
       mainEntity: [{ '@type': 'Question', name: '¿Cuándo?', acceptedAnswer: { '@type': 'Answer', text: 'El viernes.' } }],
     })
+  })
+})
+
+describe('withHreflang', () => {
+  it('points every language at the same path', () => {
+    expect(withHreflang('/chollos/hogar')).toEqual({
+      canonical: '/chollos/hogar',
+      languages: { 'es-ES': '/chollos/hogar', 'x-default': '/chollos/hogar' },
+    })
+  })
+})
+
+describe('listingMetadata', () => {
+  const copy = {
+    kind: 'category' as const, slug: 'hogar', title: 'Chollos de hogar con copy', h1: 'H1',
+    introMd: 'Hay **{deals}** chollos de hogar. Segunda frase.', faq: [], updatedAt: '2026-11-22T00:00:00Z',
+  }
+  const base = { kind: 'category' as const, slug: 'hogar', path: '/chollos/hogar', values: { deals: 12 }, indexable: true }
+
+  it('uses the copy title and the first rendered sentence as description', () => {
+    const m = listingMetadata({ ...base, copy })
+    expect(m.title).toBe('Chollos de hogar con copy · PatoBarato')
+    expect(m.description).toBe('Hay 12 chollos de hogar.')
+    expect(m.openGraph).toMatchObject({ url: '/chollos/hogar', title: m.title, description: m.description })
+  })
+
+  it('falls back to the default title with the suffix and the fallback description', () => {
+    const m = listingMetadata({ ...base, copy: null, fallbackDescription: 'Descripción por defecto.' })
+    expect(m.title).toBe('Chollos de hogar: 12 ofertas hoy · PatoBarato')
+    expect(m.description).toBe('Descripción por defecto.')
+  })
+
+  it('drops the marker sentence when the value is unavailable', () => {
+    const m = listingMetadata({ ...base, values: {}, copy: { ...copy, introMd: 'Hay {deals} chollos. Segunda frase.' } })
+    expect(m.description).toBe('Segunda frase.')
+  })
+
+  it('is noindex only when not indexable', () => {
+    expect(listingMetadata({ ...base, copy: null }).robots).toBeUndefined()
+    expect(listingMetadata({ ...base, copy: null, indexable: false }).robots).toEqual({ index: false, follow: true })
+  })
+
+  it('adds hreflang alternates', () => {
+    expect(listingMetadata({ ...base, copy: null }).alternates?.languages?.['es-ES']).toBe('/chollos/hogar')
+  })
+})
+
+describe('hreflang on every metadata helper', () => {
+  it('has alternates.languages', () => {
+    const metas = [
+      productMetadata(deal),
+      guideMetadata(guide, true),
+      eventMetadata(siteEvent({ slug: 'black-friday', name: 'Black Friday', startsOn: '2026-11-27', endsOn: '2026-11-29', introMd: 'Hola.' })),
+      searchMetadata(null),
+      legalMetadata('Aviso', '/aviso-legal', 'Texto.'),
+      homeMetadata({}),
+    ]
+    for (const m of metas) {
+      const path = m.alternates?.canonical as string
+      expect(m.alternates?.languages).toEqual({ 'es-ES': path, 'x-default': path })
+    }
+  })
+})
+
+describe('aboutJsonLd', () => {
+  it('returns AboutPage and Organization', () => {
+    const data = aboutJsonLd('https://www.patobarato.com/sobre-nosotros')
+    expect(data.map((d) => d['@type'])).toEqual(['AboutPage', 'Organization'])
+    expect(data[1]).toMatchObject({ name: 'PatoBarato', sameAs: ['https://t.me/patobarato'] })
   })
 })

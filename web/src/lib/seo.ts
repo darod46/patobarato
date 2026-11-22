@@ -3,9 +3,10 @@ import { discountPercent, formatPrice } from './format'
 import { eventPath, eventYear } from './events'
 import { guidePath } from './guides'
 import { storeInfo } from './stores'
+import { renderCopy, pageTitle, type CopyValues } from './page-copy'
 import { stripMarkdown } from './text'
 import type { StoreStats } from './stores-data'
-import type { Deal, Guide, SiteEvent } from './types'
+import type { Deal, Guide, PageCopy, PageCopyKind, SiteEvent } from './types'
 import { SITE_URL, parseTagParam, productPath, tagPath } from './urls'
 
 export const MAX_DESCRIPTION = 160
@@ -13,6 +14,11 @@ export const MAX_DESCRIPTION = 160
 export const MIN_INDEXABLE_DEALS = 3
 
 const NOINDEX = { index: false, follow: true }
+
+/** Canonical plus the hreflang alternates (the site is Spanish-only, so every language points at the same path). */
+export function withHreflang(path: string): NonNullable<Metadata['alternates']> {
+  return { canonical: path, languages: { 'es-ES': path, 'x-default': path } }
+}
 
 /** Default Open Graph image; child metadata replaces the layout's `openGraph`, so pages repeat it. */
 export const OG_IMAGE = { url: '/og.png', width: 1200, height: 630, alt: 'PatoBarato · El pato que caza los chollos de Amazon antes de que vuelen' }
@@ -50,7 +56,7 @@ export function productMetadata(deal: Deal): Metadata {
   return {
     title,
     description,
-    alternates: { canonical: path },
+    alternates: withHreflang(path),
     openGraph: {
       type: 'website',
       siteName: 'PatoBarato',
@@ -102,28 +108,6 @@ export function breadcrumbJsonLd(items: BreadcrumbItem[]): Record<string, unknow
   }
 }
 
-export function hashtagMetadata(tag: string, count: number): Metadata {
-  const title = `Chollos de ${tag} · PatoBarato`
-  const description = `Los últimos chollos de #${tag} en Amazon, cazados por PatoBarato con su precio, el precio anterior y el cupón si lo hay.`
-  const path = tagPath(tag)
-  return {
-    title,
-    description,
-    alternates: { canonical: path },
-    openGraph: {
-      type: 'website',
-      siteName: 'PatoBarato',
-      locale: 'es_ES',
-      url: path,
-      title,
-      description,
-      images: [OG_IMAGE],
-    },
-    twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
-    ...(count < MIN_INDEXABLE_DEALS && { robots: NOINDEX }),
-  }
-}
-
 /** Honest title/description parts from the stores with data; undefined without stores. */
 function storeCopy(stores: StoreStats[]) {
   const coupons = stores.some((s) => s.coupons > 0)
@@ -144,29 +128,114 @@ export function homeMetadata(params: { stores?: StoreStats[] }): Metadata {
   const { title, description } = storeCopy(stores)
   return {
     ...(stores.length > 0 && { title, description, openGraph: { title, description, images: [OG_IMAGE] } }),
-    alternates: { canonical: '/' },
+    alternates: withHreflang('/'),
   }
 }
 
-/**
- * `/chollos` metadata: a fixed title, the same store-honest description as the home, canonical on
- * `/chollos` (or the hashtag page for a legacy `?tag=`).
- */
-export function dealsMetadata(params: { tag?: string; stores?: StoreStats[] }): Metadata {
-  const tag = params.tag ? parseTagParam(params.tag) : null
-  const stores = params.stores ?? []
-  const title = 'Chollos de hoy · PatoBarato'
-  const description = stores.length
-    ? storeCopy(stores).description
-    : 'Los últimos chollos cazados por PatoBarato, con su precio, el precio anterior y el cupón si lo hay.'
-  const path = tag ? tagPath(tag) : '/chollos'
+export type ListingMeta = {
+  kind: PageCopyKind
+  slug: string
+  path: string
+  copy: PageCopy | null
+  values: CopyValues
+  indexable: boolean
+  /** Description used when there is no published copy. */
+  fallbackDescription?: string
+}
+
+const DEFAULT_DESCRIPTION = 'Los últimos chollos cazados por PatoBarato, con su precio, el precio anterior y el cupón si lo hay.'
+
+/** Metadata of a listing page (category, store or static): published copy first, honest defaults otherwise. */
+export function listingMetadata(m: ListingMeta): Metadata {
+  const title = pageTitle(m.copy, m.kind, m.slug, m.values)
+  const description = m.copy
+    ? truncate(firstSentence(renderCopy(m.copy.introMd, m.values)), MAX_DESCRIPTION)
+    : (m.fallbackDescription ?? DEFAULT_DESCRIPTION)
   return {
     title,
     description,
-    alternates: { canonical: path },
-    openGraph: { type: 'website', siteName: 'PatoBarato', locale: 'es_ES', url: path, title, description, images: [OG_IMAGE] },
+    alternates: withHreflang(m.path),
+    openGraph: { type: 'website', siteName: 'PatoBarato', locale: 'es_ES', url: m.path, title, description, images: [OG_IMAGE] },
     twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
+    ...(!m.indexable && { robots: NOINDEX }),
   }
+}
+
+/** @deprecated Use `listingMetadata`; removed once the pages are rewired. */
+export function hashtagMetadata(tag: string, count: number): Metadata {
+  return listingMetadata({
+    kind: 'category', slug: tag, path: tagPath(tag), copy: null, values: {}, indexable: count >= MIN_INDEXABLE_DEALS,
+    fallbackDescription: `Los últimos chollos de #${tag} en Amazon, cazados por PatoBarato con su precio, el precio anterior y el cupón si lo hay.`,
+  })
+}
+
+/** @deprecated Use `listingMetadata`; removed once the pages are rewired. */
+export function dealsMetadata(params: { tag?: string; stores?: StoreStats[] }): Metadata {
+  const tag = params.tag ? parseTagParam(params.tag) : null
+  const stores = params.stores ?? []
+  const fallbackDescription = stores.length
+    ? storeCopy(stores).description
+    : 'Los últimos chollos cazados por PatoBarato, con su precio, el precio anterior y el cupón si lo hay.'
+  return listingMetadata(
+    tag
+      ? { kind: 'category', slug: tag, path: tagPath(tag), copy: null, values: {}, indexable: true, fallbackDescription }
+      : { kind: 'static', slug: 'chollos', path: '/chollos', copy: null, values: {}, indexable: true, fallbackDescription },
+  )
+}
+
+/** @deprecated Use `listingMetadata`; removed once the pages are rewired. */
+export function storeMetadata(store: string, deals: number): Metadata {
+  const { name, slug } = storeInfo(store)
+  return listingMetadata({
+    kind: 'store', slug, path: `/tiendas/${slug}`, copy: null, values: {}, indexable: deals >= MIN_INDEXABLE_DEALS,
+    fallbackDescription: `Los últimos chollos y cupones de ${name} cazados por PatoBarato, con su precio, el precio anterior y el cupón si lo hay.`,
+  })
+}
+
+/** @deprecated Use `listingMetadata`; removed once the pages are rewired. */
+export function storesMetadata(count: number): Metadata {
+  return listingMetadata({
+    kind: 'static', slug: 'tiendas', path: '/tiendas', copy: null, values: {}, indexable: count >= 2,
+    fallbackDescription: 'Las tiendas de las que PatoBarato publica chollos y cupones, con lo que hay ahora en cada una.',
+  })
+}
+
+/** @deprecated Use `listingMetadata`; removed once the pages are rewired. */
+export function couponsMetadata(count: number): Metadata {
+  return listingMetadata({
+    kind: 'static', slug: 'cupones', path: '/cupones', copy: null, values: {}, indexable: count > 0,
+    fallbackDescription: 'Códigos de descuento vigentes, con sus condiciones y caducidad, comprobados por PatoBarato.',
+  })
+}
+
+/** @deprecated Use `listingMetadata`; removed once the pages are rewired. */
+export function guidesMetadata(count: number): Metadata {
+  return listingMetadata({
+    kind: 'static', slug: 'guias', path: '/guias', copy: null, values: {}, indexable: count > 0,
+    fallbackDescription: 'Guías de compra con los mejores productos, sus precios revisados y los cupones que aplican, por PatoBarato.',
+  })
+}
+
+/** @deprecated Use `listingMetadata`; removed once the pages are rewired. */
+export function eventsMetadata(): Metadata {
+  return listingMetadata({
+    kind: 'static', slug: 'eventos', path: '/eventos', copy: null, values: {}, indexable: true,
+    fallbackDescription: 'El calendario de eventos de compras del año, con sus fechas, los chollos y los cupones de cada uno.',
+  })
+}
+
+/** AboutPage and Organization structured data for `/sobre-nosotros`. */
+export function aboutJsonLd(url: string): Record<string, unknown>[] {
+  return [
+    { '@context': 'https://schema.org', '@type': 'AboutPage', name: 'Sobre PatoBarato', url },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: 'PatoBarato',
+      url: SITE_URL,
+      sameAs: ['https://t.me/patobarato'],
+    },
+  ]
 }
 
 /** `/buscar`: canonical on itself; any search is `noindex`. */
@@ -176,52 +245,10 @@ export function searchMetadata(q: string | null): Metadata {
   return {
     title,
     description,
-    alternates: { canonical: '/buscar' },
+    alternates: withHreflang('/buscar'),
     openGraph: { type: 'website', siteName: 'PatoBarato', locale: 'es_ES', url: '/buscar', title, description, images: [OG_IMAGE] },
     twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
     ...(q?.trim() ? { robots: NOINDEX } : {}),
-  }
-}
-
-export function storeMetadata(store: string, deals: number): Metadata {
-  const { name, slug } = storeInfo(store)
-  const title = `Chollos de ${name} · PatoBarato`
-  const description = `Los últimos chollos y cupones de ${name} cazados por PatoBarato, con su precio, el precio anterior y el cupón si lo hay.`
-  const path = `/tiendas/${slug}`
-  return {
-    title,
-    description,
-    alternates: { canonical: path },
-    openGraph: { type: 'website', siteName: 'PatoBarato', locale: 'es_ES', url: path, title, description, images: [OG_IMAGE] },
-    twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
-    ...(deals < MIN_INDEXABLE_DEALS && { robots: NOINDEX }),
-  }
-}
-
-/** `/tiendas` index; with a single store with data there is nothing to choose, so it stays out of the index. */
-export function storesMetadata(count: number): Metadata {
-  const title = 'Tiendas · PatoBarato'
-  const description = 'Las tiendas de las que PatoBarato publica chollos y cupones, con lo que hay ahora en cada una.'
-  return {
-    title,
-    description,
-    alternates: { canonical: '/tiendas' },
-    openGraph: { type: 'website', siteName: 'PatoBarato', locale: 'es_ES', url: '/tiendas', title, description, images: [OG_IMAGE] },
-    twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
-    ...(count < 2 && { robots: NOINDEX }),
-  }
-}
-
-export function couponsMetadata(count: number): Metadata {
-  const title = 'Cupones vigentes · PatoBarato'
-  const description = 'Códigos de descuento vigentes, con sus condiciones y caducidad, comprobados por PatoBarato.'
-  return {
-    title,
-    description,
-    alternates: { canonical: '/cupones' },
-    openGraph: { type: 'website', siteName: 'PatoBarato', locale: 'es_ES', url: '/cupones', title, description, images: [OG_IMAGE] },
-    twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
-    ...(count === 0 && { robots: NOINDEX }),
   }
 }
 
@@ -238,23 +265,10 @@ export function guideMetadata(guide: Guide, indexable: boolean): Metadata {
   return {
     title,
     description,
-    alternates: { canonical: path },
+    alternates: withHreflang(path),
     openGraph: { type: 'article', siteName: 'PatoBarato', locale: 'es_ES', url: path, title, description, images: [OG_IMAGE] },
     twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
     ...(!indexable && { robots: NOINDEX }),
-  }
-}
-
-export function guidesMetadata(count: number): Metadata {
-  const title = 'Guías de compra · PatoBarato'
-  const description = 'Guías de compra con los mejores productos, sus precios revisados y los cupones que aplican, por PatoBarato.'
-  return {
-    title,
-    description,
-    alternates: { canonical: '/guias' },
-    openGraph: { type: 'website', siteName: 'PatoBarato', locale: 'es_ES', url: '/guias', title, description, images: [OG_IMAGE] },
-    twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
-    ...(count === 0 && { robots: NOINDEX }),
   }
 }
 
@@ -311,20 +325,8 @@ export function eventMetadata(event: SiteEvent): Metadata {
   return {
     title,
     description,
-    alternates: { canonical: path },
+    alternates: withHreflang(path),
     openGraph: { type: 'website', siteName: 'PatoBarato', locale: 'es_ES', url: path, title, description, images: [OG_IMAGE] },
-    twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
-  }
-}
-
-export function eventsMetadata(): Metadata {
-  const title = 'Eventos de compras: Black Friday, 11.11, Cyber Monday | PatoBarato'
-  const description = 'El calendario de eventos de compras del año, con sus fechas, los chollos y los cupones de cada uno.'
-  return {
-    title,
-    description,
-    alternates: { canonical: '/eventos' },
-    openGraph: { type: 'website', siteName: 'PatoBarato', locale: 'es_ES', url: '/eventos', title, description, images: [OG_IMAGE] },
     twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
   }
 }
@@ -381,7 +383,7 @@ export function legalMetadata(title: string, path: string, description: string):
   return {
     title: full,
     description,
-    alternates: { canonical: path },
+    alternates: withHreflang(path),
     openGraph: { type: 'website', siteName: 'PatoBarato', locale: 'es_ES', url: path, title: full, description, images: [OG_IMAGE] },
   }
 }

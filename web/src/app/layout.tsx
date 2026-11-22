@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://www.patobarato.com'),
   title: 'PatoBarato · Chollos de Amazon',
   description: 'Los mejores chollos de Amazon, seleccionados cada día por PatoBarato.',
+  alternates: { canonical: '/', languages: { 'es-ES': '/', 'x-default': '/' } },
+  other: { 'geo.region': 'ES' },
   icons: { icon: '/favicon.ico' },
   openGraph: {
     type: 'website',
