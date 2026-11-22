@@ -1,6 +1,6 @@
 # PatoBarato web
 
-Web pública de [PatoBarato](https://www.patobarato.com): Next.js 16 (App Router), React, TypeScript y Tailwind v4. Los datos vienen de Supabase con la clave pública (anon) y solo se leen las vistas `web_deals`, `web_hashtags`, `web_coupons`, `web_stores`, `web_guides`, `web_guide_items` y `web_guides_by_product`.
+Web pública de [PatoBarato](https://www.patobarato.com): Next.js 16 (App Router), React, TypeScript y Tailwind v4. Los datos vienen de Supabase con la clave pública (anon) y solo se leen las vistas `web_deals`, `web_hashtags`, `web_coupons`, `web_stores`, `web_guides`, `web_guide_items`, `web_guides_by_product`, `web_events`, `web_event_promos` y `web_page_copy`.
 
 ## Desarrollo local
 
@@ -38,29 +38,31 @@ Notas:
 | `npm start` | Sirve el build (`next start`) |
 | `npm test` | Tests (vitest) |
 | `npm run lint` | oxlint |
-| `node scripts/check-views.mjs` | Comprueba el acceso anon a las vistas públicas |
+| `node scripts/check-views.mjs` | Comprueba el acceso anon a las vistas públicas (incluye `web_page_copy` legible y `page_copy` no) |
 | `node scripts/render-og.mjs` | Regenera `public/og.png` |
 | `npm run typecheck` | `tsc --noEmit --incremental false` |
 
 ## Rutas
 
 - `/`: portada: barra de anuncio (próximo evento del calendario), hero, listado con orden (`?orden=recientes|descuento|minimo`) y chips de hashtags, cupones (si hay), cómo funciona, calendario de eventos, «Hola, soy el Pato», bloque Telegram y pie.
-- `/cupones`: cupones vigentes (vista `web_coupons`), agrupados por tienda. `noindex` si no hay ninguno.
-- `/tiendas`: índice de tiendas con chollos o cupones activos (vista `web_stores`), con sus recuentos. `noindex` salvo que haya más de una tienda con datos; si la vista no carga, muestra un aviso en lugar de datos inventados.
-- `/tiendas/{tienda}`: chollos y cupones de una tienda (el slug es el id de `src/lib/stores.ts`; 404 si no existe). Cabecera con los recuentos reales, cupones vigentes de la tienda y listado con orden, hashtags y «cargar más». `noindex` si tiene menos de 3 chollos.
+- `/cupones`: cupones vigentes (vista `web_coupons`), agrupados por tienda. Siempre indexable (con texto editorial aunque no haya cupones).
+- `/tiendas`: índice de tiendas con chollos o cupones activos (vista `web_stores`), con sus recuentos. Siempre indexable; si la vista no carga, la página lanza (ver «Textos editoriales»).
+- `/tiendas/{tienda}`: chollos y cupones de una tienda (el slug es el id de `src/lib/stores.ts`; 404 si no existe). Cabecera con los recuentos reales, cupones vigentes de la tienda y listado con orden, hashtags y «cargar más». `noindex` solo sin texto editorial y con menos de 3 chollos.
 - `?tienda={id}`: filtra por tienda el listado de la portada (y de `/buscar`) y lo marca con chips; en `/tiendas/{tienda}` se ignora porque la tienda viene de la ruta.
-- `/guias`: índice de guías de compra publicadas (vista `web_guides`), más recientes primero. `noindex` si no hay ninguna.
+- `/guias`: índice de guías de compra publicadas (vista `web_guides`), más recientes primero. Siempre indexable.
 - `/guias/{slug}`: una guía con sus productos (vista `web_guide_items`), precios y cupones de la tienda. `noindex` mientras sus precios no estén frescos (ver «Guías de compra»); 404 si el slug no existe o no está publicada.
 - `/aviso-legal`, `/privacidad`, `/cookies`, `/afiliados`, `/contacto`: páginas estáticas. Los textos llevan marcadores `[TITULAR]`, `[NIF]`, `[DIRECCIÓN]`, `[EMAIL]`, `[CIUDAD]`, `[PLAZO]` que hay que sustituir.
 - `/oferta/{tienda}/{slug}-{id}`: ficha de producto (Amazon y AliExpress). Las tiendas de Awin usan `/oferta/{tienda}/{id}`, con el id codificado como porcentaje. Redirige con 308 a la URL canónica si el slug no coincide; 404 si la oferta no existe.
-- `/chollos/{hashtag}`: listado por hashtag. `noindex` si tiene menos de 3 ofertas.
+- `/chollos/{hashtag}`: listado por hashtag. 404 si no tiene ningún chollo activo; `noindex` solo con 1–2 chollos y sin texto editorial.
+- `/sobre-nosotros`: quiénes somos, cómo elegimos los chollos y cómo ganamos dinero (texto de `page_copy`, `static`/`sobre-nosotros`; JSON-LD `AboutPage` y `Organization`). Enlazada desde el pie.
+- `/api/salud`: comprobación de salud del servidor (ver «Salud del servidor»).
 - `/chollos`: listado puro (sin buscador) con orden (`?orden=`), tienda (`?tienda=`) y chips. Es dinámico: el servidor valida `?tag=`, `?orden=` y `?tienda=` con las mismas reglas que el cliente (`src/lib/filters.ts`) y pinta ya la página 0 filtrada, sin `revalidate`.
 - `/buscar`: buscador global, indexable sin `?q=` (con `?q=` lleva `noindex`, también por `X-Robots-Tag`). Un campo y tres bloques: «Chollos» (vista `web_deals`), «En AliExpress» (`/api/buscar/aliexpress`; se oculta si el endpoint responde 204) y «En tiendas» (catálogo propio, función `web_catalog_search`). Desde 2 letras; el campo escribe `?q=` en la URL. La cabecera de todas las demás páginas enlaza aquí con el botón «Buscar».
 - `/api/buscar/aliexpress?q=`: búsqueda en AliExpress desde el servidor. Variables `ALIEXPRESS_APP_KEY`, `ALIEXPRESS_APP_SECRET` y `ALIEXPRESS_TRACKING_ID`, **solo en Vercel y solo servidor** (nunca `NEXT_PUBLIC_*`). Sin ellas responde 204 y el bloque no se muestra. Caché de 15 min (`s-maxage=900`) y límite global de 30 consultas distintas por minuto (no por cliente; 429 con `Retry-After`).
 - Catálogo de tiendas: la tabla `catalog_products` la rellena el bot (`upsert_catalog_products`) y la web solo la consulta con la función `web_catalog_search` (anon); la tabla no se lee directamente.
 - Redirecciones (308, `next.config.ts`): `/?q=…` y `/chollos?q=…` van a `/buscar?q=…`; `/?tag=…`, `/?orden=…` y `/?tienda=…` van a `/chollos` con el mismo filtro. Ya no hay reescrituras hacia `/buscar`.
 - `/go/{ASIN}`: página de salto a Amazon (`public/go.html`, añade el tag de afiliado por script).
-- `/sitemap.xml` y `/robots.txt`: generados por `src/app/sitemap.ts` y `src/app/robots.ts`. El sitemap incluye `/guias` y `/guias/{slug}` (con `lastModified` = `updated_at`) aunque una guía aún no tenga precios, porque la página se marca `noindex` por su cuenta. El sitemap incluye `/buscar`; robots.txt solo bloquea `/go/`.
+- `/sitemap.xml` y `/robots.txt`: el primero es un índice de sitemaps (ver «Sitemaps»); `robots.txt` lo genera `src/app/robots.ts` y apunta a `/sitemap.xml`. Bloquea `/go/` y `/api/`.
 - `/og.png`: imagen Open Graph (`public/og.png`), generada con `node scripts/render-og.mjs` a partir de `scripts/og.html` (necesita Playwright).
 
 ## Caché (ISR)
@@ -69,14 +71,87 @@ Notas:
 - `/chollos` y `/buscar`: dinámicos (por petición); `/api/buscar/aliexpress`: 15 min.
 - Cupones (`/cupones`): 600 s.
 - Producto (`/oferta/...`): 600 s.
-- Sitemap: 3600 s.
+- Sitemaps (`/sitemap.xml` y `/sitemaps/*.xml`): 3600 s.
 - Revalidación bajo demanda: `POST /api/revalidate` con la cabecera `x-revalidate-secret` (debe coincidir con `REVALIDATE_SECRET`; sin variable, siempre 401) revalida todo el sitio (`revalidatePath('/', 'layout')`). Lo llama el bot tras cada cambio del admin, para que las ediciones se vean al instante.
 
 ## SEO
 
-- Metadatos (title, description, Open Graph) por página y URLs canónicas.
+- Metadatos (title, description, Open Graph) por página y URLs canónicas. Los listados los generan con `listingMetadata` (`src/lib/seo.ts`) a partir de `page_copy`.
+- hreflang: cada página emite `es-ES` y `x-default` apuntando a su propia ruta (`withHreflang(path)` en `src/lib/seo.ts`; el layout pone lo mismo para `/`), y `<meta name="geo.region" content="ES">`. El sitio es solo en español, así que ambos apuntan a la misma URL.
 - JSON-LD: `Product` (ficha), `BreadcrumbList`, `WebSite` con `SearchAction` y `Organization` (sitio).
-- Search Console: añade la propiedad `www.patobarato.com` y envía `/sitemap.xml`.
+- Search Console: añade la propiedad `www.patobarato.com` y envía `/sitemap.xml` (el índice; no hace falta enviar los tres ficheros).
+
+## Textos editoriales (`page_copy`)
+
+Los listados llevan título SEO, `h1`, introducción y FAQ propios, editables desde Supabase sin desplegar. La web solo lee la vista `web_page_copy` (filas con `status = 'published'`); la tabla `page_copy` tiene RLS, sin acceso para `anon`, y solo la editan los administradores (`is_admin()`). La semilla está en `supabase/migrations/20261123000000_page_copy.sql`.
+
+**Filas.** `kind` + `slug` son únicos:
+
+| `kind` | `slug` | Página |
+| --- | --- | --- |
+| `category` | el hashtag (`hogar`, `tecnologia`, `bricolaje`…) | `/chollos/{hashtag}` |
+| `store` | el id de `src/lib/stores.ts` (`amazon`, `aliexpress`…) | `/tiendas/{tienda}` |
+| `static` | `chollos`, `tiendas`, `cupones`, `guias`, `eventos`, `sobre-nosotros` | `/chollos`, `/tiendas`, `/cupones`, `/guias`, `/eventos`, `/sobre-nosotros` |
+
+Campos: `title` (el `<title>` sin el sufijo « · PatoBarato», que añade la web), `h1`, `intro_md` (Markdown), `faq` (`[{"q": "...", "a_md": "..."}]`, con `FAQPage` JSON-LD) y `status` (`draft` no sale en la web). Para publicar o cambiar un texto basta un `insert`/`update` en `page_copy`; las páginas lo recogen en su siguiente revalidación (60 s en listados; 600 s en `/cupones`) o al instante con `/api/revalidate`.
+
+**Marcadores.** `intro_md` admite `{deals}` (número de chollos activos de la página) y `{stores}` (lista de tiendas, «Amazon y AliExpress»). Reglas:
+
+- Cada marcador va **en su propia frase**: si no hay valor (lectura fallida, lista vacía), la web elimina la frase entera; nunca se pinta un `{deals}` o `{stores}` literal (hay test).
+- Los números salen de la base de datos: por categoría, `web_hashtags.count`; por tienda, `web_stores.deals`; en `/chollos`, la suma de `web_stores`. `{stores}` son las tiendas con al menos un chollo.
+- Singular: con exactamente 1 chollo, «1 chollos activos» pasa a «1 chollo activo» (y «1 chollos» / «1 ofertas» a singular).
+- Se escribe a mano cada fila; no se copian textos entre categorías cambiando el nombre.
+
+**Sin fila publicada** la página usa título y `h1` por defecto, sin introducción ni FAQ. El número solo aparece si se conoce (y es > 0):
+
+| Página | Título por defecto |
+| --- | --- |
+| Categoría | `Chollos de {tag}: N ofertas hoy` / `Chollos de {tag}` |
+| Tienda | `Chollos de {Tienda} hoy: N ofertas` / `Chollos de {Tienda} hoy` |
+| `/chollos` | `Chollos de hoy: N ofertas en {tiendas}` / `Chollos de hoy` |
+| `/tiendas`, `/cupones`, `/guias` | `Tiendas con chollos`, `Cupones de descuento vigentes`, `Guías de compra` |
+| `/eventos`, `/sobre-nosotros` | `Eventos de compras: Black Friday, 11.11, Cyber Monday`, `Quiénes somos y cómo elegimos los chollos` |
+
+El `h1` por defecto es el título sin el número (en categorías y tiendas, `Chollos de {tag}` / `Chollos de {Tienda}`). La descripción es la primera frase de `intro_md` ya renderizada (≤ 160 caracteres).
+
+**Reglas de indexación** (spec §6, tal como están implementadas):
+
+| Página | Regla |
+| --- | --- |
+| `/chollos/{tag}` | 404 si el hashtag no tiene ningún chollo activo (con la lectura correcta). Indexable con fila en `page_copy` **o** ≥ 3 chollos; `noindex` solo con 1–2 chollos **y** sin fila. |
+| `/tiendas/{tienda}` | Indexable con fila publicada **o** ≥ 3 chollos; `noindex` solo sin fila y con menos de 3. Sin chollos muestra el texto editorial y «ahora mismo no hay chollos activos». |
+| `/chollos`, `/tiendas`, `/cupones`, `/guias`, `/eventos`, `/sobre-nosotros` | Siempre indexables; con la lista vacía, texto editorial y un mensaje honesto. |
+| `/guias/{slug}` | Sin cambio: `noindex` mientras los precios no estén frescos (ver «Guías de compra»). |
+| `/buscar?q=` | Sin cambio: `noindex`. |
+| Fallo de lectura de Supabase en un listado | La página **lanza** y Next sigue sirviendo la última versión ISR: nunca 404, nunca `noindex`, nunca una página vacía cacheada. Solo los bloques secundarios (chips, tiendas del pie, eventos, texto editorial) usan `optional()` y se omiten si fallan. |
+
+`noindex` solo se emite cuando la base de datos ha respondido y la página es realmente fina. Si falla la lectura del texto editorial, la página sale con título y `h1` por defecto (y sin `noindex`, salvo el caso fino de la tabla). Si falla solo el contador pero la lectura principal va bien, se usa el número de elementos cargados.
+
+**Fase de build.** Sin base de datos durante `next build`, `src/lib/primary.ts` (`primary()`) registra el error y devuelve `undefined` en lugar de lanzar (`NEXT_PHASE=phase-production-build`), de modo que el despliegue sigue y la página queda con su estado vacío honesto hasta la primera revalidación. Fuera del build, `primary()` relanza siempre. Con Supabase caído y sin versión ISR previa, la primera petición da el error de Next (500); `/api/salud` permite detectarlo antes de pedir indexación.
+
+## Sitemaps
+
+`/sitemap.xml` (la URL que Google ya conoce) es un **índice** `<sitemapindex>` (`src/app/sitemap.xml/route.ts`) con tres sitemaps (`src/app/sitemaps/[name]/route.ts`; lógica en `src/lib/sitemap-data.ts` y `src/lib/sitemap.ts`):
+
+| Sitemap | Contenido | `lastmod` |
+| --- | --- | --- |
+| `/sitemaps/chollos.xml` | Fichas de oferta (`changefreq daily`) | `publishedAt` |
+| `/sitemaps/paginas.xml` | Portada, listados (`/chollos`, `/buscar`, `/tiendas`, `/cupones`, `/guias`), categorías indexables, tiendas indexables, guías y páginas estáticas (incl. `/sobre-nosotros`) | `updated_at` de `page_copy` o de la guía |
+| `/sitemaps/eventos.xml` | `/eventos` y cada evento publicado | `updated_at` del evento |
+
+Las categorías y tiendas entran con la misma regla que su página (categoría con ≥ 1 chollo y, además, fila o ≥ 3 chollos; tienda con fila o ≥ 3 chollos), así que `/chollos/bricolaje` con 2 chollos y sin fila **no** está. El índice lleva el `lastmod` de la fila más reciente de cada sitemap. Cada fichero devuelve su versión mínima si la lectura falla durante el build y **lanza** en runtime (Next conserva la última versión). `robots.txt` apunta a `/sitemap.xml`. Search Console: envía solo el índice.
+
+## Salud del servidor
+
+`GET /api/salud` comprueba desde el servidor si Supabase se lee (las mismas lecturas que usan los listados). Responde siempre `200` y `Cache-Control: no-store`:
+
+```json
+{ "ok": true, "at": "2026-11-22T10:00:00.000Z", "checks": { "supabase": "ok", "deals": 316, "events": 5 } }
+```
+
+- `checks.deals`: suma de chollos activos de `web_stores`; `checks.events`: número de eventos publicados; ambos `null` si falla la lectura.
+- Con fallo: `ok: false`, `checks.supabase: "error"` y `checks.errorName` con solo el nombre del error (`Error` suele indicar variables sin configurar; `TypeError`, un fallo de red). Nunca incluye URLs, claves ni mensajes completos.
+- `robots.txt` lo bloquea (`Disallow: /api/`). Úsalo desde el navegador tras cada despliegue y antes de pedir la validación en Search Console.
 
 ## Iconos
 
@@ -122,7 +197,7 @@ Páginas editoriales de eventos de compras (`/eventos` y `/eventos/{slug}`). Los
 
 ## Seguridad
 
-La web solo usa la clave pública (anon) de Supabase y solo lee las vistas `web_deals`, `web_hashtags`, `web_coupons`, `web_stores`, `web_guides`, `web_guide_items`, `web_guides_by_product`, `web_events` y `web_event_promos`. Nunca pongas la clave `service_role` en la web ni en Vercel. `node scripts/check-views.mjs` comprueba con la clave anon que esas vistas se leen y que la tabla `coupons` no; también cubre las vistas y tablas de guías (`web_guides*` legibles; `guides`, `guide_items`, `guide_item_stores` y `product_prices` no) y de eventos (`web_events` y `web_event_promos` legibles; `events` y `event_promos` no).
+La web solo usa la clave pública (anon) de Supabase y solo lee las vistas `web_deals`, `web_hashtags`, `web_coupons`, `web_stores`, `web_guides`, `web_guide_items`, `web_guides_by_product`, `web_events`, `web_event_promos` y `web_page_copy`. Nunca pongas la clave `service_role` en la web ni en Vercel. `node scripts/check-views.mjs` comprueba con la clave anon que esas vistas se leen y que la tabla `coupons` no; también cubre las vistas y tablas de guías (`web_guides*` legibles; `guides`, `guide_items`, `guide_item_stores` y `product_prices` no) de eventos (`web_events` y `web_event_promos` legibles; `events` y `event_promos` no) y de textos editoriales (`web_page_copy` legible; `page_copy` no).
 
 ## Despliegue en Vercel
 
