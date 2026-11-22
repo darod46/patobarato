@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { cache } from 'react'
 import { Footer } from '../../components/Footer'
 import { Header } from '../../components/Header'
-import { PageIntro } from '../../components/PageIntro'
+import { PageFaq, PageIntro } from '../../components/PageIntro'
 import { defaultH1, fetchPageCopy } from '../../lib/page-copy'
 import { aboutJsonLd, breadcrumbJsonLd, jsonLdScript, listingMetadata } from '../../lib/seo'
 import { primary } from '../../lib/primary'
@@ -45,6 +45,7 @@ export default async function AboutPage() {
       <main className="mx-auto max-w-[800px] px-4 pt-24 pb-16 md:px-8 md:pt-32">
         <PageIntro h1={copy?.h1 ?? defaultH1('static', 'sobre-nosotros')} copy={copy} values={{}} />
         {!copy && <p className="mt-3 text-muted">PatoBarato es un proyecto independiente de caza de chollos.</p>}
+        <PageFaq faq={copy?.faq} className="mt-8" />
       </main>
       <Footer year={new Date().getUTCFullYear()} />
     </div>

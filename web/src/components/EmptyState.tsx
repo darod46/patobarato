@@ -3,18 +3,18 @@ import { SearchX } from "lucide-react";
 export function EmptyState({
   message = "No hay chollos con esos filtros",
   onClear,
+  hint = "Prueba con otra búsqueda o quita los filtros para ver todos los chollos de hoy.",
 }: {
   message?: string;
   onClear?: () => void;
+  /** Line under the message; the default talks about filters. */
+  hint?: string;
 }) {
   return (
     <div className="flex flex-col items-center gap-4 py-16 text-center">
       <SearchX size={40} className="text-muted" aria-hidden="true" />
       <p className="font-display text-xl font-bold text-ink">{message}</p>
-      <p className="max-w-sm text-sm text-muted">
-        Prueba con otra búsqueda o quita los filtros para ver todos los chollos
-        de hoy.
-      </p>
+      <p className="max-w-sm text-sm text-muted">{hint}</p>
       {onClear && (
         <button
           type="button"

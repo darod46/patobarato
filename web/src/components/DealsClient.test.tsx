@@ -183,32 +183,20 @@ it('hydrates a server-filtered page 0 without mismatches and without refetching 
   }
 })
 
-it('renders the page intro with the copy h1 and the rendered intro', () => {
+it('renders the intro slot in place of the plain h1 and caption, and the FAQ slot below the listing', async () => {
   render(
     <DealsClient
       now="2026-11-04T12:00:00Z"
-      fetchDeals={vi.fn().mockResolvedValue({ deals: [], hasMore: false })}
+      fetchDeals={vi.fn().mockResolvedValue({ deals: [deal], hasMore: false })}
       fetchHashtags={vi.fn().mockResolvedValue([])}
-      intro={{
-        copy: { kind: 'static', slug: 'chollos', title: 'T', h1: 'Chollos de hoy en Amazon', introMd: 'Hay {deals} ofertas en {stores}.', faq: [], updatedAt: '2026-11-01T00:00:00Z' },
-        values: { deals: 315, stores: ['amazon', 'aliexpress'] },
-        nextEvent: null,
-      }}
+      intro={<h1>Chollos de hoy en Amazon</h1>}
+      faq={<section data-testid="faq">FAQ</section>}
     />,
   )
+  expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
   expect(screen.getByRole('heading', { level: 1, name: 'Chollos de hoy en Amazon' })).toBeInTheDocument()
-  expect(screen.getByText('Hay 315 ofertas en Amazon y AliExpress.')).toBeInTheDocument()
-  expect(screen.getByText('Se actualiza automáticamente')).toBeInTheDocument()
-})
-
-it('uses the default h1 when there is no copy', () => {
-  render(
-    <DealsClient
-      now="2026-11-04T12:00:00Z"
-      fetchDeals={vi.fn().mockResolvedValue({ deals: [], hasMore: false })}
-      fetchHashtags={vi.fn().mockResolvedValue([])}
-      intro={{ copy: null, values: { deals: null }, nextEvent: null }}
-    />,
-  )
-  expect(screen.getByRole('heading', { level: 1, name: 'Chollos de hoy' })).toBeInTheDocument()
+  expect(screen.queryByText('Se actualiza automáticamente')).toBeNull()
+  const card = await screen.findByText('Auriculares Sony')
+  // The FAQ follows the deal grid in document order.
+  expect(card.compareDocumentPosition(screen.getByTestId('faq')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 })

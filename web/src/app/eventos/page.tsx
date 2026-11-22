@@ -3,7 +3,7 @@ import { cache } from 'react'
 import { EventCard } from '../../components/events/EventCard'
 import { Footer } from '../../components/Footer'
 import { Header } from '../../components/Header'
-import { PageIntro } from '../../components/PageIntro'
+import { PageFaq, PageIntro } from '../../components/PageIntro'
 import { eventPhase } from '../../lib/events'
 import { fetchEvents } from '../../lib/events-data'
 import { optional } from '../../lib/optional'
@@ -74,6 +74,7 @@ export default async function EventsPage() {
         ) : (
           <p className="mt-10 rounded-2xl border border-line bg-surface p-6 text-muted">Todavía no hay eventos en el calendario.</p>
         )}
+        <PageFaq faq={copy?.faq} />
       </main>
       <Footer year={now.getUTCFullYear()} stores={(stores ?? []).map((s) => s.store)} />
     </div>

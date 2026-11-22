@@ -2,11 +2,12 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { cache } from 'react'
 import { HashtagClient } from '../../../components/HashtagClient'
+import { PageFaq, PageIntro } from '../../../components/PageIntro'
 import { fetchDeals, fetchHashtagCount, fetchHashtags } from '../../../lib/deals'
 import { fetchEvents } from '../../../lib/events-data'
 import { ANNOUNCE_WINDOW_DAYS, nextEvent } from '../../../lib/events'
 import { optional } from '../../../lib/optional'
-import { fetchPageCopy } from '../../../lib/page-copy'
+import { defaultH1, fetchPageCopy } from '../../../lib/page-copy'
 import { MIN_INDEXABLE_DEALS, breadcrumbJsonLd, jsonLdScript, listingMetadata } from '../../../lib/seo'
 import { getSupabase } from '../../../lib/supabase'
 import { parseTagParam, tagPath } from '../../../lib/urls'
@@ -77,11 +78,15 @@ export default async function HashtagPage({ params }: Props) {
         now={new Date().toISOString()}
         initialDeals={{ q: '', tag: data.tag, ...data.page }}
         initialTags={tags.map((h) => h.tag)}
-        intro={{
-          copy: data.copy,
-          values: { deals: data.count },
-          nextEvent: events ? nextEvent(new Date(), events, ANNOUNCE_WINDOW_DAYS) : null,
-        }}
+        intro={
+          <PageIntro
+            h1={data.copy?.h1 ?? defaultH1('category', data.tag)}
+            copy={data.copy}
+            values={{ deals: data.count }}
+            nextEvent={events ? nextEvent(new Date(), events, ANNOUNCE_WINDOW_DAYS) : null}
+          />
+        }
+        faq={<PageFaq faq={data.copy?.faq} />}
       />
     </>
   )

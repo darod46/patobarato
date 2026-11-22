@@ -4,6 +4,9 @@ import * as deals from '../../../lib/deals'
 import * as eventsData from '../../../lib/events-data'
 import * as pageCopy from '../../../lib/page-copy'
 import type { Deal, PageCopy } from '../../../lib/types'
+import { HashtagClient } from '../../../components/HashtagClient'
+import { PageFaq, PageIntro } from '../../../components/PageIntro'
+import { payloadKeys, propsOf } from '../../../test-utils/clientProps'
 import HashtagPage, { generateMetadata } from './page'
 
 vi.mock('../../../lib/supabase', () => ({ getSupabase: () => ({}) }))
@@ -136,6 +139,16 @@ describe('/chollos/[tag]', () => {
     expect(screen.getByText('Chollo 1')).toBeInTheDocument()
     const ld = JSON.parse(container.querySelector('script[type="application/ld+json"]')!.textContent!)
     expect(ld.itemListElement[1].item).toMatch(/\/chollos\/tecnologia$/)
+  })
+
+  it('hands the intro and FAQ to the client as server-rendered slots, never the raw copy', async () => {
+    given({ n: 3, withCopy: true })
+    vi.mocked(pageCopy.fetchPageCopy).mockResolvedValue({ ...copy, faq: [{ q: '¿Cada cuánto?', aMd: 'Cada hora.' }] })
+    const client = propsOf(await HashtagPage(props()), HashtagClient)
+    expect((client.intro as { type: unknown }).type).toBe(PageIntro)
+    expect((client.faq as { type: unknown }).type).toBe(PageFaq)
+    const keys = payloadKeys(client)
+    for (const key of ['introMd', 'aMd', 'copy']) expect(keys.has(key)).toBe(false)
   })
 
   it('renders the page even when the events read fails', async () => {

@@ -19,6 +19,15 @@ describe('listing states', () => {
     expect(screen.queryByRole('button')).toBeNull()
   })
 
+  it('EmptyState shows the filters hint by default and a custom hint in its place', () => {
+    const { unmount } = render(<EmptyState />)
+    expect(screen.getByText(/quita los filtros/)).toBeInTheDocument()
+    unmount()
+    render(<EmptyState message="Sin chollos" hint="Vuelve más tarde o mira las demás tiendas." />)
+    expect(screen.getByText('Vuelve más tarde o mira las demás tiendas.')).toBeInTheDocument()
+    expect(screen.queryByText(/quita los filtros/)).toBeNull()
+  })
+
   it('ErrorState retries', async () => {
     const onRetry = vi.fn()
     render(<ErrorState onRetry={onRetry} />)

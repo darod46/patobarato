@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, expect, it, vi } from 'vitest'
 import type { Deal } from '../lib/types'
 import { HashtagClient } from './HashtagClient'
+import { PageFaq, PageIntro } from './PageIntro'
 
 const deal = (id: number): Deal => ({
   publicationId: id,
@@ -70,35 +71,42 @@ const event = {
   approximate: false, hashtags: [], aliexpressPromo: null, introMd: '', tipsMd: '', faq: [], updatedAt: '2026-11-01T00:00:00Z',
 }
 
-it('renders the page intro: copy h1, rendered intro and the next event', () => {
+it('renders the server intro slot (h1, intro, next event) and the FAQ slot after the deals', () => {
   render(
     <HashtagClient
       tag="tecnologia"
       now="2026-11-04T12:00:00Z"
       initialDeals={{ q: '', tag: 'tecnologia', deals: [deal(1)], hasMore: false }}
       initialTags={[]}
-      intro={{
-        copy: { kind: 'category', slug: 'tecnologia', title: 'T', h1: 'Chollos de tecnología', introMd: 'Hoy hay {deals} chollos de tecnología.', faq: [], updatedAt: '2026-11-01T00:00:00Z' },
-        values: { deals: 12 },
-        nextEvent: event,
-      }}
+      intro={
+        <PageIntro
+          h1="Chollos de tecnología"
+          copy={{ kind: 'category', slug: 'tecnologia', title: 'T', h1: 'Chollos de tecnología', introMd: 'Hoy hay {deals} chollos de tecnología.', faq: [], updatedAt: '2026-11-01T00:00:00Z' }}
+          values={{ deals: 12 }}
+          nextEvent={event}
+        />
+      }
+      faq={<PageFaq faq={[{ q: '¿Cada cuánto?', aMd: 'Cada hora.' }]} />}
     />,
   )
+  expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
   expect(screen.getByRole('heading', { level: 1, name: 'Chollos de tecnología' })).toBeInTheDocument()
   expect(screen.getByText('Hoy hay 12 chollos de tecnología.')).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Black Friday 2026' })).toHaveAttribute('href', '/eventos/black-friday')
+  expect(screen.queryByText('Se actualiza automáticamente')).toBeNull()
+  const faq = screen.getByText('¿Cada cuánto?')
+  expect(screen.getByText(deal(1).title).compareDocumentPosition(faq) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 })
 
-it('falls back to the default h1 when the intro has no copy', () => {
+it('without an intro slot renders the plain h1 and the caption', () => {
   render(
     <HashtagClient
       tag="tecnologia"
       now="2026-11-04T12:00:00Z"
       initialDeals={{ q: '', tag: 'tecnologia', deals: [deal(1)], hasMore: false }}
       initialTags={[]}
-      intro={{ copy: null, values: {}, nextEvent: null }}
     />,
   )
-  expect(screen.getByRole('heading', { level: 1, name: 'Chollos de tecnologia' })).toBeInTheDocument()
-  expect(screen.queryByText(/Próximo evento/)).toBeNull()
+  expect(screen.getByRole('heading', { level: 1, name: 'Chollos de #tecnologia' })).toBeInTheDocument()
+  expect(screen.getByText('Se actualiza automáticamente')).toBeInTheDocument()
 })

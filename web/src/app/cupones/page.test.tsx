@@ -67,6 +67,15 @@ describe('CouponsPage', () => {
     expect(screen.getByText('Ahora mismo no hay cupones vigentes. Los publicamos en el canal en cuanto salen.')).toBeInTheDocument()
   })
 
+  it('puts the FAQ below the coupons', async () => {
+    vi.mocked(fetchCoupons).mockResolvedValue([coupon(1, 'aliexpress', 'PATO6')])
+    vi.mocked(fetchPageCopy).mockResolvedValue(copy)
+    render(await CouponsPage())
+    const faq = screen.getByText('¿Los cupones están comprobados?')
+    expect(screen.getByText('PATO6').compareDocumentPosition(faq) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.getByText('Antes de publicar un cupón comprobamos que funciona.').compareDocumentPosition(screen.getByText('PATO6')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
   it('rejects (never an empty page) when the coupons read fails', async () => {
     vi.mocked(fetchCoupons).mockImplementation(async () => {
       throw new Error('down')

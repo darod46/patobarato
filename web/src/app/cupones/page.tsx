@@ -3,7 +3,7 @@ import { cache } from 'react'
 import { CouponCard } from '../../components/CouponCard'
 import { Footer } from '../../components/Footer'
 import { Header } from '../../components/Header'
-import { PageIntro } from '../../components/PageIntro'
+import { PageFaq, PageIntro } from '../../components/PageIntro'
 import { fetchCoupons } from '../../lib/coupons'
 import { optional } from '../../lib/optional'
 import { primary } from '../../lib/primary'
@@ -64,6 +64,7 @@ export default async function CouponsPage() {
             </section>
           ))
         )}
+        <PageFaq faq={copy?.faq} />
       </main>
       <Footer year={year} stores={coupons.map((c) => c.store)} />
     </div>

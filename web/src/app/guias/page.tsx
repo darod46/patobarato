@@ -3,7 +3,7 @@ import { cache } from 'react'
 import { Footer } from '../../components/Footer'
 import { GuideCard } from '../../components/GuideCard'
 import { Header } from '../../components/Header'
-import { PageIntro } from '../../components/PageIntro'
+import { PageFaq, PageIntro } from '../../components/PageIntro'
 import { fetchGuides } from '../../lib/guides-data'
 import { defaultH1, fetchPageCopy } from '../../lib/page-copy'
 import { breadcrumbJsonLd, jsonLdScript, listingMetadata } from '../../lib/seo'
@@ -61,6 +61,7 @@ export default async function GuidesPage() {
         ) : (
           <p className="mt-10 rounded-2xl border border-line bg-surface p-6 text-muted">Todavía no hay guías publicadas</p>
         )}
+        <PageFaq faq={copy?.faq} />
       </main>
       <Footer year={new Date().getUTCFullYear()} stores={(stores ?? []).map((s) => s.store)} />
     </div>

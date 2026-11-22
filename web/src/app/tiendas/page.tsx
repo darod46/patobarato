@@ -3,7 +3,7 @@ import { Store } from 'lucide-react'
 import { cache } from 'react'
 import { Footer } from '../../components/Footer'
 import { Header } from '../../components/Header'
-import { PageIntro } from '../../components/PageIntro'
+import { PageFaq, PageIntro } from '../../components/PageIntro'
 import { defaultH1, fetchPageCopy, type CopyValues } from '../../lib/page-copy'
 import { breadcrumbJsonLd, jsonLdScript, listingMetadata } from '../../lib/seo'
 import { storeInfo } from '../../lib/stores'
@@ -89,6 +89,7 @@ export default async function StoresPage() {
       <main className="mx-auto max-w-[1200px] px-4 pt-24 pb-16 md:px-8 md:pt-32">
         <PageIntro h1={copy?.h1 ?? defaultH1('static', 'tiendas')} copy={copy} values={copyValues(stores)} />
         <StoresIndex stores={stores} />
+        <PageFaq faq={copy?.faq} />
       </main>
       <Footer year={new Date().getUTCFullYear()} stores={stores.map((s) => s.store)} />
     </div>

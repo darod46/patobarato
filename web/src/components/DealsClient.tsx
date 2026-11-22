@@ -1,21 +1,16 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { useClock } from '../hooks/useClock'
 import type { DealsFetcher, InitialDeals } from '../hooks/useDeals'
 import { useUrlFilters } from '../hooks/useUrlFilters'
 import * as api from '../lib/deals'
-import { defaultH1, type CopyValues } from '../lib/page-copy'
 import type { StoreStats } from '../lib/stores-data'
 import { getSupabase } from '../lib/supabase'
-import type { HashtagCount, PageCopy, SiteEvent } from '../lib/types'
+import type { HashtagCount } from '../lib/types'
 import { DealFeed } from './DealFeed'
 import { Footer } from './Footer'
 import { Header } from './Header'
-import { PageIntro } from './PageIntro'
-
-/** Server-loaded heading data; without it the plain default `<h1>` is rendered. */
-export type ListingIntro = { copy: PageCopy | null; values: CopyValues; nextEvent: SiteEvent | null }
 
 type Props = {
   /** Server render time (ISO); the first client render uses it so hydration matches. */
@@ -28,8 +23,10 @@ type Props = {
   fetchHashtags?: () => Promise<HashtagCount[]>
   /** Stores with active deals or coupons (store chips, affiliate notice). */
   stores?: StoreStats[]
-  /** Editorial copy, live values and next event for the heading. */
-  intro?: ListingIntro
+  /** Server-rendered heading (`<PageIntro>`) in place of the plain `<h1>`; keeps Markdown out of the client bundle. */
+  intro?: ReactNode
+  /** Server-rendered FAQ (`<PageFaq>`), shown below the listing. */
+  faq?: ReactNode
 }
 
 // Bound lazily so the Supabase client (and its env vars) is only needed when actually fetching.
@@ -54,6 +51,7 @@ export function DealsClient({
   fetchHashtags = defaultFetchHashtags,
   stores = [],
   intro,
+  faq,
 }: Props) {
   // Chips are links to /chollos/{tag}; a legacy `?tag=` still filters here and marks its chip.
   const serverSearch = useMemo(() => (initialDeals ? searchOf(initialDeals) : ''), [initialDeals])
@@ -66,16 +64,14 @@ export function DealsClient({
       <Header />
       <main className="mx-auto max-w-[1200px] px-4 pt-24 pb-12 md:px-8 md:pt-24 md:pb-16">
         {intro ? (
-          <PageIntro
-            h1={intro.copy?.h1 ?? defaultH1('static', 'chollos')}
-            copy={intro.copy}
-            values={intro.values}
-            nextEvent={intro.nextEvent}
-          />
+          // The editorial intro replaces the plain caption under the heading.
+          <div className="mb-5">{intro}</div>
         ) : (
-          <h1 className="font-display text-2xl font-bold tracking-[-0.02em] md:text-[32px]">Chollos de hoy</h1>
+          <>
+            <h1 className="font-display text-2xl font-bold tracking-[-0.02em] md:text-[32px]">Chollos de hoy</h1>
+            <p className="mt-1.5 mb-5 text-muted">Se actualiza automáticamente</p>
+          </>
         )}
-        <p className="mt-1.5 mb-5 text-muted">Se actualiza automáticamente</p>
         <DealFeed
           q=""
           tag={tag}
@@ -91,6 +87,7 @@ export function DealsClient({
           initialTags={initialTags}
           now={clock}
         />
+        {faq}
       </main>
       <Footer year={new Date(now).getUTCFullYear()} stores={stores.map((s) => s.store)} />
     </div>

@@ -1,22 +1,21 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { useClock } from '../hooks/useClock'
 import type { DealsFetcher, InitialDeals } from '../hooks/useDeals'
 import { useUrlFilters } from '../hooks/useUrlFilters'
 import { MAX_STORE_COUPONS } from '../lib/coupons'
 import * as api from '../lib/deals'
-import { defaultH1 } from '../lib/page-copy'
 import { storeInfo } from '../lib/stores'
 import type { StoreStats } from '../lib/stores-data'
 import { countLabel } from '../lib/text'
 import type { Coupon } from '../lib/types'
 import { getSupabase } from '../lib/supabase'
 import { CouponsBlock } from './CouponsBlock'
-import type { ListingIntro } from './DealsClient'
 import { DealFeed } from './DealFeed'
+import { EmptyState } from './EmptyState'
 import { Footer } from './Footer'
 import { Header } from './Header'
-import { PageIntro } from './PageIntro'
 
 type Props = {
   /** Store id, fixed for the whole page. */
@@ -31,15 +30,17 @@ type Props = {
   /** Valid coupons of this store; undefined when they could not be loaded. */
   coupons: Coupon[] | undefined
   fetchDeals?: DealsFetcher
-  /** Editorial copy and next event; replaces the plain heading when present. */
-  intro?: ListingIntro
+  /** Server-rendered heading (`<PageIntro>`) in place of the plain `<h1>`; keeps Markdown out of the client bundle. */
+  intro?: ReactNode
+  /** Server-rendered FAQ (`<PageFaq>`), shown below the listing. */
+  faq?: ReactNode
 }
 
 // Bound lazily so the Supabase client is only created when the visitor searches or loads more.
 const defaultFetchDeals: DealsFetcher = async (params) => api.fetchDeals(getSupabase(), params)
 
 /** `/tiendas/{tienda}`: the listing with the store fixed (`?tienda=` is ignored). */
-export function StoreClient({ store, now, initialDeals, initialTags, stores, coupons, fetchDeals = defaultFetchDeals, intro }: Props) {
+export function StoreClient({ store, now, initialDeals, initialTags, stores, coupons, fetchDeals = defaultFetchDeals, intro, faq }: Props) {
   // Only the sort is used from the URL; the store comes from the path.
   const { sort, setSort } = useUrlFilters()
   const clock = useClock(now)
@@ -59,14 +60,7 @@ export function StoreClient({ store, now, initialDeals, initialTags, stores, cou
       <Header />
       <main>
         <div className="mx-auto max-w-[1200px] px-4 pt-24 md:px-8 md:pt-24">
-        {intro ? (
-          <PageIntro
-            h1={intro.copy?.h1 ?? defaultH1('store', store)}
-            copy={intro.copy}
-            values={intro.values}
-            nextEvent={intro.nextEvent}
-          />
-        ) : (
+        {intro ?? (
           <h1 className="font-display text-2xl font-bold tracking-[-0.02em] md:text-[32px]">Chollos de {storeInfo(store).name}</h1>
         )}
         <p className="mt-1.5 mb-5 text-muted">{summary}</p>
@@ -79,13 +73,19 @@ export function StoreClient({ store, now, initialDeals, initialTags, stores, cou
           store={store}
           sort={sort}
           onSort={setSort}
-          onClear={() => setSort('recientes')}
-          emptyMessage={`Ahora mismo no hay chollos activos de ${storeInfo(store).name}.`}
+          // No filters to remove here: the empty state points elsewhere instead of offering «Quitar filtros».
+          empty={
+            <EmptyState
+              message={`Ahora mismo no hay chollos activos de ${storeInfo(store).name}.`}
+              hint="Vuelve más tarde o mira las demás tiendas."
+            />
+          }
           fetchDeals={fetchDeals}
           initialDeals={initialDeals}
           initialTags={initialTags}
           now={clock}
         />
+        {faq}
         </div>
       </main>
       <Footer year={new Date(now).getUTCFullYear()} stores={stores.map((s) => s.store)} />

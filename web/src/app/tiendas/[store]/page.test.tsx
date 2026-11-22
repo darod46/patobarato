@@ -7,6 +7,9 @@ import { fetchPageCopy } from '../../../lib/page-copy'
 import { fetchStores } from '../../../lib/stores-data'
 import type { Deal, PageCopy } from '../../../lib/types'
 import { siteEvent } from '../../../test-utils/siteEvent'
+import { PageFaq, PageIntro } from '../../../components/PageIntro'
+import { StoreClient } from '../../../components/StoreClient'
+import { payloadKeys, propsOf } from '../../../test-utils/clientProps'
 import StorePage, { generateMetadata } from './page'
 
 const deal = (id: number): Deal => ({
@@ -150,6 +153,31 @@ describe('StorePage', () => {
   it('is still noindex with 2 deals when the copy row is absent', async () => {
     vi.mocked(fetchPageCopy).mockResolvedValue(null)
     expect((await generateMetadata(params('aliexpress'))).robots).toEqual({ index: false, follow: true })
+  })
+
+  it('hands the intro and FAQ to the client as server-rendered slots, never the raw copy', async () => {
+    vi.mocked(fetchPageCopy).mockResolvedValue(copy({ faq: [{ q: '¿Envía a España?', aMd: 'Sí.' }] }))
+    const client = propsOf(await StorePage(params('aliexpress')), StoreClient)
+    expect((client.intro as { type: unknown }).type).toBe(PageIntro)
+    expect((client.faq as { type: unknown }).type).toBe(PageFaq)
+    const keys = payloadKeys(client)
+    for (const key of ['introMd', 'aMd', 'copy']) expect(keys.has(key)).toBe(false)
+  })
+
+  it('reads the next event together with the other secondary reads', async () => {
+    let eventsStarted = false
+    vi.mocked(fetchEvents).mockImplementation(async () => {
+      eventsStarted = true
+      return []
+    })
+    vi.mocked(fetchDeals).mockImplementation(async () => {
+      // Still inside the loader's Promise.all: events must already have been requested.
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(eventsStarted).toBe(true)
+      return { deals: [deal(1)], hasMore: false }
+    })
+    await generateMetadata(params('aliexpress'))
+    expect(fetchEvents).toHaveBeenCalledTimes(1)
   })
 
   it('rejects (never 404 or noindex) when the deals read fails', async () => {

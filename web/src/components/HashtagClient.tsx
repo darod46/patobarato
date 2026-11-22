@@ -1,15 +1,13 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { useClock } from '../hooks/useClock'
 import type { DealsFetcher, InitialDeals } from '../hooks/useDeals'
 import * as api from '../lib/deals'
-import { defaultH1 } from '../lib/page-copy'
 import { getSupabase } from '../lib/supabase'
-import type { ListingIntro } from './DealsClient'
 import { DealFeed } from './DealFeed'
 import { Footer } from './Footer'
 import { Header } from './Header'
-import { PageIntro } from './PageIntro'
 
 type Props = {
   /** Normalized hashtag, fixed for the whole page. */
@@ -20,8 +18,10 @@ type Props = {
   initialDeals: InitialDeals
   initialTags: string[]
   fetchDeals?: DealsFetcher
-  /** Editorial copy, live values and next event for the heading. */
-  intro?: ListingIntro
+  /** Server-rendered heading (`<PageIntro>`) in place of the plain `<h1>`; keeps Markdown out of the client bundle. */
+  intro?: ReactNode
+  /** Server-rendered FAQ (`<PageFaq>`), shown below the listing. */
+  faq?: ReactNode
 }
 
 // Bound lazily so the Supabase client is only created when the visitor searches or loads more.
@@ -31,7 +31,7 @@ const defaultFetchDeals: DealsFetcher = async (params) => api.fetchDeals(getSupa
 const allDeals = () => window.location.assign('/chollos')
 
 /** `/chollos/{tag}`: the listing with the tag fixed. */
-export function HashtagClient({ tag, now, initialDeals, initialTags, fetchDeals = defaultFetchDeals, intro }: Props) {
+export function HashtagClient({ tag, now, initialDeals, initialTags, fetchDeals = defaultFetchDeals, intro, faq }: Props) {
   const clock = useClock(now)
 
   return (
@@ -39,16 +39,14 @@ export function HashtagClient({ tag, now, initialDeals, initialTags, fetchDeals 
       <Header />
       <main className="mx-auto max-w-[1200px] px-4 pt-24 pb-12 md:px-8 md:pt-24 md:pb-16">
         {intro ? (
-          <PageIntro
-            h1={intro.copy?.h1 ?? defaultH1('category', tag)}
-            copy={intro.copy}
-            values={intro.values}
-            nextEvent={intro.nextEvent}
-          />
+          // The editorial intro replaces the plain caption under the heading.
+          <div className="mb-5">{intro}</div>
         ) : (
-          <h1 className="font-display text-2xl font-bold tracking-[-0.02em] md:text-[32px]">Chollos de #{tag}</h1>
+          <>
+            <h1 className="font-display text-2xl font-bold tracking-[-0.02em] md:text-[32px]">Chollos de #{tag}</h1>
+            <p className="mt-1.5 mb-5 text-muted">Se actualiza automáticamente</p>
+          </>
         )}
-        <p className="mt-1.5 mb-5 text-muted">Se actualiza automáticamente</p>
         <DealFeed
           q=""
           tag={tag}
@@ -58,6 +56,7 @@ export function HashtagClient({ tag, now, initialDeals, initialTags, fetchDeals 
           initialTags={initialTags}
           now={clock}
         />
+        {faq}
       </main>
       <Footer year={new Date(now).getUTCFullYear()} />
     </div>

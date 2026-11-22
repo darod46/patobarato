@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, expect, it, vi } from 'vitest'
 import type { Coupon, Deal } from '../lib/types'
 import { StoreClient } from './StoreClient'
+import { PageFaq, PageIntro } from './PageIntro'
 
 const deal = (id: number): Deal => ({
   publicationId: id,
@@ -138,7 +139,7 @@ it('without stats omits the coupon count when the list may be truncated', () => 
   expect(screen.getByText(/^Decathlon · 1 chollo$/)).toBeInTheDocument()
 })
 
-it('with an intro renders the copy h1, intro and live count in place of the plain heading', () => {
+it('with an intro slot renders it in place of the plain heading and the FAQ slot after the deals', () => {
   render(
     <StoreClient
       store="aliexpress"
@@ -148,38 +149,30 @@ it('with an intro renders the copy h1, intro and live count in place of the plai
       stores={stores}
       coupons={[]}
       fetchDeals={vi.fn()}
-      intro={{
-        copy: {
-          kind: 'store', slug: 'aliexpress', title: 'T', h1: 'AliExpress, cazado por el pato',
-          introMd: 'Hay {deals} chollos activos.', faq: [], updatedAt: '2026-11-20T10:00:00Z',
-        },
-        values: { deals: 12 },
-        nextEvent: null,
-      }}
+      intro={
+        <PageIntro
+          h1="AliExpress, cazado por el pato"
+          copy={{
+            kind: 'store', slug: 'aliexpress', title: 'T', h1: 'AliExpress, cazado por el pato',
+            introMd: 'Hay {deals} chollos activos.', faq: [], updatedAt: '2026-11-20T10:00:00Z',
+          }}
+          values={{ deals: 12 }}
+        />
+      }
+      faq={<PageFaq faq={[{ q: '¿Envía a España?', aMd: 'Sí.' }]} />}
     />,
   )
   expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('AliExpress, cazado por el pato')
   expect(screen.getByText('Hay 12 chollos activos.')).toBeInTheDocument()
+  const faq = screen.getByText('¿Envía a España?')
+  expect(screen.getByText(deal(1).title).compareDocumentPosition(faq) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 })
 
-it('with an intro and no copy uses the default store h1', () => {
-  render(
-    <StoreClient
-      store="decathlon"
-      now="2026-11-04T12:00:00Z"
-      initialTags={[]}
-      stores={[]}
-      coupons={[]}
-      initialDeals={{ q: '', tag: null, store: 'decathlon', sort: 'recientes', deals: [], hasMore: false }}
-      fetchDeals={vi.fn()}
-      intro={{ copy: null, values: { deals: null }, nextEvent: null }}
-    />,
-  )
-  expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Chollos de Decathlon')
-})
-
-it('says honestly that the store has no active deals', async () => {
+it('says honestly that the store has no active deals, without talking about filters', async () => {
   noStats({ deals: [], hasMore: false }, [])
   expect(await screen.findByText('Ahora mismo no hay chollos activos de Decathlon.')).toBeInTheDocument()
+  expect(screen.getByText('Vuelve más tarde o mira las demás tiendas.')).toBeInTheDocument()
+  expect(screen.queryByText(/quita los filtros/)).toBeNull()
+  expect(screen.queryByRole('button', { name: 'Quitar filtros' })).toBeNull()
 })

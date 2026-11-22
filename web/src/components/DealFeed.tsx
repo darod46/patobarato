@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useDeals, type DealsFetcher, type InitialDeals } from '../hooks/useDeals'
 import type { DealSort } from '../lib/deals'
 import type { StoreStats } from '../lib/stores-data'
@@ -27,6 +27,8 @@ type Props = {
   onClear?: () => void
   /** Copy of the empty state (default: the filters message). */
   emptyMessage?: string
+  /** Replaces the whole empty state (then `emptyMessage` and `onClear` are not used for it). */
+  empty?: ReactNode
   fetchDeals: DealsFetcher
   /** Used only when `initialTags` is not given. */
   fetchHashtags?: () => Promise<HashtagCount[]>
@@ -50,6 +52,7 @@ export function DealFeed({
   onTag,
   onClear,
   emptyMessage,
+  empty,
   fetchDeals,
   fetchHashtags,
   initialDeals,
@@ -91,7 +94,7 @@ export function DealFeed({
         </div>
       )}
       {status === 'error' && <ErrorState onRetry={retry} />}
-      {status === 'ready' && deals.length === 0 && <EmptyState message={emptyMessage} onClear={onClear} />}
+      {status === 'ready' && deals.length === 0 && (empty ?? <EmptyState message={emptyMessage} onClear={onClear} />)}
       {status === 'ready' && deals.length > 0 && (
         <>
           <div className={GRID}>

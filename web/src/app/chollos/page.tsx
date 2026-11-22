@@ -1,11 +1,12 @@
 import type { Metadata } from 'next'
 import { cache } from 'react'
 import { DealsClient } from '../../components/DealsClient'
+import { PageFaq, PageIntro } from '../../components/PageIntro'
 import { fetchDeals, fetchHashtags } from '../../lib/deals'
 import { fetchEvents } from '../../lib/events-data'
 import { ANNOUNCE_WINDOW_DAYS, nextEvent } from '../../lib/events'
 import { parseListingFilters } from '../../lib/filters'
-import { fetchPageCopy, type CopyValues } from '../../lib/page-copy'
+import { defaultH1, fetchPageCopy, type CopyValues } from '../../lib/page-copy'
 import { breadcrumbJsonLd, jsonLdScript, listingMetadata } from '../../lib/seo'
 import { fetchStores, type StoreStats } from '../../lib/stores-data'
 import { getSupabase } from '../../lib/supabase'
@@ -85,11 +86,15 @@ export default async function DealsPage({ searchParams }: { searchParams?: Promi
         initialDeals={page && { q: '', ...filters, ...page }}
         initialTags={tags?.map((h) => h.tag)}
         stores={stores ?? []}
-        intro={{
-          copy,
-          values: copyValues(stores),
-          nextEvent: events ? nextEvent(new Date(), events, ANNOUNCE_WINDOW_DAYS) : null,
-        }}
+        intro={
+          <PageIntro
+            h1={copy?.h1 ?? defaultH1('static', 'chollos')}
+            copy={copy}
+            values={copyValues(stores)}
+            nextEvent={events ? nextEvent(new Date(), events, ANNOUNCE_WINDOW_DAYS) : null}
+          />
+        }
+        faq={<PageFaq faq={copy?.faq} />}
       />
     </>
   )

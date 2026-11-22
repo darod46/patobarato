@@ -4,6 +4,9 @@ import * as deals from '../../lib/deals'
 import * as eventsData from '../../lib/events-data'
 import * as pageCopy from '../../lib/page-copy'
 import * as storesData from '../../lib/stores-data'
+import { DealsClient } from '../../components/DealsClient'
+import { PageFaq, PageIntro } from '../../components/PageIntro'
+import { payloadKeys, propsOf } from '../../test-utils/clientProps'
 import DealsPage, * as pageModule from './page'
 import { generateMetadata } from './page'
 
@@ -112,6 +115,12 @@ describe('/chollos', () => {
       expect(screen.getByText('Hay 40 chollos en Amazon.')).toBeInTheDocument()
       expect(screen.getByRole('link', { name: /Black Friday/ })).toHaveAttribute('href', '/eventos/black-friday')
       expect((await generateMetadata()).title).toBe('Chollos de hoy en Amazon · PatoBarato')
+      // The intro and FAQ are server-rendered slots: no raw copy crosses into the client component.
+      const client = propsOf(await DealsPage(), DealsClient)
+      expect((client.intro as { type: unknown }).type).toBe(PageIntro)
+      expect((client.faq as { type: unknown }).type).toBe(PageFaq)
+      const keys = payloadKeys(client)
+      for (const key of ['introMd', 'aMd', 'copy']) expect(keys.has(key)).toBe(false)
     } finally {
       vi.mocked(storesData.fetchStores).mockResolvedValue([])
       vi.mocked(pageCopy.fetchPageCopy).mockResolvedValue(null)
