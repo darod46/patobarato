@@ -29,14 +29,14 @@ export async function loadSitemapXml(name: SitemapName, client: SupabaseClient, 
     fetchGuides(client),
     fetchAllCopies(client),
   ])
-  return buildSitemapXml(pageEntries({ siteUrl: SITE_URL, tags, stores, guides, copies }))
+  return buildSitemapXml(pageEntries({ siteUrl: SITE_URL, tags, stores, guides, copies, now }))
 }
 
 /** Minimal sitemap used only when the reads fail during the build. */
 export function minimalSitemapXml(name: SitemapName, now: Date): string {
   if (name === 'chollos') return buildSitemapXml([])
   if (name === 'eventos') return buildSitemapXml(eventEntries([], SITE_URL, now))
-  return buildSitemapXml(pageEntries({ siteUrl: SITE_URL, tags: [], stores: [], guides: [], copies: [] }))
+  return buildSitemapXml(pageEntries({ siteUrl: SITE_URL, tags: [], stores: [], guides: [], copies: [], now }))
 }
 
 /** XML of the sitemap index, with each sitemap's lastmod from its newest row. */

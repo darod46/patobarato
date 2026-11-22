@@ -19,7 +19,9 @@ const copy = (kind: PageCopy['kind'], slug: string, updatedAt: string): PageCopy
   updatedAt,
 })
 
-const guide = (slug: string, updatedAt: string): GuideSummary => ({
+const NOW = new Date('2026-11-22T12:00:00Z')
+
+const guide = (slug: string, updatedAt: string, pricesCheckedAt: string | null = '2026-11-22T06:00:00Z'): GuideSummary => ({
   slug,
   title: slug,
   subtitle: null,
@@ -29,7 +31,7 @@ const guide = (slug: string, updatedAt: string): GuideSummary => ({
   publishedAt: '2026-11-01T10:00:00Z',
   updatedAt,
   items: 3,
-  pricesCheckedAt: null,
+  pricesCheckedAt,
 })
 
 describe('buildSitemapIndex', () => {
@@ -87,7 +89,7 @@ describe('dealEntries', () => {
 })
 
 describe('pageEntries', () => {
-  const base = { siteUrl: SITE_URL, tags: [], stores: [], guides: [], copies: [] }
+  const base = { siteUrl: SITE_URL, tags: [], stores: [], guides: [], copies: [], now: NOW }
   const urls = (p: Partial<Parameters<typeof pageEntries>[0]>) => pageEntries({ ...base, ...p }).map((e) => e.url)
 
   it('always lists the home, the listings and the static pages', () => {
@@ -167,6 +169,19 @@ describe('pageEntries', () => {
     expect(by('/chollos/hogar')?.lastModified).toEqual(new Date('2026-11-19T09:00:00Z'))
     expect(by('/tiendas/amazon')?.lastModified).toEqual(new Date('2026-11-18T09:00:00Z'))
     expect(by('/tiendas')?.lastModified).toBeUndefined()
+  })
+
+  it('lists only guides with fresh prices (the others are noindex)', () => {
+    const u = urls({
+      guides: [
+        guide('cafeteras', '2026-11-07T08:00:00Z'),
+        guide('freidoras', '2026-11-07T08:00:00Z', '2026-11-19T06:00:00Z'),
+        guide('robots', '2026-11-07T08:00:00Z', null),
+      ],
+    })
+    expect(u).toContain(`${SITE_URL}/guias/cafeteras`)
+    expect(u).not.toContain(`${SITE_URL}/guias/freidoras`)
+    expect(u).not.toContain(`${SITE_URL}/guias/robots`)
   })
 
   it('has no duplicate URLs', () => {

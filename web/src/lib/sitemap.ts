@@ -3,7 +3,7 @@ import { MIN_INDEXABLE_DEALS } from './seo'
 import type { StoreStats } from './stores-data'
 import { daysUntil, eventPath, eventPhase } from './events'
 import type { Deal, GuideSummary, HashtagCount, PageCopy, SiteEvent } from './types'
-import { guidePath } from './guides'
+import { guidePath, hasFreshPrices } from './guides'
 import { storeFromSlug, storeInfo } from './stores'
 import { productPath, tagPath } from './urls'
 
@@ -19,7 +19,10 @@ export function isSitemapName(name: string): name is SitemapName {
 
 export const STATIC_PATHS = ['/aviso-legal', '/privacidad', '/cookies', '/afiliados', '/contacto', '/sobre-nosotros']
 
-/** Listing pages, always indexable: each has an editorial copy (kind `static`, slug = path without `/`). */
+/**
+ * Listing pages, always indexable. All but `/buscar` have an editorial copy (kind `static`, slug = path
+ * without `/`) whose `updated_at` is their lastmod; `/buscar` has none and goes without lastmod.
+ */
 const LISTING_PATHS = ['/chollos', '/buscar', '/tiendas', '/cupones', '/guias']
 
 const XML_HEAD = '<?xml version="1.0" encoding="UTF-8"?>'
@@ -64,8 +67,8 @@ export function dealEntries(deals: DealRef[], siteUrl: string): MetadataRoute.Si
 }
 
 /**
- * `paginas` sitemap: home, listings, indexable categories and stores, guides and
- * static pages. `lastmod` comes from the page copy (`updated_at`) or the guide when there is one.
+ * `paginas` sitemap: home, listings, indexable categories and stores, guides with fresh prices (the
+ * others are noindex) and static pages. `lastmod` comes from the page copy (`updated_at`) or the guide.
  */
 export function pageEntries({
   siteUrl,
@@ -73,8 +76,11 @@ export function pageEntries({
   stores,
   guides,
   copies,
+  now,
 }: {
   siteUrl: string
+  /** Reference time for the guides' price freshness. */
+  now: Date
   tags: HashtagCount[]
   stores: StoreStats[]
   guides: GuideSummary[]
@@ -100,7 +106,7 @@ export function pageEntries({
     ...LISTING_PATHS.map(staticEntry),
     ...tags.filter(categoryListed).map((t) => ({ url: siteUrl + tagPath(t.tag), ...updated('category', t.tag) })),
     ...storeIds.map((id) => ({ url: `${siteUrl}/tiendas/${storeInfo(id).slug}`, ...updated('store', id) })),
-    ...guides.map((g) => ({ url: siteUrl + guidePath(g.slug), lastModified: new Date(g.updatedAt) })),
+    ...guides.filter((g) => hasFreshPrices(g.pricesCheckedAt, now)).map((g) => ({ url: siteUrl + guidePath(g.slug), lastModified: new Date(g.updatedAt) })),
     ...STATIC_PATHS.map(staticEntry),
   ]
 }
