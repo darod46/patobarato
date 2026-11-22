@@ -400,3 +400,11 @@ async def test_fail_running_jobs_updates_running_rows():
     assert ("eq", ("status", "running"), {}) in client.log
     update = next(a[0] for n, a, _ in client.log if n == "update")
     assert update == {"status": "error", "error": "boom"}
+
+
+async def test_upsert_channel_stats_upserts_id_1():
+    client = _Client([])
+    await SupabaseRepository(client).upsert_channel_stats(1234, NOW)
+    assert ("table", ("channel_stats",), {}) in client.log
+    _, args, _ = next(e for e in client.log if e[0] == "upsert")
+    assert args[0] == {"id": 1, "members": 1234, "checked_at": NOW.isoformat()}

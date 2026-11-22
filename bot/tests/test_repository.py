@@ -498,3 +498,11 @@ async def test_fail_running_jobs_only_touches_running():
     jobs = repo.jobs()
     assert [j["status"] for j in jobs] == ["done", "error", "pending"]
     assert jobs[1]["error"] == "interrumpido"
+
+
+async def test_upsert_channel_stats_replaces_row():
+    repo = InMemoryRepository()
+    assert repo.channel_stats is None
+    await repo.upsert_channel_stats(10, NOW)
+    await repo.upsert_channel_stats(20, NOW + timedelta(hours=1))
+    assert repo.channel_stats == {"members": 20, "checked_at": NOW + timedelta(hours=1)}

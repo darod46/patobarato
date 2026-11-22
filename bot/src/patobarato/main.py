@@ -29,6 +29,7 @@ from patobarato.sources.aliexpress_source import AliExpressSource
 from patobarato.sources.api_scheduler import ApiScheduler, ApiSourceRunner
 from patobarato.sources.awin_feeds import AwinFeedsSource
 from patobarato.sources.awin_source import AwinClient, AwinPromotionsSource
+from patobarato.sources.channel_stats import ChannelStatsSource
 from patobarato.sources.event_promos import EventPromosSource
 from patobarato.sources.guide_prices import GuidePriceRefresher
 from patobarato.sources.telegram_listener import TelegramListener, make_photo_provider
@@ -115,6 +116,7 @@ def build_runners(
     settings: Settings,
     clock: Callable[[], datetime],
     http: httpx.AsyncClient | None = None,
+    bot: TelegramClient | None = None,
 ) -> list[ApiSourceRunner]:
     """API source runners available with the configured credentials."""
     runners: list[ApiSourceRunner] = []
@@ -135,6 +137,8 @@ def build_runners(
     runners.append(
         GuidePriceRefresher(registry, repo, clock, delay_seconds=settings.guide_price_delay_seconds)
     )
+    if bot is not None:
+        runners.append(ChannelStatsSource(bot, repo, settings.target_channel, clock))
     return runners
 
 
@@ -174,7 +178,8 @@ async def run(settings: Settings) -> int:
             registry=registry,
             image_downloader=lambda url: download_photo(http, url),
         )
-        scheduler = ApiScheduler(repo, build_runners(registry, repo, settings, utcnow, http))
+        scheduler = ApiScheduler(repo, build_runners(registry, repo, settings, utcnow, http, bot=bot)
+        )
         runner = JobRunner(
             repo,
             PostService(

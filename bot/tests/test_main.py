@@ -466,3 +466,19 @@ def test_main_dispatches_promos(monkeypatch):
 
     assert main(["promos"]) == 0
     assert seen == ["settings"]
+
+
+def test_build_runners_adds_channel_stats_only_with_bot():
+    from patobarato.storage.repository import InMemoryRepository
+    from patobarato.stores.registry import build_registry
+
+    settings = _ali_settings()
+    http = httpx.AsyncClient()
+    registry = build_registry(settings, http, http)
+    repo = InMemoryRepository()
+
+    without = main_module.build_runners(registry, repo, settings, lambda: None)
+    with_bot = main_module.build_runners(registry, repo, settings, lambda: None, bot=object())
+
+    assert "channel_stats" not in [r.type for r in without]
+    assert "channel_stats" in [r.type for r in with_bot]

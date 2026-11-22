@@ -738,6 +738,14 @@ class SupabaseRepository:
 
         await asyncio.to_thread(run)
 
+    async def upsert_channel_stats(self, members: int, checked_at: datetime) -> None:
+        def run():
+            self._client.table("channel_stats").upsert(
+                {"id": 1, "members": members, "checked_at": checked_at.isoformat()}
+            ).execute()
+
+        await asyncio.to_thread(run)
+
     async def find_catalog_product(self, store: str, url: str) -> CatalogRow | None:
         def run():
             return (

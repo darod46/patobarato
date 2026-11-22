@@ -189,6 +189,10 @@ class Repository(Protocol):
 
     async def find_catalog_product(self, store: str, url: str) -> CatalogRow | None: ...
 
+    async def upsert_channel_stats(self, members: int, checked_at: datetime) -> None:
+        """Stores the channel member count in the single ``channel_stats`` row."""
+        ...
+
 
 class InMemoryRepository(Repository):
     """Test double that mirrors the database uniqueness rules."""
@@ -212,6 +216,7 @@ class InMemoryRepository(Repository):
         self._events: dict[int, tuple[str, str | None, str]] = {}
         self._event_promos: dict[int, list[EventPromoRow]] = {}
         self.feed_runs: dict[tuple[str, int], dict] = {}
+        self.channel_stats: dict | None = None
         self._jobs: list[dict] = []
         self.admin_users: dict[str, dict] = {}
         self._manual_source_id: int | None = None
@@ -625,6 +630,9 @@ class InMemoryRepository(Repository):
             "products": products,
             "last_error": error,
         }
+
+    async def upsert_channel_stats(self, members: int, checked_at: datetime) -> None:
+        self.channel_stats = {"members": members, "checked_at": checked_at}
 
     async def find_catalog_product(self, store: str, url: str) -> CatalogRow | None:
         matches = [r for (s, _), r in self.catalog.items() if s == store and r.url == url]
