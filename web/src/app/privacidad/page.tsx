@@ -8,7 +8,7 @@ export const metadata = legalMetadata('Política de privacidad', '/privacidad', 
 
 export default function PrivacidadPage() {
   return (
-    <LegalLayout title="Política de privacidad" updated="6 de noviembre de 2026" year={YEAR}>
+    <LegalLayout title="Política de privacidad" updated="25 de noviembre de 2026" year={YEAR}>
       <h2>Responsable</h2>
       <p>El responsable del tratamiento es [TITULAR], NIF [NIF], [DIRECCIÓN], correo [EMAIL].</p>
       <h2>Qué datos tratamos</h2>
@@ -16,7 +16,8 @@ export default function PrivacidadPage() {
         Navegar por patobarato.com no requiere registro ni facilitar datos personales. El sitio no tiene
         formularios ni cuentas de usuario. El proveedor de alojamiento (Vercel) registra de forma automática
         datos técnicos de las conexiones (dirección IP, navegador, páginas visitadas) con la única finalidad
-        de prestar el servicio, garantizar su seguridad y obtener estadísticas agregadas.
+        de prestar el servicio, garantizar su seguridad y obtener estadísticas agregadas. Contamos los clics en los botones de Telegram (botón y página) sin
+        guardar ningún dato que te identifique.
       </p>
       <h2>Telegram</h2>
       <p>

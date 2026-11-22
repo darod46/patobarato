@@ -6,6 +6,7 @@ import type { Deal } from '../lib/types'
 import { tagPath } from '../lib/urls'
 import { BuyButton } from './BuyButton'
 import { DealCard } from './DealCard'
+import { NextDealCta } from './NextDealCta'
 
 const PLACEHOLDER = '/pato-placeholder.svg'
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
@@ -156,6 +157,8 @@ export function ProductView({ deal, related, now, guides = [] }: Props) {
           )}
         </div>
       </article>
+
+      <NextDealCta hashtags={deal.hashtags} />
 
       {related.length > 0 && (
         <section className="mt-12">

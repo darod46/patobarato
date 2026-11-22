@@ -124,7 +124,16 @@ describe('ProductView', () => {
 
   it('omits the related section when there are no related deals', () => {
     render(<ProductView deal={deal} related={[]} now={now} />)
-    expect(screen.queryByRole('heading', { level: 2 })).toBeNull()
+    expect(screen.queryByRole('heading', { level: 2, name: /Más chollos/ })).toBeNull()
+  })
+
+  it('shows the Telegram card between the buy block and the related section', () => {
+    render(<ProductView deal={deal} related={related} now={now} />)
+    const cta = screen.getByRole('heading', { level: 2, name: '¿Se te ha escapado?' })
+    const buy = screen.getByRole('link', { name: 'Ver en Amazon' })
+    const more = screen.getByRole('heading', { level: 2, name: 'Más chollos de #hogar' })
+    expect(buy.compareDocumentPosition(cta) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(cta.compareDocumentPosition(more) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 })
 
