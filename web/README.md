@@ -123,9 +123,9 @@ El `h1` por defecto es el título sin el número (en categorías y tiendas, `Cho
 | `/chollos`, `/tiendas`, `/cupones`, `/guias`, `/eventos`, `/sobre-nosotros` | Siempre indexables; con la lista vacía, texto editorial y un mensaje honesto. |
 | `/guias/{slug}` | Sin cambio: `noindex` mientras los precios no estén frescos (ver «Guías de compra»). |
 | `/buscar?q=` | Sin cambio: `noindex`. |
-| Fallo de lectura de Supabase en un listado | La página **lanza** y Next sigue sirviendo la última versión ISR: nunca 404, nunca `noindex`, nunca una página vacía cacheada. Solo los bloques secundarios (chips, tiendas del pie, eventos, texto editorial) usan `optional()` y se omiten si fallan. |
+| Fallo de lectura de Supabase en un listado | La página **lanza** y Next sigue sirviendo la última versión ISR: nunca 404, nunca `noindex`, nunca una página vacía cacheada. Solo los bloques secundarios (chips, tiendas del pie, eventos, texto editorial) usan `optional()` y se omiten si fallan. Excepción: `/chollos` es dinámica (por petición) y su listado también usa `optional()`: si falla, el cliente vuelve a pedirlo en el navegador. |
 
-`noindex` solo se emite cuando la base de datos ha respondido y la página es realmente fina. Si falla la lectura del texto editorial, la página sale con título y `h1` por defecto (y sin `noindex`, salvo el caso fino de la tabla). Si falla solo el contador pero la lectura principal va bien, se usa el número de elementos cargados.
+`noindex` solo se emite cuando la base de datos ha respondido y la página es realmente fina. Si falla la lectura del texto editorial, la página sale con título y `h1` por defecto y **nunca** con `noindex`, aunque tenga 1–2 chollos: un fallo no es «sin fila». Solo una lectura correcta sin fila cuenta como «sin texto editorial». Si falla solo el contador pero la lectura principal va bien, se usa el número de elementos cargados.
 
 **Fase de build.** Sin base de datos durante `next build`, `src/lib/primary.ts` (`primary()`) registra el error y devuelve `undefined` en lugar de lanzar (`NEXT_PHASE=phase-production-build`), de modo que el despliegue sigue y la página queda con su estado vacío honesto hasta la primera revalidación. Fuera del build, `primary()` relanza siempre. Con Supabase caído y sin versión ISR previa, la primera petición da el error de Next (500); `/api/salud` permite detectarlo antes de pedir indexación.
 
@@ -136,7 +136,7 @@ El `h1` por defecto es el título sin el número (en categorías y tiendas, `Cho
 | Sitemap | Contenido | `lastmod` |
 | --- | --- | --- |
 | `/sitemaps/chollos.xml` | Fichas de oferta (`changefreq daily`) | `publishedAt` |
-| `/sitemaps/paginas.xml` | Portada, listados (`/chollos`, `/buscar`, `/tiendas`, `/cupones`, `/guias`), categorías indexables, tiendas indexables, guías y páginas estáticas (incl. `/sobre-nosotros`) | `updated_at` de `page_copy` o de la guía |
+| `/sitemaps/paginas.xml` | Portada, listados (`/chollos`, `/buscar`, `/tiendas`, `/cupones`, `/guias`), categorías indexables, tiendas indexables, guías con precios frescos (las demás llevan `noindex`) y páginas estáticas (incl. `/sobre-nosotros`) | `updated_at` de `page_copy` o de la guía |
 | `/sitemaps/eventos.xml` | `/eventos` y cada evento publicado | `updated_at` del evento |
 
 Las categorías y tiendas entran con la misma regla que su página (categoría con ≥ 1 chollo y, además, fila o ≥ 3 chollos; tienda con fila o ≥ 3 chollos), así que `/chollos/bricolaje` con 2 chollos y sin fila **no** está. El índice lleva el `lastmod` de la fila más reciente de cada sitemap. Cada fichero devuelve su versión mínima si la lectura falla durante el build y **lanza** en runtime (Next conserva la última versión). `robots.txt` apunta a `/sitemap.xml`. Search Console: envía solo el índice.
@@ -146,11 +146,11 @@ Las categorías y tiendas entran con la misma regla que su página (categoría c
 `GET /api/salud` comprueba desde el servidor si Supabase se lee (las mismas lecturas que usan los listados). Responde siempre `200` y `Cache-Control: no-store`:
 
 ```json
-{ "ok": true, "at": "2026-11-22T10:00:00.000Z", "checks": { "supabase": "ok", "deals": 316, "events": 5 } }
+{ "ok": true, "at": "2026-11-22T10:00:00.000Z", "checks": { "supabase": "ok", "deals": 316, "events": 5, "copies": 6 } }
 ```
 
-- `checks.deals`: suma de chollos activos de `web_stores`; `checks.events`: número de eventos publicados; ambos `null` si falla la lectura.
-- Con fallo: `ok: false`, `checks.supabase: "error"` y `checks.errorName` con solo el nombre del error (`Error` suele indicar variables sin configurar; `TypeError`, un fallo de red). Nunca incluye URLs, claves ni mensajes completos.
+- `checks.deals`: suma de chollos activos de `web_stores`; `checks.events`: número de eventos publicados; `checks.copies`: número de textos editoriales publicados de tipo `static` (`web_page_copy`; 0 indica que falta la migración o la semilla); todos `null` si falla la lectura.
+- Con fallo: `ok: false`, `checks.supabase: "error"` y `checks.errorName` con solo el nombre del error. `TypeError` suele ser un fallo de red; `Error` puede ser variables sin configurar **o** un error de PostgREST (por ejemplo, una vista que no existe porque falta una migración), así que `errorName` por sí solo no distingue entorno de base de datos: revisa los logs de la función. Nunca incluye URLs, claves ni mensajes completos.
 - `robots.txt` lo bloquea (`Disallow: /api/`). Úsalo desde el navegador tras cada despliegue y antes de pedir la validación en Search Console.
 
 ## Iconos
@@ -169,7 +169,7 @@ Hoy una guía se publica con SQL, hasta que exista el panel de administración:
 
 1. Inserta la fila en `guides` (`slug` en minúsculas con guiones, `title`, `subtitle`, `category`, `intro_md`, `how_to_choose_md`, `faq` como `[{"q": "...", "a_md": "..."}]`, `reading_minutes`) con `status = 'draft'`.
 2. Añade los productos en `guide_items` (`guide_id`, `position`, `name`, `award`, `summary_md`, `pros`, `cons`, `specs`) y sus tiendas en `guide_item_stores` (`store`, `external_id` = ASIN o id de la tienda, `url` canónica, `note`).
-3. Cuando el contenido esté listo, pon `status = 'published'` y `published_at`. La guía aparece en `/guias` y en el sitemap.
+3. Cuando el contenido esté listo, pon `status = 'published'` y `published_at`. La guía aparece en `/guias`, y en el sitemap en cuanto sus precios estén frescos.
 
 El ejemplo completo es `supabase/migrations/20261108000001_guides_seed.sql` (la guía de freidoras de aire, como borrador con los valores entre corchetes por rellenar).
 
@@ -205,4 +205,5 @@ La web solo usa la clave pública (anon) de Supabase y solo lee las vistas `web_
 2. Root Directory: `web` (el framework Next.js lo fija `vercel.json`).
 3. Variables de entorno `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` en Production y Preview; además `ALIEXPRESS_APP_KEY`, `ALIEXPRESS_APP_SECRET` y `ALIEXPRESS_TRACKING_ID` (solo servidor) para el bloque de AliExpress; y `REVALIDATE_SECRET` (solo servidor, el mismo valor que en el `.env` del bot) para la revalidación bajo demanda. Las `VITE_SUPABASE_*` antiguas siguen valiendo por el fallback de `next.config.ts`.
 4. Las variables se incrustan en el build: tras cambiarlas hay que redesplegar.
-5. Dominio principal: `www.patobarato.com` (`patobarato.com` redirige a él).
+5. Orden de despliegue con migraciones nuevas: aplicar `20261123000000_page_copy.sql` y ejecutar `node scripts/check-views.mjs` antes de desplegar la web; después, comprobar `/api/salud` (`checks.copies` > 0).
+6. Dominio principal: `www.patobarato.com` (`patobarato.com` redirige a él).
