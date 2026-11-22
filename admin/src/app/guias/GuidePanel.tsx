@@ -226,6 +226,8 @@ function GuideForm({ detail, disabled, setBusy, db, onSaved }: FormProps) {
         {tab === 'Datos' && (
           <GuideDataFields
             value={data}
+            publishedAt={publishedAt}
+            onPublishedAt={setPublishedAt}
             onTitle={(title) => patch({ title, ...(slugTouched ? {} : { slug: slugify(title) }) })}
             onSlug={(slug) => {
               setSlugTouched(true)

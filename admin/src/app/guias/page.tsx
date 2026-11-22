@@ -2,6 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { ListPanelLayout, usePanelId } from '../../components/ListPanelLayout'
+import { guideStatusLabel } from '../../lib/guide-dates'
 import { listGuides, type GuideFilter, type GuideRow } from '../../lib/guides'
 import { createBrowserSupabase } from '../../lib/supabase/browser'
 import { GuidePanel } from './GuidePanel'
@@ -81,7 +82,7 @@ function Guias() {
                   {r.category}
                 </span>
               </span>
-              <span className="shrink-0 text-xs text-neutral-600">{r.status === 'published' ? 'Publicado' : 'Borrador'}</span>
+              <span className="shrink-0 text-xs text-neutral-600">{guideStatusLabel(r.status, r.publishedAt, new Date())}</span>
             </button>
           </li>
         ))}

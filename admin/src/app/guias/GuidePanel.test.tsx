@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { GuideDetail } from '../../lib/guides'
@@ -79,6 +79,31 @@ describe('GuidePanel', () => {
     await waitFor(() => expect(m.enqueueJob).toHaveBeenCalledWith(expect.anything(), 'revalidate', {}))
     expect(onChanged).toHaveBeenCalled()
     expect(await screen.findByText('job 77')).toBeInTheDocument()
+  })
+
+  it('shows the publication date (Madrid time) only when published, with the hint', async () => {
+    const { unmount } = setup('4', { publishedAt: '2026-11-30T06:00:00.000Z' })
+    expect(await screen.findByLabelText('Fecha de publicación')).toHaveValue('2026-11-30T07:00')
+    expect(screen.getByText('Vacío = ahora al guardar. Una fecha futura programa la guía.')).toBeInTheDocument()
+    unmount()
+    setup('4', { status: 'draft' })
+    await screen.findByLabelText('Título')
+    expect(screen.queryByLabelText('Fecha de publicación')).toBeNull()
+  })
+
+  it('saves a scheduled date as the Madrid instant, and empty as null', async () => {
+    setup('4')
+    const field = await screen.findByLabelText('Fecha de publicación')
+    fireEvent.change(field, { target: { value: '2027-04-05T07:00' } })
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+    await waitFor(() => expect(m.saveGuide).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ publishedAt: '2027-04-05T05:00:00.000Z' })))
+  })
+
+  it('an empty date saves publishedAt null (stamped now by saveGuide)', async () => {
+    setup('4')
+    fireEvent.change(await screen.findByLabelText('Fecha de publicación'), { target: { value: '' } })
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+    await waitFor(() => expect(m.saveGuide).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ publishedAt: null })))
   })
 
   it('duplicate slug shows Ese slug ya existe and does not revalidate', async () => {

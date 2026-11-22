@@ -51,7 +51,7 @@ export type GuideInput = {
   publishedAt: string | null
 }
 
-export type GuideRow = { id: number; slug: string; title: string; category: string; status: GuideStatus }
+export type GuideRow = { id: number; slug: string; title: string; category: string; status: GuideStatus; publishedAt: string | null }
 
 export type GuideDetail = GuideInput & { id: number; items: (GuideItemInput & { id: number })[] }
 
@@ -71,11 +71,11 @@ function fail(error: { message: string; code?: string } | null): void {
 }
 
 export async function listGuides(client: SupabaseClient, { filter }: { filter: GuideFilter }): Promise<GuideRow[]> {
-  let query = client.from('guides').select('id, slug, title, category, status')
+  let query = client.from('guides').select('id, slug, title, category, status, published_at')
   if (filter !== 'all') query = query.eq('status', filter)
   const { data, error } = await query.order('updated_at', { ascending: false }).limit(LIMIT)
   fail(error)
-  return ((data ?? []) as Row[]).map((r) => ({ id: r.id, slug: r.slug, title: r.title, category: r.category, status: r.status }))
+  return ((data ?? []) as Row[]).map((r) => ({ id: r.id, slug: r.slug, title: r.title, category: r.category, status: r.status, publishedAt: r.published_at ?? null }))
 }
 
 export async function getGuide(client: SupabaseClient, id: number | string): Promise<GuideDetail> {

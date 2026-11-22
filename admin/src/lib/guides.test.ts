@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getGuide, saveGuide, saveGuideItems, type GuideItemInput } from './guides'
+import { getGuide, listGuides, saveGuide, saveGuideItems, type GuideItemInput } from './guides'
 
 type Call = { table: string; ops: [string, unknown[]][] }
 
@@ -156,5 +156,19 @@ describe('getGuide', () => {
     const [a, b] = g.items[0].stores
     expect(a.price).toMatchObject({ price: 19.9, previousPrice: 25, currency: 'EUR' })
     expect(b.price).toBeNull()
+  })
+})
+
+describe('listGuides', () => {
+  it('selects published_at and maps it to publishedAt', async () => {
+    const { client, calls } = mockClient(() => ({
+      data: [
+        { id: 1, slug: 'a', title: 'A', category: 'Hogar', status: 'published', published_at: '2026-11-30T06:00:00.000Z' },
+        { id: 2, slug: 'b', title: 'B', category: 'Hogar', status: 'draft' },
+      ],
+    }))
+    const rows = await listGuides(client, { filter: 'all' })
+    expect(String(arg(calls[0], 'select'))).toContain('published_at')
+    expect(rows.map((r) => r.publishedAt)).toEqual(['2026-11-30T06:00:00.000Z', null])
   })
 })
