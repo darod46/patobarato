@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { buildRobots, buildSitemap } from './sitemap'
+import { buildRobots, buildSitemapIndex, buildSitemapXml, dealEntries, eventEntries, pageEntries, SITEMAP_NAMES } from './sitemap'
 import { siteEvent } from '../test-utils/siteEvent'
-import type { GuideSummary } from './types'
+import type { GuideSummary, PageCopy } from './types'
 import { SITE_URL } from './urls'
 
 const deals = [
@@ -9,76 +9,14 @@ const deals = [
   { store: 'amazon', asin: 'B0ZZZZZZ99', title: 'Café molido', publishedAt: '2026-11-03T08:00:00Z' },
 ]
 
-describe('buildSitemap', () => {
-  it('lists the home, every deal and only hashtags with at least 3 deals', () => {
-    const entries = buildSitemap(
-      deals,
-      [
-        { tag: 'hogar', count: 3 },
-        { tag: 'poco', count: 2 },
-        { tag: 'cañas', count: 10 },
-      ],
-      SITE_URL,
-    )
-    expect(entries.map((e) => e.url).filter((u) => u.includes('/oferta/') || u.includes('/chollos') || u.endsWith('/buscar') || u.endsWith('.com/'))).toEqual([
-      'https://www.patobarato.com/',
-      'https://www.patobarato.com/chollos',
-      'https://www.patobarato.com/buscar',
-      'https://www.patobarato.com/oferta/amazon/freidora-de-aire-b0abcdef12',
-      'https://www.patobarato.com/oferta/amazon/cafe-molido-b0zzzzzz99',
-      'https://www.patobarato.com/chollos/hogar',
-      `https://www.patobarato.com/chollos/${encodeURIComponent('cañas')}`,
-    ])
-  })
-
-  it('uses publishedAt as lastModified for deals', () => {
-    const entries = buildSitemap(deals, [], SITE_URL)
-    expect(entries[3].lastModified).toEqual(new Date('2026-11-04T11:19:00Z'))
-  })
-
-  it('returns the home and the static pages when there is no data', () => {
-    expect(buildSitemap([], [], SITE_URL).map((e) => e.url)).toEqual([
-      'https://www.patobarato.com/',
-      'https://www.patobarato.com/chollos',
-      'https://www.patobarato.com/buscar',
-      'https://www.patobarato.com/aviso-legal',
-      'https://www.patobarato.com/privacidad',
-      'https://www.patobarato.com/cookies',
-      'https://www.patobarato.com/afiliados',
-      'https://www.patobarato.com/contacto',
-      'https://www.patobarato.com/sobre-nosotros',
-    ])
-  })
-
-  it('adds /cupones only when there are coupons', () => {
-    expect(buildSitemap([], [], SITE_URL, { coupons: true }).map((e) => e.url)).toContain('https://www.patobarato.com/cupones')
-    expect(buildSitemap([], [], SITE_URL, { coupons: false }).map((e) => e.url)).not.toContain('https://www.patobarato.com/cupones')
-  })
-})
-
-describe('buildSitemap stores', () => {
-  const stores = [
-    { store: 'amazon', deals: 10, coupons: 0 },
-    { store: 'aliexpress', deals: 2, coupons: 1 },
-  ]
-  const urls = (s: typeof stores) => buildSitemap([], [], SITE_URL, { coupons: false, stores: s }).map((e) => e.url)
-
-  it('adds /tiendas with two stores and a page only for stores with at least 3 deals', () => {
-    expect(urls(stores)).toContain('https://www.patobarato.com/tiendas')
-    expect(urls(stores)).toContain('https://www.patobarato.com/tiendas/amazon')
-    expect(urls(stores)).not.toContain('https://www.patobarato.com/tiendas/aliexpress')
-  })
-
-  it('ignores unknown store ids', () => {
-    const u = urls([...stores, { store: 'fnac', deals: 9, coupons: 0 }])
-    expect(u.some((x) => x.includes('fnac'))).toBe(false)
-    expect(urls([stores[0], { store: 'fnac', deals: 9, coupons: 0 }])).not.toContain('https://www.patobarato.com/tiendas')
-  })
-
-  it('omits /tiendas with a single store but keeps its page when indexable', () => {
-    expect(urls([stores[0]])).not.toContain('https://www.patobarato.com/tiendas')
-    expect(urls([stores[0]])).toContain('https://www.patobarato.com/tiendas/amazon')
-  })
+const copy = (kind: PageCopy['kind'], slug: string, updatedAt: string): PageCopy => ({
+  kind,
+  slug,
+  title: slug,
+  h1: slug,
+  introMd: '',
+  faq: [],
+  updatedAt,
 })
 
 const guide = (slug: string, updatedAt: string): GuideSummary => ({
@@ -94,36 +32,72 @@ const guide = (slug: string, updatedAt: string): GuideSummary => ({
   pricesCheckedAt: null,
 })
 
-describe('buildSitemap guides', () => {
-  it('adds nothing for guides when there are none', () => {
-    const u = buildSitemap([], [], SITE_URL, { coupons: false, guides: [] }).map((e) => e.url)
-    expect(u).not.toContain('https://www.patobarato.com/guias')
-    expect(u.some((x) => x.includes('/guias/'))).toBe(false)
+describe('buildSitemapIndex', () => {
+  it('lists the three sitemaps with absolute URLs and optional lastmod', () => {
+    const xml = buildSitemapIndex(SITE_URL, { chollos: new Date('2026-11-04T11:19:00Z') })
+    expect(SITEMAP_NAMES).toEqual(['chollos', 'paginas', 'eventos'])
+    expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true)
+    expect(xml).toContain('<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
+    expect(xml).toContain(
+      '<sitemap><loc>https://www.patobarato.com/sitemaps/chollos.xml</loc><lastmod>2026-11-04T11:19:00.000Z</lastmod></sitemap>',
+    )
+    expect(xml).toContain('<sitemap><loc>https://www.patobarato.com/sitemaps/paginas.xml</loc></sitemap>')
+    expect(xml).toContain('<sitemap><loc>https://www.patobarato.com/sitemaps/eventos.xml</loc></sitemap>')
+    expect(xml.trim().endsWith('</sitemapindex>')).toBe(true)
   })
+})
 
-  it('lists /guias and one entry per guide with lastModified = updatedAt, after the stores and before the deals', () => {
-    const entries = buildSitemap(deals, [], SITE_URL, {
-      coupons: false,
-      stores: [{ store: 'amazon', deals: 10, coupons: 0 }],
-      guides: [guide('freidoras-de-aire-menos-100', '2026-11-06T09:00:00Z'), guide('cafeteras', '2026-11-07T08:00:00Z')],
-    })
-    const urls = entries.map((e) => e.url)
-    const guideEntries = entries.filter((e) => e.url.includes('/guias/'))
-    expect(guideEntries.map((e) => e.lastModified)).toEqual([
-      new Date('2026-11-06T09:00:00Z'),
-      new Date('2026-11-07T08:00:00Z'),
+describe('buildSitemapXml', () => {
+  it('writes loc, lastmod in ISO, changefreq and priority', () => {
+    const xml = buildSitemapXml([
+      { url: 'https://x.test/a', lastModified: new Date('2026-11-04T11:19:00Z'), changeFrequency: 'daily', priority: 0.9 },
+      { url: 'https://x.test/b' },
     ])
-    expect(urls.indexOf('https://www.patobarato.com/guias')).toBeGreaterThan(urls.indexOf('https://www.patobarato.com/tiendas/amazon'))
-    expect(urls.indexOf('https://www.patobarato.com/guias/cafeteras')).toBeLessThan(urls.indexOf(SITE_URL + '/oferta/amazon/freidora-de-aire-b0abcdef12'))
+    expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
+    expect(xml).toContain(
+      '<url><loc>https://x.test/a</loc><lastmod>2026-11-04T11:19:00.000Z</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>',
+    )
+    expect(xml).toContain('<url><loc>https://x.test/b</loc></url>')
   })
 
-  it('returns the same entries when guides are omitted', () => {
-    expect(buildSitemap(deals, [], SITE_URL, { coupons: false }).map((e) => e.url)).toEqual([
+  it('escapes &, < and > in loc', () => {
+    const xml = buildSitemapXml([{ url: 'https://x.test/a?b=1&c=<2>' }])
+    expect(xml).toContain('<loc>https://x.test/a?b=1&amp;c=&lt;2&gt;</loc>')
+    expect(xml).not.toContain('&c=')
+  })
+
+  it('accepts lastModified as a string', () => {
+    expect(buildSitemapXml([{ url: 'https://x.test/a', lastModified: '2026-11-04T11:19:00Z' }])).toContain(
+      '<lastmod>2026-11-04T11:19:00.000Z</lastmod>',
+    )
+  })
+
+  it('is an empty urlset without entries', () => {
+    expect(buildSitemapXml([])).toMatch(/<urlset[^>]*>\s*<\/urlset>/)
+  })
+})
+
+describe('dealEntries', () => {
+  it('lists every deal with lastmod = publishedAt and changefreq daily', () => {
+    expect(dealEntries(deals, SITE_URL)).toEqual([
+      { url: 'https://www.patobarato.com/oferta/amazon/freidora-de-aire-b0abcdef12', lastModified: new Date('2026-11-04T11:19:00Z'), changeFrequency: 'daily' },
+      { url: 'https://www.patobarato.com/oferta/amazon/cafe-molido-b0zzzzzz99', lastModified: new Date('2026-11-03T08:00:00Z'), changeFrequency: 'daily' },
+    ])
+  })
+})
+
+describe('pageEntries', () => {
+  const base = { siteUrl: SITE_URL, tags: [], stores: [], guides: [], copies: [] }
+  const urls = (p: Partial<Parameters<typeof pageEntries>[0]>) => pageEntries({ ...base, ...p }).map((e) => e.url)
+
+  it('always lists the home, the listings and the static pages', () => {
+    expect(urls({})).toEqual([
       'https://www.patobarato.com/',
       'https://www.patobarato.com/chollos',
       'https://www.patobarato.com/buscar',
-      'https://www.patobarato.com/oferta/amazon/freidora-de-aire-b0abcdef12',
-      'https://www.patobarato.com/oferta/amazon/cafe-molido-b0zzzzzz99',
+      'https://www.patobarato.com/tiendas',
+      'https://www.patobarato.com/cupones',
+      'https://www.patobarato.com/guias',
       'https://www.patobarato.com/aviso-legal',
       'https://www.patobarato.com/privacidad',
       'https://www.patobarato.com/cookies',
@@ -132,24 +106,76 @@ describe('buildSitemap guides', () => {
       'https://www.patobarato.com/sobre-nosotros',
     ])
   })
-})
 
-describe('buildRobots', () => {
-  it('allows everything except /go/ (search URLs carry noindex) and lists the sitemap', () => {
-    const robots = buildRobots(SITE_URL)
-    expect(robots.rules).toEqual({ userAgent: '*', allow: '/', disallow: ['/go/'] })
-    expect(robots.sitemap).toBe('https://www.patobarato.com/sitemap.xml')
+  it('lists categories with at least one deal', () => {
+    const u = urls({ tags: [{ tag: 'hogar', count: 1 }, { tag: 'vacía', count: 0 }, { tag: 'cañas', count: 10 }] })
+    expect(u).toContain('https://www.patobarato.com/chollos/hogar')
+    expect(u).toContain(`https://www.patobarato.com/chollos/${encodeURIComponent('cañas')}`)
+    expect(u.some((x) => x.includes(encodeURIComponent('vacía')))).toBe(false)
+  })
+
+  it('lists stores with a published copy or at least 3 deals, never unknown ones', () => {
+    const u = urls({
+      stores: [
+        { store: 'amazon', deals: 10, coupons: 0 },
+        { store: 'aliexpress', deals: 2, coupons: 1 },
+        { store: 'decathlon', deals: 1, coupons: 0 },
+        { store: 'fnac', deals: 9, coupons: 0 },
+      ],
+      copies: [copy('store', 'aliexpress', '2026-11-20T10:00:00Z'), copy('store', 'fnac', '2026-11-20T10:00:00Z')],
+    })
+    expect(u).toContain('https://www.patobarato.com/tiendas/amazon')
+    expect(u).toContain('https://www.patobarato.com/tiendas/aliexpress')
+    expect(u).not.toContain('https://www.patobarato.com/tiendas/decathlon')
+    expect(u.some((x) => x.includes('fnac'))).toBe(false)
+  })
+
+  it('lists a store with a copy even when it has no deals', () => {
+    expect(urls({ copies: [copy('store', 'pccomponentes', '2026-11-20T10:00:00Z')] })).toContain(
+      'https://www.patobarato.com/tiendas/pccomponentes',
+    )
+  })
+
+  it('uses the guide updatedAt and the copies updated_at as lastmod', () => {
+    const entries = pageEntries({
+      ...base,
+      tags: [{ tag: 'hogar', count: 4 }],
+      stores: [{ store: 'amazon', deals: 10, coupons: 0 }],
+      guides: [guide('cafeteras', '2026-11-07T08:00:00Z')],
+      copies: [
+        copy('static', 'chollos', '2026-11-21T09:00:00Z'),
+        copy('static', 'sobre-nosotros', '2026-11-22T09:00:00Z'),
+        copy('category', 'hogar', '2026-11-19T09:00:00Z'),
+        copy('store', 'amazon', '2026-11-18T09:00:00Z'),
+      ],
+    })
+    const by = (p: string) => entries.find((e) => e.url === SITE_URL + p)
+    expect(by('/guias/cafeteras')?.lastModified).toEqual(new Date('2026-11-07T08:00:00Z'))
+    expect(by('/chollos')?.lastModified).toEqual(new Date('2026-11-21T09:00:00Z'))
+    expect(by('/sobre-nosotros')?.lastModified).toEqual(new Date('2026-11-22T09:00:00Z'))
+    expect(by('/chollos/hogar')?.lastModified).toEqual(new Date('2026-11-19T09:00:00Z'))
+    expect(by('/tiendas/amazon')?.lastModified).toEqual(new Date('2026-11-18T09:00:00Z'))
+    expect(by('/tiendas')?.lastModified).toBeUndefined()
+  })
+
+  it('has no duplicate URLs', () => {
+    const u = urls({
+      tags: [{ tag: 'hogar', count: 4 }],
+      stores: [{ store: 'amazon', deals: 10, coupons: 0 }],
+      copies: [copy('store', 'amazon', '2026-11-18T09:00:00Z')],
+    })
+    expect(new Set(u).size).toBe(u.length)
   })
 })
 
-describe('buildSitemap events', () => {
+describe('eventEntries', () => {
   const now = new Date('2026-11-08T10:00:00Z')
   const soon = siteEvent({ slug: 'black-friday', name: 'Black Friday', startsOn: '2026-11-27', updatedAt: '2026-11-02T00:00:00Z' })
   const far = siteEvent({ slug: 'navidad', name: 'Navidad', startsOn: '2027-03-01' })
   const during = siteEvent({ slug: 'once', name: '11.11', startsOn: '2026-11-07', endsOn: '2026-11-09' })
 
   it('lists /eventos and each event with its priority', () => {
-    const entries = buildSitemap([], [], SITE_URL, { coupons: false, events: [soon, far, during], now })
+    const entries = eventEntries([soon, far, during], SITE_URL, now)
     const by = (u: string) => entries.find((e) => e.url === SITE_URL + u)
     expect(by('/eventos')).toMatchObject({ changeFrequency: 'weekly', priority: 0.7 })
     expect(by('/eventos/black-friday')).toMatchObject({ priority: 0.9, changeFrequency: 'weekly', lastModified: new Date('2026-11-02T00:00:00Z') })
@@ -157,8 +183,15 @@ describe('buildSitemap events', () => {
     expect(by('/eventos/once')?.priority).toBe(0.9)
   })
 
-  it('omits /eventos without events', () => {
-    const entries = buildSitemap([], [], SITE_URL, { coupons: false, events: [], now })
-    expect(entries.some((e) => e.url.includes('/eventos'))).toBe(false)
+  it('keeps /eventos without events (the page is always indexable)', () => {
+    expect(eventEntries([], SITE_URL, now).map((e) => e.url)).toEqual(['https://www.patobarato.com/eventos'])
+  })
+})
+
+describe('buildRobots', () => {
+  it('allows everything except /go/ and /api/ and points to the sitemap index', () => {
+    const robots = buildRobots(SITE_URL)
+    expect(robots.rules).toEqual({ userAgent: '*', allow: '/', disallow: ['/go/', '/api/'] })
+    expect(robots.sitemap).toBe('https://www.patobarato.com/sitemap.xml')
   })
 })
