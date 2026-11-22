@@ -7,6 +7,7 @@ import { PageIntro } from '../../components/PageIntro'
 import { eventPhase } from '../../lib/events'
 import { fetchEvents } from '../../lib/events-data'
 import { optional } from '../../lib/optional'
+import { primary } from '../../lib/primary'
 import { defaultH1, fetchPageCopy } from '../../lib/page-copy'
 import { breadcrumbJsonLd, jsonLdScript, listingMetadata } from '../../lib/seo'
 import { fetchStores } from '../../lib/stores-data'
@@ -30,12 +31,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function EventsPage() {
-  // The events are the primary read: a failure throws (Next keeps the last ISR version), never an empty page.
-  const [events, stores, copy] = await Promise.all([
-    fetchEvents(getSupabase()),
+  // The events are the primary read: at runtime a failure throws (Next keeps the last ISR version), never an
+  // empty page; during the build it renders the honest empty state.
+  const [found, stores, copy] = await Promise.all([
+    primary('eventos', () => fetchEvents(getSupabase())),
     optional('eventos', () => fetchStores(getSupabase())),
     loadCopy(),
   ])
+  const events = found ?? []
   const now = new Date()
   const crumbs = breadcrumbJsonLd([
     { name: 'Inicio', path: '/' },

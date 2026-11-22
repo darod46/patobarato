@@ -10,6 +10,7 @@ import { breadcrumbJsonLd, jsonLdScript, listingMetadata } from '../../lib/seo'
 import { fetchStores } from '../../lib/stores-data'
 import { getSupabase } from '../../lib/supabase'
 import { optional } from '../../lib/optional'
+import { primary } from '../../lib/primary'
 
 // Regenerated at most every 60 s, like the listings.
 export const revalidate = 60
@@ -31,12 +32,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function GuidesPage() {
-  // The guides are the primary read: a failure throws (Next keeps the last ISR version), never an empty page.
-  const [guides, stores, copy] = await Promise.all([
-    fetchGuides(getSupabase()),
+  // The guides are the primary read: at runtime a failure throws (Next keeps the last ISR version), never an
+  // empty page; during the build it renders the honest empty state.
+  const [found, stores, copy] = await Promise.all([
+    primary('guias', () => fetchGuides(getSupabase())),
     optional('guias', () => fetchStores(getSupabase())),
     loadCopy(),
   ])
+  const guides = found ?? []
   const crumbs = breadcrumbJsonLd([
     { name: 'Inicio', path: '/' },
     { name: 'Guías', path: '/guias' },

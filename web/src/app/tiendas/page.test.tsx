@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fetchPageCopy } from '../../lib/page-copy'
 import { fetchStores } from '../../lib/stores-data'
 import type { PageCopy } from '../../lib/types'
@@ -85,5 +85,19 @@ describe('StoresPage', () => {
     vi.mocked(fetchStores).mockImplementation(down)
     await expect(StoresPage()).rejects.toThrow('down')
     await expect(generateMetadata()).rejects.toThrow('down')
+  })
+})
+
+describe('StoresPage during the build', () => {
+  afterEach(() => {
+    delete process.env.NEXT_PHASE
+  })
+
+  it('renders the honest empty state, indexable, when the stores cannot be read', async () => {
+    process.env.NEXT_PHASE = 'phase-production-build'
+    vi.mocked(fetchStores).mockRejectedValue(new TypeError('fetch failed'))
+    expect((await generateMetadata()).robots).toBeUndefined()
+    render(await StoresPage())
+    expect(screen.getByText('Todavía no hay chollos ni cupones activos de ninguna tienda.')).toBeInTheDocument()
   })
 })

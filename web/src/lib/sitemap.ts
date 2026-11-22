@@ -64,7 +64,7 @@ export function dealEntries(deals: DealRef[], siteUrl: string): MetadataRoute.Si
 }
 
 /**
- * `paginas` sitemap: home, listings, categories with at least one deal, indexable stores, guides and
+ * `paginas` sitemap: home, listings, indexable categories and stores, guides and
  * static pages. `lastmod` comes from the page copy (`updated_at`) or the guide when there is one.
  */
 export function pageEntries({
@@ -85,6 +85,10 @@ export function pageEntries({
     return c ? { lastModified: new Date(c.updatedAt) } : {}
   }
   const staticEntry = (path: string) => ({ url: siteUrl + path, ...updated('static', path.slice(1)) })
+  // Same rule as the category page (spec §6): it exists with at least one deal (404 otherwise) and is
+  // indexable with an editorial copy or with at least 3 deals.
+  const categoryListed = (t: HashtagCount) =>
+    t.count >= 1 && (t.count >= MIN_INDEXABLE_DEALS || copies.some((c) => c.kind === 'category' && c.slug === t.tag))
   // Same rule as the store page (spec §6): indexable with an editorial copy or with at least 3 deals.
   // Only stores known to STORES: an unknown id would be a 404.
   const storeIds = [
@@ -94,7 +98,7 @@ export function pageEntries({
   return [
     { url: `${siteUrl}/` },
     ...LISTING_PATHS.map(staticEntry),
-    ...tags.filter((t) => t.count >= 1).map((t) => ({ url: siteUrl + tagPath(t.tag), ...updated('category', t.tag) })),
+    ...tags.filter(categoryListed).map((t) => ({ url: siteUrl + tagPath(t.tag), ...updated('category', t.tag) })),
     ...storeIds.map((id) => ({ url: `${siteUrl}/tiendas/${storeInfo(id).slug}`, ...updated('store', id) })),
     ...guides.map((g) => ({ url: siteUrl + guidePath(g.slug), lastModified: new Date(g.updatedAt) })),
     ...STATIC_PATHS.map(staticEntry),

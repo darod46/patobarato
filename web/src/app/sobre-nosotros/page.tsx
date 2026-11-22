@@ -5,13 +5,15 @@ import { Header } from '../../components/Header'
 import { PageIntro } from '../../components/PageIntro'
 import { defaultH1, fetchPageCopy } from '../../lib/page-copy'
 import { aboutJsonLd, breadcrumbJsonLd, jsonLdScript, listingMetadata } from '../../lib/seo'
+import { primary } from '../../lib/primary'
 import { getSupabase } from '../../lib/supabase'
 import { SITE_URL } from '../../lib/urls'
 
 export const revalidate = 3600
 
-// Shared by generateMetadata and the page within one request. Primary read: a failure throws (Next keeps the last ISR version).
-const loadCopy = cache(() => fetchPageCopy(getSupabase(), 'static', 'sobre-nosotros'))
+// Shared by generateMetadata and the page within one request. Primary read: at runtime a failure throws (Next keeps
+// the last ISR version); during the build it renders the default h1 and the fallback paragraph.
+const loadCopy = cache(async () => (await primary('sobre-nosotros', () => fetchPageCopy(getSupabase(), 'static', 'sobre-nosotros'))) ?? null)
 
 export async function generateMetadata(): Promise<Metadata> {
   return listingMetadata({

@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fetchPageCopy } from '../../lib/page-copy'
 import AboutPage, { generateMetadata } from './page'
 
@@ -62,5 +62,21 @@ describe('AboutPage', () => {
     const meta = await generateMetadata()
     expect(meta.alternates?.canonical).toBe('/sobre-nosotros')
     expect(meta.robots).toBeUndefined()
+  })
+})
+
+describe('AboutPage during the build', () => {
+  afterEach(() => {
+    delete process.env.NEXT_PHASE
+  })
+
+  it('renders the default h1 and the fallback paragraph, indexable, when the copy cannot be read', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    process.env.NEXT_PHASE = 'phase-production-build'
+    vi.mocked(fetchPageCopy).mockRejectedValue(new TypeError('fetch failed'))
+    expect((await generateMetadata()).robots).toBeUndefined()
+    render(await AboutPage())
+    expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
+    expect(screen.getByText('PatoBarato es un proyecto independiente de caza de chollos.')).toBeInTheDocument()
   })
 })

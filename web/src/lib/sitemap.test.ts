@@ -107,10 +107,21 @@ describe('pageEntries', () => {
     ])
   })
 
-  it('lists categories with at least one deal', () => {
-    const u = urls({ tags: [{ tag: 'hogar', count: 1 }, { tag: 'vacía', count: 0 }, { tag: 'cañas', count: 10 }] })
+  it('lists categories with a published copy or at least 3 deals', () => {
+    const u = urls({
+      tags: [
+        { tag: 'hogar', count: 3 },
+        { tag: 'poco', count: 2 },
+        { tag: 'uno', count: 1 },
+        { tag: 'vacía', count: 0 },
+        { tag: 'cañas', count: 10 },
+      ],
+      copies: [copy('category', 'uno', '2026-11-20T10:00:00Z')],
+    })
     expect(u).toContain('https://www.patobarato.com/chollos/hogar')
     expect(u).toContain(`https://www.patobarato.com/chollos/${encodeURIComponent('cañas')}`)
+    expect(u).toContain('https://www.patobarato.com/chollos/uno')
+    expect(u).not.toContain('https://www.patobarato.com/chollos/poco')
     expect(u.some((x) => x.includes(encodeURIComponent('vacía')))).toBe(false)
   })
 

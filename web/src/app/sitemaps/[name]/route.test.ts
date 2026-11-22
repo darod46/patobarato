@@ -22,7 +22,7 @@ describe('GET /sitemaps/[name]', () => {
     vi.mocked(fetchAllDealRefs).mockResolvedValue([
       { store: 'amazon', asin: 'B0ABCDEF12', title: 'Freidora de aire', publishedAt: '2026-11-04T11:19:00Z' },
     ])
-    vi.mocked(fetchHashtagCounts).mockResolvedValue([{ tag: 'hogar', count: 2 }])
+    vi.mocked(fetchHashtagCounts).mockResolvedValue([{ tag: 'hogar', count: 3 }, { tag: 'poco', count: 2 }])
     vi.mocked(fetchStores).mockResolvedValue([{ store: 'amazon', deals: 10, coupons: 0 }])
     vi.mocked(fetchGuides).mockResolvedValue([])
     vi.mocked(fetchPageCopies).mockResolvedValue([])
@@ -52,6 +52,7 @@ describe('GET /sitemaps/[name]', () => {
   it('serves the pages sitemap with categories and indexable stores', async () => {
     const xml = await (await get('paginas.xml')).text()
     expect(xml).toContain('<loc>https://www.patobarato.com/chollos/hogar</loc>')
+    expect(xml).not.toContain('/chollos/poco')
     expect(xml).toContain('<loc>https://www.patobarato.com/tiendas/amazon</loc>')
     expect(xml).toContain('<loc>https://www.patobarato.com/sobre-nosotros</loc>')
     expect(xml).not.toContain('/oferta/')

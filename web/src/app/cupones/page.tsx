@@ -6,6 +6,7 @@ import { Header } from '../../components/Header'
 import { PageIntro } from '../../components/PageIntro'
 import { fetchCoupons } from '../../lib/coupons'
 import { optional } from '../../lib/optional'
+import { primary } from '../../lib/primary'
 import { defaultH1, fetchPageCopy } from '../../lib/page-copy'
 import { listingMetadata } from '../../lib/seo'
 import { storeInfo } from '../../lib/stores'
@@ -37,8 +38,10 @@ function groupByStore(coupons: Coupon[]): [string, Coupon[]][] {
 }
 
 export default async function CouponsPage() {
-  // The coupons are the primary read: a failure throws (Next keeps the last ISR version), never an empty page.
-  const [coupons, copy] = await Promise.all([fetchCoupons(getSupabase()), loadCopy()])
+  // The coupons are the primary read: at runtime a failure throws (Next keeps the last ISR version), never an
+  // empty page; during the build it renders the honest empty state.
+  const [found, copy] = await Promise.all([primary('cupones', () => fetchCoupons(getSupabase())), loadCopy()])
+  const coupons = found ?? []
   const year = new Date().getUTCFullYear()
   return (
     <div className="min-h-screen bg-white font-sans text-ink">

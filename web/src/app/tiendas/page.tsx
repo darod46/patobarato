@@ -11,13 +11,14 @@ import { fetchStores, type StoreStats } from '../../lib/stores-data'
 import { getSupabase } from '../../lib/supabase'
 import { countLabel } from '../../lib/text'
 import { optional } from '../../lib/optional'
+import { primary } from '../../lib/primary'
 
 // Regenerated at most every 60 s, like the listings.
 export const revalidate = 60
 
 // Shared by generateMetadata and the page within one request. The stores are the primary read: a failure
-// throws (Next keeps the last ISR version). The copy is secondary.
-const loadStores = cache(() => fetchStores(getSupabase()))
+// throws at runtime (Next keeps the last ISR version); during the build it renders the empty state. The copy is secondary.
+const loadStores = cache(async () => (await primary('tiendas', () => fetchStores(getSupabase()))) ?? [])
 const loadCopy = cache(async () => (await optional('tiendas', () => fetchPageCopy(getSupabase(), 'static', 'tiendas'))) ?? null)
 
 /** Live totals for the copy markers; 0 deals is no value (the sentence is dropped). */

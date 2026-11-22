@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fetchCoupons } from '../../lib/coupons'
 import { fetchPageCopy } from '../../lib/page-copy'
 import type { Coupon, PageCopy } from '../../lib/types'
@@ -72,5 +72,18 @@ describe('CouponsPage', () => {
       throw new Error('down')
     })
     await expect(CouponsPage()).rejects.toThrow('down')
+  })
+})
+
+describe('CouponsPage during the build', () => {
+  afterEach(() => {
+    delete process.env.NEXT_PHASE
+  })
+
+  it('renders the honest empty state when the coupons cannot be read', async () => {
+    process.env.NEXT_PHASE = 'phase-production-build'
+    vi.mocked(fetchCoupons).mockRejectedValue(new TypeError('fetch failed'))
+    render(await CouponsPage())
+    expect(screen.getByText(/Ahora mismo no hay cupones vigentes/)).toBeInTheDocument()
   })
 })

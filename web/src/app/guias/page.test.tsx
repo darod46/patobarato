@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fetchGuides } from '../../lib/guides-data'
 import { fetchPageCopy } from '../../lib/page-copy'
 import { fetchStores } from '../../lib/stores-data'
@@ -78,5 +78,19 @@ describe('GuidesPage', () => {
   it('rejects (never an empty page) when the guides read fails', async () => {
     vi.mocked(fetchGuides).mockImplementation(async () => { throw new Error('down') })
     await expect(GuidesPage()).rejects.toThrow('down')
+  })
+})
+
+describe('GuidesPage during the build', () => {
+  afterEach(() => {
+    delete process.env.NEXT_PHASE
+  })
+
+  it('renders the honest empty state when the guides cannot be read', async () => {
+    process.env.NEXT_PHASE = 'phase-production-build'
+    vi.mocked(fetchGuides).mockRejectedValue(new TypeError('fetch failed'))
+    vi.mocked(fetchStores).mockRejectedValue(new TypeError('fetch failed'))
+    render(await GuidesPage())
+    expect(screen.getByText('Todavía no hay guías publicadas')).toBeInTheDocument()
   })
 })

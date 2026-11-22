@@ -86,3 +86,16 @@ describe('EventsPage', () => {
     expect((await generateMetadata()).robots).toBeUndefined()
   })
 })
+
+describe('EventsPage during the build', () => {
+  afterEach(() => {
+    delete process.env.NEXT_PHASE
+  })
+
+  it('renders the honest empty state when the events cannot be read', async () => {
+    process.env.NEXT_PHASE = 'phase-production-build'
+    vi.mocked(fetchEvents).mockRejectedValue(new TypeError('fetch failed'))
+    render(await EventsPage())
+    expect(screen.getByText('Todavía no hay eventos en el calendario.')).toBeInTheDocument()
+  })
+})
