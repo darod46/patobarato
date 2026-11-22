@@ -1,5 +1,31 @@
 import { describe, expect, it } from 'vitest'
-import { RateLimiter } from './rate-limit'
+import { RateLimiter, RequestLimiter } from './rate-limit'
+
+describe('RequestLimiter', () => {
+  it('allows max requests per key then rejects', () => {
+    const rl = new RequestLimiter(2, 1000, () => 0)
+    expect(rl.allow('a')).toBe(true)
+    expect(rl.allow('a')).toBe(true)
+    expect(rl.allow('a')).toBe(false)
+  })
+
+  it('does not affect other keys', () => {
+    const rl = new RequestLimiter(1, 1000, () => 0)
+    expect(rl.allow('a')).toBe(true)
+    expect(rl.allow('a')).toBe(false)
+    expect(rl.allow('b')).toBe(true)
+  })
+
+  it('allows again after the window elapses', () => {
+    let t = 0
+    const rl = new RequestLimiter(2, 1000, () => t)
+    rl.allow('a')
+    rl.allow('a')
+    expect(rl.allow('a')).toBe(false)
+    t = 1000
+    expect(rl.allow('a')).toBe(true)
+  })
+})
 
 describe('RateLimiter', () => {
   it('allows up to max distinct keys per window', () => {
