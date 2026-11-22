@@ -69,12 +69,16 @@ export function renderCopy(introMd: string, values: CopyValues): string {
       lines.push(line)
       continue
     }
-    const kept = sentences(line).filter((s) => !((s.includes('{deals}') && dealsText === null) || (s.includes('{stores}') && storesText === null)))
-    if (kept.length > 0) lines.push(fill(kept.join('')).trimEnd())
+    const prefix = /^\s*(?:\d+[.)]|[-*+])\s+/.exec(line)?.[0] ?? ''
+    const kept = sentences(line.slice(prefix.length)).filter((s) => !((s.includes('{deals}') && dealsText === null) || (s.includes('{stores}') && storesText === null)))
+    if (kept.length > 0) lines.push(prefix + fill(kept.join('')).trimEnd())
   }
   let out = lines.join('\n').replace(/\n{3,}/g, '\n\n').trim()
   if (values.deals === 1) {
-    out = out.replace(/\b1 chollos activos\b/g, '1 chollo activo').replace(/\b1 chollos\b/g, '1 chollo').replace(/\b1 ofertas\b/g, '1 oferta')
+    out = out
+      .replace(/\b(\*{0,2}1\*{0,2}) chollos activos\b/g, '$1 chollo activo')
+      .replace(/\b(\*{0,2}1\*{0,2}) chollos\b/g, '$1 chollo')
+      .replace(/\b(\*{0,2}1\*{0,2}) ofertas\b/g, '$1 oferta')
   }
   return out
 }

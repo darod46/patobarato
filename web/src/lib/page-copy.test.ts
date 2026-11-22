@@ -24,6 +24,13 @@ describe('renderCopy', () => {
     expect(renderCopy('¡Hay {deals} chollos! Sigue.\n\n- lista', {})).toBe('Sigue.\n\n- lista'))
   it('drops a whole paragraph and list item without leaving blank gaps', () =>
     expect(renderCopy('A.\n\nHoy hay {deals} chollos.\n\nB.\n\n- uno\n- Hay {deals}.\n- tres', {})).toBe('A.\n\nB.\n\n- uno\n- tres'))
+  it('drops a numbered or bulleted item whole, keeping the other prefixes', () => {
+    expect(renderCopy('1. Hay {deals} chollos.\n2. Otro.', {})).toBe('2. Otro.')
+    expect(renderCopy('- Hay {deals} chollos.\n- Otro.', {})).toBe('- Otro.')
+    expect(renderCopy('1. Hay {deals} chollos.', {})).toBe('')
+    expect(renderCopy('1) Hay {deals} chollos. Sigue.', {})).toBe('1) Sigue.')
+  })
+  it('handles bold around the singular number', () => expect(renderCopy('Hay **{deals}** chollos.', { deals: 1 })).toBe('Hay **1** chollo.'))
   it('treats an empty stores array as no value', () =>
     expect(renderCopy('Antes. Hoy hay chollos en {stores}. Después.', { stores: [] })).toBe('Antes. Después.'))
   it('never leaves a literal marker', () => expect(renderCopy('{deals} {stores}', {})).not.toMatch(/\{deals\}|\{stores\}/))
