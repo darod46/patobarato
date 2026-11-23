@@ -22,6 +22,7 @@ from patobarato.admin.users import UserAdmin
 from patobarato.config import Settings, get_settings
 from patobarato.core.backfill import backfill_images
 from patobarato.core.pipeline import Pipeline, utcnow
+from patobarato.models import ApiSource
 from patobarato.parsing.links import UrlResolver
 from patobarato.publishing.photo_download import download_photo
 from patobarato.publishing.telegram_publisher import TelegramPublisher
@@ -266,6 +267,38 @@ async def promos(settings: Settings) -> int:
     return 0
 
 
+GUIDE_PRICES_DONE_MESSAGE = "Precios de guías actualizados (detalle en el registro de arriba)."
+
+
+async def guide_prices(settings: Settings) -> int:
+    """Refreshes the guide prices once, without Telegram (safe to run beside the live bot)."""
+    repo = SupabaseRepository(
+        create_client(settings.supabase_url, settings.supabase_service_key)
+    )
+    async with (
+        httpx.AsyncClient(timeout=settings.http_timeout_seconds) as http,
+        httpx.AsyncClient(timeout=settings.http_timeout_seconds) as amazon_http,
+    ):
+        registry = build_registry(settings, http, amazon_http)
+        refresher = GuidePriceRefresher(
+            registry, repo, utcnow, delay_seconds=settings.guide_price_delay_seconds
+        )
+        await refresher.run(
+            ApiSource(
+                id=0,
+                type=refresher.type,
+                identifier="guides",
+                country=settings.default_country,
+                config={},
+                every_minutes=0,
+                hashtags=[],
+                last_run_at=None,
+            )
+        )
+    print(GUIDE_PRICES_DONE_MESSAGE)
+    return 0
+
+
 def _config_error_message(error: ValidationError) -> str:
     missing = [
         ".".join(str(part) for part in err["loc"]).upper()
@@ -287,7 +320,7 @@ def _config_error_message(error: ValidationError) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="patobarato")
-    parser.add_argument("command", choices=["login", "run", "backfill-images", "promos"])
+    parser.add_argument("command", choices=["login", "run", "backfill-images", "promos", "guide-prices"])
     args = parser.parse_args(argv)
 
     logging.basicConfig(
@@ -315,6 +348,8 @@ def main(argv: list[str] | None = None) -> int:
         return asyncio.run(backfill(settings))
     if args.command == "promos":
         return asyncio.run(promos(settings))
+    if args.command == "guide-prices":
+        return asyncio.run(guide_prices(settings))
     try:
         return asyncio.run(run(settings))
     except KeyboardInterrupt:

@@ -198,6 +198,8 @@ El ejecutor `channel_stats` mide cada 60 min los suscriptores de @patobarato con
 
 El ejecutor `guide_prices` refresca el precio de todos los productos de las guías **publicadas** (las guías en borrador, con ids de relleno como `[ASIN]`, nunca se consultan). Para cada producto lee el precio con el lector de su tienda y lo guarda junto con la hora de la comprobación; si la lectura falla, conserva el último precio y anota el error (`no price`, o `store_disabled` si la tienda no está activa en el bot). Las peticiones van una detrás de otra, con una pausa de `GUIDE_PRICE_DELAY_SECONDS` segundos (por defecto 1,5) entre productos. Un producto que ya existe en `products` conserva su título y su URL; solo los nuevos toman el nombre de la guía.
 
+Si el servidor no consigue leer los precios de Amazon (captcha o bloqueo de la IP del hosting, que en el registro aparece como `captcha` o `HTTP 503`), puedes lanzar el refresco una sola vez desde otra conexión, por ejemplo tu ordenador, con el mismo `.env`: `docker compose run --rm bot guide-prices` (o `python -m patobarato guide-prices`). No toca Telegram, así que puede ejecutarse mientras el bot de producción sigue en marcha; solo escribe en `products` y `product_prices`.
+
 La fuente `guide_prices` (cada 360 minutos) ya viene creada por la migración `20261108000000_guides.sql`; no hay que darla de alta. Para pausarla: `update sources set active = false where type = 'guide_prices';`.
 
 ### Cómo dar de alta una guía por SQL

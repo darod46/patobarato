@@ -482,3 +482,48 @@ def test_build_runners_adds_channel_stats_only_with_bot():
 
     assert "channel_stats" not in [r.type for r in without]
     assert "channel_stats" in [r.type for r in with_bot]
+
+
+# --- guide-prices command ---------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_guide_prices_runs_refresher_once_without_telegram(monkeypatch, capsys):
+    from patobarato.storage.repository import InMemoryRepository
+
+    repo = InMemoryRepository()
+    runs: list[str] = []
+
+    class FakeRefresher:
+        type = "guide_prices"
+
+        def __init__(self, registry, repo_arg, clock, delay_seconds):
+            assert repo_arg is repo
+            assert delay_seconds == 1.5
+
+        async def run(self, source):
+            runs.append(source.type)
+
+    monkeypatch.setattr(main_module, "create_client", lambda url, key: object())
+    monkeypatch.setattr(main_module, "SupabaseRepository", lambda client: repo)
+    monkeypatch.setattr(main_module, "GuidePriceRefresher", FakeRefresher)
+    monkeypatch.setattr(
+        main_module, "_client", lambda *a, **k: pytest.fail("Telegram must not be used")
+    )
+
+    assert await main_module.guide_prices(_ali_settings()) == 0
+    assert runs == ["guide_prices"]
+    assert "Precios de guías actualizados" in capsys.readouterr().out
+
+
+def test_main_accepts_guide_prices_command(monkeypatch):
+    called = []
+    monkeypatch.setattr(main_module, "get_settings", lambda: _ali_settings())
+
+    async def fake(settings):
+        called.append(settings)
+        return 0
+
+    monkeypatch.setattr(main_module, "guide_prices", fake)
+    assert main(["guide-prices"]) == 0
+    assert len(called) == 1
