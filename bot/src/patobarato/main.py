@@ -163,7 +163,7 @@ async def run(settings: Settings) -> int:
 
     async with (
         httpx.AsyncClient(timeout=settings.http_timeout_seconds) as http,
-        httpx.AsyncClient(timeout=settings.http_timeout_seconds) as amazon_http,
+        httpx.AsyncClient(timeout=settings.http_timeout_seconds, http2=True) as amazon_http,
     ):
         resolver = UrlResolver(http)
         supabase_client = create_client(settings.supabase_url, settings.supabase_service_key)
@@ -277,7 +277,7 @@ async def guide_prices(settings: Settings) -> int:
     )
     async with (
         httpx.AsyncClient(timeout=settings.http_timeout_seconds) as http,
-        httpx.AsyncClient(timeout=settings.http_timeout_seconds) as amazon_http,
+        httpx.AsyncClient(timeout=settings.http_timeout_seconds, http2=True) as amazon_http,
     ):
         registry = build_registry(settings, http, amazon_http)
         refresher = GuidePriceRefresher(

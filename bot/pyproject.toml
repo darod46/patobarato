@@ -9,7 +9,7 @@ requires-python = ">=3.12"
 dependencies = [
     "telethon==1.45.0",
     "supabase==2.34.0",
-    "httpx==0.28.1",
+    "httpx[http2]==0.28.1",
     "pydantic-settings==2.16.2",
 ]
 

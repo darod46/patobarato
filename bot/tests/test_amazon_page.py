@@ -346,3 +346,46 @@ def test_extract_price_reads_visible_parts_when_offscreen_text_is_blank():
     assert quote is not None
     assert quote.price == Decimal("26.13")
     assert quote.previous_price == Decimal("1039.90")
+
+
+BLOCKED_PAGE = "<html><head><title>Amazon.es</title></head><body><a href='/ref=cs_503_link'>Continuar comprando</a></body></html>"
+
+
+def test_browser_headers_look_like_chrome():
+    from patobarato.sources.amazon_page import BROWSER_HEADERS
+
+    for header in ("sec-ch-ua", "sec-ch-ua-platform", "Sec-Fetch-Mode", "Sec-Fetch-Dest", "Upgrade-Insecure-Requests"):
+        assert header in BROWSER_HEADERS, header
+    assert "Chrome/" in BROWSER_HEADERS["User-Agent"]
+
+
+async def test_fetcher_retries_once_after_blocked_page():
+    answers = [BLOCKED_PAGE, load_fixture("amazon_price.html")]
+    seen: list[dict] = []
+
+    def handler(request):
+        seen.append(dict(request.headers))
+        return httpx.Response(200, text=answers.pop(0))
+
+    sleeps: list[float] = []
+
+    async def sleep(seconds):
+        sleeps.append(seconds)
+
+    fetcher = AmazonPageFetcher(httpx.AsyncClient(transport=httpx.MockTransport(handler)), sleep=sleep)
+    page = await fetcher.fetch("B0GS1K5XQ8", "ES")
+    assert page is not None and "a-price" in page
+    assert len(seen) == 2 and sleeps == [fetcher.retry_delay]
+    assert fetcher.failed == 0
+
+
+async def test_fetcher_gives_up_after_second_blocked_page():
+    async def sleep(seconds):
+        pass
+
+    fetcher = AmazonPageFetcher(
+        httpx.AsyncClient(transport=httpx.MockTransport(lambda r: httpx.Response(200, text=BLOCKED_PAGE))),
+        sleep=sleep,
+    )
+    assert await fetcher.fetch("B0GS1K5XQ8", "ES") is None
+    assert fetcher.failed == 1

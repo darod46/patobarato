@@ -5,11 +5,13 @@ request per lookup; any failure (captcha, HTTP error, timeout, no image)
 returns None so the caller can carry on without an image.
 """
 
+import asyncio
 import html
 import json
 import logging
 import re
 from decimal import Decimal, InvalidOperation
+from collections.abc import Awaitable, Callable
 from typing import Protocol
 
 import httpx
@@ -20,14 +22,31 @@ logger = logging.getLogger("patobarato.amazon")
 
 PRODUCT_PAGE_URLS = {"ES": "https://www.amazon.es/dp/{asin}"}
 
+# The full header set a desktop Chrome sends on a top-level navigation. Amazon
+# answers a bare "Accept + User-Agent" request with a generic page titled
+# "Amazon.es" (a "continue shopping" interstitial) instead of the product.
 BROWSER_HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-        "(KHTML, like Gecko) Chrome/130.0 Safari/537.36"
+        "(KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
     ),
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept": (
+        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,"
+        "image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+    ),
     "Accept-Language": "es-ES,es;q=0.9",
+    "Accept-Encoding": "gzip, deflate",
+    "Cache-Control": "max-age=0",
+    "Upgrade-Insecure-Requests": "1",
+    "sec-ch-ua": '"Chromium";v="142", "Google Chrome";v="142", "Not_A Brand";v="99"',
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": '"Windows"',
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-User": "?1",
+    "Sec-Fetch-Dest": "document",
 }
+BLOCKED_RETRY_DELAY_SECONDS = 2.0
 
 IMAGE_SIZE = "_AC_SL500_"
 _IMAGE_HOST = r"https://m\.media-amazon\.com/images/"
@@ -37,6 +56,7 @@ _DYNAMIC_RE = re.compile(r'data-a-dynamic-image="([^"]+)"')
 _HIRES_RE = re.compile(rf'"hiRes"\s*:\s*"({_IMAGE_HOST}[^"]+)"')
 _OG_IMAGE_RE = re.compile(rf'<meta[^>]+property="og:image"[^>]+content="({_IMAGE_HOST}[^"]+)"')
 _CAPTCHA_MARKERS = ("/errors/validateCaptcha", "captchacharacters")
+_BLOCKED_TITLE_RE = re.compile(r"<title[^>]*>\s*Amazon\.[a-z.]+\s*</title>", re.IGNORECASE)
 _SIZE_TOKEN_RE = re.compile(r"\._[^/.]*_(\.\w+)$")
 _EXTENSION_RE = re.compile(r"(\.\w+)$")
 
@@ -205,6 +225,11 @@ class ImageFinder(Protocol):
     async def find(self, asin: str, country: str) -> str | None: ...
 
 
+def _is_blocked(page: str) -> bool:
+    """The generic interstitial: a bare "Amazon.es" title and no product block."""
+    return bool(_BLOCKED_TITLE_RE.search(page)) and 'id="productTitle"' not in page
+
+
 class AmazonPageFetcher:
     """One GET of the product page with browser-like headers.
 
@@ -214,9 +239,17 @@ class AmazonPageFetcher:
     caller is after ("image", "price") in those log lines.
     """
 
-    def __init__(self, client: httpx.AsyncClient, label: str = "page") -> None:
+    def __init__(
+        self,
+        client: httpx.AsyncClient,
+        label: str = "page",
+        sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+        retry_delay: float = BLOCKED_RETRY_DELAY_SECONDS,
+    ) -> None:
         self._client = client
         self._label = label
+        self._sleep = sleep
+        self.retry_delay = retry_delay
         self.found = 0
         self.failed = 0
 
@@ -224,10 +257,20 @@ class AmazonPageFetcher:
         template = PRODUCT_PAGE_URLS.get(country)
         if template is None:
             return None
+        url = template.format(asin=asin)
+        page = await self._get(asin, url)
+        if page is not None and _is_blocked(page):
+            # Amazon often serves the real page on a second request, once the
+            # session cookie from the first answer is sent back.
+            await self._sleep(self.retry_delay)
+            page = await self._get(asin, url)
+            if page is not None and _is_blocked(page):
+                return self.fail(asin, "blocked page (no product, title 'Amazon.es')")
+        return page
+
+    async def _get(self, asin: str, url: str) -> str | None:
         try:
-            response = await self._client.get(
-                template.format(asin=asin), headers=BROWSER_HEADERS, follow_redirects=True
-            )
+            response = await self._client.get(url, headers=BROWSER_HEADERS, follow_redirects=True)
         except httpx.HTTPError as error:
             return self.fail(asin, f"network error ({type(error).__name__})")
         if response.status_code != 200:
