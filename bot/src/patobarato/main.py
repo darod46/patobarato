@@ -32,6 +32,7 @@ from patobarato.sources.awin_feeds import AwinFeedsSource
 from patobarato.sources.awin_source import AwinClient, AwinPromotionsSource
 from patobarato.sources.channel_stats import ChannelStatsSource
 from patobarato.sources.deal_check import DealChecker
+from patobarato.sources.ended_posts import EndedPostsSource
 from patobarato.sources.event_promos import EventPromosSource
 from patobarato.sources.guide_prices import GuidePriceRefresher
 from patobarato.sources.telegram_listener import TelegramListener, make_photo_provider
@@ -44,8 +45,6 @@ from patobarato.stores.registry import StoreRegistry, build_registry
 logger = logging.getLogger("patobarato.main")
 
 BOT_SESSION_PATH = "data/bot.session"
-# check-deals logs the bot in with its own session, so it can run beside the live bot.
-CHECK_DEALS_SESSION_PATH = "data/check-deals.session"
 LOGIN_FIRST_MESSAGE = "Ejecuta primero: docker compose run --rm bot login"
 BOT_START_FAILED_MESSAGE = "No se pudo iniciar el bot (revisa TELEGRAM_BOT_TOKEN)"
 EXIT_CONFIG_ERROR = 2
@@ -143,6 +142,15 @@ def build_runners(
     )
     if bot is not None:
         runners.append(ChannelStatsSource(bot, repo, settings.target_channel, clock))
+        download_http = http or httpx.AsyncClient(timeout=settings.http_timeout_seconds)
+        posts = PostService(
+            repo,
+            TelegramPublisher(bot, settings.target_channel),
+            registry,
+            lambda url: download_photo(download_http, url),
+            utcnow,
+        )
+        runners.append(EndedPostsSource(repo, posts, clock))
     return runners
 
 
@@ -306,51 +314,33 @@ REVALIDATE_BY_HAND_MESSAGE = "Sin WEB_REVALIDATE_URL/REVALIDATE_SECRET: revalida
 
 
 async def check_deals(settings: Settings, dry_run: bool = False) -> int:
-    """Ends Amazon deals whose price went up (and old ones), editing their posts. No reader."""
-    bot = _client(CHECK_DEALS_SESSION_PATH, settings)
-    try:
-        await bot.start(bot_token=settings.telegram_bot_token)
-    except Exception as e:
-        logger.debug("Bot login failed", exc_info=True)
-        print(f"{BOT_START_FAILED_MESSAGE}: {e}", file=sys.stderr)
-        await bot.disconnect()
-        return 1
-    try:
-        async with (
-            httpx.AsyncClient(timeout=settings.http_timeout_seconds) as http,
-            httpx.AsyncClient(timeout=settings.http_timeout_seconds, http2=True) as amazon_http,
-        ):
-            repo = SupabaseRepository(
-                create_client(settings.supabase_url, settings.supabase_service_key)
-            )
-            registry = build_registry(settings, http, amazon_http)
-            publisher = TelegramPublisher(bot, settings.target_channel)
-            posts = PostService(
-                repo, publisher, registry, lambda url: download_photo(http, url), utcnow
-            )
-            revalidator = WebRevalidator(
-                http, settings.web_revalidate_url, settings.revalidate_secret
-            )
-            summary = await DealChecker(
-                registry,
-                repo,
-                posts,
-                delay_seconds=settings.guide_price_delay_seconds,
-                limit=settings.check_deals_limit,
-                edit_limit=settings.check_deals_edit_limit,
-            ).run(dry_run)
-            if summary.ended + summary.stale_ended > 0 and not dry_run:
-                if settings.web_revalidate_url and settings.revalidate_secret:
-                    try:
-                        await revalidator.revalidate()
-                    except RevalidateError as e:
-                        print(f"{e}: revalida la web a mano.", file=sys.stderr)
-                else:
-                    print(REVALIDATE_BY_HAND_MESSAGE)
-            print(summary.format())
-        return 0
-    finally:
-        await bot.disconnect()
+    """Ends Amazon deals whose price went up (and old ones). No Telegram: the server
+    bot's ``ended_posts`` runner edits their posts."""
+    async with (
+        httpx.AsyncClient(timeout=settings.http_timeout_seconds) as http,
+        httpx.AsyncClient(timeout=settings.http_timeout_seconds, http2=True) as amazon_http,
+    ):
+        repo = SupabaseRepository(
+            create_client(settings.supabase_url, settings.supabase_service_key)
+        )
+        registry = build_registry(settings, http, amazon_http)
+        revalidator = WebRevalidator(http, settings.web_revalidate_url, settings.revalidate_secret)
+        summary = await DealChecker(
+            registry,
+            repo,
+            delay_seconds=settings.guide_price_delay_seconds,
+            limit=settings.check_deals_limit,
+        ).run(dry_run)
+        if summary.ended + summary.stale_ended > 0 and not dry_run:
+            if settings.web_revalidate_url and settings.revalidate_secret:
+                try:
+                    await revalidator.revalidate()
+                except RevalidateError as e:
+                    print(f"{e}: revalida la web a mano.", file=sys.stderr)
+            else:
+                print(REVALIDATE_BY_HAND_MESSAGE)
+        print(summary.format())
+    return 0
 
 
 def _config_error_message(error: ValidationError) -> str:

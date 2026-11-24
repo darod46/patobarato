@@ -194,6 +194,10 @@ El ejecutor de cupones de Awin solo existe si están `AWIN_PUBLISHER_ID` y `AWIN
 
 El ejecutor `channel_stats` mide cada 60 min los suscriptores de @patobarato con `GetFullChannelRequest` y los guarda en `channel_stats` para la web. Necesita el cliente de Telethon: solo existe cuando `build_runners` recibe `bot=`.
 
+### Posts de ofertas caducadas (`ended_posts`)
+
+El ejecutor `ended_posts` edita cada 60 min los posts de Telegram de las ofertas ya terminadas (por `check-deals` o desde el panel) que aún no se han editado (`post_synced_at` nulo): les pone el precio tachado. Edita como mucho 100 por pasada, los más recientes primero, con 1,5 s de pausa entre ediciones, porque Telegram limita las ediciones por minuto; los pendientes salen en las pasadas siguientes. Si el post ya no existe o es de un canal antiguo, se marca como editado y no se vuelve a intentar; cualquier otro fallo queda pendiente para la siguiente pasada. Cada pasada deja en el registro una línea `EndedPosts: N edited, N failed, N pending`. Como `channel_stats`, usa el bot publicador y solo existe cuando `build_runners` recibe `bot=`. La fila de `sources` la crea la migración `20261127000000_ended_posts.sql`; para forzar una pasada: `update sources set last_run_at = null where type = 'ended_posts';`.
+
 ## 7. Guías de compra y precios
 
 El ejecutor `guide_prices` refresca el precio de todos los productos de las guías **publicadas** (las guías en borrador, con ids de relleno como `[ASIN]`, nunca se consultan). Para cada producto lee el precio con el lector de su tienda y lo guarda junto con la hora de la comprobación; si la lectura falla, conserva el último precio y anota el error (`no price`, o `store_disabled` si la tienda no está activa en el bot). Las peticiones van una detrás de otra, con una pausa de `GUIDE_PRICE_DELAY_SECONDS` segundos (por defecto 1,5) entre productos. Un producto que ya existe en `products` conserva su título y su URL; solo los nuevos toman el nombre de la guía.
@@ -214,16 +218,16 @@ En el siguiente ciclo del planificador el ejecutor empezará a rellenar los prec
 
 ### Comprobar ofertas caducadas
 
-`check-deals` termina las ofertas de Amazon cuyo precio actual es mayor que el publicado y las que superan los 30 días, y edita su post de Telegram con el precio tachado. Es un comando manual y local (Amazon no sirve la ficha a la IP del servidor), con el mismo `.env` del bot:
+`check-deals` termina las ofertas de Amazon cuyo precio actual es mayor que el publicado y las que superan los 30 días. Es un comando manual y local (Amazon no sirve la ficha a la IP del servidor), con el mismo `.env` del bot:
 
 ```
 docker compose run --rm bot check-deals
 python -m patobarato check-deals
 ```
 
-Solo arranca el bot publicador, no el lector de Telegram, y lo conecta con su propia sesión (`data/check-deals.session`, no la del bot), así que puede ejecutarse con el bot de producción en marcha. Si el bot no arranca, sale con error 1. Al terminar, si ha caducado alguna oferta, avisa a la web para que se actualice (necesita `WEB_REVALIDATE_URL` y `REVALIDATE_SECRET`; si faltan, imprime un aviso y hay que revalidar a mano).
+**No usa Telegram**: no arranca ningún cliente ni necesita sesión, y solo hace peticiones HTTPS (Amazon, Supabase y la web), así que funciona aunque tu red corte Telegram y puede ejecutarse con el bot de producción en marcha. Los posts de las ofertas que termina los edita después el bot del servidor con el ejecutor `ended_posts` (cada hora, 100 por pasada; ver la sección 6). Al terminar, si ha caducado alguna oferta, avisa a la web para que se actualice (necesita `WEB_REVALIDATE_URL` y `REVALIDATE_SECRET`; si faltan, imprime un aviso y hay que revalidar a mano).
 
-Para la primera ejecución usa `--dry-run`: hace la selección y las consultas, imprime lo que haría y no escribe nada ni edita posts.
+Para la primera ejecución usa `--dry-run`: hace la selección y las consultas, imprime lo que haría y no escribe nada.
 
 ```
 docker compose run --rm bot check-deals --dry-run
@@ -235,11 +239,10 @@ Qué significa cada cifra del resumen:
 
 - **Comprobadas**: ofertas cuyo precio se ha consultado en esta ejecución. De ellas, **caducadas** son las que ahora cuestan más que el precio publicado, **siguen** las que no han subido y **sin precio** las que Amazon no ha dado precio; **sin leer** son las que han fallado y se reintentan en la siguiente ejecución.
 - **Caducadas por antigüedad**: ofertas con más de 30 días terminadas sin consultar su precio.
-- **Posts editados** (y fallos): posts de Telegram actualizados con el precio tachado. Si el post ya no existe o es de un canal antiguo, cuenta como fallo y no se vuelve a intentar.
-- **Pendientes de editar**: posts de ofertas ya terminadas que aún no se han editado.
+- **Posts pendientes de editar en el servidor**: posts de ofertas terminadas (en esta ejecución o antes) que el ejecutor `ended_posts` del servidor aún no ha editado. Bajan a razón de 100 por hora.
 - Si Amazon ha bloqueado dos peticiones seguidas, el resumen lo indica: vuelve a lanzarlo más tarde.
 
-Las ediciones se limitan a 100 posts por ejecución, los más recientes primero, porque Telegram limita las ediciones por minuto y la primera vez habrá cientos de ofertas antiguas por terminar. Los pendientes salen en ejecuciones siguientes. Ambos límites se ajustan con variables de entorno: `CHECK_DEALS_LIMIT` (ofertas que se consultan por ejecución, por defecto 600; con la pausa de 1,5 s son unos 15 minutos) y `CHECK_DEALS_EDIT_LIMIT` (posts que se editan por ejecución, por defecto 100).
+El número de ofertas que se consultan por ejecución se ajusta con `CHECK_DEALS_LIMIT` (por defecto 600; con la pausa de 1,5 s son unos 15 minutos).
 
 ## 8. Amazon Afiliados
 

@@ -468,7 +468,7 @@ def test_main_dispatches_promos(monkeypatch):
     assert seen == ["settings"]
 
 
-def test_build_runners_adds_channel_stats_only_with_bot():
+def test_build_runners_adds_telegram_runners_only_with_bot():
     from patobarato.storage.repository import InMemoryRepository
     from patobarato.stores.registry import build_registry
 
@@ -480,8 +480,9 @@ def test_build_runners_adds_channel_stats_only_with_bot():
     without = main_module.build_runners(registry, repo, settings, lambda: None)
     with_bot = main_module.build_runners(registry, repo, settings, lambda: None, bot=object())
 
-    assert "channel_stats" not in [r.type for r in without]
-    assert "channel_stats" in [r.type for r in with_bot]
+    for runner_type in ("channel_stats", "ended_posts"):
+        assert runner_type not in [r.type for r in without]
+        assert runner_type in [r.type for r in with_bot]
 
 
 # --- guide-prices command ---------------------------------------------------
@@ -537,15 +538,8 @@ def _patch_check_deals(monkeypatch, summary, **settings_kw):
     events: list = []
     built: dict = {}
 
-    class FakeBot:
-        async def start(self, bot_token=None):
-            events.append(("start", bot_token))
-
-        async def disconnect(self):
-            events.append("disconnect")
-
     class FakeChecker:
-        def __init__(self, registry, repo, posts, **kwargs):
+        def __init__(self, registry, repo, **kwargs):
             built.update(kwargs)
 
         async def run(self, dry_run=False):
@@ -559,11 +553,10 @@ def _patch_check_deals(monkeypatch, summary, **settings_kw):
         async def revalidate(self):
             events.append("revalidate")
 
-    def fake_client(path, settings):
-        built["session"] = path
-        return FakeBot()
+    def no_telegram(*args, **kwargs):
+        pytest.fail("check-deals must not use Telegram")
 
-    monkeypatch.setattr(main_module, "_client", fake_client)
+    monkeypatch.setattr(main_module, "_client", no_telegram)
     monkeypatch.setattr(main_module, "create_client", lambda url, key: object())
     monkeypatch.setattr(main_module, "SupabaseRepository", lambda client: object())
     monkeypatch.setattr(main_module, "build_registry", lambda *a, **k: object())
@@ -573,34 +566,25 @@ def _patch_check_deals(monkeypatch, summary, **settings_kw):
 
 
 @pytest.mark.asyncio
-async def test_check_deals_passes_settings_limits_and_revalidates(monkeypatch, capsys):
+async def test_check_deals_passes_settings_limits_and_revalidates_without_telegram(
+    monkeypatch, capsys
+):
     from patobarato.sources.deal_check import CheckSummary
 
     events, built, settings = _patch_check_deals(
         monkeypatch,
         CheckSummary(checked=3, ended=2),
         check_deals_limit=7,
-        check_deals_edit_limit=3,
         guide_price_delay_seconds=0.25,
         web_revalidate_url="https://web/api/revalidate",
         revalidate_secret="s",
     )
 
     assert await main_module.check_deals(settings) == 0
-    assert built["limit"] == 7 and built["edit_limit"] == 3
+    assert built["limit"] == 7 and "edit_limit" not in built
     assert built["delay_seconds"] == 0.25
-    assert events == [("start", settings.telegram_bot_token), ("run", False), "revalidate", "disconnect"]
+    assert events == [("run", False), "revalidate"]
     assert "Comprobadas 3" in capsys.readouterr().out
-
-
-@pytest.mark.asyncio
-async def test_check_deals_uses_its_own_session_not_the_bot_one(monkeypatch):
-    from patobarato.sources.deal_check import CheckSummary
-
-    _, built, settings = _patch_check_deals(monkeypatch, CheckSummary())
-    assert await main_module.check_deals(settings) == 0
-    assert built["session"] == main_module.CHECK_DEALS_SESSION_PATH == "data/check-deals.session"
-    assert built["session"] != main_module.BOT_SESSION_PATH
 
 
 @pytest.mark.asyncio
@@ -642,25 +626,6 @@ async def test_check_deals_tells_to_revalidate_by_hand_without_variables(monkeyp
     await main_module.check_deals(settings)
     assert "revalida la web a mano" in capsys.readouterr().out
     assert "revalidate" not in events
-
-
-@pytest.mark.asyncio
-async def test_check_deals_bot_start_failure_returns_1(monkeypatch, capsys):
-    from patobarato.sources.deal_check import CheckSummary
-
-    events, _, settings = _patch_check_deals(monkeypatch, CheckSummary())
-
-    class BadBot:
-        async def start(self, bot_token=None):
-            raise RuntimeError("boom")
-
-        async def disconnect(self):
-            events.append("disconnect")
-
-    monkeypatch.setattr(main_module, "_client", lambda *a, **k: BadBot())
-    assert await main_module.check_deals(settings) == 1
-    assert main_module.BOT_START_FAILED_MESSAGE in capsys.readouterr().err
-    assert events == ["disconnect"]
 
 
 def test_main_check_deals_passes_dry_run(monkeypatch):

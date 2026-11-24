@@ -1,4 +1,8 @@
-"""Ends active Amazon deals whose current price went above the published one."""
+"""Ends active Amazon deals whose current price went above the published one.
+
+No Telegram here: the ended deals' posts are edited by the server bot's
+``ended_posts`` runner (see ``sources/ended_posts.py``).
+"""
 
 import asyncio
 import logging
@@ -6,11 +10,7 @@ import re
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Protocol
 
-from telethon.errors import MessageIdInvalidError
-
-from patobarato.admin.posts import PostError
 from patobarato.core.pipeline import utcnow
 from patobarato.models import DealToCheck, PriceQuote
 from patobarato.sources.amazon_page import is_block
@@ -24,20 +24,7 @@ STORE = "amazon"
 COUNTRY = "ES"
 DEFAULT_DELAY_SECONDS = 1.5
 BLOCKED_STREAK_LIMIT = 2
-# PostError raised by sync_post when the post's channel no longer resolves.
-_CHANNEL_GONE = "No se encuentra el canal"
 _URL = re.compile(r"https?://\S+")
-
-
-class PostSyncer(Protocol):
-    async def sync_post(self, publication_id: int) -> dict: ...
-
-
-def _is_permanent(error: Exception) -> bool:
-    """An edit failure that retrying never fixes (old channel, deleted message)."""
-    if isinstance(error, MessageIdInvalidError):
-        return True
-    return isinstance(error, PostError) and str(error).startswith(_CHANNEL_GONE)
 
 
 def _n(value: int) -> str:
@@ -52,8 +39,6 @@ class CheckSummary:
     unknown: int = 0
     failed: int = 0
     stale_ended: int = 0
-    posts_edited: int = 0
-    edit_failed: int = 0
     posts_pending: int = 0
     stopped_blocked: bool = False
     dry_run: bool = False
@@ -71,13 +56,11 @@ class CheckSummary:
             f"Caducadas por antigüedad (>{self.max_age_days} días): {_n(self.stale_ended)}.",
         ]
         if self.dry_run:
-            lines.insert(0, "Simulación: no se ha escrito nada ni editado ningún post.")
+            lines.insert(0, "Simulación: no se ha escrito nada.")
         else:
             lines.append(
-                f"Posts editados: {_n(self.posts_edited)} ({_n(self.edit_failed)} fallos)."
+                f"Posts pendientes de editar en el servidor: {_n(self.posts_pending)}."
             )
-            if self.posts_pending:
-                lines.append(f"Pendientes de editar: {_n(self.posts_pending)}.")
         if self.stopped_blocked:
             lines.append(
                 "Amazon ha bloqueado dos peticiones seguidas; parada. "
@@ -91,25 +74,21 @@ class DealChecker:
         self,
         registry: StoreRegistry,
         repo: Repository,
-        posts: PostSyncer,
         clock: Callable[[], datetime] = utcnow,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         delay_seconds: float = DEFAULT_DELAY_SECONDS,
         max_age_days: int = 30,
         recheck_hours: int = 48,
         limit: int = 600,
-        edit_limit: int = 100,
     ) -> None:
         self._registry = registry
         self._repo = repo
-        self._posts = posts
         self._clock = clock
         self._sleep = sleep
         self._delay = delay_seconds
         self._max_age_days = max_age_days
         self._recheck_hours = recheck_hours
         self._limit = limit
-        self._edit_limit = edit_limit
         self._requested = False
 
     async def run(self, dry_run: bool = False) -> CheckSummary:
@@ -122,7 +101,6 @@ class DealChecker:
             stale = await self._repo.end_stale_deals(now, self._max_age_days)
         summary.stale_ended = len(stale)
 
-        failed_edits: set[int] = set()
         store = self._registry.get(STORE)
         if store is None:
             logger.warning("DealCheck: store %s not enabled, no deals checked", STORE)
@@ -130,16 +108,16 @@ class DealChecker:
             deals = await self._repo.list_deals_to_check(
                 now, self._max_age_days, self._recheck_hours, self._limit
             )
-            failed_edits = await self._check_deals(store, deals, summary)
+            await self._check_deals(store, deals, summary)
         if not dry_run:
-            await self._edit_ended_posts(summary, failed_edits)
+            # Includes deals ended by earlier runs that the server bot has not edited yet.
+            summary.posts_pending = await self._repo.count_ended_posts_to_edit()
         logger.info("DealCheck: %s", summary.format().replace("\n", " "))
         return summary
 
     async def _check_deals(
         self, store: Store, deals: list[DealToCheck], summary: CheckSummary
-    ) -> set[int]:
-        failed_edits: set[int] = set()
+    ) -> None:
         blocked_streak = 0
         for deal in deals:
             await self._pause()
@@ -153,8 +131,6 @@ class DealChecker:
                     summary.ended += 1
                     if not summary.dry_run:
                         await self._repo.end_publication(deal.publication_id, now)
-                        if not await self._sync(deal.publication_id, summary):
-                            failed_edits.add(deal.publication_id)
                 else:
                     outcome = "kept"
                     summary.kept += 1
@@ -184,7 +160,6 @@ class DealChecker:
                     "DealCheck: Amazon blocked %d requests in a row, stopping", blocked_streak
                 )
                 break
-        return failed_edits
 
     async def _fetch(
         self, store: Store, deal: DealToCheck
@@ -202,44 +177,8 @@ class DealChecker:
             return quote, None
         return None, getattr(store, "last_failure", None)
 
-    async def _edit_ended_posts(self, summary: CheckSummary, failed_edits: set[int]) -> None:
-        # Posts whose edit already failed in this run are left for the next one.
-        pending = [
-            publication_id
-            for publication_id in await self._repo.list_ended_posts_to_edit(
-                self._edit_limit + len(failed_edits)
-            )
-            if publication_id not in failed_edits
-        ]
-        for publication_id in pending[: self._edit_limit]:
-            await self._pause()
-            await self._sync(publication_id, summary)
-        summary.posts_pending = await self._repo.count_ended_posts_to_edit()
-
-    async def _sync(self, publication_id: int, summary: CheckSummary) -> bool:
-        """Edits the post; a failure is counted and logged, never raised."""
-        try:
-            result = await self._posts.sync_post(publication_id)
-        except Exception as e:
-            summary.edit_failed += 1
-            permanent = _is_permanent(e)
-            logger.warning(
-                "DealCheck: post of publication %d not edited%s: %s: %s",
-                publication_id,
-                " (will not be retried)" if permanent else "",
-                type(e).__name__,
-                _URL.sub("<url>", str(e)),
-            )
-            if permanent:
-                # Leaves the edit queue: the post's channel or message is gone.
-                await self._repo.mark_post_synced(publication_id, self._clock())
-            return False
-        if result.get("edited"):
-            summary.posts_edited += 1
-        return True
-
     async def _pause(self) -> None:
-        """Sleeps between network requests (Amazon reads and Telegram edits)."""
+        """Sleeps between Amazon requests."""
         if self._requested:
             await self._sleep(self._delay)
         self._requested = True
