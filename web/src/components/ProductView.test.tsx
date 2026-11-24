@@ -183,6 +183,12 @@ describe('ProductView ended deal', () => {
     expect(article.textContent).not.toContain('Mínimo histórico')
   })
 
+  it('shows only when it was published, without the price-may-change note', () => {
+    const { container } = render(<ProductView deal={ended} related={[]} now={now} />)
+    expect(screen.getByText('Publicado hace 41 min', exact)).toBeInTheDocument()
+    expect(container.textContent).not.toContain('El precio puede cambiar')
+  })
+
   it('places the warning above the price', () => {
     render(<ProductView deal={ended} related={[]} now={now} />)
     const warning = screen.getByText('Oferta caducada · terminó el 23 nov', exact)

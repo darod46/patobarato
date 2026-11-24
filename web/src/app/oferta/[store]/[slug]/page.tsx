@@ -60,8 +60,8 @@ export default async function ProductPage({ params }: Props) {
   ]
 
   return (
-    // Bottom padding on mobile keeps the footer clear of the fixed buy bar.
-    <div className="min-h-screen bg-surface pb-24 font-sans text-ink md:pb-0">
+    // Bottom padding on mobile keeps the footer clear of the fixed buy bar (active deals only).
+    <div className={`min-h-screen bg-surface font-sans text-ink${deal.status === 'ended' ? '' : ' pb-24 md:pb-0'}`}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={jsonLdScript(productJsonLd(deal, SITE_URL + canonical))}

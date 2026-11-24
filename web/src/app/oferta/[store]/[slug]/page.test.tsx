@@ -95,6 +95,18 @@ describe('ProductPage', () => {
     expect(screen.getByRole('heading', { level: 1, name: ended.title })).toBeInTheDocument()
   })
 
+  it('pads the bottom for the fixed buy bar only on an active deal', async () => {
+    const slug = productPath(deal).split('/').pop()!
+    const active = render(await ProductPage({ params: Promise.resolve({ store: 'amazon', slug }) }))
+    expect(active.container.firstElementChild).toHaveClass('pb-24', 'md:pb-0')
+    active.unmount()
+
+    vi.mocked(fetchDealByProduct).mockResolvedValueOnce({ ...deal, status: 'ended', endedAt: '2026-11-23T10:00:00Z' })
+    const ended = render(await ProductPage({ params: Promise.resolve({ store: 'amazon', slug }) }))
+    expect(ended.container.firstElementChild).not.toHaveClass('pb-24')
+    expect(ended.container.firstElementChild).not.toHaveClass('md:pb-0')
+  })
+
   it('throws notFound when the deal does not exist', async () => {
     vi.mocked(fetchDealByProduct).mockResolvedValueOnce(null)
     const error = await ProductPage({

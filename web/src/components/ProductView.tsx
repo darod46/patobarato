@@ -132,7 +132,9 @@ export function ProductView({ deal, related, now, guides = [] }: Props) {
             <p className="rounded-md bg-surface px-3 py-1.5 text-sm text-muted">{deal.coupon}</p>
           )}
           <p className="text-sm text-muted">
-            {`Publicado ${timeAgo(deal.publishedAt, clock)} · El precio puede cambiar`}
+            {ended
+              ? `Publicado ${timeAgo(deal.publishedAt, clock)}`
+              : `Publicado ${timeAgo(deal.publishedAt, clock)} · El precio puede cambiar`}
           </p>
 
           {ended ? (
