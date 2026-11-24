@@ -168,3 +168,52 @@ describe('ProductView lowest price', () => {
     expect(screen.queryByText(/Esta oferta aparece en la guía/)).toBeNull()
   })
 })
+
+describe('ProductView ended deal', () => {
+  const ended: Deal = { ...deal, status: 'ended', endedAt: '2026-11-23T10:00:00Z', isLowest: true }
+
+  it('warns that the offer ended, strikes the price and drops the savings details', () => {
+    const { container } = render(<ProductView deal={ended} related={related} now={now} />)
+    const article = container.querySelector('article')!
+    expect(article.textContent).toContain('Oferta caducada · terminó el 23 nov')
+    expect(within(article).getByText(formatPrice(13.9), exact).tagName).toBe('S')
+    expect(article.textContent).not.toContain('Ahorras')
+    expect(article.textContent).not.toContain(formatPrice(22.9))
+    expect(article.textContent).not.toContain('-39%')
+    expect(article.textContent).not.toContain('Mínimo histórico')
+  })
+
+  it('places the warning above the price', () => {
+    render(<ProductView deal={ended} related={[]} now={now} />)
+    const warning = screen.getByText('Oferta caducada · terminó el 23 nov', exact)
+    const price = screen.getByText(formatPrice(13.9), exact)
+    expect(warning.compareDocumentPosition(price) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('replaces the fixed buy bar with an inline secondary link to the current price', () => {
+    const { container } = render(<ProductView deal={ended} related={related} now={now} />)
+    expect(container.querySelector('.fixed')).toBeNull()
+    expect(screen.queryByRole('link', { name: 'Ver en Amazon' })).toBeNull()
+    const link = screen.getByRole('link', { name: 'Ver precio actual en Amazon' })
+    expect(link).toHaveAttribute('href', deal.affiliateUrl)
+    expect(link.getAttribute('rel')?.split(' ')).toEqual(expect.arrayContaining(['sponsored', 'noopener']))
+  })
+
+  it('does not mention Amazon in the current-price link of other stores', () => {
+    const pc: Deal = { ...ended, store: 'pccomponentes', affiliateUrl: 'https://www.pccomponentes.com/x' }
+    render(<ProductView deal={pc} related={[]} now={now} />)
+    expect(screen.getByRole('link', { name: 'Ver precio actual' })).toHaveAttribute('href', pc.affiliateUrl)
+  })
+
+  it('keeps the Telegram card and the related deals', () => {
+    render(<ProductView deal={ended} related={related} now={now} />)
+    expect(screen.getByRole('heading', { level: 2, name: '¿Se te ha escapado?' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'Más chollos de #hogar' })).toBeInTheDocument()
+  })
+
+  it('keeps the fixed bar and no warning for an active deal', () => {
+    const { container } = render(<ProductView deal={deal} related={[]} now={now} />)
+    expect(container.querySelector('.fixed')).not.toBeNull()
+    expect(container.textContent).not.toContain('Oferta caducada')
+  })
+})

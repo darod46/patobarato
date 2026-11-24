@@ -1,5 +1,5 @@
-import { ChevronRight, Store, TrendingDown } from 'lucide-react'
-import { discountPercent, formatPrice, timeAgo } from '../lib/format'
+import { ChevronRight, Clock, Store, TrendingDown } from 'lucide-react'
+import { discountPercent, formatDayMonth, formatPrice, timeAgo } from '../lib/format'
 import { guidePath } from '../lib/guides'
 import { storeInfo } from '../lib/stores'
 import type { Deal } from '../lib/types'
@@ -28,8 +28,10 @@ type Props = {
 export function ProductView({ deal, related, now, guides = [] }: Props) {
   const clock = new Date(now)
   const store = storeInfo(deal.store)
+  const ended = deal.status === 'ended'
+  // An ended deal keeps its page but drops every claim about the (no longer valid) saving.
   const discount =
-    deal.previousPrice !== null ? discountPercent(deal.price, deal.previousPrice) : null
+    !ended && deal.previousPrice !== null ? discountPercent(deal.price, deal.previousPrice) : null
   const saving = discount !== null ? deal.previousPrice! - deal.price : null
   const tag = deal.hashtags[0]
   // fetchRelatedDeals falls back to the latest deals when the tag has no others.
@@ -94,8 +96,20 @@ export function ProductView({ deal, related, now, guides = [] }: Props) {
             <span>{store.name}</span>
           </span>
           <h1 className="font-display text-2xl leading-tight font-bold tracking-[-0.02em] md:text-3xl">{deal.title}</h1>
+          {ended && (
+            <p className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3 py-1.5 text-sm font-semibold text-ink">
+              <Clock size={16} aria-hidden="true" className="text-muted" />
+              <span>{`Oferta caducada · terminó el ${formatDayMonth(deal.endedAt ?? now)}`}</span>
+            </p>
+          )}
           <div className="flex flex-wrap items-baseline justify-center gap-3 md:justify-start">
-            <span className="price font-display text-4xl font-bold tracking-[-0.02em]">{formatPrice(deal.price)}</span>
+            {ended ? (
+              <s className="price font-display text-4xl font-bold tracking-[-0.02em] text-muted">
+                {formatPrice(deal.price)}
+              </s>
+            ) : (
+              <span className="price font-display text-4xl font-bold tracking-[-0.02em]">{formatPrice(deal.price)}</span>
+            )}
             {deal.priceBeforeCoupon && (
               <span data-testid="price-before-coupon" className="text-sm text-muted">
                 sin cupón
@@ -104,7 +118,7 @@ export function ProductView({ deal, related, now, guides = [] }: Props) {
             {discount !== null && (
               <s className="price text-lg text-muted">{formatPrice(deal.previousPrice!)}</s>
             )}
-            {deal.isLowest && (
+            {!ended && deal.isLowest && (
               <span className="inline-flex items-center gap-1 rounded-lg bg-success-soft px-2.5 py-1 text-xs font-semibold text-success">
                 <TrendingDown size={14} aria-hidden="true" />
                 Mínimo histórico
@@ -121,10 +135,22 @@ export function ProductView({ deal, related, now, guides = [] }: Props) {
             {`Publicado ${timeAgo(deal.publishedAt, clock)} · El precio puede cambiar`}
           </p>
 
-          {/* Mobile: fixed bottom bar (above the home indicator); desktop: inline. */}
-          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur md:static md:z-auto md:w-full md:max-w-sm md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
-            <BuyButton url={deal.affiliateUrl} store={deal.store} className="w-full" />
-          </div>
+          {ended ? (
+            <div className="w-full max-w-sm">
+              <BuyButton
+                url={deal.affiliateUrl}
+                store={deal.store}
+                variant="secondary"
+                label={deal.store === 'amazon' ? 'Ver precio actual en Amazon' : 'Ver precio actual'}
+                className="w-full"
+              />
+            </div>
+          ) : (
+            /* Mobile: fixed bottom bar (above the home indicator); desktop: inline. */
+            <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur md:static md:z-auto md:w-full md:max-w-sm md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
+              <BuyButton url={deal.affiliateUrl} store={deal.store} className="w-full" />
+            </div>
+          )}
           {guides.length > 0 && (
             <ul className="flex max-w-sm flex-col text-sm text-muted">
               {guides.map((g) => (

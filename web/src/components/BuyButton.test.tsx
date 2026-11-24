@@ -40,4 +40,27 @@ describe('BuyButton', () => {
     expect(link).toHaveAttribute('href', url)
     expect(fireEvent.click(link)).toBe(false) // default prevented, intent opened instead
   })
+
+  it('renders a secondary variant with a custom label and the same link behaviour', () => {
+    const url = 'https://www.amazon.es/dp/B0ABCDEF12?tag=x-21'
+    render(<BuyButton url={url} store="amazon" variant="secondary" label="Ver precio actual en Amazon" />)
+    const link = screen.getByRole('link', { name: 'Ver precio actual en Amazon' })
+    expect(link).toHaveAttribute('href', url)
+    expect(link).toHaveAttribute('rel', 'sponsored noopener noreferrer')
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link.className).toContain('border-line')
+    expect(link.className).toContain('bg-white')
+    expect(link.className).not.toContain('bg-accent')
+  })
+
+  it('uses the custom label for other stores too', () => {
+    render(<BuyButton url="https://www.pccomponentes.com/x" store="pccomponentes" variant="secondary" label="Ver precio actual" />)
+    const link = screen.getByRole('link', { name: 'Ver precio actual' })
+    expect(link.className).toContain('border-line')
+  })
+
+  it('defaults to the primary style', () => {
+    render(<BuyButton url="https://www.amazon.es/dp/B0ABCDEF12" store="amazon" />)
+    expect(screen.getByRole('link', { name: 'Ver en Amazon' }).className).toContain('bg-accent')
+  })
 })

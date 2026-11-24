@@ -36,3 +36,10 @@ export function escapeIlike(text: string): string {
 export function formatLongDate(iso: string): string {
   return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Madrid' })
 }
+
+/** Spanish day and short month (e.g. "23 nov") in Madrid time. */
+export function formatDayMonth(iso: string): string {
+  return new Date(iso)
+    .toLocaleDateString('es-ES', { day: 'numeric', month: 'short', timeZone: 'Europe/Madrid' })
+    .replace(/\.$/, '')
+}

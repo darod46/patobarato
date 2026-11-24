@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { discountPercent, escapeIlike, formatLongDate, formatPrice, timeAgo } from './format'
+import { discountPercent, escapeIlike, formatDayMonth, formatLongDate, formatPrice, timeAgo } from './format'
 
 describe('formatPrice', () => {
   it('uses es-ES separators with a non-breaking space before the euro sign', () => {
@@ -50,5 +50,12 @@ describe('formatLongDate', () => {
   it('formats a Spanish long date in Madrid time', () => {
     expect(formatLongDate('2026-11-07T12:00:00Z')).toBe('7 de noviembre de 2026')
     expect(formatLongDate('2026-12-31T23:30:00Z')).toBe('1 de enero de 2027')
+  })
+})
+
+describe('formatDayMonth', () => {
+  it('formats a short Spanish day and month in Madrid time', () => {
+    expect(formatDayMonth('2026-11-23T10:00:00Z')).toBe('23 nov')
+    expect(formatDayMonth('2026-11-30T23:30:00Z')).toBe('1 dic')
   })
 })
