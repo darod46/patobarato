@@ -3,6 +3,9 @@
 -- When a product has an active publication it wins; otherwise the latest ended one is shown.
 alter table publications add column checked_at timestamptz;
 alter table publications add column post_synced_at timestamptz;
+-- Publications ended before this migration (admin-ended, AliExpress included) are not queued
+-- for check-deals to edit their post again.
+update publications set post_synced_at = coalesce(ended_at, now()) where status = 'ended';
 
 create view web_deal_pages as
 select distinct on (p.product_id)
