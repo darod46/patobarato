@@ -87,6 +87,14 @@ describe('ProductPage', () => {
     expect((error as { digest?: string }).digest).toMatch(/NEXT_HTTP_ERROR_FALLBACK;404/)
   })
 
+  it('renders an ended deal without calling notFound', async () => {
+    const ended: Deal = { ...deal, status: 'ended', endedAt: '2026-11-23T10:00:00Z' }
+    vi.mocked(fetchDealByProduct).mockResolvedValueOnce(ended)
+    const slug = productPath(ended).split('/').pop()!
+    render(await ProductPage({ params: Promise.resolve({ store: 'amazon', slug }) }))
+    expect(screen.getByRole('heading', { level: 1, name: ended.title })).toBeInTheDocument()
+  })
+
   it('throws notFound when the deal does not exist', async () => {
     vi.mocked(fetchDealByProduct).mockResolvedValueOnce(null)
     const error = await ProductPage({

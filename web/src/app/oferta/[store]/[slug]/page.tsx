@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { store, slug } = await params
   const deal = await loadDeal(store, slug)
   if (!deal) notFound()
-  return productMetadata(deal)
+  return productMetadata(deal, new Date())
 }
 
 export default async function ProductPage({ params }: Props) {

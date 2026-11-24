@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { formatPrice } from './format'
+import { storeInfo } from './stores'
 import { siteEvent } from '../test-utils/siteEvent'
 import { OG_IMAGE, aboutJsonLd, legalMetadata, listingMetadata, withHreflang, breadcrumbJsonLd, eventJsonLd, eventMetadata, faqJsonLd, guideJsonLd, guideMetadata, searchMetadata, homeMetadata, productJsonLd, productMetadata, siteJsonLd, jsonLdScript } from './seo'
 import type { Deal, Guide } from './types'
@@ -345,5 +346,38 @@ describe('aboutJsonLd', () => {
     const data = aboutJsonLd('https://www.patobarato.com/sobre-nosotros')
     expect(data.map((d) => d['@type'])).toEqual(['AboutPage', 'Organization'])
     expect(data[1]).toMatchObject({ name: 'PatoBarato', sameAs: ['https://t.me/patobarato'] })
+  })
+})
+
+describe('ended deals', () => {
+  const ended: Deal = { ...deal, status: 'ended', endedAt: '2026-11-23T10:00:00Z', publishedAt: '2026-11-20T10:00:00Z' }
+  const now = new Date('2026-11-24T10:00:00Z')
+
+  it('keeps the active metadata and no robots', () => {
+    const meta = productMetadata(deal, now)
+    expect(meta.title).toContain('por 13,90')
+    expect(meta.robots).toBeUndefined()
+  })
+
+  it('titles and describes a recently ended deal and keeps it indexable', () => {
+    const meta = productMetadata(ended, now)
+    expect(meta.title).toBe(`${ended.title} · Oferta caducada · PatoBarato`)
+    expect(meta.description).toBe(
+      `Esta oferta de ${storeInfo('amazon').name} ya ha terminado. Se publicó a ${formatPrice(ended.price)} el 20 de noviembre. Mira el precio actual o las ofertas vigentes.`,
+    )
+    expect(meta.robots).toBeUndefined()
+  })
+
+  it('marks an old ended deal noindex', () => {
+    const old: Deal = { ...ended, endedAt: '2026-01-01T10:00:00Z' }
+    expect(productMetadata(old, now).robots).toEqual({ index: false, follow: true })
+  })
+
+  it('declares SoldOut and priceValidUntil in the JSON-LD', () => {
+    const ld = productJsonLd(ended, url) as Record<string, any>
+    expect(ld.offers.availability).toBe('https://schema.org/SoldOut')
+    expect(ld.offers.priceValidUntil).toBe('2026-11-23')
+    const active = productJsonLd(deal, url) as Record<string, any>
+    expect(active.offers.priceValidUntil).toBeUndefined()
   })
 })
