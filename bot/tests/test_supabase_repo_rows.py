@@ -457,8 +457,49 @@ async def test_end_stale_deals_updates_listed_ids():
     ids = await SupabaseRepository(client).end_stale_deals(NOW, 30)
     assert ids == [1, 2]
     (args, _), = _calls(client, "update")
-    assert args[0] == {"status": "ended", "ended_at": NOW.isoformat()}
+    assert args[0] == {"status": "ended", "ended_at": NOW.isoformat(), "post_synced_at": None}
     assert _calls(client, "in_")[0][0] == ("id", [1, 2])
+
+
+class _PagedClient(_Client):
+    """Returns ``pages[i]`` on the i-th ``execute`` (then empty lists)."""
+
+    def __init__(self, pages: list[list]) -> None:
+        super().__init__([])
+        self._pages = list(pages)
+
+    def table(self, name: str) -> _Query:
+        self.log.append(("table", (name,), {}))
+        data = self._pages.pop(0) if self._pages else []
+        return _Query(self.log, data)
+
+
+async def test_list_stale_deals_pages_beyond_row_cap():
+    from patobarato.storage.supabase_repo import CATALOG_PAGE
+
+    first = [{"id": i} for i in range(CATALOG_PAGE)]
+    second = [{"id": CATALOG_PAGE + 1}, {"id": CATALOG_PAGE + 2}]
+    client = _PagedClient([first, second])
+    ids = await SupabaseRepository(client).list_stale_deals(NOW, 30)
+    assert ids == [r["id"] for r in first + second]
+    assert _calls(client, "range") == [
+        ((0, CATALOG_PAGE - 1), {}),
+        ((CATALOG_PAGE, 2 * CATALOG_PAGE - 1), {}),
+    ]
+    assert _calls(client, "order")[0][0] == ("id",)
+
+
+async def test_end_stale_deals_updates_in_chunks():
+    from patobarato.storage.supabase_repo import CATALOG_UPDATE_CHUNK
+
+    total = 2 * CATALOG_UPDATE_CHUNK + 50
+    client = _PagedClient([[{"id": i} for i in range(total)]])
+    ids = await SupabaseRepository(client).end_stale_deals(NOW, 30)
+    assert ids == list(range(total))
+    chunks = [a[1] for a, _ in _calls(client, "in_")]
+    assert len(_calls(client, "update")) == 3
+    assert [len(c) for c in chunks] == [CATALOG_UPDATE_CHUNK, CATALOG_UPDATE_CHUNK, 50]
+    assert [i for c in chunks for i in c] == ids
 
 
 async def test_end_stale_deals_without_stale_does_not_update():
@@ -476,7 +517,7 @@ async def test_end_publication_mark_checked_mark_post_synced_rows():
     iso = NOW.isoformat()
     updates = [a[0] for a, _ in _calls(client, "update")]
     assert updates == [
-        {"status": "ended", "ended_at": iso, "checked_at": iso},
+        {"status": "ended", "ended_at": iso, "checked_at": iso, "post_synced_at": None},
         {"checked_at": iso},
         {"post_synced_at": iso},
     ]
@@ -493,5 +534,34 @@ async def test_list_ended_posts_to_edit_query():
         ("message_id", "null"),
         ("post_synced_at", "null"),
     ]
-    assert _calls(client, "order")[0] == (("ended_at",), {"desc": True})
+    assert _calls(client, "order") == [
+        (("ended_at",), {"desc": True}),
+        (("published_at",), {"desc": True}),
+    ]
     assert _calls(client, "limit")[0][0] == (5,)
+
+
+async def test_count_ended_posts_to_edit_query():
+    class _CountQuery(_Query):
+        def execute(self):
+            class R:
+                data = ()
+                count = 42
+
+            return R()
+
+    class _CountClient(_Client):
+        def table(self, name):
+            self.log.append(("table", (name,), {}))
+            return _CountQuery(self.log, [])
+
+    client = _CountClient([])
+    assert await SupabaseRepository(client).count_ended_posts_to_edit() == 42
+    assert _calls(client, "select")[0] == (("id",), {"count": "exact", "head": True})
+    assert ("status", "ended") in [a for a, _ in _calls(client, "eq")]
+    names = [n for n, _, _ in client.log]
+    assert names.index("not_") + 1 == names.index("is_")
+    assert [a for a, _ in _calls(client, "is_")] == [
+        ("message_id", "null"),
+        ("post_synced_at", "null"),
+    ]

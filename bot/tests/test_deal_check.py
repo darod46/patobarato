@@ -3,6 +3,9 @@ import logging
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
+import pytest
+from telethon.errors import MessageIdInvalidError
+
 from patobarato.admin.posts import PostError
 from patobarato.models import ParsedOffer, PriceQuote, PublicationStatus
 from patobarato.sources.deal_check import CheckSummary, DealChecker
@@ -47,15 +50,16 @@ class FakeStore(BaseStore):
 
 
 class FakePosts:
-    def __init__(self, repo, fail=()):
+    def __init__(self, repo, fail=(), error=None):
         self.repo = repo
         self.fail = set(fail)
+        self.error = error or (lambda: ConnectionError("timeout"))
         self.calls: list[int] = []
 
     async def sync_post(self, publication_id):
         self.calls.append(publication_id)
         if publication_id in self.fail:
-            raise PostError("No se encuentra el canal del post")
+            raise self.error()
         await self.repo.mark_post_synced(publication_id, NOW)
         return {"edited": True}
 
@@ -300,3 +304,55 @@ async def test_without_amazon_store_still_ends_stale_and_edits_posts():
     summary = await checker.run()
     assert summary.stale_ended == 1 and summary.checked == 0
     assert posts.calls == [stale] and summary.posts_edited == 1
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        lambda: PostError("No se encuentra el canal del post"),
+        lambda: MessageIdInvalidError(request=None),
+    ],
+)
+async def test_permanent_post_error_leaves_the_queue(error, caplog):
+    repo = InMemoryRepository()
+    gone = await _seed(repo, "S01", age_days=40)
+    posts = FakePosts(repo, fail={gone}, error=error)
+    checker, posts, _ = _make(repo, FakeStore(), posts=posts)
+    with caplog.at_level(logging.WARNING, logger="patobarato.deal_check"):
+        summary = await checker.run()
+    assert posts.calls == [gone]
+    assert summary.edit_failed == 1 and summary.posts_edited == 0
+    assert _pub(repo, gone)["post_synced_at"] == NOW
+    assert await repo.list_ended_posts_to_edit(10) == []
+    assert summary.posts_pending == 0
+    assert "will not be retried" in caplog.text
+
+
+async def test_permanent_error_on_inline_sync_leaves_the_queue():
+    repo = InMemoryRepository()
+    pid = await _seed(repo, "B01", "5.00")
+    posts = FakePosts(
+        repo, fail={pid}, error=lambda: PostError("No se encuentra el canal del post")
+    )
+    checker, posts, _ = _make(repo, FakeStore({"B01": _quote("9.00")}), posts=posts)
+    summary = await checker.run()
+    assert _pub(repo, pid)["post_synced_at"] == NOW
+    assert summary.edit_failed == 1 and summary.posts_pending == 0
+
+
+async def test_posts_pending_is_the_real_count_of_the_queue():
+    repo = InMemoryRepository()
+    for i in range(5):
+        await _seed(repo, f"S0{i}", age_days=31 + i)
+    calls = []
+    original = repo.list_ended_posts_to_edit
+
+    async def spy(limit):
+        calls.append(limit)
+        return await original(limit)
+
+    repo.list_ended_posts_to_edit = spy
+    checker, _, _ = _make(repo, FakeStore(), edit_limit=2)
+    summary = await checker.run()
+    assert summary.posts_edited == 2 and summary.posts_pending == 3
+    assert calls == [2]

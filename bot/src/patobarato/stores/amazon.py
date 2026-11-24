@@ -42,6 +42,7 @@ class AmazonStore(BaseStore):
             else None
         )
         self._prices = AmazonPageFetcher(http, "price") if http is not None else None
+        self._no_http_failure: str | None = None
 
     def matches(self, url: str) -> bool:
         return is_amazon_url(url)
@@ -64,15 +65,18 @@ class AmazonStore(BaseStore):
 
     @property
     def last_failure(self) -> str | None:
-        return self._prices.last_failure if self._prices else None
+        return self._prices.last_failure if self._prices else self._no_http_failure
 
     async def fetch_price(self, product_id: str, canonical_url: str) -> PriceQuote | None:
         if self._prices is None:
+            self._no_http_failure = "no HTTP client"
             return None
         country = country_from_url(canonical_url) or DEFAULT_COUNTRY
         try:
             page = await self._prices.fetch(product_id, country)
             if page is None:
+                if self._prices.last_failure is None:
+                    return self._prices.fail(product_id, f"unsupported country {country}")
                 return None
             quote = extract_price(page)
             if quote is None:
@@ -86,4 +90,4 @@ class AmazonStore(BaseStore):
             return quote
         except Exception as error:
             logger.warning("Amazon price for %s failed: %s: %s", product_id, type(error).__name__, error)
-            return None
+            return self._prices.fail(product_id, f"network error ({type(error).__name__})")

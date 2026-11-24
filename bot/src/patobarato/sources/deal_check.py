@@ -8,6 +8,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
 
+from telethon.errors import MessageIdInvalidError
+
+from patobarato.admin.posts import PostError
 from patobarato.core.pipeline import utcnow
 from patobarato.models import DealToCheck, PriceQuote
 from patobarato.sources.amazon_page import is_block
@@ -21,13 +24,20 @@ STORE = "amazon"
 COUNTRY = "ES"
 DEFAULT_DELAY_SECONDS = 1.5
 BLOCKED_STREAK_LIMIT = 2
-# Ended posts read at once to count the ones left for later runs.
-PENDING_SCAN_LIMIT = 10_000
+# PostError raised by sync_post when the post's channel no longer resolves.
+_CHANNEL_GONE = "No se encuentra el canal"
 _URL = re.compile(r"https?://\S+")
 
 
 class PostSyncer(Protocol):
     async def sync_post(self, publication_id: int) -> dict: ...
+
+
+def _is_permanent(error: Exception) -> bool:
+    """An edit failure that retrying never fixes (old channel, deleted message)."""
+    if isinstance(error, MessageIdInvalidError):
+        return True
+    return isinstance(error, PostError) and str(error).startswith(_CHANNEL_GONE)
 
 
 def _n(value: int) -> str:
@@ -197,17 +207,14 @@ class DealChecker:
         pending = [
             publication_id
             for publication_id in await self._repo.list_ended_posts_to_edit(
-                self._edit_limit + len(failed_edits) + PENDING_SCAN_LIMIT
+                self._edit_limit + len(failed_edits)
             )
             if publication_id not in failed_edits
         ]
-        batch = pending[: self._edit_limit]
-        edited = 0
-        for publication_id in batch:
+        for publication_id in pending[: self._edit_limit]:
             await self._pause()
-            if await self._sync(publication_id, summary):
-                edited += 1
-        summary.posts_pending = len(pending) - edited + len(failed_edits)
+            await self._sync(publication_id, summary)
+        summary.posts_pending = await self._repo.count_ended_posts_to_edit()
 
     async def _sync(self, publication_id: int, summary: CheckSummary) -> bool:
         """Edits the post; a failure is counted and logged, never raised."""
@@ -215,12 +222,17 @@ class DealChecker:
             result = await self._posts.sync_post(publication_id)
         except Exception as e:
             summary.edit_failed += 1
+            permanent = _is_permanent(e)
             logger.warning(
-                "DealCheck: post of publication %d not edited: %s: %s",
+                "DealCheck: post of publication %d not edited%s: %s: %s",
                 publication_id,
+                " (will not be retried)" if permanent else "",
                 type(e).__name__,
                 _URL.sub("<url>", str(e)),
             )
+            if permanent:
+                # Leaves the edit queue: the post's channel or message is gone.
+                await self._repo.mark_post_synced(publication_id, self._clock())
             return False
         if result.get("edited"):
             summary.posts_edited += 1

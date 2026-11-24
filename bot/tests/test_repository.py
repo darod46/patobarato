@@ -601,3 +601,24 @@ async def test_list_ended_posts_to_edit():
     await _seed_pub(repo, "E5")
     assert await repo.list_ended_posts_to_edit(10) == [new, old]
     assert await repo.list_ended_posts_to_edit(1) == [new]
+    assert await repo.count_ended_posts_to_edit() == 2
+
+
+async def test_list_ended_posts_to_edit_ties_newest_published_first():
+    repo = InMemoryRepository()
+    older = await _seed_pub(repo, "G1", age_days=40)
+    newer = await _seed_pub(repo, "G2", age_days=35)
+    assert await repo.end_stale_deals(NOW, 30) == [older, newer]
+    assert await repo.list_ended_posts_to_edit(10) == [newer, older]
+
+
+async def test_ending_clears_post_synced_at():
+    repo = InMemoryRepository()
+    stale = await _seed_pub(repo, "H1", age_days=40, synced=True)
+    checked = await _seed_pub(repo, "H2", synced=True)
+    assert await repo.list_ended_posts_to_edit(10) == []
+    await repo.end_stale_deals(NOW, 30)
+    await repo.end_publication(checked, NOW)
+    assert _pub(repo, stale)["post_synced_at"] is None
+    assert _pub(repo, checked)["post_synced_at"] is None
+    assert set(await repo.list_ended_posts_to_edit(10)) == {stale, checked}

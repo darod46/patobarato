@@ -788,18 +788,27 @@ class SupabaseRepository:
         oldest = (now - timedelta(days=max_age_days)).isoformat()
 
         def run():
-            return (
-                self._client.table("publications")
-                .select("id, products!inner(store)")
-                .eq("status", "active")
-                .eq("channel", "telegram")
-                .eq("products.store", "amazon")
-                .lte("published_at", oldest)
-                .execute()
-            )
+            ids: list[int] = []
+            start = 0
+            while True:
+                page = (
+                    self._client.table("publications")
+                    .select("id, products!inner(store)")
+                    .eq("status", "active")
+                    .eq("channel", "telegram")
+                    .eq("products.store", "amazon")
+                    .lte("published_at", oldest)
+                    .order("id")
+                    .range(start, start + CATALOG_PAGE - 1)
+                    .execute()
+                    .data
+                )
+                ids.extend(row["id"] for row in page)
+                if len(page) < CATALOG_PAGE:
+                    return ids
+                start += CATALOG_PAGE
 
-        response = await asyncio.to_thread(run)
-        return [row["id"] for row in response.data]
+        return await asyncio.to_thread(run)
 
     async def end_stale_deals(self, now: datetime, max_age_days: int) -> list[int]:
         ids = await self.list_stale_deals(now, max_age_days)
@@ -807,9 +816,14 @@ class SupabaseRepository:
             return []
 
         def run():
-            self._client.table("publications").update(
-                {"status": PublicationStatus.ENDED.value, "ended_at": now.isoformat()}
-            ).in_("id", ids).execute()
+            for i in range(0, len(ids), CATALOG_UPDATE_CHUNK):
+                self._client.table("publications").update(
+                    {
+                        "status": PublicationStatus.ENDED.value,
+                        "ended_at": now.isoformat(),
+                        "post_synced_at": None,
+                    }
+                ).in_("id", ids[i : i + CATALOG_UPDATE_CHUNK]).execute()
 
         await asyncio.to_thread(run)
         return ids
@@ -824,7 +838,12 @@ class SupabaseRepository:
         iso = now.isoformat()
         await self._update_publication(
             publication_id,
-            {"status": PublicationStatus.ENDED.value, "ended_at": iso, "checked_at": iso},
+            {
+                "status": PublicationStatus.ENDED.value,
+                "ended_at": iso,
+                "checked_at": iso,
+                "post_synced_at": None,
+            },
         )
 
     async def mark_checked(self, publication_id: int, now: datetime) -> None:
@@ -839,12 +858,27 @@ class SupabaseRepository:
                 .not_.is_("message_id", "null")
                 .is_("post_synced_at", "null")
                 .order("ended_at", desc=True)
+                .order("published_at", desc=True)
                 .limit(limit)
                 .execute()
             )
 
         response = await asyncio.to_thread(run)
         return [row["id"] for row in response.data]
+
+    async def count_ended_posts_to_edit(self) -> int:
+        def run():
+            return (
+                self._client.table("publications")
+                .select("id", count="exact", head=True)
+                .eq("status", "ended")
+                .not_.is_("message_id", "null")
+                .is_("post_synced_at", "null")
+                .execute()
+            )
+
+        response = await asyncio.to_thread(run)
+        return response.count or 0
 
     async def mark_post_synced(self, publication_id: int, now: datetime) -> None:
         await self._update_publication(publication_id, {"post_synced_at": now.isoformat()})

@@ -559,7 +559,11 @@ def _patch_check_deals(monkeypatch, summary, **settings_kw):
         async def revalidate(self):
             events.append("revalidate")
 
-    monkeypatch.setattr(main_module, "_client", lambda *a, **k: FakeBot())
+    def fake_client(path, settings):
+        built["session"] = path
+        return FakeBot()
+
+    monkeypatch.setattr(main_module, "_client", fake_client)
     monkeypatch.setattr(main_module, "create_client", lambda url, key: object())
     monkeypatch.setattr(main_module, "SupabaseRepository", lambda client: object())
     monkeypatch.setattr(main_module, "build_registry", lambda *a, **k: object())
@@ -577,14 +581,26 @@ async def test_check_deals_passes_settings_limits_and_revalidates(monkeypatch, c
         CheckSummary(checked=3, ended=2),
         check_deals_limit=7,
         check_deals_edit_limit=3,
+        guide_price_delay_seconds=0.25,
         web_revalidate_url="https://web/api/revalidate",
         revalidate_secret="s",
     )
 
     assert await main_module.check_deals(settings) == 0
     assert built["limit"] == 7 and built["edit_limit"] == 3
+    assert built["delay_seconds"] == 0.25
     assert events == [("start", settings.telegram_bot_token), ("run", False), "revalidate", "disconnect"]
     assert "Comprobadas 3" in capsys.readouterr().out
+
+
+@pytest.mark.asyncio
+async def test_check_deals_uses_its_own_session_not_the_bot_one(monkeypatch):
+    from patobarato.sources.deal_check import CheckSummary
+
+    _, built, settings = _patch_check_deals(monkeypatch, CheckSummary())
+    assert await main_module.check_deals(settings) == 0
+    assert built["session"] == main_module.CHECK_DEALS_SESSION_PATH == "data/check-deals.session"
+    assert built["session"] != main_module.BOT_SESSION_PATH
 
 
 @pytest.mark.asyncio

@@ -221,7 +221,7 @@ docker compose run --rm bot check-deals
 python -m patobarato check-deals
 ```
 
-Solo arranca el bot publicador, no el lector de Telegram, así que puede ejecutarse con el bot de producción en marcha. Si el bot no arranca, sale con error 1. Al terminar, si ha caducado alguna oferta, avisa a la web para que se actualice (necesita `WEB_REVALIDATE_URL` y `REVALIDATE_SECRET`; si faltan, imprime un aviso y hay que revalidar a mano).
+Solo arranca el bot publicador, no el lector de Telegram, y lo conecta con su propia sesión (`data/check-deals.session`, no la del bot), así que puede ejecutarse con el bot de producción en marcha. Si el bot no arranca, sale con error 1. Al terminar, si ha caducado alguna oferta, avisa a la web para que se actualice (necesita `WEB_REVALIDATE_URL` y `REVALIDATE_SECRET`; si faltan, imprime un aviso y hay que revalidar a mano).
 
 Para la primera ejecución usa `--dry-run`: hace la selección y las consultas, imprime lo que haría y no escribe nada ni edita posts.
 
@@ -235,7 +235,7 @@ Qué significa cada cifra del resumen:
 
 - **Comprobadas**: ofertas cuyo precio se ha consultado en esta ejecución. De ellas, **caducadas** son las que ahora cuestan más que el precio publicado, **siguen** las que no han subido y **sin precio** las que Amazon no ha dado precio; **sin leer** son las que han fallado y se reintentan en la siguiente ejecución.
 - **Caducadas por antigüedad**: ofertas con más de 30 días terminadas sin consultar su precio.
-- **Posts editados** (y fallos): posts de Telegram actualizados con el precio tachado.
+- **Posts editados** (y fallos): posts de Telegram actualizados con el precio tachado. Si el post ya no existe o es de un canal antiguo, cuenta como fallo y no se vuelve a intentar.
 - **Pendientes de editar**: posts de ofertas ya terminadas que aún no se han editado.
 - Si Amazon ha bloqueado dos peticiones seguidas, el resumen lo indica: vuelve a lanzarlo más tarde.
 

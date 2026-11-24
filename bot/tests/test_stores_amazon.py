@@ -137,3 +137,31 @@ async def test_amazon_store_last_failure():
 
 def test_last_failure_defaults_to_none(amazon):
     assert amazon.last_failure is None
+
+
+async def test_unexpected_error_leaves_network_error_failure(monkeypatch):
+    import patobarato.stores.amazon as amazon_module
+
+    def boom(page):
+        raise RuntimeError("parser exploded")
+
+    monkeypatch.setattr(amazon_module, "extract_price", boom)
+    async with _serve("amazon_price.html") as client:
+        store = AmazonStore("patobarato-21", client)
+        assert await store.fetch_price("B09XS7JWHH", URL) is None
+    assert store.last_failure.startswith("network error")
+    assert "RuntimeError" in store.last_failure
+
+
+async def test_fetch_price_without_http_leaves_a_failure(amazon):
+    assert await amazon.fetch_price("B09XS7JWHH", URL) is None
+    assert amazon.last_failure is not None
+    assert not amazon.last_failure.startswith("no price")
+
+
+async def test_fetch_price_unsupported_country_leaves_a_failure(monkeypatch):
+    monkeypatch.setattr("patobarato.sources.amazon_page.PRODUCT_PAGE_URLS", {})
+    async with _serve("amazon_price.html") as client:
+        store = AmazonStore("patobarato-21", client)
+        assert await store.fetch_price("B09XS7JWHH", URL) is None
+    assert store.last_failure == "unsupported country ES"

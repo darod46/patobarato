@@ -209,17 +209,30 @@ class Repository(Protocol):
         ...
 
     async def end_stale_deals(self, now: datetime, max_age_days: int) -> list[int]:
-        """Ends the publications of ``list_stale_deals`` (status ``ended``, ``ended_at``); returns ids."""
+        """Ends the publications of ``list_stale_deals``; returns ids.
+
+        Sets status ``ended`` and ``ended_at``, and clears ``post_synced_at`` so the post is edited.
+        """
         ...
 
     async def end_publication(self, publication_id: int, now: datetime) -> None:
-        """Status ``ended``; ``ended_at`` and ``checked_at`` are set to ``now``."""
+        """Status ``ended``; ``ended_at`` and ``checked_at`` set to ``now``.
+
+        Clears ``post_synced_at`` so the post is edited.
+        """
         ...
 
     async def mark_checked(self, publication_id: int, now: datetime) -> None: ...
 
     async def list_ended_posts_to_edit(self, limit: int) -> list[int]:
-        """Ended publications with a Telegram message not yet edited, newest ``ended_at`` first."""
+        """Ended publications with a Telegram message not yet edited.
+
+        Newest ``ended_at`` first, ties by newest ``published_at``.
+        """
+        ...
+
+    async def count_ended_posts_to_edit(self) -> int:
+        """How many publications ``list_ended_posts_to_edit`` would return without a limit."""
         ...
 
     async def mark_post_synced(self, publication_id: int, now: datetime) -> None: ...
@@ -723,7 +736,7 @@ class InMemoryRepository(Repository):
         ids = await self.list_stale_deals(now, max_age_days)
         for pub in self._publications:
             if pub["id"] in ids:
-                pub.update(status=PublicationStatus.ENDED, ended_at=now)
+                pub.update(status=PublicationStatus.ENDED, ended_at=now, post_synced_at=None)
         return ids
 
     def _pub_by_id(self, publication_id: int) -> dict:
@@ -731,22 +744,31 @@ class InMemoryRepository(Repository):
 
     async def end_publication(self, publication_id: int, now: datetime) -> None:
         self._pub_by_id(publication_id).update(
-            status=PublicationStatus.ENDED, ended_at=now, checked_at=now
+            status=PublicationStatus.ENDED, ended_at=now, checked_at=now, post_synced_at=None
         )
 
     async def mark_checked(self, publication_id: int, now: datetime) -> None:
         self._pub_by_id(publication_id)["checked_at"] = now
 
-    async def list_ended_posts_to_edit(self, limit: int) -> list[int]:
-        picked = [
+    def _ended_posts_to_edit(self) -> list[dict]:
+        return [
             p
             for p in self._publications
             if p["status"] == PublicationStatus.ENDED
             and p["message_id"] is not None
             and p["post_synced_at"] is None
         ]
-        picked.sort(key=lambda p: p["ended_at"] or datetime.min.replace(tzinfo=UTC), reverse=True)
+
+    async def list_ended_posts_to_edit(self, limit: int) -> list[int]:
+        picked = self._ended_posts_to_edit()
+        oldest = datetime.min.replace(tzinfo=UTC)
+        picked.sort(
+            key=lambda p: (p["ended_at"] or oldest, p["published_at"] or oldest), reverse=True
+        )
         return [p["id"] for p in picked[:limit]]
+
+    async def count_ended_posts_to_edit(self) -> int:
+        return len(self._ended_posts_to_edit())
 
     async def mark_post_synced(self, publication_id: int, now: datetime) -> None:
         self._pub_by_id(publication_id)["post_synced_at"] = now

@@ -44,6 +44,8 @@ from patobarato.stores.registry import StoreRegistry, build_registry
 logger = logging.getLogger("patobarato.main")
 
 BOT_SESSION_PATH = "data/bot.session"
+# check-deals logs the bot in with its own session, so it can run beside the live bot.
+CHECK_DEALS_SESSION_PATH = "data/check-deals.session"
 LOGIN_FIRST_MESSAGE = "Ejecuta primero: docker compose run --rm bot login"
 BOT_START_FAILED_MESSAGE = "No se pudo iniciar el bot (revisa TELEGRAM_BOT_TOKEN)"
 EXIT_CONFIG_ERROR = 2
@@ -305,7 +307,7 @@ REVALIDATE_BY_HAND_MESSAGE = "Sin WEB_REVALIDATE_URL/REVALIDATE_SECRET: revalida
 
 async def check_deals(settings: Settings, dry_run: bool = False) -> int:
     """Ends Amazon deals whose price went up (and old ones), editing their posts. No reader."""
-    bot = _client(BOT_SESSION_PATH, settings)
+    bot = _client(CHECK_DEALS_SESSION_PATH, settings)
     try:
         await bot.start(bot_token=settings.telegram_bot_token)
     except Exception as e:
@@ -333,6 +335,7 @@ async def check_deals(settings: Settings, dry_run: bool = False) -> int:
                 registry,
                 repo,
                 posts,
+                delay_seconds=settings.guide_price_delay_seconds,
                 limit=settings.check_deals_limit,
                 edit_limit=settings.check_deals_edit_limit,
             ).run(dry_run)
