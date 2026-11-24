@@ -118,3 +118,22 @@ async def test_fetch_price_no_buybox_log_includes_page_title(caplog):
         with caplog.at_level(logging.WARNING, logger="patobarato.amazon"):
             await AmazonStore("patobarato-21", client).fetch_price("B09XS7JWHH", URL)
     assert any("Producto agotado" in r.getMessage() for r in caplog.records)
+
+
+async def test_amazon_store_last_failure():
+    async with _serve("amazon_captcha.html") as client:
+        store = AmazonStore("patobarato-21", client)
+        assert await store.fetch_price("B09XS7JWHH", URL) is None
+        assert store.last_failure == "captcha"
+    async with _serve("amazon_no_price.html") as client:
+        store = AmazonStore("patobarato-21", client)
+        assert await store.fetch_price("B09XS7JWHH", URL) is None
+        assert store.last_failure.startswith("no price in buy box (")
+    async with _serve("amazon_price.html") as client:
+        store = AmazonStore("patobarato-21", client)
+        assert await store.fetch_price("B09XS7JWHH", URL) is not None
+        assert store.last_failure is None
+
+
+def test_last_failure_defaults_to_none(amazon):
+    assert amazon.last_failure is None

@@ -47,5 +47,10 @@ class BaseStore:
             raise ValueError(f"No product id in {url!r}")
         return self.canonical_url(product_id, country)
 
+    @property
+    def last_failure(self) -> str | None:
+        """Why the latest fetch_price returned None, when the store knows."""
+        return None
+
     async def fetch_price(self, product_id: str, canonical_url: str) -> PriceQuote | None:
         return None

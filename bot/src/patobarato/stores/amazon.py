@@ -62,6 +62,10 @@ class AmazonStore(BaseStore):
         country = country_from_url(canonical_url) or DEFAULT_COUNTRY
         return await self._images.find(product_id, country)
 
+    @property
+    def last_failure(self) -> str | None:
+        return self._prices.last_failure if self._prices else None
+
     async def fetch_price(self, product_id: str, canonical_url: str) -> PriceQuote | None:
         if self._prices is None:
             return None

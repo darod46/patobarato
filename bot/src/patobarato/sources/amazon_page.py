@@ -48,6 +48,14 @@ BROWSER_HEADERS = {
 }
 BLOCKED_RETRY_DELAY_SECONDS = 2.0
 
+# Failure reasons that mean Amazon refused us (as opposed to a page without a price).
+BLOCK_REASONS = ("captcha", "blocked page", "HTTP 503")
+
+
+def is_block(reason: str | None) -> bool:
+    return reason is not None and reason.startswith(BLOCK_REASONS)
+
+
 IMAGE_SIZE = "_AC_SL500_"
 _IMAGE_HOST = r"https://m\.media-amazon\.com/images/"
 _LANDING_RE = re.compile(r'<img[^>]*id="landingImage"[^>]*>', re.IGNORECASE)
@@ -252,8 +260,10 @@ class AmazonPageFetcher:
         self.retry_delay = retry_delay
         self.found = 0
         self.failed = 0
+        self.last_failure: str | None = None
 
     async def fetch(self, asin: str, country: str) -> str | None:
+        self.last_failure = None
         template = PRODUCT_PAGE_URLS.get(country)
         if template is None:
             return None
@@ -288,6 +298,7 @@ class AmazonPageFetcher:
 
     def fail(self, asin: str, reason: str) -> None:
         self.failed += 1
+        self.last_failure = reason
         logger.warning(
             "Amazon %s for %s not found: %s (ok=%d, failed=%d)",
             self._label,

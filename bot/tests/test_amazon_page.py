@@ -389,3 +389,34 @@ async def test_fetcher_gives_up_after_second_blocked_page():
     )
     assert await fetcher.fetch("B0GS1K5XQ8", "ES") is None
     assert fetcher.failed == 1
+
+
+# --- last_failure -------------------------------------------------------------------
+from patobarato.sources.amazon_page import is_block  # noqa: E402
+
+
+async def test_fetcher_last_failure_tracks_the_latest_fetch():
+    pages = iter([load_fixture("amazon_captcha.html"), "<html>hola</html>"])
+    fetcher = AmazonPageFetcher(httpx.AsyncClient(transport=httpx.MockTransport(
+        lambda r: httpx.Response(200, text=next(pages)))))
+    assert fetcher.last_failure is None
+    assert await fetcher.fetch("B0GS1K5XQ8", "ES") is None
+    assert fetcher.last_failure == "captcha"
+    assert await fetcher.fetch("B0GS1K5XQ8", "ES") == "<html>hola</html>"
+    assert fetcher.last_failure is None
+
+
+async def test_fetcher_last_failure_on_http_error():
+    fetcher = AmazonPageFetcher(httpx.AsyncClient(transport=httpx.MockTransport(
+        lambda r: httpx.Response(503))))
+    assert await fetcher.fetch("B0GS1K5XQ8", "ES") is None
+    assert fetcher.last_failure == "HTTP 503"
+
+
+def test_is_block():
+    assert is_block("HTTP 503")
+    assert is_block("captcha")
+    assert is_block("blocked page (no product, title 'Amazon.es')")
+    assert not is_block("no price in buy box (title: 'x')")
+    assert not is_block("HTTP 404")
+    assert not is_block(None)
