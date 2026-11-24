@@ -66,6 +66,9 @@ for (const view of ['web_events', 'web_event_promos', 'web_channel_stats', 'web_
   const r = await rest(`${view}?select=*&limit=1`)
   if (r.status !== 200 || !Array.isArray(r.body)) problems.push(`${view}: HTTP ${r.status}`)
 }
+const dealPages = await rest('web_deal_pages?select=*&limit=1')
+if (dealPages.status !== 200 || !Array.isArray(dealPages.body)) problems.push(`web_deal_pages: HTTP ${dealPages.status}`)
+else if (dealPages.body[0] && !('status' in dealPages.body[0] && 'ended_at' in dealPages.body[0])) problems.push('web_deal_pages: missing status/ended_at')
 for (const t of ['events', 'event_promos', 'cta_clicks', 'cta_clicks_daily', 'channel_stats']) {
   const r = await rest(`${t}?select=*&limit=1`)
   if (r.status === 200) problems.push(`${t} table is readable by anon (expected permission denied)`)
