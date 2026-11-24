@@ -8,7 +8,7 @@ import { DealCard } from './DealCard'
 const now = new Date('2026-11-04T12:00:00Z')
 
 const full: Deal = {
-  publicationId: 1,
+  publicationId: 1, status: 'active', endedAt: null,
   publishedAt: '2026-11-04T11:55:00Z',
   price: 29.99,
   previousPrice: 49.99,

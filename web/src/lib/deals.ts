@@ -5,6 +5,15 @@ import type { Deal, HashtagCount } from './types'
 
 export const PAGE_SIZE = 24
 
+export const ENDED_INDEXABLE_DAYS = 30
+
+/** Active deals, and ended ones for `ENDED_INDEXABLE_DAYS` after they ended, may be indexed. */
+export function isDealIndexable(deal: Pick<Deal, 'status' | 'endedAt'>, now: Date): boolean {
+  if (deal.status === 'active') return true
+  if (!deal.endedAt) return false
+  return now.getTime() - new Date(deal.endedAt).getTime() <= ENDED_INDEXABLE_DAYS * 86400000
+}
+
 export type DealSort = 'recientes' | 'descuento' | 'minimo'
 export const DEAL_SORTS: readonly DealSort[] = ['recientes', 'descuento', 'minimo']
 
@@ -31,6 +40,8 @@ type DealRow = {
   previous_min_price?: number | string | null
   is_lowest?: boolean | null
   price_before_coupon?: boolean | null
+  status?: string
+  ended_at?: string | null
 }
 
 function toDeal(row: DealRow): Deal {
@@ -52,6 +63,8 @@ function toDeal(row: DealRow): Deal {
     previousMinPrice: row.previous_min_price == null ? null : Number(row.previous_min_price),
     isLowest: row.is_lowest === true,
     priceBeforeCoupon: row.price_before_coupon === true,
+    status: row.status === 'ended' ? 'ended' : 'active',
+    endedAt: row.ended_at ?? null,
   }
 }
 
@@ -128,7 +141,7 @@ export async function fetchDealByProduct(
   id: string,
 ): Promise<Deal | null> {
   const { data, error } = await client
-    .from('web_deals')
+    .from('web_deal_pages')
     .select('*')
     .eq('store', store)
     .eq('asin', store === 'amazon' ? id.toUpperCase() : id)
@@ -184,11 +197,14 @@ async function fetchAllPages<T>(
 
 export async function fetchAllDealRefs(
   client: SupabaseClient,
-): Promise<Pick<Deal, 'store' | 'asin' | 'title' | 'publishedAt'>[]> {
+  now: Date,
+): Promise<Pick<Deal, 'store' | 'asin' | 'title' | 'publishedAt' | 'status' | 'endedAt'>[]> {
+  const cutoff = new Date(now.getTime() - ENDED_INDEXABLE_DAYS * 86400000).toISOString()
   const rows = await fetchAllPages<DealRow>((from, to) =>
     client
-      .from('web_deals')
-      .select('store, asin, title, published_at')
+      .from('web_deal_pages')
+      .select('store, asin, title, published_at, status, ended_at')
+      .or(`status.eq.active,ended_at.gt.${cutoff}`)
       .order('published_at', { ascending: false })
       .order('publication_id', { ascending: false })
       .range(from, to),
@@ -198,6 +214,8 @@ export async function fetchAllDealRefs(
     asin: r.asin,
     title: r.title,
     publishedAt: r.published_at,
+    status: r.status === 'ended' ? ('ended' as const) : ('active' as const),
+    endedAt: r.ended_at ?? null,
   }))
 }
 

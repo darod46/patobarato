@@ -7,7 +7,7 @@ import { TelegramPreview } from './TelegramPreview'
 const URL_ES = 'https://www.amazon.es/dp/A1?tag=patobarato-21'
 
 const full: Deal = {
-  publicationId: 1,
+  publicationId: 1, status: 'active', endedAt: null,
   publishedAt: '2026-11-04T11:55:00Z',
   price: 80,
   previousPrice: 100,

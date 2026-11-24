@@ -3,7 +3,7 @@ import { heroHighlights } from './highlights'
 import type { Coupon, Deal } from './types'
 
 const deal = (id: number, discountPct: number | null, isLowest = false): Deal => ({
-  publicationId: id, publishedAt: '2026-11-06T09:00:00Z', price: 10, previousPrice: null, coupon: null, hashtags: [],
+  publicationId: id, status: 'active', endedAt: null, publishedAt: '2026-11-06T09:00:00Z', price: 10, previousPrice: null, coupon: null, hashtags: [],
   affiliateUrl: '', title: `Deal ${id}`, imageUrl: null, asin: `A${id}`, country: 'ES', store: 'amazon', productId: id,
   discountPct, previousMinPrice: null, isLowest, priceBeforeCoupon: false,
 })

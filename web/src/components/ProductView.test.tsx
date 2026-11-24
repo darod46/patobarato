@@ -8,7 +8,7 @@ import { ProductView } from './ProductView'
 const now = '2026-11-04T12:00:00Z'
 
 const deal: Deal = {
-  publicationId: 1,
+  publicationId: 1, status: 'active', endedAt: null,
   publishedAt: '2026-11-04T11:19:00Z',
   price: 13.9,
   previousPrice: 22.9,

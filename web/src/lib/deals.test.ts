@@ -10,6 +10,7 @@ import {
   fetchHashtags,
   fetchLatestDeal,
   fetchRelatedDeals,
+  isDealIndexable,
   parseDealSort,
 } from './deals'
 
@@ -106,6 +107,8 @@ describe('fetchDeals', () => {
       previousMinPrice: 34.99,
       isLowest: true,
       priceBeforeCoupon: false,
+      status: 'active',
+      endedAt: null,
     })
   })
 
@@ -226,7 +229,7 @@ describe('fetchDealByProduct', () => {
   it('queries by store and uppercase asin', async () => {
     const { client, calls } = fakeClient({ data: [row(3)], error: null })
     expect((await fetchDealByProduct(client, 'amazon', 'b0bpzvjjqj'))?.publicationId).toBe(3)
-    expect(calls).toContainEqual(['from', ['web_deals']])
+    expect(calls).toContainEqual(['from', ['web_deal_pages']])
     expect(calls).toContainEqual(['eq', ['store', 'amazon']])
     expect(calls).toContainEqual(['eq', ['asin', 'B0BPZVJJQJ']])
   })
@@ -241,7 +244,7 @@ describe('fetchRelatedDeals', () => {
   function toDealLike() {
     return {
       publicationId: 5, publishedAt: '', price: 1, previousPrice: null, coupon: null, hashtags: [] as string[],
-      affiliateUrl: '', title: 't', imageUrl: null, asin: 'B000000000', country: 'ES', store: 'amazon', productId: 5, discountPct: null, previousMinPrice: null, isLowest: false, priceBeforeCoupon: false,
+      affiliateUrl: '', title: 't', imageUrl: null, asin: 'B000000000', country: 'ES', store: 'amazon', productId: 5, discountPct: null, previousMinPrice: null, isLowest: false, priceBeforeCoupon: false, status: 'active' as const, endedAt: null,
     }
   }
   it('filters by first hashtag and excludes itself', async () => {
@@ -279,16 +282,23 @@ describe('fetchAllDealRefs', () => {
     ]
     let n = 0
     const builder: Record<string, unknown> = {}
-    for (const name of ['select', 'order']) builder[name] = () => builder
+    for (const name of ['select', 'order', 'or']) builder[name] = () => builder
     builder.range = (...a: unknown[]) => {
       ranges.push(a)
       return Promise.resolve({ data: pages[n++], error: null })
     }
     const client = { from: () => builder } as unknown as SupabaseClient
-    const refs = await fetchAllDealRefs(client)
+    const refs = await fetchAllDealRefs(client, NOW)
     expect(ranges).toEqual([[0, 999], [1000, 1999]])
     expect(refs).toHaveLength(1001)
-    expect(refs[0]).toEqual({ store: 'amazon', asin: 'B000000000', title: 'Item 0', publishedAt: '2026-11-04T10:00:00Z' })
+    expect(refs[0]).toEqual({ store: 'amazon', asin: 'B000000000', title: 'Item 0', publishedAt: '2026-11-04T10:00:00Z', status: 'active', endedAt: null })
+  })
+  it('reads web_deal_pages keeping active and recently ended deals', async () => {
+    const { client, calls } = fakeClient({ data: [{ ...row(1), status: 'ended', ended_at: '2026-11-20T00:00:00Z' }], error: null })
+    const refs = await fetchAllDealRefs(client, NOW)
+    expect(calls).toContainEqual(['from', ['web_deal_pages']])
+    expect(calls).toContainEqual(['or', [`status.eq.active,ended_at.gt.${new Date(NOW.getTime() - 30 * 86400000).toISOString()}`]])
+    expect(refs[0]).toMatchObject({ status: 'ended', endedAt: '2026-11-20T00:00:00Z' })
   })
 })
 
@@ -316,5 +326,34 @@ describe('fetchHashtagCount', () => {
     await expect(
       fetchHashtagCount(fakeClient({ data: null, error: { message: 'boom' } }).client, 'x'),
     ).rejects.toThrow('boom')
+  })
+})
+
+const NOW = new Date('2026-11-24T12:00:00Z')
+
+describe('isDealIndexable', () => {
+  const ended = (ms: number) => ({ status: 'ended' as const, endedAt: new Date(NOW.getTime() - ms).toISOString() })
+  const DAY = 86400000
+  it('is true for active deals', () => {
+    expect(isDealIndexable({ status: 'active', endedAt: null }, NOW)).toBe(true)
+  })
+  it('is true when ended 29 days ago and exactly 30 days ago', () => {
+    expect(isDealIndexable(ended(29 * DAY), NOW)).toBe(true)
+    expect(isDealIndexable(ended(30 * DAY), NOW)).toBe(true)
+  })
+  it('is false when ended 30 days and one second ago', () => {
+    expect(isDealIndexable(ended(30 * DAY + 1000), NOW)).toBe(false)
+  })
+  it('is false when ended without a date', () => {
+    expect(isDealIndexable({ status: 'ended', endedAt: null }, NOW)).toBe(false)
+  })
+})
+
+describe('toDeal status', () => {
+  it('defaults to active/null without the columns and maps ended rows', async () => {
+    const a = fakeClient({ data: [row(1)], error: null })
+    expect(await fetchDealByProduct(a.client, 'amazon', 'x')).toMatchObject({ status: 'active', endedAt: null })
+    const b = fakeClient({ data: [{ ...row(1), status: 'ended', ended_at: '2026-11-01T00:00:00Z' }], error: null })
+    expect(await fetchDealByProduct(b.client, 'amazon', 'x')).toMatchObject({ status: 'ended', endedAt: '2026-11-01T00:00:00Z' })
   })
 })

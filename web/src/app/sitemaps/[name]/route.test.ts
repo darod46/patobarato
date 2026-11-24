@@ -20,7 +20,7 @@ const get = (name: string) => GET(new Request(`http://localhost/sitemaps/${name}
 describe('GET /sitemaps/[name]', () => {
   beforeEach(() => {
     vi.mocked(fetchAllDealRefs).mockResolvedValue([
-      { store: 'amazon', asin: 'B0ABCDEF12', title: 'Freidora de aire', publishedAt: '2026-11-04T11:19:00Z' },
+      { store: 'amazon', asin: 'B0ABCDEF12', title: 'Freidora de aire', publishedAt: '2026-11-04T11:19:00Z', status: 'active', endedAt: null },
     ])
     vi.mocked(fetchHashtagCounts).mockResolvedValue([{ tag: 'hogar', count: 3 }, { tag: 'poco', count: 2 }])
     vi.mocked(fetchStores).mockResolvedValue([{ store: 'amazon', deals: 10, coupons: 0 }])

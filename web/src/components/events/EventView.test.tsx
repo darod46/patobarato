@@ -10,7 +10,7 @@ vi.mock('../../lib/supabase', () => ({ getSupabase: () => { throw new Error('no 
 
 const now = new Date('2026-11-28T10:00:00Z')
 const deal = (id: number): Deal => ({
-  publicationId: id, publishedAt: '2026-11-28T09:00:00Z', price: 10, previousPrice: null, coupon: null,
+  publicationId: id, status: 'active', endedAt: null, publishedAt: '2026-11-28T09:00:00Z', price: 10, previousPrice: null, coupon: null,
   hashtags: ['blackfriday'], affiliateUrl: 'https://amzn.to/x', title: `Chollo ${id}`, imageUrl: null,
   asin: `A${id}`, country: 'es', store: 'amazon', productId: id, discountPct: null, previousMinPrice: null, isLowest: false, priceBeforeCoupon: false,
 })

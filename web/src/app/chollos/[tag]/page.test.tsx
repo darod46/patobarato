@@ -23,7 +23,7 @@ vi.mock('../../../lib/deals', async (importOriginal) => ({
 }))
 
 const deal = (id: number): Deal => ({
-  publicationId: id,
+  publicationId: id, status: 'active', endedAt: null,
   publishedAt: '2026-11-04T11:55:00Z',
   price: 10,
   previousPrice: null,

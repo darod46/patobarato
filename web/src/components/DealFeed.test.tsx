@@ -7,7 +7,7 @@ import { DealFeed } from './DealFeed'
 
 const now = new Date('2026-11-04T12:00:00Z')
 const deal = (id: number): Deal => ({
-  publicationId: id,
+  publicationId: id, status: 'active', endedAt: null,
   publishedAt: '2026-11-04T11:55:00Z',
   price: 10,
   previousPrice: null,

@@ -24,7 +24,7 @@ const bf = siteEvent({
 const prime = siteEvent({ slug: 'prime-day', name: 'Prime Day', startsOn: '2027-07-01', approximate: true, introMd: 'Prime Day.' })
 const cyber = siteEvent({ slug: 'cyber-monday', name: 'Cyber Monday', startsOn: '2026-11-30' })
 const deal = (id: number): Deal => ({
-  publicationId: id, publishedAt: '2026-11-07T09:00:00Z', price: 10, previousPrice: null, coupon: null, hashtags: [],
+  publicationId: id, status: 'active', endedAt: null, publishedAt: '2026-11-07T09:00:00Z', price: 10, previousPrice: null, coupon: null, hashtags: [],
   affiliateUrl: 'https://amzn.to/x', title: `Chollo ${id}`, imageUrl: null, asin: `A${id}`, country: 'es', store: 'amazon',
   productId: id, discountPct: null, previousMinPrice: null, isLowest: false, priceBeforeCoupon: false,
 })

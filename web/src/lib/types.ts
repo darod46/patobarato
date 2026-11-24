@@ -20,6 +20,9 @@ export type Deal = {
   isLowest: boolean
   /** The store's price before the coupon the post advertises (AliExpress API prices). */
   priceBeforeCoupon: boolean
+  /** 'ended' once the publication was marked as no longer available. */
+  status: 'active' | 'ended'
+  endedAt: string | null
 }
 
 export type HashtagCount = { tag: string; count: number }

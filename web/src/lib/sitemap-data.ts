@@ -21,7 +21,7 @@ async function fetchAllCopies(client: SupabaseClient) {
 
 /** XML of one sitemap. Every read is primary: a failure throws. */
 export async function loadSitemapXml(name: SitemapName, client: SupabaseClient, now: Date): Promise<string> {
-  if (name === 'chollos') return buildSitemapXml(dealEntries(await fetchAllDealRefs(client), SITE_URL))
+  if (name === 'chollos') return buildSitemapXml(dealEntries(await fetchAllDealRefs(client, now), SITE_URL))
   if (name === 'eventos') return buildSitemapXml(eventEntries(await fetchEvents(client), SITE_URL, now))
   const [tags, stores, guides, copies] = await Promise.all([
     fetchHashtagCounts(client),

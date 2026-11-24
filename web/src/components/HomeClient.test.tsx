@@ -6,7 +6,7 @@ import type { Deal } from '../lib/types'
 import { siteEvent } from '../test-utils/siteEvent'
 
 const deal: Deal = {
-  publicationId: 1,
+  publicationId: 1, status: 'active', endedAt: null,
   publishedAt: '2026-11-04T11:55:00Z',
   price: 80,
   previousPrice: 100,

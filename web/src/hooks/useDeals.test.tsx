@@ -5,7 +5,7 @@ import type { Deal } from '../lib/types'
 import { useDeals } from './useDeals'
 
 const deal = (id: number): Deal => ({
-  publicationId: id,
+  publicationId: id, status: 'active', endedAt: null,
   publishedAt: '2026-11-04T11:55:00Z',
   price: 1,
   previousPrice: null,

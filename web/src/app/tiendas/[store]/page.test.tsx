@@ -13,7 +13,7 @@ import { payloadKeys, propsOf } from '../../../test-utils/clientProps'
 import StorePage, { generateMetadata } from './page'
 
 const deal = (id: number): Deal => ({
-  publicationId: id,
+  publicationId: id, status: 'active', endedAt: null,
   publishedAt: '2026-11-04T11:55:00Z',
   price: 10,
   previousPrice: null,
