@@ -202,3 +202,18 @@ cuando toque (su `checked_at` se conserva).
   `test_guide_prices.py` y `test_posts.py`).
 - Si `AmazonPageFetcher.last_failure` o un contador de bloqueos consecutivos: lo que sea más
   simple y esté probado.
+
+## Adenda (24 nov): la edición de posts pasa al bot del servidor
+
+La red de David corta MTProto (Telegram) aunque deja pasar HTTPS, así que `check-deals` no
+puede arrancar el bot desde su ordenador. Cambio de reparto:
+
+- `check-deals` **no usa Telegram**: comprueba precios (Amazon), termina ofertas y revalida la web
+  (HTTPS). Las ofertas terminadas quedan con `post_synced_at = null`. No arranca ningún cliente
+  Telethon y no necesita `TELEGRAM_BOT_TOKEN` válido en la máquina que lo lanza. Su resumen deja
+  de hablar de posts editados y dice «Posts pendientes de editar en el servidor: N».
+- El bot del servidor gana el ejecutor `ended_posts` (`sources.type = 'ended_posts'`, cada 60 min,
+  dado de alta por la migración `20261127000000_ended_posts.sql`): edita hasta 100 posts
+  pendientes por pasada (`list_ended_posts_to_edit(100)` → `PostService.sync_post`), con las mismas
+  reglas que tenía `check-deals` (fallos permanentes se marcan como sincronizados y se registran).
+  Solo se construye cuando `build_runners` recibe `bot=`.
