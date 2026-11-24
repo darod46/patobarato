@@ -9,6 +9,7 @@ from patobarato.models import (
     ApiSource,
     CatalogRow,
     CouponUpsert,
+    DealToCheck,
     EventPromoRow,
     EventRef,
     GuideProduct,
@@ -192,6 +193,36 @@ class Repository(Protocol):
     async def upsert_channel_stats(self, members: int, checked_at: datetime) -> None:
         """Stores the channel member count in the single ``channel_stats`` row."""
         ...
+
+    async def list_deals_to_check(
+        self, now: datetime, max_age_days: int, recheck_hours: int, limit: int
+    ) -> list[DealToCheck]:
+        """Active Telegram Amazon publications (offer without coupon) worth re-checking.
+
+        ``published_at > now - max_age_days`` and never checked or checked more than
+        ``recheck_hours`` ago; ordered by ``checked_at`` (never first), then newest first.
+        """
+        ...
+
+    async def list_stale_deals(self, now: datetime, max_age_days: int) -> list[int]:
+        """Ids of active Telegram Amazon publications with ``published_at <= now - max_age_days``."""
+        ...
+
+    async def end_stale_deals(self, now: datetime, max_age_days: int) -> list[int]:
+        """Ends the publications of ``list_stale_deals`` (status ``ended``, ``ended_at``); returns ids."""
+        ...
+
+    async def end_publication(self, publication_id: int, now: datetime) -> None:
+        """Status ``ended``; ``ended_at`` and ``checked_at`` are set to ``now``."""
+        ...
+
+    async def mark_checked(self, publication_id: int, now: datetime) -> None: ...
+
+    async def list_ended_posts_to_edit(self, limit: int) -> list[int]:
+        """Ended publications with a Telegram message not yet edited, newest ``ended_at`` first."""
+        ...
+
+    async def mark_post_synced(self, publication_id: int, now: datetime) -> None: ...
 
 
 class InMemoryRepository(Repository):
@@ -383,6 +414,9 @@ class InMemoryRepository(Repository):
         channel: PublicationChannel = "telegram",
         price_before_coupon: bool = False,
         status: PublicationStatus = PublicationStatus.ACTIVE,
+        checked_at: datetime | None = None,
+        post_synced_at: datetime | None = None,
+        ended_at: datetime | None = None,
     ) -> int:
         publication_id = self._new_id("publication")
         self._publications.append(
@@ -399,6 +433,9 @@ class InMemoryRepository(Repository):
                 "affiliate_url": affiliate_url,
                 "status": status,
                 "published_at": published_at,
+                "checked_at": checked_at,
+                "post_synced_at": post_synced_at,
+                "ended_at": ended_at,
             }
         )
         return publication_id
@@ -633,6 +670,86 @@ class InMemoryRepository(Repository):
 
     async def upsert_channel_stats(self, members: int, checked_at: datetime) -> None:
         self.channel_stats = {"members": members, "checked_at": checked_at}
+
+    def _amazon_telegram_active(self, pub: dict) -> bool:
+        store = next(k[0] for k, v in self._products.items() if v == pub["product_id"])
+        return (
+            pub["status"] == PublicationStatus.ACTIVE
+            and pub["channel"] == "telegram"
+            and store == "amazon"
+        )
+
+    async def list_deals_to_check(
+        self, now: datetime, max_age_days: int, recheck_hours: int, limit: int
+    ) -> list[DealToCheck]:
+        oldest = now - timedelta(days=max_age_days)
+        recheck_before = now - timedelta(hours=recheck_hours)
+        picked = [
+            p
+            for p in self._publications
+            if self._amazon_telegram_active(p)
+            and self._offers[p["offer_id"]]["coupon"] is None
+            and p["published_at"] > oldest
+            and (p["checked_at"] is None or p["checked_at"] < recheck_before)
+        ]
+        picked.sort(key=lambda p: p["published_at"], reverse=True)
+        # stable sorts: checked_at asc with never-checked first, ties by newest published
+        picked.sort(
+            key=lambda p: (p["checked_at"] is not None, p["checked_at"] or datetime.min.replace(tzinfo=UTC))
+        )
+        result = []
+        for p in picked[:limit]:
+            asin = next(k[2] for k, v in self._products.items() if v == p["product_id"])
+            result.append(
+                DealToCheck(
+                    publication_id=p["id"],
+                    product_id=p["product_id"],
+                    asin=asin,
+                    url=self.product_urls.get(p["product_id"], ""),
+                    published_price=p["published_price"],
+                )
+            )
+        return result
+
+    async def list_stale_deals(self, now: datetime, max_age_days: int) -> list[int]:
+        oldest = now - timedelta(days=max_age_days)
+        return [
+            p["id"]
+            for p in self._publications
+            if self._amazon_telegram_active(p) and p["published_at"] <= oldest
+        ]
+
+    async def end_stale_deals(self, now: datetime, max_age_days: int) -> list[int]:
+        ids = await self.list_stale_deals(now, max_age_days)
+        for pub in self._publications:
+            if pub["id"] in ids:
+                pub.update(status=PublicationStatus.ENDED, ended_at=now)
+        return ids
+
+    def _pub_by_id(self, publication_id: int) -> dict:
+        return next(p for p in self._publications if p["id"] == publication_id)
+
+    async def end_publication(self, publication_id: int, now: datetime) -> None:
+        self._pub_by_id(publication_id).update(
+            status=PublicationStatus.ENDED, ended_at=now, checked_at=now
+        )
+
+    async def mark_checked(self, publication_id: int, now: datetime) -> None:
+        self._pub_by_id(publication_id)["checked_at"] = now
+
+    async def list_ended_posts_to_edit(self, limit: int) -> list[int]:
+        picked = [
+            p
+            for p in self._publications
+            if p["status"] == PublicationStatus.ENDED
+            and p["message_id"] is not None
+            and p["post_synced_at"] is None
+        ]
+        picked.sort(key=lambda p: p["ended_at"] or datetime.min.replace(tzinfo=UTC), reverse=True)
+        return [p["id"] for p in picked[:limit]]
+
+    async def mark_post_synced(self, publication_id: int, now: datetime) -> None:
+        self._pub_by_id(publication_id)["post_synced_at"] = now
 
     async def find_catalog_product(self, store: str, url: str) -> CatalogRow | None:
         matches = [r for (s, _), r in self.catalog.items() if s == store and r.url == url]

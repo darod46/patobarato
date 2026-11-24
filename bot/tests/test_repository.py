@@ -506,3 +506,98 @@ async def test_upsert_channel_stats_replaces_row():
     await repo.upsert_channel_stats(10, NOW)
     await repo.upsert_channel_stats(20, NOW + timedelta(hours=1))
     assert repo.channel_stats == {"members": 20, "checked_at": NOW + timedelta(hours=1)}
+
+
+async def _seed_pub(
+    repo, asin="B000000001", *, store="amazon", coupon=None, channel="telegram",
+    status=PublicationStatus.ACTIVE, age_days=1, checked_ago_h=None, message_id=5,
+    synced=False, ended=False, price="9.99",
+):
+    offer = dataclasses.replace(make_offer(asin), store=store, coupon=coupon)
+    source = repo.add_source(f"@c{asin}{store}")
+    pid_ = await repo.upsert_product(offer)
+    offer_id = await repo.insert_offer(pid_, source.id, 1, offer, "raw", NOW)
+    return await repo.insert_publication(
+        offer_id, pid_, "ES", -1001, message_id, Decimal(price), "https://aff",
+        NOW - timedelta(days=age_days),
+        channel=channel, status=status,
+        checked_at=None if checked_ago_h is None else NOW - timedelta(hours=checked_ago_h),
+        post_synced_at=NOW if synced else None,
+        ended_at=NOW if ended else None,
+    )
+
+
+def _pub(repo, pid_):
+    return next(p for p in repo.publications() if p["id"] == pid_)
+
+
+async def test_list_deals_to_check_filters():
+    repo = InMemoryRepository()
+    ok_never = await _seed_pub(repo, "A1")
+    ok_old_check = await _seed_pub(repo, "A2", checked_ago_h=50)
+    await _seed_pub(repo, "A3", status=PublicationStatus.ENDED)
+    await _seed_pub(repo, "A4", store="aliexpress")
+    await _seed_pub(repo, "A5", coupon="CODE")
+    await _seed_pub(repo, "A6", age_days=31)
+    await _seed_pub(repo, "A7", checked_ago_h=10)
+    await _seed_pub(repo, "A8", channel="web")
+    deals = await repo.list_deals_to_check(NOW, 30, 24, 10)
+    assert {d.publication_id for d in deals} == {ok_never, ok_old_check}
+    d = next(d for d in deals if d.publication_id == ok_never)
+    assert (d.asin, d.url, d.published_price) == (
+        "A1", "https://www.amazon.es/dp/A1", Decimal("9.99")
+    )
+
+
+async def test_list_deals_to_check_order_and_limit():
+    repo = InMemoryRepository()
+    checked = await _seed_pub(repo, "B1", checked_ago_h=50, age_days=1)
+    never_old = await _seed_pub(repo, "B2", age_days=5)
+    never_new = await _seed_pub(repo, "B3", age_days=2)
+    deals = await repo.list_deals_to_check(NOW, 30, 24, 10)
+    assert [d.publication_id for d in deals] == [never_new, never_old, checked]
+    limited = await repo.list_deals_to_check(NOW, 30, 24, 2)
+    assert [d.publication_id for d in limited] == [never_new, never_old]
+
+
+async def test_stale_deals_listed_and_ended():
+    repo = InMemoryRepository()
+    stale = await _seed_pub(repo, "C1", age_days=30)
+    await _seed_pub(repo, "C2", age_days=29)
+    await _seed_pub(repo, "C3", age_days=40, store="aliexpress")
+    await _seed_pub(repo, "C4", age_days=40, status=PublicationStatus.ENDED)
+    await _seed_pub(repo, "C5", age_days=40, channel="web")
+    assert await repo.list_stale_deals(NOW, 30) == [stale]
+    assert _pub(repo, stale)["status"] == PublicationStatus.ACTIVE
+    assert await repo.end_stale_deals(NOW, 30) == [stale]
+    row = _pub(repo, stale)
+    assert row["status"] == PublicationStatus.ENDED and row["ended_at"] == NOW
+    assert await repo.end_stale_deals(NOW, 30) == []
+
+
+async def test_end_publication_mark_checked_mark_post_synced():
+    repo = InMemoryRepository()
+    a = await _seed_pub(repo, "D1")
+    b = await _seed_pub(repo, "D2")
+    await repo.end_publication(a, NOW)
+    row = _pub(repo, a)
+    assert row["status"] == PublicationStatus.ENDED
+    assert row["ended_at"] == NOW and row["checked_at"] == NOW
+    await repo.mark_checked(b, NOW)
+    assert _pub(repo, b)["checked_at"] == NOW
+    assert _pub(repo, b)["status"] == PublicationStatus.ACTIVE
+    await repo.mark_post_synced(a, NOW)
+    assert _pub(repo, a)["post_synced_at"] == NOW
+
+
+async def test_list_ended_posts_to_edit():
+    repo = InMemoryRepository()
+    old = await _seed_pub(repo, "E1", status=PublicationStatus.ENDED)
+    await repo.end_publication(old, NOW - timedelta(days=2))
+    new = await _seed_pub(repo, "E2", status=PublicationStatus.ENDED)
+    await repo.end_publication(new, NOW)
+    await _seed_pub(repo, "E3", status=PublicationStatus.ENDED, message_id=None)
+    await _seed_pub(repo, "E4", status=PublicationStatus.ENDED, synced=True)
+    await _seed_pub(repo, "E5")
+    assert await repo.list_ended_posts_to_edit(10) == [new, old]
+    assert await repo.list_ended_posts_to_edit(1) == [new]

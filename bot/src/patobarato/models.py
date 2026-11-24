@@ -74,6 +74,15 @@ class LastPublication:
 
 
 @dataclass(frozen=True)
+class DealToCheck:
+    publication_id: int
+    product_id: int
+    asin: str
+    url: str
+    published_price: Decimal
+
+
+@dataclass(frozen=True)
 class AdminJob:
     id: int
     type: str

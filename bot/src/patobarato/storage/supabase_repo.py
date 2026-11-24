@@ -11,6 +11,7 @@ from patobarato.models import (
     ApiSource,
     CatalogRow,
     CouponUpsert,
+    DealToCheck,
     EventPromoRow,
     EventRef,
     GuideProduct,
@@ -745,6 +746,108 @@ class SupabaseRepository:
             ).execute()
 
         await asyncio.to_thread(run)
+
+    async def list_deals_to_check(
+        self, now: datetime, max_age_days: int, recheck_hours: int, limit: int
+    ) -> list[DealToCheck]:
+        oldest = (now - timedelta(days=max_age_days)).isoformat()
+        recheck_before = (now - timedelta(hours=recheck_hours)).isoformat()
+
+        def run():
+            return (
+                self._client.table("publications")
+                .select(
+                    "id, product_id, published_price::text, "
+                    "offers!inner(coupon), products!inner(asin, url, store)"
+                )
+                .eq("status", "active")
+                .eq("channel", "telegram")
+                .eq("products.store", "amazon")
+                .is_("offers.coupon", "null")
+                .gt("published_at", oldest)
+                .or_(f"checked_at.is.null,checked_at.lt.{recheck_before}")
+                .order("checked_at", desc=False, nullsfirst=True)
+                .order("published_at", desc=True)
+                .limit(limit)
+                .execute()
+            )
+
+        response = await asyncio.to_thread(run)
+        return [
+            DealToCheck(
+                publication_id=row["id"],
+                product_id=row["product_id"],
+                asin=row["products"]["asin"],
+                url=row["products"]["url"] or "",
+                published_price=Decimal(row["published_price"]),
+            )
+            for row in response.data
+        ]
+
+    async def list_stale_deals(self, now: datetime, max_age_days: int) -> list[int]:
+        oldest = (now - timedelta(days=max_age_days)).isoformat()
+
+        def run():
+            return (
+                self._client.table("publications")
+                .select("id, products!inner(store)")
+                .eq("status", "active")
+                .eq("channel", "telegram")
+                .eq("products.store", "amazon")
+                .lte("published_at", oldest)
+                .execute()
+            )
+
+        response = await asyncio.to_thread(run)
+        return [row["id"] for row in response.data]
+
+    async def end_stale_deals(self, now: datetime, max_age_days: int) -> list[int]:
+        ids = await self.list_stale_deals(now, max_age_days)
+        if not ids:
+            return []
+
+        def run():
+            self._client.table("publications").update(
+                {"status": PublicationStatus.ENDED.value, "ended_at": now.isoformat()}
+            ).in_("id", ids).execute()
+
+        await asyncio.to_thread(run)
+        return ids
+
+    async def _update_publication(self, publication_id: int, values: dict) -> None:
+        def run():
+            self._client.table("publications").update(values).eq("id", publication_id).execute()
+
+        await asyncio.to_thread(run)
+
+    async def end_publication(self, publication_id: int, now: datetime) -> None:
+        iso = now.isoformat()
+        await self._update_publication(
+            publication_id,
+            {"status": PublicationStatus.ENDED.value, "ended_at": iso, "checked_at": iso},
+        )
+
+    async def mark_checked(self, publication_id: int, now: datetime) -> None:
+        await self._update_publication(publication_id, {"checked_at": now.isoformat()})
+
+    async def list_ended_posts_to_edit(self, limit: int) -> list[int]:
+        def run():
+            return (
+                self._client.table("publications")
+                .select("id")
+                .eq("status", "ended")
+                .not_.is_("message_id", "null")
+                .is_("post_synced_at", "null")
+                .order("ended_at", desc=True)
+                .limit(limit)
+                .execute()
+            )
+
+        response = await asyncio.to_thread(run)
+        return [row["id"] for row in response.data]
+
+    async def mark_post_synced(self, publication_id: int, now: datetime) -> None:
+        await self._update_publication(publication_id, {"post_synced_at": now.isoformat()})
 
     async def find_catalog_product(self, store: str, url: str) -> CatalogRow | None:
         def run():

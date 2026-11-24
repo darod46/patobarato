@@ -102,6 +102,8 @@ class PostService:
             )
         except ChannelMismatchError:
             raise PostError("No se encuentra el canal del post") from None
+        if post.status == PublicationStatus.ENDED:
+            await self._repo.mark_post_synced(publication_id, self._clock())
         return {"edited": True}
 
     async def _download(self, url: str) -> bytes | None:

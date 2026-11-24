@@ -147,3 +147,19 @@ async def test_sync_post_missing_publication_raises():
     service, _, _, _ = await make_service()
     with pytest.raises(PostError, match="La oferta no existe"):
         await service.sync_post(9999)
+
+
+async def test_sync_post_ended_marks_post_synced():
+    service, repo, _, pid = await make_service(
+        status=PublicationStatus.ENDED, chat_id=-1001, message_id=5
+    )
+    await service.sync_post(pid)
+    assert repo.publications()[0]["post_synced_at"] == NOW
+
+
+async def test_sync_post_active_does_not_mark_post_synced():
+    service, repo, _, pid = await make_service(
+        status=PublicationStatus.ACTIVE, chat_id=-1001, message_id=5
+    )
+    await service.sync_post(pid)
+    assert repo.publications()[0]["post_synced_at"] is None

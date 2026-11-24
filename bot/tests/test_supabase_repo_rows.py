@@ -408,3 +408,90 @@ async def test_upsert_channel_stats_upserts_id_1():
     assert ("table", ("channel_stats",), {}) in client.log
     _, args, _ = next(e for e in client.log if e[0] == "upsert")
     assert args[0] == {"id": 1, "members": 1234, "checked_at": NOW.isoformat()}
+
+
+def _calls(client, name):
+    return [(a, k) for n, a, k in client.log if n == name]
+
+
+async def test_list_deals_to_check_query_and_rows():
+    client = _Client([{
+        "id": 3, "product_id": 4, "published_price": "9.99",
+        "products": {"asin": "B1", "url": "https://amz/B1", "store": "amazon"},
+        "offers": {"coupon": None},
+    }])
+    deals = await SupabaseRepository(client).list_deals_to_check(NOW, 30, 24, 7)
+    assert [(d.publication_id, d.product_id, d.asin, d.url, d.published_price) for d in deals] == [
+        (3, 4, "B1", "https://amz/B1", Decimal("9.99"))
+    ]
+    assert ("table", ("publications",), {}) in client.log
+    sel = _calls(client, "select")[0][0][0]
+    assert "offers!inner(coupon)" in sel and "products!inner(asin, url, store)" in sel
+    eqs = [a for a, _ in _calls(client, "eq")]
+    assert ("status", "active") in eqs and ("channel", "telegram") in eqs
+    assert ("products.store", "amazon") in eqs
+    assert _calls(client, "is_")[0][0] == ("offers.coupon", "null")
+    assert _calls(client, "gt")[0][0] == ("published_at", (NOW - timedelta(days=30)).isoformat())
+    assert _calls(client, "or_")[0][0] == (
+        f"checked_at.is.null,checked_at.lt.{(NOW - timedelta(hours=24)).isoformat()}",
+    )
+    orders = _calls(client, "order")
+    assert orders[0] == (("checked_at",), {"desc": False, "nullsfirst": True})
+    assert orders[1] == (("published_at",), {"desc": True})
+    assert _calls(client, "limit")[0][0] == (7,)
+
+
+async def test_list_stale_deals_query():
+    client = _Client([{"id": 1}, {"id": 2}])
+    ids = await SupabaseRepository(client).list_stale_deals(NOW, 30)
+    assert ids == [1, 2]
+    assert "products!inner(store)" in _calls(client, "select")[0][0][0]
+    eqs = [a for a, _ in _calls(client, "eq")]
+    assert ("status", "active") in eqs and ("channel", "telegram") in eqs
+    assert ("products.store", "amazon") in eqs
+    assert _calls(client, "lte")[0][0] == ("published_at", (NOW - timedelta(days=30)).isoformat())
+
+
+async def test_end_stale_deals_updates_listed_ids():
+    client = _Client([{"id": 1}, {"id": 2}])
+    ids = await SupabaseRepository(client).end_stale_deals(NOW, 30)
+    assert ids == [1, 2]
+    (args, _), = _calls(client, "update")
+    assert args[0] == {"status": "ended", "ended_at": NOW.isoformat()}
+    assert _calls(client, "in_")[0][0] == ("id", [1, 2])
+
+
+async def test_end_stale_deals_without_stale_does_not_update():
+    client = _Client([])
+    assert await SupabaseRepository(client).end_stale_deals(NOW, 30) == []
+    assert _calls(client, "update") == []
+
+
+async def test_end_publication_mark_checked_mark_post_synced_rows():
+    client = _Client([])
+    repo = SupabaseRepository(client)
+    await repo.end_publication(5, NOW)
+    await repo.mark_checked(5, NOW)
+    await repo.mark_post_synced(5, NOW)
+    iso = NOW.isoformat()
+    updates = [a[0] for a, _ in _calls(client, "update")]
+    assert updates == [
+        {"status": "ended", "ended_at": iso, "checked_at": iso},
+        {"checked_at": iso},
+        {"post_synced_at": iso},
+    ]
+    assert [a for a, _ in _calls(client, "eq")] == [("id", 5)] * 3
+
+
+async def test_list_ended_posts_to_edit_query():
+    client = _Client([{"id": 9}, {"id": 4}])
+    assert await SupabaseRepository(client).list_ended_posts_to_edit(5) == [9, 4]
+    assert ("status", "ended") in [a for a, _ in _calls(client, "eq")]
+    names = [n for n, _, _ in client.log]
+    assert names.index("not_") + 1 == names.index("is_")  # message_id is NOT null
+    assert [a for a, _ in _calls(client, "is_")] == [
+        ("message_id", "null"),
+        ("post_synced_at", "null"),
+    ]
+    assert _calls(client, "order")[0] == (("ended_at",), {"desc": True})
+    assert _calls(client, "limit")[0][0] == (5,)
