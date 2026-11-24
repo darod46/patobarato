@@ -527,3 +527,135 @@ def test_main_accepts_guide_prices_command(monkeypatch):
     monkeypatch.setattr(main_module, "guide_prices", fake)
     assert main(["guide-prices"]) == 0
     assert len(called) == 1
+
+
+# --- check-deals command ----------------------------------------------------
+
+
+def _patch_check_deals(monkeypatch, summary, **settings_kw):
+    """Fakes everything check_deals builds; returns (events, built, settings)."""
+    events: list = []
+    built: dict = {}
+
+    class FakeBot:
+        async def start(self, bot_token=None):
+            events.append(("start", bot_token))
+
+        async def disconnect(self):
+            events.append("disconnect")
+
+    class FakeChecker:
+        def __init__(self, registry, repo, posts, **kwargs):
+            built.update(kwargs)
+
+        async def run(self, dry_run=False):
+            events.append(("run", dry_run))
+            return summary
+
+    class FakeRevalidator:
+        def __init__(self, http, url, secret):
+            built["revalidator"] = (url, secret)
+
+        async def revalidate(self):
+            events.append("revalidate")
+
+    monkeypatch.setattr(main_module, "_client", lambda *a, **k: FakeBot())
+    monkeypatch.setattr(main_module, "create_client", lambda url, key: object())
+    monkeypatch.setattr(main_module, "SupabaseRepository", lambda client: object())
+    monkeypatch.setattr(main_module, "build_registry", lambda *a, **k: object())
+    monkeypatch.setattr(main_module, "DealChecker", FakeChecker)
+    monkeypatch.setattr(main_module, "WebRevalidator", FakeRevalidator)
+    return events, built, _ali_settings(**settings_kw)
+
+
+@pytest.mark.asyncio
+async def test_check_deals_passes_settings_limits_and_revalidates(monkeypatch, capsys):
+    from patobarato.sources.deal_check import CheckSummary
+
+    events, built, settings = _patch_check_deals(
+        monkeypatch,
+        CheckSummary(checked=3, ended=2),
+        check_deals_limit=7,
+        check_deals_edit_limit=3,
+        web_revalidate_url="https://web/api/revalidate",
+        revalidate_secret="s",
+    )
+
+    assert await main_module.check_deals(settings) == 0
+    assert built["limit"] == 7 and built["edit_limit"] == 3
+    assert events == [("start", settings.telegram_bot_token), ("run", False), "revalidate", "disconnect"]
+    assert "Comprobadas 3" in capsys.readouterr().out
+
+
+@pytest.mark.asyncio
+async def test_check_deals_revalidates_for_stale_only(monkeypatch):
+    from patobarato.sources.deal_check import CheckSummary
+
+    events, _, settings = _patch_check_deals(
+        monkeypatch,
+        CheckSummary(stale_ended=5),
+        web_revalidate_url="https://web/api/revalidate",
+        revalidate_secret="s",
+    )
+    assert await main_module.check_deals(settings) == 0
+    assert "revalidate" in events
+
+
+@pytest.mark.asyncio
+async def test_check_deals_skips_revalidate_without_ended_or_on_dry_run(monkeypatch):
+    from patobarato.sources.deal_check import CheckSummary
+
+    keys = {"web_revalidate_url": "https://web/api/revalidate", "revalidate_secret": "s"}
+    events, _, settings = _patch_check_deals(monkeypatch, CheckSummary(checked=4, kept=4), **keys)
+    await main_module.check_deals(settings)
+    assert "revalidate" not in events
+
+    events, _, settings = _patch_check_deals(
+        monkeypatch, CheckSummary(ended=2, dry_run=True), **keys
+    )
+    await main_module.check_deals(settings, dry_run=True)
+    assert ("run", True) in events
+    assert "revalidate" not in events
+
+
+@pytest.mark.asyncio
+async def test_check_deals_tells_to_revalidate_by_hand_without_variables(monkeypatch, capsys):
+    from patobarato.sources.deal_check import CheckSummary
+
+    events, _, settings = _patch_check_deals(monkeypatch, CheckSummary(ended=1))
+    await main_module.check_deals(settings)
+    assert "revalida la web a mano" in capsys.readouterr().out
+    assert "revalidate" not in events
+
+
+@pytest.mark.asyncio
+async def test_check_deals_bot_start_failure_returns_1(monkeypatch, capsys):
+    from patobarato.sources.deal_check import CheckSummary
+
+    events, _, settings = _patch_check_deals(monkeypatch, CheckSummary())
+
+    class BadBot:
+        async def start(self, bot_token=None):
+            raise RuntimeError("boom")
+
+        async def disconnect(self):
+            events.append("disconnect")
+
+    monkeypatch.setattr(main_module, "_client", lambda *a, **k: BadBot())
+    assert await main_module.check_deals(settings) == 1
+    assert main_module.BOT_START_FAILED_MESSAGE in capsys.readouterr().err
+    assert events == ["disconnect"]
+
+
+def test_main_check_deals_passes_dry_run(monkeypatch):
+    calls = []
+    monkeypatch.setattr(main_module, "get_settings", lambda: _ali_settings())
+
+    async def fake(settings, dry_run=False):
+        calls.append(dry_run)
+        return 0
+
+    monkeypatch.setattr(main_module, "check_deals", fake)
+    assert main(["check-deals", "--dry-run"]) == 0
+    assert main(["check-deals"]) == 0
+    assert calls == [True, False]

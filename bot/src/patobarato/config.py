@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     sources_refresh_seconds: int = 300
     http_timeout_seconds: float = 10.0
     guide_price_delay_seconds: float = 1.5
+    check_deals_limit: int = 600
+    check_deals_edit_limit: int = 100
     aliexpress_app_key: str | None = None
     aliexpress_app_secret: str | None = None
     aliexpress_tracking_id: str | None = None

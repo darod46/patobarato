@@ -212,6 +212,35 @@ update guides set status = 'published', published_at = now() where slug = 'freid
 
 En el siguiente ciclo del planificador el ejecutor empezará a rellenar los precios de la guía (y el enlace de afiliado de cada tienda, `product_prices.affiliate_url`). `guides.updated_at` se mantiene solo: un trigger lo actualiza al editar la guía, sus productos o sus tiendas.
 
+### Comprobar ofertas caducadas
+
+`check-deals` termina las ofertas de Amazon cuyo precio actual es mayor que el publicado y las que superan los 30 días, y edita su post de Telegram con el precio tachado. Es un comando manual y local (Amazon no sirve la ficha a la IP del servidor), con el mismo `.env` del bot:
+
+```
+docker compose run --rm bot check-deals
+python -m patobarato check-deals
+```
+
+Solo arranca el bot publicador, no el lector de Telegram, así que puede ejecutarse con el bot de producción en marcha. Si el bot no arranca, sale con error 1. Al terminar, si ha caducado alguna oferta, avisa a la web para que se actualice (necesita `WEB_REVALIDATE_URL` y `REVALIDATE_SECRET`; si faltan, imprime un aviso y hay que revalidar a mano).
+
+Para la primera ejecución usa `--dry-run`: hace la selección y las consultas, imprime lo que haría y no escribe nada ni edita posts.
+
+```
+docker compose run --rm bot check-deals --dry-run
+```
+
+Solo se comprueban las ofertas activas de Amazon, sin cupón, publicadas hace menos de 30 días y no comprobadas en las últimas 48 h (las nunca comprobadas primero). Las peticiones van espaciadas y, si Amazon bloquea dos seguidas, el comando se detiene.
+
+Qué significa cada cifra del resumen:
+
+- **Comprobadas**: ofertas cuyo precio se ha consultado en esta ejecución. De ellas, **caducadas** son las que ahora cuestan más que el precio publicado, **siguen** las que no han subido y **sin precio** las que Amazon no ha dado precio; **sin leer** son las que han fallado y se reintentan en la siguiente ejecución.
+- **Caducadas por antigüedad**: ofertas con más de 30 días terminadas sin consultar su precio.
+- **Posts editados** (y fallos): posts de Telegram actualizados con el precio tachado.
+- **Pendientes de editar**: posts de ofertas ya terminadas que aún no se han editado.
+- Si Amazon ha bloqueado dos peticiones seguidas, el resumen lo indica: vuelve a lanzarlo más tarde.
+
+Las ediciones se limitan a 100 posts por ejecución, los más recientes primero, porque Telegram limita las ediciones por minuto y la primera vez habrá cientos de ofertas antiguas por terminar. Los pendientes salen en ejecuciones siguientes. Ambos límites se ajustan con variables de entorno: `CHECK_DEALS_LIMIT` (ofertas que se consultan por ejecución, por defecto 600; con la pausa de 1,5 s son unos 15 minutos) y `CHECK_DEALS_EDIT_LIMIT` (posts que se editan por ejecución, por defecto 100).
+
 ## 8. Amazon Afiliados
 
 Recuerda registrar el canal @patobarato en tu cuenta de Amazon Afiliados y comprobar que el tag `patobarato-21` está asociado a él; si no, las comisiones no se contabilizan.

@@ -17,7 +17,7 @@ from telethon import TelegramClient
 
 from patobarato.admin.jobs import JobRunner
 from patobarato.admin.posts import PostService
-from patobarato.admin.revalidate import WebRevalidator
+from patobarato.admin.revalidate import RevalidateError, WebRevalidator
 from patobarato.admin.users import UserAdmin
 from patobarato.config import Settings, get_settings
 from patobarato.core.backfill import backfill_images
@@ -31,6 +31,7 @@ from patobarato.sources.api_scheduler import ApiScheduler, ApiSourceRunner
 from patobarato.sources.awin_feeds import AwinFeedsSource
 from patobarato.sources.awin_source import AwinClient, AwinPromotionsSource
 from patobarato.sources.channel_stats import ChannelStatsSource
+from patobarato.sources.deal_check import DealChecker
 from patobarato.sources.event_promos import EventPromosSource
 from patobarato.sources.guide_prices import GuidePriceRefresher
 from patobarato.sources.telegram_listener import TelegramListener, make_photo_provider
@@ -299,6 +300,56 @@ async def guide_prices(settings: Settings) -> int:
     return 0
 
 
+REVALIDATE_BY_HAND_MESSAGE = "Sin WEB_REVALIDATE_URL/REVALIDATE_SECRET: revalida la web a mano."
+
+
+async def check_deals(settings: Settings, dry_run: bool = False) -> int:
+    """Ends Amazon deals whose price went up (and old ones), editing their posts. No reader."""
+    bot = _client(BOT_SESSION_PATH, settings)
+    try:
+        await bot.start(bot_token=settings.telegram_bot_token)
+    except Exception as e:
+        logger.debug("Bot login failed", exc_info=True)
+        print(f"{BOT_START_FAILED_MESSAGE}: {e}", file=sys.stderr)
+        await bot.disconnect()
+        return 1
+    try:
+        async with (
+            httpx.AsyncClient(timeout=settings.http_timeout_seconds) as http,
+            httpx.AsyncClient(timeout=settings.http_timeout_seconds, http2=True) as amazon_http,
+        ):
+            repo = SupabaseRepository(
+                create_client(settings.supabase_url, settings.supabase_service_key)
+            )
+            registry = build_registry(settings, http, amazon_http)
+            publisher = TelegramPublisher(bot, settings.target_channel)
+            posts = PostService(
+                repo, publisher, registry, lambda url: download_photo(http, url), utcnow
+            )
+            revalidator = WebRevalidator(
+                http, settings.web_revalidate_url, settings.revalidate_secret
+            )
+            summary = await DealChecker(
+                registry,
+                repo,
+                posts,
+                limit=settings.check_deals_limit,
+                edit_limit=settings.check_deals_edit_limit,
+            ).run(dry_run)
+            if summary.ended + summary.stale_ended > 0 and not dry_run:
+                if settings.web_revalidate_url and settings.revalidate_secret:
+                    try:
+                        await revalidator.revalidate()
+                    except RevalidateError as e:
+                        print(f"{e}: revalida la web a mano.", file=sys.stderr)
+                else:
+                    print(REVALIDATE_BY_HAND_MESSAGE)
+            print(summary.format())
+        return 0
+    finally:
+        await bot.disconnect()
+
+
 def _config_error_message(error: ValidationError) -> str:
     missing = [
         ".".join(str(part) for part in err["loc"]).upper()
@@ -320,7 +371,8 @@ def _config_error_message(error: ValidationError) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="patobarato")
-    parser.add_argument("command", choices=["login", "run", "backfill-images", "promos", "guide-prices"])
+    parser.add_argument("command", choices=["login", "run", "backfill-images", "promos", "guide-prices", "check-deals"])
+    parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
 
     logging.basicConfig(
@@ -350,6 +402,8 @@ def main(argv: list[str] | None = None) -> int:
         return asyncio.run(promos(settings))
     if args.command == "guide-prices":
         return asyncio.run(guide_prices(settings))
+    if args.command == "check-deals":
+        return asyncio.run(check_deals(settings, dry_run=args.dry_run))
     try:
         return asyncio.run(run(settings))
     except KeyboardInterrupt:
