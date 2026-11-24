@@ -53,6 +53,7 @@ Notas:
 - `/guias/{slug}`: una guía con sus productos (vista `web_guide_items`), precios y cupones de la tienda. `noindex` mientras sus precios no estén frescos (ver «Guías de compra»); 404 si el slug no existe o no está publicada.
 - `/aviso-legal`, `/privacidad`, `/cookies`, `/afiliados`, `/contacto`: páginas estáticas. Los textos llevan marcadores `[TITULAR]`, `[NIF]`, `[DIRECCIÓN]`, `[EMAIL]`, `[CIUDAD]`, `[PLAZO]` que hay que sustituir.
 - `/oferta/{tienda}/{slug}-{id}`: ficha de producto (Amazon y AliExpress). Las tiendas de Awin usan `/oferta/{tienda}/{id}`, con el id codificado como porcentaje. Redirige con 308 a la URL canónica si el slug no coincide; 404 si la oferta no existe.
+- Fichas caducadas: una oferta que ya no está activa conserva su ficha en `/oferta/...` (vista `web_deal_pages`, que incluye activas y caducadas) con el aviso de que ha caducado y alternativas. Es indexable durante 30 días desde `ended_at` (entra en el sitemap `chollos`); pasado ese plazo la ficha sigue existiendo pero lleva `noindex` y sale del sitemap.
 - `/chollos/{hashtag}`: listado por hashtag. 404 si no tiene ningún chollo activo; `noindex` solo con 1–2 chollos y sin texto editorial.
 - `/sobre-nosotros`: quiénes somos, cómo elegimos los chollos y cómo ganamos dinero (texto de `page_copy`, `static`/`sobre-nosotros`; JSON-LD `AboutPage` y `Organization`). Enlazada desde el pie.
 - `/api/salud`: comprobación de salud del servidor (ver «Salud del servidor»).
@@ -135,7 +136,7 @@ El `h1` por defecto es el título sin el número (en categorías y tiendas, `Cho
 
 | Sitemap | Contenido | `lastmod` |
 | --- | --- | --- |
-| `/sitemaps/chollos.xml` | Fichas de oferta (`changefreq daily`) | `publishedAt` |
+| `/sitemaps/chollos.xml` | Fichas de oferta activas y caducadas hace menos de 30 días (`changefreq daily`) | `endedAt` si está caducada, si no `publishedAt` |
 | `/sitemaps/paginas.xml` | Portada, listados (`/chollos`, `/buscar`, `/tiendas`, `/cupones`, `/guias`), categorías indexables, tiendas indexables, guías con precios frescos (las demás llevan `noindex`) y páginas estáticas (incl. `/sobre-nosotros`) | `updated_at` de `page_copy` o de la guía |
 | `/sitemaps/eventos.xml` | `/eventos` y cada evento publicado | `updated_at` del evento |
 

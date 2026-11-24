@@ -7,7 +7,7 @@ import { guidePath, hasFreshPrices } from './guides'
 import { storeFromSlug, storeInfo } from './stores'
 import { productPath, tagPath } from './urls'
 
-export type DealRef = Pick<Deal, 'store' | 'asin' | 'title' | 'publishedAt'>
+export type DealRef = Pick<Deal, 'store' | 'asin' | 'title' | 'publishedAt'> & Partial<Pick<Deal, 'status' | 'endedAt'>>
 
 /** The sitemaps listed by the index at `/sitemap.xml`, each served at `/sitemaps/{name}.xml`. */
 export const SITEMAP_NAMES = ['chollos', 'paginas', 'eventos'] as const
@@ -57,11 +57,11 @@ export function buildSitemapXml(entries: MetadataRoute.Sitemap): string {
   return `${XML_HEAD}\n<urlset xmlns="${XMLNS}">\n${items.join('\n')}${items.length ? '\n' : ''}</urlset>\n`
 }
 
-/** `chollos` sitemap: one entry per deal page. */
+/** `chollos` sitemap: one entry per deal page (active, or ended within the indexable window); lastmod = `endedAt ?? publishedAt`. */
 export function dealEntries(deals: DealRef[], siteUrl: string): MetadataRoute.Sitemap {
   return deals.map((d) => ({
     url: siteUrl + productPath(d),
-    lastModified: new Date(d.publishedAt),
+    lastModified: new Date(d.endedAt ?? d.publishedAt),
     changeFrequency: 'daily' as const,
   }))
 }

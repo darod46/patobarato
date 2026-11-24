@@ -1,8 +1,13 @@
-import { describe, expect, it } from 'vitest'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { describe, expect, it, vi } from 'vitest'
+import { fetchAllDealRefs } from './deals'
+import { loadSitemapXml } from './sitemap-data'
 import { buildRobots, buildSitemapIndex, buildSitemapXml, dealEntries, eventEntries, pageEntries, SITEMAP_NAMES } from './sitemap'
 import { siteEvent } from '../test-utils/siteEvent'
 import type { GuideSummary, PageCopy } from './types'
 import { SITE_URL } from './urls'
+
+vi.mock('./deals', async (orig) => ({ ...(await orig<typeof import('./deals')>()), fetchAllDealRefs: vi.fn(async () => []) }))
 
 const deals = [
   { store: 'amazon', asin: 'B0ABCDEF12', title: 'Freidora de aire', publishedAt: '2026-11-04T11:19:00Z' },
@@ -85,6 +90,27 @@ describe('dealEntries', () => {
       { url: 'https://www.patobarato.com/oferta/amazon/freidora-de-aire-b0abcdef12', lastModified: new Date('2026-11-04T11:19:00Z'), changeFrequency: 'daily' },
       { url: 'https://www.patobarato.com/oferta/amazon/cafe-molido-b0zzzzzz99', lastModified: new Date('2026-11-03T08:00:00Z'), changeFrequency: 'daily' },
     ])
+  })
+})
+
+describe('dealEntries with ended deals', () => {
+  it('uses endedAt ?? publishedAt as lastmod', () => {
+    const entries = dealEntries(
+      [
+        { ...deals[0], status: 'ended', endedAt: '2026-11-10T09:00:00Z' },
+        { ...deals[1], status: 'active', endedAt: null },
+      ],
+      SITE_URL,
+    )
+    expect(entries.map((e) => e.lastModified)).toEqual([new Date('2026-11-10T09:00:00Z'), new Date('2026-11-03T08:00:00Z')])
+  })
+})
+
+describe('loadSitemapXml', () => {
+  it('passes now to fetchAllDealRefs for the chollos sitemap', async () => {
+    const client = {} as SupabaseClient
+    await loadSitemapXml('chollos', client, NOW)
+    expect(fetchAllDealRefs).toHaveBeenCalledWith(client, NOW)
   })
 })
 
