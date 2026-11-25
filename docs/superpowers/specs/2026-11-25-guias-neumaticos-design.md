@@ -59,8 +59,16 @@ Página de modelo + medida, por ejemplo
 velocidad) con el precio por unidad en elementos `itemprop="price"` (texto «98,01 €»). El precio
 de la guía es **el menor** de esa página. El identificador del producto (`external_id`) es el
 segmento de ruta `michelin-205-55-16-crossclimate_2`; la URL canónica es la de arriba sin query.
-La petición se hace sin cookies con las cabeceras de navegador que ya usa el bot; la página se
-sirve sin bloqueo (comprobado desde el navegador sin credenciales).
+**La parte final de la ruta (`/108+200+201+202+205`) es obligatoria**: sin ella o con solo
+`/108` el sitio devuelve 404 o un listado genérico. Los códigos varían por modelo y medida, así que
+la URL de cada producto se copia tal cual de los enlaces de la página del modelo (lista «El
+tamaño»); el bot nunca construye URLs de neumaticos.es, solo usa la guardada (`canonical_for`
+conserva la ruta completa; en el enlace Awin `ued=` el `+` va codificado como `%2B`). La petición
+se hace sin cookies con las cabeceras de navegador que ya usa el bot; desde el navegador sin
+credenciales la página se sirve sin bloqueo. Si desde el servidor neumaticos.es bloqueara al bot,
+`guide_prices` deja el precio en null con su error y la ficha muestra la tienda sin precio
+(«Precios no disponibles»), como ya ocurre con cualquier fallo; en ese caso David puede lanzar
+`guide-prices` desde su ordenador, igual que con Amazon.
 
 ### Bot
 
@@ -99,9 +107,16 @@ sirve sin bloqueo (comprobado desde el navegador sin credenciales).
   `sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-top-navigation-by-user-activation"`,
   `referrerPolicy="strict-origin-when-cross-origin"`). En pantallas más estrechas que 468 px el
   iframe de 468 se escala con `transform: scale()` dentro de un contenedor de alto fijo. Las URLs
-  son constantes en el componente (`AWIN_FINDER_WIDE`, `AWIN_FINDER_NARROW`).
-- `GuideView`: con `guide.widget === 'neumaticos'`, `TyreFinder` tras `QuickPicks` y otra vez
-  antes de `GuideFaq` (si no hay FAQ, al final).
+  son constantes en el componente:
+  `AWIN_FINDER_WIDE = 'https://www.awin1.com/cawshow.php?v=11552&s=3743674&q=397643&r=3145511&iframe=1'`
+  (728×90) y `AWIN_FINDER_NARROW = 'https://www.awin1.com/cawshow.php?v=11552&s=2718820&q=397643&r=3145511&iframe=1'`
+  (468×60). El ID de editor `r=3145511` es público por naturaleza (va en todos los enlaces de
+  afiliado `awinaffid=`); no es una credencial.
+- `GuideView`: con `guide.widget === 'neumaticos'`, `TyreFinder` tras `QuickPicks` (o, en una
+  guía sin productos, tras la introducción) y otra vez antes de `GuideFaq` (si no hay FAQ, al
+  final). Una guía sin productos (`como-elegir-neumaticos`) no muestra elección rápida, comparativa
+  ni fichas: solo intro, widget, «Cómo elegir», widget y FAQ; el generador acepta 0 ítems cuando la
+  guía lleva `widget`.
 - `freshnessLabel` no cambia; la nota de la tienda («Precio para 205/55 R16») ya la pinta
   `StoreRow`. En `QuickPicks`/`GuideItemCard` nada cambia.
 - `/cookies`: párrafo sobre el buscador de Neumaticos.es (contenido incrustado de Awin que puede
@@ -121,9 +136,11 @@ sirve sin bloqueo (comprobado desde el navegador sin credenciales).
 | 2027-01-01 | neumaticos-all-season | Neumáticos all-season: para quién sí | 205/55 R16 |
 | 2027-01-08 | neumaticos-furgoneta-215-65-r16c | Neumáticos para furgoneta (215/65 R16C) | 215/65 R16C |
 
-Cada guía con productos: 4-5 modelos (premium, dos intermedios, uno económico; marcas como
-Michelin, Continental, Bridgestone, Goodyear, Hankook, Falken, Nexen) elegidos en la página de
-la medida de neumaticos.es; datos de la etiqueta UE (eficiencia, agarre en mojado, ruido) tomados
+Cada guía con productos: 4-5 modelos (mínimo 3 si la medida no da para más; premium, dos
+intermedios, uno económico; marcas como Michelin, Continental, Bridgestone, Goodyear, Hankook,
+Falken, Nexen) elegidos por el controlador en la página de la medida de neumaticos.es desde el
+navegador integrado (como con Amazon), guardando la URL exacta de cada modelo+medida; un mismo
+modelo puede aparecer en varias guías (las tablas se indexan por tienda + id, sin conflicto); datos de la etiqueta UE (eficiencia, agarre en mojado, ruido) tomados
 de la propia página y usados como specs. El texto sigue las reglas de siempre (sin precios ni
 porcentajes, sin «hemos probado»); los pros y contras se basan en la etiqueta y en lo que indica
 el fabricante. Las guías del 25 de diciembre y el 1 de enero se publican igualmente (es
