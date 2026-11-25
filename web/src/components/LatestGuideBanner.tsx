@@ -20,7 +20,7 @@ export function LatestGuideBanner({ guide, now }: Props) {
   return (
     <section aria-labelledby="ultima-guia" className="mx-auto max-w-[1200px] px-4 pb-12 md:px-8">
       <div
-        className="relative grid overflow-hidden rounded-3xl border border-warm-line md:grid-cols-[minmax(0,1fr)_minmax(340px,46%)] md:min-h-[340px]"
+        className="relative grid overflow-hidden rounded-3xl border border-warm-line md:grid-cols-[minmax(0,1fr)_minmax(340px,46%)]"
         style={{ backgroundColor: COVER_BG }}
       >
         <div className="order-2 flex flex-col justify-center gap-3 p-6 md:order-1 md:p-12">
@@ -64,7 +64,7 @@ export function LatestGuideBanner({ guide, now }: Props) {
             width={cover.width}
             height={cover.height}
             loading="lazy"
-            className="order-1 aspect-video w-full object-contain md:order-2 md:h-full md:max-h-[380px] md:self-center"
+            className="order-1 aspect-video w-full object-cover md:order-2 md:h-full md:[mask-image:linear-gradient(to_right,transparent,black_18%)]"
           />
         )}
       </div>
