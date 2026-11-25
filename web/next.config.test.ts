@@ -26,11 +26,11 @@ describe('next.config', () => {
     }
   })
 
-  it('has no rewrite that targets /buscar', async () => {
+  it('has no rewrite that targets /buscar nor the old /go/ redirect', async () => {
     const rewrites = await nextConfig.rewrites!()
     const all = Array.isArray(rewrites) ? rewrites : [...(rewrites.beforeFiles ?? []), ...(rewrites.afterFiles ?? []), ...(rewrites.fallback ?? [])]
     expect(all.filter((r) => r.destination.startsWith('/buscar'))).toEqual([])
-    expect(all).toContainEqual({ source: '/go/:asin([A-Za-z0-9]{10})', destination: '/go.html' })
+    expect(all.filter((r) => r.source.startsWith('/go'))).toEqual([])
   })
 
   it('keeps the ?q= noindex header but no unconditional one on /buscar', async () => {

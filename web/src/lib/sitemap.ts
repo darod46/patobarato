@@ -136,7 +136,7 @@ export function latest(dates: (string | Date | undefined)[]): Date | undefined {
 
 export function buildRobots(siteUrl: string): MetadataRoute.Robots {
   return {
-    rules: { userAgent: '*', allow: '/', disallow: ['/go/', '/api/'] },
+    rules: { userAgent: '*', allow: '/', disallow: ['/api/'] },
     sitemap: `${siteUrl}/sitemap.xml`,
   }
 }

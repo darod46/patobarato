@@ -18,7 +18,7 @@ export function finalPrice(price: number | null, coupon: GuideCoupon | null, now
   return result > 0 ? result : null
 }
 
-/** Amazon always monetises through /go/ (tag added); any other store needs an affiliate link to be shown at all. */
+/** Amazon always monetises (the web builds the tagged link from the ASIN when none is stored); any other store needs an affiliate link to be shown at all. */
 export function hasAffiliate(offer: GuideStoreOffer): boolean {
   return offer.store === 'amazon' || Boolean(offer.affiliateUrl)
 }

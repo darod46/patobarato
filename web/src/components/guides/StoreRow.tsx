@@ -1,3 +1,4 @@
+import { amazonProductUrl } from '../../lib/amazonLink'
 import { formatPrice } from '../../lib/format'
 import { finalPrice, hasAffiliate, isRecent } from '../../lib/guides'
 import { storeInfo } from '../../lib/stores'
@@ -16,9 +17,10 @@ function couponValueText(coupon: GuideCoupon): string {
   return ''
 }
 
-/** Amazon goes through the /go/ redirect (affiliate tag); other stores use their affiliate link (rows without one are not rendered). */
+/** The stored affiliate link; an Amazon row without one gets the tagged product page built from its ASIN (other stores without one are not rendered). */
 function buyUrl(offer: GuideStoreOffer): string {
-  return offer.store === 'amazon' ? `/go/${offer.externalId}` : (offer.affiliateUrl ?? '')
+  if (offer.affiliateUrl) return offer.affiliateUrl
+  return offer.store === 'amazon' ? amazonProductUrl(offer.externalId) : ''
 }
 
 function StoreName({ offer }: { offer: GuideStoreOffer }) {

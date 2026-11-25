@@ -246,9 +246,9 @@ describe('eventEntries', () => {
 })
 
 describe('buildRobots', () => {
-  it('allows everything except /go/ and /api/ and points to the sitemap index', () => {
+  it('allows everything except /api/ and points to the sitemap index', () => {
     const robots = buildRobots(SITE_URL)
-    expect(robots.rules).toEqual({ userAgent: '*', allow: '/', disallow: ['/go/', '/api/'] })
+    expect(robots.rules).toEqual({ userAgent: '*', allow: '/', disallow: ['/api/'] })
     expect(robots.sitemap).toBe('https://www.patobarato.com/sitemap.xml')
   })
 })

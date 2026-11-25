@@ -81,19 +81,19 @@ describe('StoreRow', () => {
     expect(screen.queryByText(/99,90/)).not.toBeInTheDocument()
   })
 
-  it('uses the affiliate link for non-Amazon stores, falling back to the canonical url, and keeps /go/ for Amazon', () => {
+  it('uses the affiliate link for non-Amazon stores, falling back to the canonical url, and the stored one for Amazon', () => {
     const { rerender } = render(<StoreRow offer={offer({ affiliateUrl: 'https://aff.example/pcc' })} now={NOW} />)
     expect(screen.getByRole('link', { name: 'Ir a PcComponentes' })).toHaveAttribute('href', 'https://aff.example/pcc')
     rerender(<StoreRow offer={offer({ affiliateUrl: 'https://aff.example/pcc', checkedAt: '2026-11-01T00:00:00Z' })} now={NOW} />)
     expect(screen.getByRole('link', { name: 'Ver en PcComponentes' })).toHaveAttribute('href', 'https://aff.example/pcc')
     rerender(<StoreRow offer={offer({ store: 'amazon', externalId: 'B0X', affiliateUrl: 'https://amazon.es/dp/B0X?tag=t' })} now={NOW} />)
-    expect(screen.getByRole('link', { name: 'Ver en Amazon' })).toHaveAttribute('href', '/go/B0X')
+    expect(screen.getByRole('link', { name: 'Ver en Amazon' })).toHaveAttribute('href', 'https://amazon.es/dp/B0X?tag=t')
   })
 
-  it('shows previous price struck through only when there is one, and Amazon goes through /go/', () => {
-    const { rerender } = render(<StoreRow offer={offer({ store: 'amazon', externalId: 'B0ABCDEF12' })} now={NOW} />)
+  it('shows previous price struck through only when there is one, and Amazon without a stored link gets the tagged product page', () => {
+    const { rerender } = render(<StoreRow offer={offer({ store: 'amazon', externalId: 'B0ABCDEF12', affiliateUrl: null })} now={NOW} />)
     expect(document.querySelector('s')).toBeNull()
-    expect(screen.getByRole('link', { name: 'Ver en Amazon' })).toHaveAttribute('href', '/go/B0ABCDEF12')
+    expect(screen.getByRole('link', { name: 'Ver en Amazon' })).toHaveAttribute('href', 'https://www.amazon.es/dp/B0ABCDEF12?tag=patobarato-21')
     rerender(<StoreRow offer={offer({ previousPrice: 129.9 })} now={NOW} />)
     expect(document.querySelector('s')).toHaveTextContent('129,90 €')
   })
@@ -108,8 +108,8 @@ describe('StoreRow', () => {
     expect(priceless.container).toBeEmptyDOMElement()
   })
 
-  it('keeps an Amazon row without affiliateUrl, since /go/ always adds the tag', () => {
+  it('keeps an Amazon row without affiliateUrl, linking the tagged product page', () => {
     render(<StoreRow offer={offer({ store: 'amazon', externalId: 'B0X', affiliateUrl: null })} now={NOW} />)
-    expect(screen.getByRole('link', { name: 'Ver en Amazon' })).toHaveAttribute('href', '/go/B0X')
+    expect(screen.getByRole('link', { name: 'Ver en Amazon' })).toHaveAttribute('href', 'https://www.amazon.es/dp/B0X?tag=patobarato-21')
   })
 })

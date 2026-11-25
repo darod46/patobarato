@@ -7,6 +7,14 @@
 
 export type Platform = 'android' | 'ios' | 'desktop'
 
+/** Our Amazon Associates tag (public: it travels in every Amazon link we publish). */
+export const AMAZON_TAG = 'patobarato-21'
+
+/** The tagged product page for an ASIN, used when a row has no affiliate link stored yet. */
+export function amazonProductUrl(asin: string): string {
+  return `https://www.amazon.es/dp/${asin.toUpperCase()}?tag=${AMAZON_TAG}`
+}
+
 const AMAZON_ANDROID_PACKAGE = 'com.amazon.mShop.android.shopping'
 
 export function detectPlatform(userAgent: string, maxTouchPoints: number): Platform {

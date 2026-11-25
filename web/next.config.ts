@@ -36,10 +36,7 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return {
       beforeFiles: [],
-      afterFiles: [
-        // /go/{ASIN} is served by the static redirect page (affiliate tag added by script).
-        { source: '/go/:asin([A-Za-z0-9]{10})', destination: '/go.html' },
-      ],
+      afterFiles: [],
       fallback: [],
     }
   },

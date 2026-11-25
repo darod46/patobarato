@@ -18,8 +18,8 @@ export default function AfiliadosPage() {
       <h2>Amazon</h2>
       <p>
         En calidad de Afiliado de Amazon, PatoBarato obtiene ingresos por las compras adscritas que cumplen
-        los requisitos aplicables. Los enlaces a Amazon pasan por la dirección /go/ de este sitio, que añade
-        nuestro identificador de afiliado.
+        los requisitos aplicables. Los enlaces a Amazon llevan nuestro identificador de afiliado y abren
+        directamente la página del producto en amazon.es.
       </p>
       <h2>Otras tiendas</h2>
       <p>
