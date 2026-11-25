@@ -640,3 +640,21 @@ def test_main_check_deals_passes_dry_run(monkeypatch):
     assert main(["check-deals", "--dry-run"]) == 0
     assert main(["check-deals"]) == 0
     assert calls == [True, False]
+
+
+async def test_backfill_finder_skips_neumaticos():
+    class FakeStore:
+        id = "neumaticos"
+
+        def canonical_url(self, product_id, country):
+            return f"https://shop/{product_id}"
+
+        async def find_image(self, product_id, canonical_url):
+            raise AssertionError("neumaticos pages must not be scraped for images")
+
+    class FakeRegistry:
+        def get(self, store_id):
+            return FakeStore()
+
+    finder = main_module._RegistryBackfillFinder(FakeRegistry())
+    assert await finder.find("p1", "ES", "neumaticos", "https://shop/real/p1") is None

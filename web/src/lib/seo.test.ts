@@ -223,6 +223,10 @@ describe('guideJsonLd', () => {
   it('omits FAQPage without questions', () => {
     expect(guideJsonLd({ ...guide, faq: [] }, 'u')).toHaveLength(2)
   })
+  it('omits the ItemList when the guide has no products', () => {
+    const types = guideJsonLd({ ...guide, items: [] }, 'u').map((d) => (d as Record<string, unknown>)['@type'])
+    expect(types).toEqual(['Article', 'FAQPage'])
+  })
 })
 
 describe('searchMetadata', () => {

@@ -91,3 +91,9 @@ async def test_fetch_price_network_error_sets_exception_failure():
 
 def test_product_id_accepts_brand_with_underscore():
     assert store().product_id("https://www.neumaticos.es/neumaticos/bf_goodrich-205-55-16-g_grip/1+2") == "bf_goodrich-205-55-16-g_grip"
+
+
+def test_extract_min_price_reads_dot_thousands_without_decimals():
+    assert extract_min_price('<span itemprop="price">1.098 €</span>') == Decimal("1098")
+    assert extract_min_price('<span itemprop="price">12.345.678 €</span>') == Decimal("12345678")
+    assert extract_min_price('<meta itemprop="price" content="98.01">') == Decimal("98.01")

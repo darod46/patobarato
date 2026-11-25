@@ -97,7 +97,13 @@ async def _supervise(**named_coros: Coroutine[Any, Any, Any]) -> int:
 
 
 class _RegistryBackfillFinder:
-    """Routes each backfill row to the store it belongs to; unregistered stores are skipped."""
+    """Routes each backfill row to the store it belongs to; unregistered stores are skipped.
+
+    Neumaticos.es is skipped too: its og:image may be a generic logo, which would replace the guide's
+    placeholder image (web_guide_items uses coalesce(guide image, product image)).
+    """
+
+    _SKIPPED_STORES = frozenset({"neumaticos"})
 
     def __init__(self, registry: StoreRegistry) -> None:
         self._registry = registry
@@ -105,6 +111,8 @@ class _RegistryBackfillFinder:
     async def find(
         self, store_product_id: str, country: str, store: str, url: str = ""
     ) -> str | None:
+        if store in self._SKIPPED_STORES:
+            return None
         adapter = self._registry.get(store)
         if adapter is None:
             logger.warning("Backfill skipped %s: store %s is not registered", store_product_id, store)

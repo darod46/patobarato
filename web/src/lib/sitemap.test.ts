@@ -210,6 +210,11 @@ describe('pageEntries', () => {
     expect(u).not.toContain(`${SITE_URL}/guias/robots`)
   })
 
+  it('lists a guide without products even though it never has prices', () => {
+    const u = urls({ guides: [{ ...guide('como-elegir', '2026-11-07T08:00:00Z', null), items: 0 }] })
+    expect(u).toContain(`${SITE_URL}/guias/como-elegir`)
+  })
+
   it('has no duplicate URLs', () => {
     const u = urls({
       tags: [{ tag: 'hogar', count: 4 }],

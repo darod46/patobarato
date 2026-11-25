@@ -3,7 +3,7 @@ import { MIN_INDEXABLE_DEALS } from './seo'
 import type { StoreStats } from './stores-data'
 import { daysUntil, eventPath, eventPhase } from './events'
 import type { Deal, GuideSummary, HashtagCount, PageCopy, SiteEvent } from './types'
-import { guidePath, hasFreshPrices } from './guides'
+import { guidePath, isGuideIndexable } from './guides'
 import { storeFromSlug, storeInfo } from './stores'
 import { productPath, tagPath } from './urls'
 
@@ -67,8 +67,8 @@ export function dealEntries(deals: DealRef[], siteUrl: string): MetadataRoute.Si
 }
 
 /**
- * `paginas` sitemap: home, listings, indexable categories and stores, guides with fresh prices (the
- * others are noindex) and static pages. `lastmod` comes from the page copy (`updated_at`) or the guide.
+ * `paginas` sitemap: home, listings, indexable categories and stores, guides with fresh prices or
+ * without products (the others are noindex) and static pages. `lastmod` comes from the page copy (`updated_at`) or the guide.
  */
 export function pageEntries({
   siteUrl,
@@ -106,7 +106,7 @@ export function pageEntries({
     ...LISTING_PATHS.map(staticEntry),
     ...tags.filter(categoryListed).map((t) => ({ url: siteUrl + tagPath(t.tag), ...updated('category', t.tag) })),
     ...storeIds.map((id) => ({ url: `${siteUrl}/tiendas/${storeInfo(id).slug}`, ...updated('store', id) })),
-    ...guides.filter((g) => hasFreshPrices(g.pricesCheckedAt, now)).map((g) => ({ url: siteUrl + guidePath(g.slug), lastModified: new Date(g.updatedAt) })),
+    ...guides.filter((g) => isGuideIndexable(g.items, g.pricesCheckedAt, now)).map((g) => ({ url: siteUrl + guidePath(g.slug), lastModified: new Date(g.updatedAt) })),
     ...STATIC_PATHS.map(staticEntry),
   ]
 }

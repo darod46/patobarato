@@ -583,6 +583,8 @@ class SupabaseRepository:
                     "checked_at": checked_at.isoformat(),
                     "error": error,
                 }
+                if affiliate_url is not None:
+                    row["affiliate_url"] = affiliate_url
                 return (
                     self._client.table("product_prices")
                     .upsert(row, on_conflict="product_id")

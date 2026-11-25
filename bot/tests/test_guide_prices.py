@@ -356,3 +356,47 @@ async def test_refresh_finds_awin_row_stored_at_canonical_url_from_tagged_guide_
     await refresher.run(SOURCE)
     pid = await repo.find_product_id("pccomponentes", "ES", "foo-bar")
     assert repo.prices[pid]["price"] == Decimal("8.00")
+
+
+async def test_refresh_stores_affiliate_link_when_price_fails():
+    store = FakeStore({"a": None}, affiliate="https://aff.example/a")
+    repo, refresher, _ = _make([_gp("a")], store)
+    await refresher.run(SOURCE)
+    pid = await repo.find_product_id("fake", "ES", "a")
+    assert repo.prices[pid]["error"] == "no price"
+    assert repo.prices[pid]["price"] is None
+    assert repo.prices[pid]["affiliate_url"] == "https://aff.example/a"
+
+
+async def test_refresh_error_records_store_last_failure():
+    class Blocked(FakeStore):
+        @property
+        def last_failure(self):
+            return "HTTP 403"
+
+    store = Blocked({"a": None}, affiliate="https://aff.example/a")
+    repo, refresher, _ = _make([_gp("a")], store)
+    await refresher.run(SOURCE)
+    pid = await repo.find_product_id("fake", "ES", "a")
+    assert repo.prices[pid]["error"] == "HTTP 403"
+
+
+async def test_refresh_error_keeps_existing_affiliate_when_link_fails():
+    store = FakeStore({"a": [PriceQuote(Decimal("5"), None), None]}, affiliate="https://aff.example/a")
+    repo, refresher, _ = _make([_gp("a")], store)
+    await refresher.run(SOURCE)
+    store.affiliate = RuntimeError("down")
+    await refresher.run(SOURCE)
+    pid = await repo.find_product_id("fake", "ES", "a")
+    assert repo.prices[pid]["affiliate_url"] == "https://aff.example/a"
+    assert repo.prices[pid]["price"] == Decimal("5")
+
+
+async def test_refresh_warns_once_per_unregistered_store(caplog):
+    repo, refresher, _ = _make([_gp("a", store="neumaticos"), _gp("b", store="neumaticos"), _gp("c", store="gone")])
+    with caplog.at_level(logging.WARNING):
+        await refresher.run(SOURCE)
+    warnings = [r.getMessage() for r in caplog.records if r.levelno == logging.WARNING]
+    assert len([m for m in warnings if "neumaticos" in m]) == 1
+    assert len([m for m in warnings if "gone" in m]) == 1
+    assert any("AWIN_MERCHANTS" in m for m in warnings)

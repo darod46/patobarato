@@ -22,7 +22,8 @@ export function publishedAt(day) {
 }
 
 function q(text) {
-  if (text.includes(TAG)) throw new Error(`text contains ${TAG}`)
+  // Any $ is rejected: a text ending in '$pb' or starting with 'pb$' would also close the quote early.
+  if (text.includes('$')) throw new Error(`text contains $ (it could close the ${TAG} quote)`)
   return `${TAG}${text}${TAG}`
 }
 const arr = (items) => `array[${items.map(q).join(', ')}]::text[]`

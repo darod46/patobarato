@@ -43,7 +43,7 @@ export function StoreRow({ offer, now }: { offer: GuideStoreOffer; now: Date }) 
           rel="sponsored noopener noreferrer"
           className="inline-flex min-h-11 items-center rounded-xl bg-primary-soft px-4 text-sm font-semibold text-primary hover:text-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
-          {`Ver en ${store.short}`}
+          {offer.price === null ? `Ver precio en ${store.short}` : `Ver en ${store.short}`}
         </a>
       </li>
     )

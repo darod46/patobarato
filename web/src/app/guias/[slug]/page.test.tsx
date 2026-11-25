@@ -64,6 +64,16 @@ describe('GuidePage', () => {
     expect(screen.getByText('Precios no disponibles')).toBeInTheDocument()
   })
 
+  it('indexes a guide without products, which never has prices, with no price label or ItemList', async () => {
+    const g = guide({ items: [], pricesCheckedAt: null })
+    vi.mocked(fetchGuide).mockResolvedValue(g)
+    expect((await generateMetadata(params(g.slug))).robots).toBeUndefined()
+    const { container } = render(await GuidePage(params(g.slug)))
+    expect(screen.queryByText('Precios no disponibles')).toBeNull()
+    const all = [...container.querySelectorAll('script[type="application/ld+json"]')].map((s) => s.textContent ?? '').join('\n')
+    expect(all).not.toContain('"ItemList"')
+  })
+
   it('is indexable with fresh prices and emits Article and FAQPage JSON-LD', async () => {
     vi.mocked(fetchGuide).mockResolvedValue(guide())
     expect((await generateMetadata(params('mejores-freidoras'))).robots).toBeUndefined()

@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { cache } from 'react'
 import { GuideView } from '../../../components/GuideView'
-import { guidePath, hasFreshPrices } from '../../../lib/guides'
+import { guidePath, isGuideIndexable } from '../../../lib/guides'
 import { fetchGuide } from '../../../lib/guides-data'
 import { breadcrumbJsonLd, guideJsonLd, guideMetadata, jsonLdScript } from '../../../lib/seo'
 import { fetchStores } from '../../../lib/stores-data'
@@ -28,7 +28,7 @@ const loadGuide = cache(async (slug: string) => (await optional('guia', () => fe
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const guide = await loadGuide((await params).slug)
   if (!guide) notFound()
-  return guideMetadata(guide, hasFreshPrices(guide.pricesCheckedAt, new Date()))
+  return guideMetadata(guide, isGuideIndexable(guide.items.length, guide.pricesCheckedAt, new Date()))
 }
 
 export default async function GuidePage({ params }: Props) {

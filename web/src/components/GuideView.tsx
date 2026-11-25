@@ -74,7 +74,7 @@ export function GuideView({ guide, now, stores }: Props) {
               <span>{`Por ${guide.author} · equipo PatoBarato`}</span>
               <span>{`Actualizado el ${formatLongDate(guide.updatedAt)}`}</span>
               <span>{`${guide.readingMinutes} min de lectura`}</span>
-              <span>{freshnessLabel(guide.pricesCheckedAt, now)}</span>
+              {hasItems && <span>{freshnessLabel(guide.pricesCheckedAt, now)}</span>}
             </p>
           </div>
           {cover && (

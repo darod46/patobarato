@@ -604,3 +604,17 @@ async def test_mark_guide_announced_row():
         {"announced_at": NOW.isoformat(), "announce_message_id": None},
     ]
     assert [a for a, _ in _calls(client, "eq")] == [("id", 3), ("id", 4)]
+
+
+async def test_upsert_product_price_error_includes_affiliate_url_when_given():
+    client = _Client([])
+    await SupabaseRepository(client).upsert_product_price(
+        7, checked_at=NOW, error="HTTP 403", affiliate_url="https://aff.example/x"
+    )
+    args, _ = next((a, k) for n, a, k in client.log if n == "upsert")
+    assert args[0] == {
+        "product_id": 7,
+        "checked_at": NOW.isoformat(),
+        "error": "HTTP 403",
+        "affiliate_url": "https://aff.example/x",
+    }

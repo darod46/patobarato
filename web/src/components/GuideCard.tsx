@@ -33,7 +33,9 @@ export function GuideCard({ guide }: { guide: GuideSummary }) {
       </h2>
       {guide.subtitle && <p className="text-muted">{guide.subtitle}</p>}
       <p className="mt-auto pt-2 text-sm text-muted">
-        {countLabel(guide.items, 'producto', 'productos')} · actualizada el {formatLongDate(guide.updatedAt)}
+        {guide.items > 0
+          ? `${countLabel(guide.items, 'producto', 'productos')} · actualizada el ${formatLongDate(guide.updatedAt)}`
+          : `Actualizada el ${formatLongDate(guide.updatedAt)}`}
       </p>
     </article>
   )

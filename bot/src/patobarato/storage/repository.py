@@ -157,7 +157,10 @@ class Repository(Protocol):
         error: str | None = None,
         affiliate_url: str | None = None,
     ) -> None:
-        """Stores the last-known price; with ``error`` set, an existing price is kept."""
+        """Stores the last-known price; with ``error`` set, an existing price is kept.
+
+        On the error path ``affiliate_url`` is written only when given (not None).
+        """
         ...
 
     async def upsert_catalog_products(self, rows: list[CatalogRow]) -> None:
@@ -635,6 +638,8 @@ class InMemoryRepository(Repository):
             price = existing["price"]
             previous_price = existing["previous_price"]
             currency = existing["currency"]
+            if affiliate_url is None:
+                affiliate_url = existing["affiliate_url"]
         self.prices[product_id] = {
             "price": price,
             "previous_price": previous_price,

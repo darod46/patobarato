@@ -25,6 +25,13 @@ describe('GuideCard', () => {
     expect(img).toHaveAttribute('loading', 'lazy')
     expect(screen.getByRole('link', { name: summary.title })).toHaveAttribute('href', '/guias/freidoras-de-aire-menos-100')
   })
+  it('shows the product count, and omits it for a guide without products', () => {
+    const { rerender } = render(<GuideCard guide={summary} />)
+    expect(screen.getByText(/5 productos · actualizada el/)).toBeInTheDocument()
+    rerender(<GuideCard guide={{ ...summary, items: 0 }} />)
+    expect(screen.queryByText(/productos/)).toBeNull()
+    expect(screen.getByText(/^Actualizada el/)).toBeInTheDocument()
+  })
   it('renders without an image for a guide without cover', () => {
     render(<GuideCard guide={{ ...summary, slug: 'otra-guia' }} />)
     expect(document.querySelector('img')).toBeNull()

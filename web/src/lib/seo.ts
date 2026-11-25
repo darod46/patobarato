@@ -237,7 +237,7 @@ export function faqJsonLd(faq: { q: string; aMd: string }[]): Record<string, unk
   }
 }
 
-/** Article, ItemList and (when there are questions) FAQPage structured data for a guide page. */
+/** Article, ItemList (when there are products) and FAQPage (when there are questions) structured data for a guide page. */
 export function guideJsonLd(guide: Guide, url: string): Record<string, unknown>[] {
   const cover = guideCover(guide.slug, guide.title)
   const data: Record<string, unknown>[] = [
@@ -251,7 +251,9 @@ export function guideJsonLd(guide: Guide, url: string): Record<string, unknown>[
       dateModified: guide.updatedAt,
       mainEntityOfPage: url,
     },
-    {
+  ]
+  if (guide.items.length > 0) {
+    data.push({
       '@context': 'https://schema.org',
       '@type': 'ItemList',
       itemListElement: guide.items.map((it) => ({
@@ -260,8 +262,8 @@ export function guideJsonLd(guide: Guide, url: string): Record<string, unknown>[
         name: it.name,
         url: `${url}#producto-${it.position}`,
       })),
-    },
-  ]
+    })
+  }
   if (guide.faq.length > 0) {
     data.push(faqJsonLd(guide.faq))
   }

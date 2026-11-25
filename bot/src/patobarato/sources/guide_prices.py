@@ -37,9 +37,11 @@ class GuidePriceRefresher:
         self._delay = delay_seconds
         self._imageless: set[int] = set()
         self._network = False
+        self._warned_stores: set[str] = set()
 
     async def run(self, source: ApiSource) -> None:
         products = await self._repo.list_guide_products()
+        self._warned_stores = set()
         # Images already stored (Telegram, backfill) are never overwritten.
         self._imageless = {row[0] for row in await self._repo.get_products_without_image()}
         updated = failed = skipped = from_catalog = 0
@@ -83,11 +85,17 @@ class GuidePriceRefresher:
         now = self._clock()
         store = self._registry.get(product.store)
         if store is None:
+            if product.store not in self._warned_stores:
+                self._warned_stores.add(product.store)
+                logger.warning(
+                    "GuidePrices: store %s not registered (for an Awin store, add it to "
+                    "AWIN_MERCHANTS); its guide products are not priced",
+                    product.store,
+                )
             product_id = await self._repo.find_product_id(
                 product.store, COUNTRY, product.external_id
             )
             if product_id is None:
-                logger.debug("GuidePrices: store %s not enabled, skipped", product.store)
                 return "skipped"
             await self._repo.upsert_product_price(
                 product_id, checked_at=now, error="store_disabled"
@@ -128,11 +136,7 @@ class GuidePriceRefresher:
             if row.image_url and (created or product_id in self._imageless):
                 await self._repo.set_product_image(product_id, row.image_url)
             return "catalog"
-        self._network = True
-        quote = await store.fetch_price(product.external_id, canonical)
-        if quote is None:
-            await self._repo.upsert_product_price(product_id, checked_at=now, error="no price")
-            return "failed"
+        # The affiliate link is stored even without a price, so the guide still links the store.
         try:
             affiliate = await store.affiliate_url(canonical, product.external_id)
         except Exception as e:
@@ -144,6 +148,16 @@ class GuidePriceRefresher:
                 type(e).__name__,
                 _URL.sub("<url>", str(e)),
             )
+        self._network = True
+        quote = await store.fetch_price(product.external_id, canonical)
+        if quote is None:
+            await self._repo.upsert_product_price(
+                product_id,
+                checked_at=now,
+                error=getattr(store, "last_failure", None) or "no price",
+                affiliate_url=affiliate,
+            )
+            return "failed"
         await self._repo.upsert_product_price(
             product_id,
             checked_at=now,

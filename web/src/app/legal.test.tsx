@@ -30,12 +30,17 @@ describe('legal pages', () => {
     expect(screen.getAllByRole('link').some((l) => l.getAttribute('href') === 'https://t.me/patobarato')).toBe(true)
   })
 
-  it('cookies states that the embedded Awin finder sets affiliate cookies on load', () => {
+  it('cookies states that the Awin finder only loads, and sets affiliate cookies, on click', () => {
     render(<CookiesPage />)
     expect(
       screen.getByText(
-        'En las guías de neumáticos incrustamos el buscador de Neumaticos.es a través de Awin. Al cargarse, Awin establece cookies de seguimiento de afiliado en su propio dominio, aunque no uses el buscador.',
+        'En las guías de neumáticos puedes cargar el buscador de Neumaticos.es a través de Awin. Solo se carga si pulsas el botón; al hacerlo, Awin establece cookies de seguimiento de afiliado en su propio dominio.',
       ),
     ).toBeInTheDocument()
+  })
+
+  it('privacy states that loading the tyre finder sends connection data to Awin', () => {
+    render(<PrivacidadPage />)
+    expect(screen.getByText(/Si pulsas «Cargar el buscador de Neumaticos.es»/)).toBeInTheDocument()
   })
 })

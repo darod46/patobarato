@@ -66,3 +66,9 @@ test('unknown widget and items without asin or stores are rejected', () => {
   assert.throws(() => guideSql({ week: 1, day: '2026-12-04' }, { ...base, widget: 'neumaticos', items: [item({ stores: [] })] }), /neither asin nor stores/)
   assert.throws(() => guideSql({ week: 1, day: '2026-12-04' }, { ...base, widget: 'neumaticos', items: [item({})] }), /neither asin nor stores/)
 })
+
+test('rejects any $ in the text, which could close the $pb$ quote early', () => {
+  for (const title of ['cuesta 5$pb', 'pb$ caro', 'precio $pb$']) {
+    assert.throws(() => guideSql({ week: 1, monday: '2026-11-23' }, { ...base, title, widget: 'neumaticos', items: [] }), /contains \$/)
+  }
+})

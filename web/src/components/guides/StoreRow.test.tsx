@@ -44,8 +44,29 @@ describe('StoreRow', () => {
 
   it('shows only the link when there is no price', () => {
     render(<StoreRow offer={offer({ price: null })} now={NOW} />)
-    expect(screen.getByRole('link', { name: 'Ver en PcComponentes' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Ver precio en PcComponentes' })).toBeInTheDocument()
     expect(screen.getAllByRole('link')).toHaveLength(1)
+  })
+
+  it('shows a never-priced store with its affiliate link and note (price error, no price)', () => {
+    render(
+      <StoreRow
+        offer={offer({
+          store: 'neumaticos',
+          price: null,
+          previousPrice: null,
+          priceError: true,
+          note: 'Precio para 205/55 R16',
+          affiliateUrl: 'https://www.awin1.com/cread.php?awinmid=11552',
+        })}
+        now={NOW}
+      />,
+    )
+    expect(screen.getByRole('link', { name: 'Ver precio en Neumaticos.es' })).toHaveAttribute(
+      'href',
+      'https://www.awin1.com/cread.php?awinmid=11552',
+    )
+    expect(screen.getByText('Precio para 205/55 R16')).toBeInTheDocument()
   })
 
   it('renders the store CTA on a fresh row', () => {

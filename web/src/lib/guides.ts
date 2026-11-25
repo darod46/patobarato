@@ -71,6 +71,11 @@ export function guidePath(slug: string): string {
   return `/guias/${slug}`
 }
 
+/** Indexable guide: one without products (nothing to price) or one whose prices are fresh. */
+export function isGuideIndexable(items: number, checkedAt: string | null, now: Date): boolean {
+  return items === 0 || hasFreshPrices(checkedAt, now)
+}
+
 /** Guide prices were checked within 48 h (guides without that are served but kept out of the index). */
 export function hasFreshPrices(checkedAt: string | null, now: Date): boolean {
   if (checkedAt === null) return false

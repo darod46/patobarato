@@ -74,6 +74,12 @@ describe('GuideView', () => {
     expect(toc.queryByRole('link', { name: 'Preguntas frecuentes' })).toBeNull()
   })
 
+  it('shows no price-freshness label in a guide without items', () => {
+    render(<GuideView guide={guide({ items: [], pricesCheckedAt: null })} now={NOW} stores={[]} />)
+    expect(screen.queryByText('Precios no disponibles')).toBeNull()
+    expect(screen.getByText(/min de lectura/)).toBeInTheDocument()
+  })
+
   it('omits quick picks and recommendations when there are no items', () => {
     render(<GuideView guide={guide({ items: [] })} now={NOW} stores={[]} />)
     expect(document.getElementById('eleccion-rapida')).toBeNull()

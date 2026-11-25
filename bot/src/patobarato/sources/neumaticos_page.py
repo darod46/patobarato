@@ -6,6 +6,7 @@ from decimal import Decimal, InvalidOperation
 _TAG = re.compile(r"""<[^>]*\bitemprop\s*=\s*["']price["'][^>]*>""", re.IGNORECASE)
 _CONTENT = re.compile(r"""\bcontent\s*=\s*(?:"([^"]*)"|'([^']*)')""", re.IGNORECASE)
 _NUMBER = re.compile(r"\d[\d.,]*")
+_DOT_THOUSANDS = re.compile(r"\d{1,3}(?:\.\d{3})+")
 
 
 def _parse(raw: str) -> Decimal | None:
@@ -13,7 +14,8 @@ def _parse(raw: str) -> Decimal | None:
     if not match:
         return None
     number = match.group(0).rstrip(".,")
-    if "," in number:
+    if "," in number or _DOT_THOUSANDS.fullmatch(number):
+        # Spanish format: "1.098,01 €" or "1.098 €" (dots are thousands separators).
         number = number.replace(".", "").replace(",", ".")
     try:
         return Decimal(number)
