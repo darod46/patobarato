@@ -4,7 +4,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from patobarato.models import ParsedOffer, PriceQuote, PublicationStatus
-from patobarato.sources.deal_check import CheckSummary, DealChecker
+from patobarato.sources.deal_check import BLOCK_BACKOFF_SECONDS, CheckSummary, DealChecker
 from patobarato.storage.repository import InMemoryRepository
 from patobarato.stores.base import BaseStore
 from patobarato.stores.registry import StoreRegistry
@@ -150,18 +150,41 @@ async def test_network_failure_is_failed_and_not_checked():
     assert _pub(repo, other)["checked_at"] is None
 
 
-async def test_two_blocks_in_a_row_stop():
+async def test_four_blocks_in_a_row_stop_after_backing_off():
+    repo = InMemoryRepository()
+    for i, age in enumerate([1, 2, 3, 4, 5, 6]):
+        await _seed(repo, f"B0{i}", age_days=age)
+    blocked = "blocked page (no product, title 'Amazon.es')"
+    store = FakeStore(
+        {
+            "B00": _quote("1.00"),
+            "B01": "captcha",
+            "B02": "HTTP 503",
+            "B03": blocked,
+            "B04": blocked,
+            "B05": _quote("1.00"),
+        }
+    )
+    checker, sleeps = _make(repo, store)
+    summary = await checker.run()
+    assert summary.stopped_blocked is True
+    assert [c[0] for c in store.calls] == ["B00", "B01", "B02", "B03", "B04"]
+    assert summary.checked == 5 and summary.kept == 1 and summary.failed == 4
+    # Each block (except the last, which stops the run) is followed by a long pause.
+    assert sleeps.count(BLOCK_BACKOFF_SECONDS) == 3
+
+
+async def test_three_blocks_in_a_row_do_not_stop():
     repo = InMemoryRepository()
     for i, age in enumerate([1, 2, 3, 4]):
         await _seed(repo, f"B0{i}", age_days=age)
     store = FakeStore(
-        {"B00": _quote("1.00"), "B01": "captcha", "B02": "HTTP 503", "B03": _quote("1.00")}
+        {"B00": "captcha", "B01": "captcha", "B02": "captcha", "B03": _quote("1.00")}
     )
     checker, _ = _make(repo, store)
     summary = await checker.run()
-    assert summary.stopped_blocked is True
-    assert [c[0] for c in store.calls] == ["B00", "B01", "B02"]
-    assert summary.checked == 3 and summary.kept == 1 and summary.failed == 2
+    assert summary.stopped_blocked is False
+    assert summary.checked == 4 and summary.kept == 1 and summary.failed == 3
 
 
 async def test_block_success_block_does_not_stop():
@@ -245,7 +268,7 @@ def test_format_blocked_failed_and_dry_run():
         CheckSummary(), checked=3, failed=2, stopped_blocked=True, dry_run=True
     ).format()
     assert "2 sin leer" in text
-    assert "Amazon ha bloqueado dos peticiones seguidas; parada." in text
+    assert "Amazon ha bloqueado cuatro peticiones seguidas; parada." in text
     assert "Simulación" in text
 
 

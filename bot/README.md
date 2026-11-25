@@ -233,14 +233,14 @@ Para la primera ejecución usa `--dry-run`: hace la selección y las consultas, 
 docker compose run --rm bot check-deals --dry-run
 ```
 
-Solo se comprueban las ofertas activas de Amazon, sin cupón, publicadas hace menos de 30 días y no comprobadas en las últimas 48 h (las nunca comprobadas primero). Las peticiones van espaciadas y, si Amazon bloquea dos seguidas, el comando se detiene.
+Solo se comprueban las ofertas activas de Amazon, sin cupón, publicadas hace menos de 30 días y no comprobadas en las últimas 48 h (las nunca comprobadas primero). Las peticiones van espaciadas; tras una página bloqueada espera 20 s y, si Amazon bloquea cuatro seguidas, el comando se detiene.
 
 Qué significa cada cifra del resumen:
 
 - **Comprobadas**: ofertas cuyo precio se ha consultado en esta ejecución. De ellas, **caducadas** son las que ahora cuestan más que el precio publicado, **siguen** las que no han subido y **sin precio** las que Amazon no ha dado precio; **sin leer** son las que han fallado y se reintentan en la siguiente ejecución.
 - **Caducadas por antigüedad**: ofertas con más de 30 días terminadas sin consultar su precio.
 - **Posts pendientes de editar en el servidor**: posts de ofertas terminadas (en esta ejecución o antes) que el ejecutor `ended_posts` del servidor aún no ha editado. Bajan a razón de 100 por hora.
-- Si Amazon ha bloqueado dos peticiones seguidas, el resumen lo indica: vuelve a lanzarlo más tarde.
+- Si Amazon ha bloqueado cuatro peticiones seguidas, el resumen lo indica: vuelve a lanzarlo más tarde.
 
 El número de ofertas que se consultan por ejecución se ajusta con `CHECK_DEALS_LIMIT` (por defecto 600; con la pausa de 1,5 s son unos 15 minutos).
 

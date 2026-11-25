@@ -23,7 +23,8 @@ logger = logging.getLogger("patobarato.deal_check")
 STORE = "amazon"
 COUNTRY = "ES"
 DEFAULT_DELAY_SECONDS = 1.5
-BLOCKED_STREAK_LIMIT = 2
+BLOCKED_STREAK_LIMIT = 4
+BLOCK_BACKOFF_SECONDS = 20.0
 _URL = re.compile(r"https?://\S+")
 
 
@@ -63,7 +64,7 @@ class CheckSummary:
             )
         if self.stopped_blocked:
             lines.append(
-                "Amazon ha bloqueado dos peticiones seguidas; parada. "
+                "Amazon ha bloqueado cuatro peticiones seguidas; parada. "
                 "Vuelve a lanzarlo más tarde."
             )
         return "\n".join(lines)
@@ -160,6 +161,9 @@ class DealChecker:
                     "DealCheck: Amazon blocked %d requests in a row, stopping", blocked_streak
                 )
                 break
+            if blocked_streak:
+                # Amazon serves the odd generic page; a longer pause usually clears it.
+                await self._sleep(BLOCK_BACKOFF_SECONDS)
 
     async def _fetch(
         self, store: Store, deal: DealToCheck
