@@ -29,4 +29,13 @@ describe('legal pages', () => {
     render(<ContactoPage />)
     expect(screen.getAllByRole('link').some((l) => l.getAttribute('href') === 'https://t.me/patobarato')).toBe(true)
   })
+
+  it('cookies states that the embedded Awin finder sets affiliate cookies on load', () => {
+    render(<CookiesPage />)
+    expect(
+      screen.getByText(
+        'En las guías de neumáticos incrustamos el buscador de Neumaticos.es a través de Awin. Al cargarse, Awin establece cookies de seguimiento de afiliado en su propio dominio, aunque no uses el buscador.',
+      ),
+    ).toBeInTheDocument()
+  })
 })

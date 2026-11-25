@@ -6,6 +6,12 @@ import { join } from 'node:path'
 import { build, guideSql } from './build-guides-migration.mjs'
 
 
+const base = {
+  slug: 'g', title: 'Titulo', subtitle: 's', category: 'Motor', intro_md: 'i', how_to_choose_md: 'h',
+  faq: [], reading_minutes: 3,
+}
+const item = (extra) => ({ position: 1, name: 'N', award: 'A', summary_md: 'm', pros: ['p'], cons: ['c'], specs: {}, ...extra })
+
 // The applied migration 20261124010000 predates later edits to content/guides (dates and texts), so
 // it cannot be compared byte for byte with a fresh build; instead the Amazon SQL shape is pinned.
 test('Amazon guides keep the original SQL shape (no widget, no note)', () => {
@@ -22,14 +28,8 @@ test('Amazon guides keep the original SQL shape (no widget, no note)', () => {
   assert.ok(sql.includes('$pb$2026-11-23T06:00:00Z$pb$::timestamptz)'))
 })
 
-const base = {
-  slug: 'g', title: 'Titulo', subtitle: 's', category: 'Motor', intro_md: 'i', how_to_choose_md: 'h',
-  faq: [], reading_minutes: 3,
-}
-const item = (extra) => ({ position: 1, name: 'N', award: 'A', summary_md: 'm', pros: ['p'], cons: ['c'], specs: {}, ...extra })
-
 test('items with stores write store, url and note', () => {
-  const url = 'https://www.neumaticos.es/neumaticos/michelin-primacy-4?size=205-55-16'
+  const url = 'https://www.neumaticos.es/neumaticos/michelin-205-55-16-crossclimate_2/108+200+201+202+205'
   const sql = guideSql({ week: 2, day: '2026-12-11' }, {
     ...base, widget: 'neumaticos',
     items: [1, 2, 3, 4].map((position) => item({ position, stores: [{ store: 'neumaticos', external_id: `x${position}`, url, note: 'Precio para 205/55 R16' }] })),
@@ -59,4 +59,10 @@ test('build accepts a content dir and header', () => {
   const out = build(dir, '-- cabecera')
   assert.equal(out.split('\n')[0], '-- cabecera')
   assert.ok(out.includes('widget = excluded.widget'))
+})
+
+test('unknown widget and items without asin or stores are rejected', () => {
+  assert.throws(() => guideSql({ week: 1, day: '2026-12-04' }, { ...base, widget: 'neumatikos', items: [] }), /unknown widget/)
+  assert.throws(() => guideSql({ week: 1, day: '2026-12-04' }, { ...base, widget: 'neumaticos', items: [item({ stores: [] })] }), /neither asin nor stores/)
+  assert.throws(() => guideSql({ week: 1, day: '2026-12-04' }, { ...base, widget: 'neumaticos', items: [item({})] }), /neither asin nor stores/)
 })

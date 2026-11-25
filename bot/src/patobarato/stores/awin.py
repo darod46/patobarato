@@ -33,7 +33,7 @@ _TRACKING = {"awc", "gclid", "fbclid"}
 _LISTING_SEGMENTS = frozenset({"search", "search-nwx", "buscar", "busqueda", "search-results", "s"})
 # A last segment of only digits shorter than this is a page/category number, not a product.
 _MIN_NUMERIC_ID_LENGTH = 4
-_TYRE_SLUG = re.compile(r"^[a-z0-9]+-\d{3}-\d{2}-\d{2}c?-[a-z0-9_]+$")
+_TYRE_SLUG = re.compile(r"^[a-z0-9_]+-\d{3}-\d{2}-\d{2}c?-[a-z0-9_]+$")
 _TYRE_CODES = re.compile(r"^\d+(\+\d+)*$")
 
 
@@ -130,15 +130,20 @@ class AwinStore(BaseStore):
 
     async def _fetch_tyre_price(self, product_id: str, canonical_url: str) -> PriceQuote | None:
         assert self._http is not None
+        failure = "no price in page"
+        price: Decimal | None = None
         try:
             response = await self._http.get(canonical_url, headers=BROWSER_HEADERS, follow_redirects=True)
-            price: Decimal | None = extract_min_price(response.text) if response.is_success else None
+            if response.is_success:
+                price = extract_min_price(response.text)
+            else:
+                failure = f"HTTP {response.status_code}"
         except Exception as e:
+            failure = type(e).__name__
             log.warning("Neumaticos price for %s not found: %s: %s", product_id, type(e).__name__, e)
-            price = None
         if price is None:
-            self._last_failure = "no price in page"
-            log.warning("Neumaticos price for %s not found: no price in page", product_id)
+            self._last_failure = failure
+            log.warning("Neumaticos price for %s not found: %s", product_id, failure)
             return None
         return PriceQuote(price, None, "EUR", None)
 

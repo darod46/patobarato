@@ -22,8 +22,8 @@ export default function CookiesPage() {
         consulta la <a href="/afiliados">política de afiliación</a>.
       </p>
       <p>
-        En las guías de neumáticos incrustamos el buscador de Neumaticos.es a través de Awin. Ese contenido lo
-        sirve Awin y puede usar cookies propias cuando interactúas con él; si no lo usas, no se activa ninguna.
+        En las guías de neumáticos incrustamos el buscador de Neumaticos.es a través de Awin. Al cargarse, Awin
+        establece cookies de seguimiento de afiliado en su propio dominio, aunque no uses el buscador.
       </p>
       <h2>Cómo gestionarlas</h2>
       <p>

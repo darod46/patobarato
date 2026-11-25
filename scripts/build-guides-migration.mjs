@@ -3,7 +3,7 @@
 // content/guides/_calendar.json (publication days). Idempotent: guides upsert by slug and
 // their items are replaced. Usage: node scripts/build-guides-migration.mjs [contentDir] [header] > supabase/migrations/<version>_guides_calendar.sql
 import { readFileSync, readdirSync } from 'node:fs'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 
 const DEFAULT_DIR = join(process.cwd(), 'content', 'guides')
 const DEFAULT_HEADER = '-- Guías programadas: 24 guías de compra, una cada lunes (generado por scripts/build-guides-migration.mjs).'
@@ -44,6 +44,10 @@ function storeSql(item, bySlug) {
 
 export function guideSql(entry, guide) {
   if (guide.title.length > 60) throw new Error(`${guide.slug}: title longer than 60 chars`)
+  if (guide.widget && guide.widget !== 'neumaticos') throw new Error(`${guide.slug}: unknown widget ${guide.widget}`)
+  for (const it of guide.items) {
+    if (!it.asin && !(Array.isArray(it.stores) && it.stores.length > 0)) throw new Error(`${guide.slug}: item ${it.position} has neither asin nor stores`)
+  }
   const [minItems, maxItems] = guide.widget ? [0, 5] : [4, 5]
   if (guide.items.length < minItems || guide.items.length > maxItems) throw new Error(`${guide.slug}: ${guide.items.length} items`)
   const day = entry.day ?? entry.monday
@@ -84,5 +88,5 @@ export function build(dir = DEFAULT_DIR, header = DEFAULT_HEADER) {
 
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/^.*\//, ''))) {
   const [dir, header] = process.argv.slice(2)
-  process.stdout.write(build(dir ? join(process.cwd(), dir) : undefined, header))
+  process.stdout.write(build(dir ? resolve(dir) : undefined, header))
 }

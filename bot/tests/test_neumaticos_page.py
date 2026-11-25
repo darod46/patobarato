@@ -69,3 +69,25 @@ async def test_fetch_price_without_price_sets_last_failure():
     s = store(http)
     assert await s.fetch_price("x", URL) is None
     assert s.last_failure == "no price in page"
+
+
+@pytest.mark.asyncio
+async def test_fetch_price_http_error_sets_status_failure():
+    http = httpx.AsyncClient(transport=httpx.MockTransport(lambda r: httpx.Response(403, text="blocked")))
+    s = store(http)
+    assert await s.fetch_price("x", URL) is None
+    assert s.last_failure == "HTTP 403"
+
+
+@pytest.mark.asyncio
+async def test_fetch_price_network_error_sets_exception_failure():
+    def boom(request):
+        raise httpx.ConnectError("down")
+
+    s = store(httpx.AsyncClient(transport=httpx.MockTransport(boom)))
+    assert await s.fetch_price("x", URL) is None
+    assert s.last_failure == "ConnectError"
+
+
+def test_product_id_accepts_brand_with_underscore():
+    assert store().product_id("https://www.neumaticos.es/neumaticos/bf_goodrich-205-55-16-g_grip/1+2") == "bf_goodrich-205-55-16-g_grip"
