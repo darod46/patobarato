@@ -8,7 +8,7 @@ export const metadata = legalMetadata('Política de cookies', '/cookies', 'Las c
 
 export default function CookiesPage() {
   return (
-    <LegalLayout title="Política de cookies" updated="6 de noviembre de 2026" year={YEAR}>
+    <LegalLayout title="Política de cookies" updated="25 de noviembre de 2026" year={YEAR}>
       <h2>Qué cookies usamos</h2>
       <p>
         patobarato.com solo utiliza cookies y almacenamiento técnicos, imprescindibles para que el sitio
@@ -20,6 +20,10 @@ export default function CookiesPage() {
         Al pulsar un enlace hacia una tienda o hacia Telegram, esos sitios pueden instalar sus propias cookies
         bajo sus condiciones. Los enlaces de afiliado permiten a la tienda atribuir la visita a PatoBarato;
         consulta la <a href="/afiliados">política de afiliación</a>.
+      </p>
+      <p>
+        En las guías de neumáticos incrustamos el buscador de Neumaticos.es a través de Awin. Ese contenido lo
+        sirve Awin y puede usar cookies propias cuando interactúas con él; si no lo usas, no se activa ninguna.
       </p>
       <h2>Cómo gestionarlas</h2>
       <p>

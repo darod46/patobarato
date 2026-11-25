@@ -171,6 +171,7 @@ const guide: Guide = {
     { id: 1, position: 1, name: 'Ninja', award: null, summaryMd: '', pros: [], cons: [], specs: [], imageUrl: null, stores: [] },
     { id: 2, position: 2, name: 'Cosori', award: null, summaryMd: '', pros: [], cons: [], specs: [], imageUrl: null, stores: [] },
   ],
+  widget: null,
 }
 
 describe('guideMetadata', () => {

@@ -8,7 +8,7 @@ export const metadata = legalMetadata('Política de afiliación', '/afiliados', 
 
 export default function AfiliadosPage() {
   return (
-    <LegalLayout title="Política de afiliación" updated="6 de noviembre de 2026" year={YEAR}>
+    <LegalLayout title="Política de afiliación" updated="25 de noviembre de 2026" year={YEAR}>
       <h2>Cómo nos financiamos</h2>
       <p>
         PatoBarato es gratuito y no tiene publicidad. Se financia con enlaces de afiliado: cuando compras
@@ -24,7 +24,8 @@ export default function AfiliadosPage() {
       <h2>Otras tiendas</h2>
       <p>
         Cuando publicamos cupones o chollos de otras tiendas, sus enlaces también pueden ser de afiliado.
-        Lo indicamos en el pie de cada página en la que aparezcan.
+        Lo indicamos en el pie de cada página en la que aparezcan. En las guías de neumáticos los enlaces a
+        Neumaticos.es son de afiliado a través de Awin, igual que el buscador que incrustamos.
       </p>
       <h2>Independencia</h2>
       <p>

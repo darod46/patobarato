@@ -27,6 +27,7 @@ const guide = (over: Partial<Guide> = {}): Guide => ({
   howToChooseMd: 'Elige.',
   faq: [{ q: '¿Cuánto?', aMd: 'Poco.' }],
   items: [item(1, { stores: [offer({ checkedAt: recent() })] })],
+  widget: null,
   ...over,
 })
 

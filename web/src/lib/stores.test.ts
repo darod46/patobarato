@@ -12,6 +12,10 @@ describe('stores', () => {
     expect(storeFromSlug('')).toBeNull()
     expect(storeFromSlug('constructor')).toBeNull()
   })
+  it('knows Neumaticos.es', () => {
+    expect(storeInfo('neumaticos')).toEqual({ slug: 'neumaticos', name: 'Neumaticos.es', short: 'Neumaticos.es', cta: 'Ver en Neumaticos.es' })
+    expect(storeFromSlug('neumaticos')).toBe('neumaticos')
+  })
   it('unknown stores fall back to their id', () => {
     expect(storeInfo('pccomp')).toEqual({ slug: 'pccomp', name: 'pccomp', short: 'pccomp', cta: 'Ver oferta' })
   })

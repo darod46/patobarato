@@ -8,6 +8,7 @@ export const STORES: Record<string, StoreInfo> = {
   mediamarkt: { slug: 'mediamarkt', name: 'MediaMarkt', short: 'MediaMarkt', cta: 'Ir a MediaMarkt' },
   elcorteingles: { slug: 'elcorteingles', name: 'El Corte Inglés', short: 'El Corte Inglés', cta: 'Ir a El Corte Inglés' },
   decathlon: { slug: 'decathlon', name: 'Decathlon', short: 'Decathlon', cta: 'Ir a Decathlon' },
+  neumaticos: { slug: 'neumaticos', name: 'Neumaticos.es', short: 'Neumaticos.es', cta: 'Ver en Neumaticos.es' },
 }
 
 export function storeInfo(store: string): StoreInfo {

@@ -18,6 +18,7 @@ type GuideRow = {
   faq: unknown
   items: Num
   prices_checked_at: string | null
+  widget?: string | null
 }
 
 type GuideItemRow = {
@@ -174,6 +175,7 @@ export async function fetchGuide(client: SupabaseClient, slug: string): Promise<
     howToChooseMd: row.how_to_choose_md,
     faq: jsonList<{ q: string; a_md: string }>(row.faq).map((f) => ({ q: f.q, aMd: f.a_md })),
     items: groupItems((itemsRes.data ?? []) as GuideItemRow[]),
+    widget: row.widget === 'neumaticos' ? 'neumaticos' : null,
   }
 }
 

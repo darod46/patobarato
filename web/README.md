@@ -181,6 +181,10 @@ El ejemplo completo es `supabase/migrations/20261108000001_guides_seed.sql` (la 
 
 Los precios los actualiza el bot con la fuente `guide_prices` (cada 6 h, `every_minutes = 360`), que escribe en `product_prices` para los productos de las guías. Una guía sin precios frescos (menos de 48 h) se sirve igualmente, pero con `noindex` y con la fecha de comprobación visible; así no se indexa una guía con precios antiguos.
 
+### Buscador de neumáticos (`widget`)
+
+`web_guides` expone `widget` (`guides.widget`, nulo = sin widget). Con `widget = 'neumaticos'` la guía (`Guide.widget`) muestra dos veces el componente `TyreFinder` (`src/components/guides/TyreFinder.tsx`), el buscador de Neumaticos.es de Awin en su versión `<iframe>` (nunca el `<script>`, que usa `document.write`): el primero justo después de «Nuestra elección rápida» o, en una guía sin productos, después de la introducción; el segundo justo antes de las preguntas frecuentes (sin FAQ, al final). Desde `md` se usa el iframe de 728 × 90 (`AWIN_FINDER_WIDE`); por debajo, el de 468 × 60 (`AWIN_FINDER_NARROW`), escalado con CSS al ancho de la tarjeta cuando no cabe. Los iframes van con `sandbox`, `loading="lazy"` y `referrerPolicy="strict-origin-when-cross-origin"`. El ID de editor `r=3145511` de las URLs es público (va en todos los enlaces de afiliado); no es una credencial. `/cookies` y `/afiliados` mencionan el buscador. Una guía con `widget` puede no tener productos: entonces solo muestra introducción, buscador, «Cómo elegir», buscador y FAQ.
+
 ## Calendario de eventos
 
 Los eventos salen de la vista `web_events` (ver «Eventos»). La barra de anuncio muestra el siguiente; el bloque de eventos, los cuatro siguientes.

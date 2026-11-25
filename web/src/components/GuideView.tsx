@@ -12,6 +12,7 @@ import { GuideFaq } from './guides/GuideFaq'
 import { GuideItemCard } from './guides/GuideItemCard'
 import { GuideToc } from './guides/GuideToc'
 import { QuickPicks } from './guides/QuickPicks'
+import { TyreFinder } from './guides/TyreFinder'
 
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
@@ -28,6 +29,7 @@ export function GuideView({ guide, now, stores }: Props) {
   const hasFaq = guide.faq.length > 0
   const cover = guideCover(guide.slug, guide.title)
   const hasItems = guide.items.length > 0
+  const finder = guide.widget === 'neumaticos'
   return (
     <div className="min-h-screen bg-white font-sans text-ink">
       <Header />
@@ -93,8 +95,10 @@ export function GuideView({ guide, now, stores }: Props) {
           </aside>
           <div className="flex min-w-0 flex-col gap-10">
             {hasItems && <QuickPicks items={guide.items} now={now} />}
+            {finder && hasItems && <TyreFinder />}
             <AffiliateNotice />
             <Markdown source={guide.introMd} />
+            {finder && !hasItems && <TyreFinder />}
             {hasItems && (
             <section aria-labelledby="recomendaciones-titulo" className="flex flex-col gap-6">
               <h2 id="recomendaciones-titulo" className="font-display text-2xl font-bold tracking-[-0.02em]">
@@ -114,6 +118,7 @@ export function GuideView({ guide, now, stores }: Props) {
                 <Markdown source={guide.howToChooseMd} className="mt-4" />
               </section>
             )}
+            {finder && <TyreFinder />}
             {hasFaq && <GuideFaq faq={guide.faq} />}
             <AffiliateNotice />
           </div>

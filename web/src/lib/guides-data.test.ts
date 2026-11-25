@@ -171,6 +171,19 @@ describe('fetchGuide', () => {
     expect(guide!.items[0].specs).toEqual([{ label: 'Potencia', value: '100 W' }])
     expect(guide!.items[1].specs).toEqual([{ label: 'Peso', value: '2 kg' }])
   })
+  it('maps widget: neumaticos stays, anything else becomes null', async () => {
+    const read = async (widget: unknown) => {
+      const m = multiClient({
+        web_guides: { data: [{ ...summaryRow, widget }], error: null },
+        web_guide_items: { data: [], error: null },
+      })
+      return (await fetchGuide(m.client, 's'))!.widget
+    }
+    expect(await read('neumaticos')).toBe('neumaticos')
+    expect(await read(null)).toBeNull()
+    expect(await read(undefined)).toBeNull()
+    expect(await read('otro')).toBeNull()
+  })
   it('parses faq given as a JSON string', async () => {
     const m = multiClient({
       web_guides: { data: [{ ...summaryRow, faq: '[{"q":"x","a_md":"y"}]' }], error: null },

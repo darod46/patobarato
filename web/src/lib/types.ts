@@ -102,6 +102,8 @@ export type Guide = Omit<GuideSummary, 'items'> & {
   howToChooseMd: string
   faq: { q: string; aMd: string }[]
   items: GuideItem[]
+  /** Embedded tool shown in the guide: the Neumaticos.es tyre finder, or none. */
+  widget: 'neumaticos' | null
 }
 
 /** A shopping event from `web_events`. Dates are inclusive calendar days (YYYY-MM-DD) in Europe/Madrid. */
