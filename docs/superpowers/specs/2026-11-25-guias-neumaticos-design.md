@@ -151,3 +151,18 @@ contenido perenne).
 - Nombres de clases Tailwind del `TyreFinder`, siguiendo `AffiliateNotice`.
 - Cómo falsear el iframe en los tests (basta comprobar `src`, `title` y tamaños).
 - Si el escalado móvil va con CSS puro o con un `ResizeObserver`; lo más simple que no deje hueco.
+
+## Adenda (25 nov, tras probar el widget)
+
+Los dos códigos de Awin no son banners de 728×90 / 468×60: `cawshow.php?...&iframe=1` devuelve una
+página que incrusta el **configurador responsive de neumaticos.es** (`/affiliates/configurator`)
+en un iframe de 580 px de alto y 100 % de ancho (medido: 535 px de alto a 375 px de ancho). Por
+tanto `TyreFinder` lleva **un solo iframe**, `src = AWIN_FINDER =
+'https://www.awin1.com/cawshow.php?v=11552&s=3743674&q=397643&r=3145511&iframe=1'`, `width="100%"`,
+`height="600"`, sin escalado ni variante móvil.
+
+Al cargarse, la página de Awin establece cookies de seguimiento de afiliado (`aw11552`, `AWSESS`)
+sin que el lector interactúe. El texto de `/cookies` lo dice así: «En las guías de neumáticos
+incrustamos el buscador de Neumaticos.es a través de Awin. Al cargarse, Awin establece cookies de
+seguimiento de afiliado en su propio dominio, aunque no uses el buscador.» El iframe se carga con
+`loading="lazy"`, así que solo ocurre si el lector llega hasta él.
