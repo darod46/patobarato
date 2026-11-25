@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { describe, expect, it } from 'vitest'
 import { fakeClient, type FakeResult } from '../test-utils/fakeClient'
-import { fetchGuide, fetchGuides, fetchGuidesByProduct } from './guides-data'
+import { fetchGuide, fetchGuides, fetchGuidesByProduct, fetchLatestGuide } from './guides-data'
 
 /** Routes `from(table)` to a per-table fake so one client can answer several queries. */
 function multiClient(results: Record<string, FakeResult>) {
@@ -86,6 +86,22 @@ const itemRows = [
     specs: '[{"label":"Peso","value":"2 kg"}]',
   },
 ]
+
+describe('fetchLatestGuide', () => {
+  it('reads the newest published guide, or null without guides', async () => {
+    const { client, calls } = fakeClient({ data: [summaryRow], error: null })
+    const guide = await fetchLatestGuide(client)
+    expect(calls).toEqual([
+      ['from', ['web_guides']],
+      ['select', ['*']],
+      ['order', ['published_at', { ascending: false }]],
+      ['limit', [1]],
+    ])
+    expect(guide?.slug).toBe('mejores-aspiradoras')
+    const empty = fakeClient({ data: [], error: null })
+    expect(await fetchLatestGuide(empty.client)).toBeNull()
+  })
+})
 
 describe('fetchGuides', () => {
   it('reads web_guides newest first and maps rows', async () => {

@@ -4,6 +4,7 @@ import { fetchCoupons } from '../lib/coupons'
 import { fetchDeals, fetchLatestDeal } from '../lib/deals'
 import { activeEvent, ANNOUNCE_WINDOW_DAYS, nextEvent, upcomingEvents } from '../lib/events'
 import { fetchEvents } from '../lib/events-data'
+import { fetchLatestGuide } from '../lib/guides-data'
 import { heroHighlights } from '../lib/highlights'
 import { fetchStores } from '../lib/stores-data'
 import { homeMetadata, jsonLdScript, siteJsonLd } from '../lib/seo'
@@ -27,7 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function HomePage() {
   const now = new Date()
   // Each part degrades on its own: without deals the carousel shows an honest fallback.
-  const [page, coupons, stores, latest, events, live] = await Promise.all([
+  const [page, coupons, stores, latest, events, live, latestGuide] = await Promise.all([
     optional('home', () => fetchDeals(getSupabase(), { page: 0 })),
     loadCoupons(),
     loadStores(),
@@ -37,6 +38,7 @@ export default async function HomePage() {
       stats: await fetchChannelStats(getSupabase()),
       posts: await fetchChannelRecent(getSupabase(), 3),
     })),
+    optional('home-guide', () => fetchLatestGuide(getSupabase())),
   ])
   const couponList = coupons ?? []
   return (
@@ -53,6 +55,7 @@ export default async function HomePage() {
         activeEvent={events ? activeEvent(now, events) : null}
         latestPublishedAt={latest?.publishedAt ?? null}
         live={live ?? null}
+        latestGuide={latestGuide ?? null}
       />
     </>
   )

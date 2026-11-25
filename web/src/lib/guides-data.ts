@@ -139,6 +139,18 @@ export async function fetchGuides(client: SupabaseClient): Promise<GuideSummary[
   return ((data ?? []) as GuideRow[]).map(toSummary)
 }
 
+/** The newest published guide, or null when there is none. */
+export async function fetchLatestGuide(client: SupabaseClient): Promise<GuideSummary | null> {
+  const { data, error } = await client
+    .from('web_guides')
+    .select('*')
+    .order('published_at', { ascending: false })
+    .limit(1)
+  if (error) throw new Error(error.message)
+  const row = ((data ?? []) as GuideRow[])[0]
+  return row ? toSummary(row) : null
+}
+
 /** One guide with its items grouped from `web_guide_items`; null when the slug does not exist. */
 export async function fetchGuide(client: SupabaseClient, slug: string): Promise<Guide | null> {
   const [guideRes, itemsRes] = await Promise.all([

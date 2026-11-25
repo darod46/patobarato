@@ -6,7 +6,7 @@ import { storeNames } from '../lib/stores'
 import type { StoreStats } from '../lib/stores-data'
 import { getSupabase } from '../lib/supabase'
 import { formatMembers, type ChannelLive } from '../lib/telegram'
-import type { Coupon, Deal, SiteEvent } from '../lib/types'
+import type { Coupon, Deal, GuideSummary, SiteEvent } from '../lib/types'
 import { AboutBlock } from './AboutBlock'
 import { AnnouncementBar } from './AnnouncementBar'
 import { CouponsBlock } from './CouponsBlock'
@@ -17,6 +17,7 @@ import { Header } from './Header'
 import { StoresBlock } from './StoresBlock'
 import { Hero, type HeroHighlights } from './Hero'
 import { HowItWorks } from './HowItWorks'
+import { LatestGuideBanner } from './LatestGuideBanner'
 import { TelegramBlock } from './TelegramBlock'
 
 type Props = {
@@ -41,6 +42,8 @@ type Props = {
   latestPublishedAt?: string | null
   /** Live Telegram channel activity (figures and latest posts); nothing extra renders when null. */
   live?: ChannelLive | null
+  /** Newest published guide for the home banner; null hides it. */
+  latestGuide?: GuideSummary | null
 }
 
 // Bound lazily so the Supabase client (and its env vars) is only needed when actually fetching.
@@ -60,6 +63,7 @@ export function HomeClient({
   activeEvent = null,
   latestPublishedAt = null,
   live = null,
+  latestGuide = null,
 }: Props) {
   const clock = useClock(now)
   const renderTime = new Date(now)
@@ -86,6 +90,7 @@ export function HomeClient({
           <p className="mt-1.5 mb-5 text-muted">Se actualiza automáticamente</p>
           <DealCarousel deals={deals} now={clock} />
         </section>
+        {latestGuide && <LatestGuideBanner guide={latestGuide} now={renderTime} />}
         <CouponsBlock coupons={coupons} />
         <HowItWorks />
         {upcoming.length > 0 && <EventsBlock next={upcoming[0]} upcoming={upcoming} now={renderTime} />}

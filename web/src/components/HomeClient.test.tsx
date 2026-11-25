@@ -162,3 +162,25 @@ it('passes the event in progress to the hero', () => {
   render(<HomeClient {...props} now="2026-11-28T10:00:00Z" event={bf} upcoming={[bf]} activeEvent={bf} />)
   expect(screen.getByRole('link', { name: 'Chollos del Black Friday' })).toHaveAttribute('href', '/eventos/black-friday')
 })
+
+it('shows the latest guide banner only when a guide is given', () => {
+  const guide = {
+    slug: 'freidoras-de-aire-menos-100',
+    title: 'Freidoras de aire por menos de 100 €',
+    subtitle: null,
+    category: 'Hogar',
+    author: 'el Pato',
+    readingMinutes: 5,
+    publishedAt: '2026-11-23T06:00:00Z',
+    updatedAt: '2026-11-23T06:00:00Z',
+    items: 5,
+    pricesCheckedAt: null,
+  }
+  render(<HomeClient {...props} latestGuide={guide} />)
+  expect(screen.getByRole('link', { name: /Leer la guía/ })).toHaveAttribute('href', '/guias/freidoras-de-aire-menos-100')
+})
+
+it('renders no guide banner without a latest guide', () => {
+  render(<HomeClient {...props} />)
+  expect(screen.queryByRole('link', { name: /Leer la guía/ })).toBeNull()
+})
