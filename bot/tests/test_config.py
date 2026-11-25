@@ -100,6 +100,6 @@ def test_site_url_default_and_env(monkeypatch):
     for key, value in REQUIRED_ENV.items():
         monkeypatch.setenv(key, value)
     monkeypatch.delenv("SITE_URL", raising=False)
-    assert Settings(_env_file=None).site_url == "https://patobarato.com"
+    assert Settings(_env_file=None).site_url == "https://www.patobarato.com"
     monkeypatch.setenv("SITE_URL", "https://staging.patobarato.com")
     assert Settings(_env_file=None).site_url == "https://staging.patobarato.com"

@@ -107,10 +107,10 @@ que solo haya una guía fijada).
   nueva; como mucho una por pasada (así la primera ejecución no inunda el canal: las guías ya
   publicadas antes de esta migración se marcan como anunciadas en la propia migración, salvo la
   más reciente, que sí se anuncia).
-- Mensaje: foto = `https://patobarato.com/guias/<slug>.jpeg` descargada con `download_photo` (si
+- Mensaje: foto = `https://www.patobarato.com/guias/<slug>.jpeg` descargada con `download_photo` (si
   falla, se envía sin foto); pie en HTML: `📘 <b>Nueva guía: {title}</b>\n\n{subtitle}\n\n👉
-  https://patobarato.com/guias/{slug}` (sin subtítulo, se omite esa línea). La URL se construye
-  desde `Settings.site_url` (nuevo, por defecto `https://patobarato.com`).
+  https://www.patobarato.com/guias/{slug}` (sin subtítulo, se omite esa línea). La URL se construye
+  desde `Settings.site_url` (nuevo, por defecto `https://www.patobarato.com`).
 - Tras enviar: `pin_message(channel, message_id, notify=False)`; si otra guía tenía
   `announce_message_id`, `unpin_message` de ese id antes (fallo al desfijar → aviso en el registro
   y se sigue). Guardar `announced_at` y `announce_message_id`. Si falla el envío, no se marca y se
