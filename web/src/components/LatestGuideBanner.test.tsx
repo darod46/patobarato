@@ -26,6 +26,12 @@ describe('LatestGuideBanner', () => {
     expect(screen.getByText(/hace 2 días/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Leer la guía/ })).toHaveAttribute('href', '/guias/freidoras-de-aire-menos-100')
     expect(document.querySelector('img')).toHaveAttribute('src', '/guias/freidoras-de-aire-menos-100.jpeg')
+    expect(screen.getByText('Nueva')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Todas las guías' })).toHaveAttribute('href', '/guias')
+  })
+  it('drops the «Nueva» pill after a week', () => {
+    render(<LatestGuideBanner guide={guide} now={new Date('2026-12-05T10:00:00Z')} />)
+    expect(screen.queryByText('Nueva')).toBeNull()
   })
   it('renders without an image when the guide has no cover', () => {
     render(<LatestGuideBanner guide={{ ...guide, slug: 'sin-portada', subtitle: null }} now={NOW} />)
