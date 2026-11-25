@@ -13,19 +13,26 @@ describe('Header', () => {
     expect(links.map((l) => l.getAttribute('href'))).toEqual(NAV_LINKS.map((l) => l.href))
     expect(links[0]).toHaveAttribute('href', '/chollos')
     expect(screen.getByRole('link', { name: 'Unirme al canal' })).toHaveAttribute('href', 'https://t.me/patobarato')
-    expect(screen.getByRole('link', { name: /Buscar chollos/ })).toHaveAttribute('href', '/buscar')
+    expect(screen.getByRole('search', { name: 'Buscar chollos' })).toHaveAttribute('action', '/buscar')
   })
 
-  it('is translucent with a backdrop blur so the page shows through', () => {
+  it('is solid white so it reads the same over the dark hero and over light pages', () => {
     render(<Header />)
-    expect(screen.getByRole('banner')).toHaveClass('bg-white/80', 'backdrop-blur')
+    expect(screen.getByRole('banner')).toHaveClass('bg-white')
+    expect(screen.getByRole('banner')).not.toHaveClass('backdrop-blur')
+  })
+
+  it('keeps the channel button on one line', () => {
+    render(<Header />)
+    expect(screen.getByRole('link', { name: 'Unirme al canal' })).toHaveClass('whitespace-nowrap', 'shrink-0')
   })
 
   it('shows the search trigger by default and hides it with searchTrigger={false}', () => {
     const { rerender } = render(<Header />)
     expect(screen.getByRole('link', { name: /Buscar chollos/ })).toHaveAttribute('href', '/buscar')
-    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument()
+    expect(screen.getByRole('searchbox', { name: 'Buscar chollos' })).toHaveAttribute('name', 'q')
     rerender(<Header searchTrigger={false} />)
     expect(screen.queryByRole('link', { name: /Buscar chollos/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument()
   })
 })

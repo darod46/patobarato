@@ -59,9 +59,10 @@ it('loads more within the tag', async () => {
   expect(fetchDeals).toHaveBeenCalledWith({ q: undefined, tag: 'niños', sort: 'recientes', page: 1 })
 })
 
-it('has no search field; the header links to /buscar', () => {
+it('has no search field of its own; the only one is the header search to /buscar', () => {
   setup()
-  expect(screen.queryByRole('searchbox')).toBeNull()
+  const banner = screen.getByRole('banner')
+  expect(screen.getAllByRole('searchbox').every((box) => banner.contains(box))).toBe(true)
   expect(screen.getByRole('link', { name: /Buscar chollos/ })).toHaveAttribute('href', '/buscar')
 })
 

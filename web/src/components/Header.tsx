@@ -15,27 +15,29 @@ type Props = {
 /** Fixed header: logo, main navigation (collapsed into a menu on small screens), the search entry and the channel button. */
 export function Header({ searchTrigger = true }: Props) {
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-white/80 backdrop-blur">
-      <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-x-6 px-4 py-2 md:px-8 md:py-3">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-white shadow-[0_1px_8px_rgba(20,22,26,0.06)]">
+      <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-x-5 px-4 py-2 md:px-8 md:py-3">
         <a href="/" className={`shrink-0 rounded-md ${FOCUS}`}>
           <img src="/logo.svg" alt="PatoBarato" className="h-8 w-auto md:h-11" />
         </a>
-        <nav aria-label="Principal" className="hidden items-center gap-6 text-[15px] font-medium lg:flex">
+        <nav aria-label="Principal" className="hidden shrink-0 items-center gap-1 text-[15px] font-medium lg:flex">
           {NAV_LINKS.map((link) => (
-            <a key={link.href} href={link.href} className={`rounded-md text-ink hover:text-primary ${FOCUS}`}>
+            <a key={link.href} href={link.href} className={`rounded-full px-3 py-2 text-ink transition-colors hover:bg-surface hover:text-primary ${FOCUS}`}>
               {link.label}
             </a>
           ))}
         </nav>
-        <div className="flex min-w-0 items-center gap-1 sm:gap-2">
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-1 sm:gap-3">
           {searchTrigger && <SearchTrigger />}
           <TelegramCta
             placement="header"
             aria-label="Unirme al canal"
-            className={`inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-3 text-sm font-semibold text-white hover:bg-primary-hover sm:px-4 ${FOCUS}`}
+            className={`group inline-flex h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full bg-primary p-1 text-sm font-semibold text-white shadow-sm shadow-primary/30 transition-colors hover:bg-primary-hover sm:pr-4 lg:pr-1 xl:pr-4 ${FOCUS}`}
           >
-            <Send size={18} aria-hidden="true" />
-            <span className="hidden sm:inline">Unirme al canal</span>
+            <span className="flex size-9 items-center justify-center rounded-full bg-white/15 transition-transform group-hover:-translate-y-px group-hover:translate-x-px">
+              <Send size={17} aria-hidden="true" className="-translate-x-px translate-y-px" />
+            </span>
+            <span className="hidden sm:inline lg:hidden xl:inline">Unirme al canal</span>
           </TelegramCta>
           <MobileNav links={NAV_LINKS} />
         </div>
