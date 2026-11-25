@@ -1,0 +1,151 @@
+{
+  "slug": "neumaticos-furgoneta-215-65-r16c",
+  "title": "Neumáticos para furgoneta (215/65 R16C)",
+  "subtitle": "Cinco neumáticos de verano para furgoneta en 215/65 R16C de Michelin, Goodyear, Bridgestone, Continental y Nexen, comparados por etiqueta UE, con lo que significan la C y el índice de carga.",
+  "category": "Motor",
+  "reading_minutes": 7,
+  "intro_md": "Una furgoneta no gasta los neumáticos como un turismo. Va cargada buena parte del tiempo, arranca y frena cientos de veces en un día de reparto y, si es de trabajo, acumula kilómetros a un ritmo que un coche particular tarda años en alcanzar. Por eso necesita neumáticos específicos, con la letra C en la medida, y por eso merece la pena elegirlos con algo más de calma.\n\nEn esta guía comparamos cinco modelos de verano de Michelin, Goodyear, Bridgestone, Continental y Nexen en la medida 215/65 R16C, muy habitual en furgonetas medianas. Nos basamos en lo que se puede comprobar: la etiqueta UE de cada uno y el posicionamiento de la marca. Los precios que verás son para esa medida de referencia; si tu furgoneta lleva otra, el buscador de la página te enseña el precio en la tuya.\n\nSi quieres repasar antes lo básico de medidas y etiqueta, tienes [cómo elegir neumáticos](/guias/como-elegir-neumaticos).",
+  "how_to_choose_md": "## Qué significa la C\n\nLa C que va detrás del diámetro de la llanta, como en 215/65 R16C, indica que es un neumático para vehículo comercial ligero. Tiene una carcasa reforzada para soportar más peso y trabajar con presiones más altas que un neumático de turismo de la misma medida. Si tu furgoneta la lleva homologada, no la sustituyas por un neumático sin C aunque las cifras coincidan: no está pensado para esa carga y puede darte problemas en la ITV.\n\n## El índice de carga doble\n\nEn los neumáticos C es habitual ver dos índices de carga separados por una barra, por ejemplo 109/107. El primero es la carga máxima por neumático en montaje simple y el segundo, en montaje gemelo, con dos ruedas juntas en cada lado del eje trasero. El índice de carga y el de velocidad que montes tienen que ser iguales o superiores a los que figuran en la ficha técnica de tu furgoneta. Compruébalo antes de comprar, porque en una misma medida conviven varias versiones.\n\n## Durabilidad: lo que depende de ti\n\nLa duración real depende sobre todo del uso: carga habitual, tipo de recorrido y presión. Revisa la presión con frecuencia y ajústala a la tabla del fabricante para vehículo cargado cuando toque; ir con poca presión y mucho peso desgasta los hombros del neumático y sube el consumo. Rotar las ruedas cada cierto número de kilómetros ayuda a que el desgaste sea parejo.\n\n## Qué mirar en la etiqueta\n\nEn esta medida, los cinco modelos tienen una A en agarre en mojado en su variante principal, así que la diferencia está en la eficiencia y el ruido. Para una furgoneta de trabajo que rueda a diario, una clase mejor en eficiencia se nota en el gasto de combustible a lo largo de la vida del neumático. Si buscas ofertas puntuales, echa un ojo a [los chollos](/chollos).",
+  "faq": [
+    {
+      "q": "¿Puedo montar neumáticos de turismo en mi furgoneta?",
+      "a_md": "Si la ficha técnica indica una medida con C, no. Los neumáticos C tienen una estructura reforzada y un índice de carga adaptado al peso de la furgoneta. Montar uno de turismo reduce la capacidad de carga, puede afectar a la seguridad con el vehículo cargado y es motivo de problemas en la ITV."
+    },
+    {
+      "q": "¿Qué presión debo llevar?",
+      "a_md": "La que indique el fabricante de la furgoneta, que suele estar en una pegatina en el marco de la puerta, en la tapa del depósito o en el manual. Normalmente hay valores distintos para vacía y cargada, y en los neumáticos C las presiones son más altas que en un turismo. Compruébala en frío."
+    },
+    {
+      "q": "¿Necesito neumáticos de invierno o all-season para la furgoneta?",
+      "a_md": "Si trabajas en zona de montaña o en el norte y circulas con frío y nieve con frecuencia, sí merece la pena. Existen versiones C de invierno y de cuatro estaciones con marcaje 3PMSF. Para el resto, unos de verano como los de esta guía y unas cadenas en la furgoneta suelen bastar."
+    }
+  ],
+  "widget": "neumaticos",
+  "items": [
+    {
+      "position": 1,
+      "name": "Michelin Agilis 3",
+      "award": "Mejor en general",
+      "summary_md": "El neumático de furgoneta de Michelin, de gama premium y pensado para profesionales que hacen muchos kilómetros. Su etiqueta UE marca B en eficiencia energética y A en agarre en mojado, una combinación sólida para una furgoneta de trabajo. Es la opción a considerar si la furgoneta es tu herramienta diaria y prefieres pagar más de entrada a cambio de una marca de referencia. La pega: es el más caro de la guía y, con 72 dB, el más ruidoso según la etiqueta, algo que se nota en trayectos largos por autovía.",
+      "pros": [
+        "Clase A en agarre en mojado",
+        "Clase B en eficiencia energética",
+        "Marca premium con posicionamiento profesional"
+      ],
+      "cons": [
+        "72 dB, el más ruidoso de la guía según la etiqueta",
+        "El más caro de la lista"
+      ],
+      "specs": [
+        {"label": "Medida de referencia", "value": "215/65 R16C"},
+        {"label": "Eficiencia energética (etiqueta UE)", "value": "B"},
+        {"label": "Agarre en mojado (etiqueta UE)", "value": "A"},
+        {"label": "Ruido exterior", "value": "72 dB"},
+        {"label": "Temporada", "value": "Verano"}
+      ],
+      "stores": [
+        {"store": "neumaticos", "external_id": "michelin-215-65-16-agilis_3", "url": "https://www.neumaticos.es/neumaticos/michelin-215-65-16-agilis_3/108+200+201+202+205", "note": "Precio para 215/65 R16C"}
+      ]
+    },
+    {
+      "position": 2,
+      "name": "Goodyear EfficientGrip Cargo 2",
+      "award": "Mejor relación calidad-precio",
+      "summary_md": "En su variante principal es el único de la guía con doble A en la etiqueta UE: A en eficiencia energética y A en agarre en mojado, con 71 dB de ruido exterior. Y lo consigue por debajo del precio de Michelin, Continental y Bridgestone. Para una furgoneta que hace muchos kilómetros, esa clase A en eficiencia es un argumento de peso. La pega: hay variantes en esta medida con una etiqueta bastante peor, C en eficiencia y B en mojado, así que comprueba la etiqueta exacta de la versión que vas a comprar.",
+      "pros": [
+        "Clase A en eficiencia energética en la variante principal",
+        "Clase A en agarre en mojado",
+        "Marca premium por debajo del precio de sus rivales directos"
+      ],
+      "cons": [
+        "Algunas variantes bajan a C en eficiencia y B en mojado",
+        "71 dB de ruido exterior"
+      ],
+      "specs": [
+        {"label": "Medida de referencia", "value": "215/65 R16C"},
+        {"label": "Eficiencia energética (etiqueta UE)", "value": "A (C en algunas variantes)"},
+        {"label": "Agarre en mojado (etiqueta UE)", "value": "A (B en algunas variantes)"},
+        {"label": "Ruido exterior", "value": "71 dB (70 o 72 dB según variante)"},
+        {"label": "Temporada", "value": "Verano"}
+      ],
+      "stores": [
+        {"store": "neumaticos", "external_id": "goodyear-215-65-16-efficientgrip_cargo_2", "url": "https://www.neumaticos.es/neumaticos/goodyear-215-65-16-efficientgrip_cargo_2/108+200+201+202+205", "note": "Precio para 215/65 R16C"}
+      ]
+    },
+    {
+      "position": 3,
+      "name": "Bridgestone Duravis Van",
+      "award": "El más silencioso según la etiqueta",
+      "summary_md": "Con 69 dB de ruido exterior comparte el registro más bajo de la guía con el Nexen, pero con el respaldo de una marca premium. El resto de su etiqueta UE también es buena: B en eficiencia energética y A en agarre en mojado. Es una opción muy coherente si usas la furgoneta también para viajes largos o como vehículo familiar y valoras ir con menos ruido de rodadura. La pega: su precio está a la altura del Continental, y en eficiencia no llega a la clase A del Goodyear.",
+      "pros": [
+        "69 dB, empatado como el más silencioso de la guía",
+        "Clase A en agarre en mojado",
+        "Clase B en eficiencia energética"
+      ],
+      "cons": [
+        "Precio de gama premium",
+        "No llega a la clase A en eficiencia"
+      ],
+      "specs": [
+        {"label": "Medida de referencia", "value": "215/65 R16C"},
+        {"label": "Eficiencia energética (etiqueta UE)", "value": "B"},
+        {"label": "Agarre en mojado (etiqueta UE)", "value": "A"},
+        {"label": "Ruido exterior", "value": "69 dB"},
+        {"label": "Temporada", "value": "Verano"}
+      ],
+      "stores": [
+        {"store": "neumaticos", "external_id": "bridgestone-215-65-16-duravis_van", "url": "https://www.neumaticos.es/neumaticos/bridgestone-215-65-16-duravis_van/108+200+201+202+205", "note": "Precio para 215/65 R16C"}
+      ]
+    },
+    {
+      "position": 4,
+      "name": "Continental VanContact Ultra",
+      "award": "Alternativa premium",
+      "summary_md": "El modelo de furgoneta de Continental tiene una etiqueta UE muy equilibrada: B en eficiencia energética, A en agarre en mojado y 71 dB de ruido exterior. Se mueve en un precio parecido al del Bridgestone, por lo que la elección entre ambos suele decidirla la oferta del momento o la preferencia de marca. Es una opción sensata para quien quiere una marca de primera línea sin irse al precio del Michelin. La pega: no destaca en ningún apartado de la etiqueta frente a sus rivales directos.",
+      "pros": [
+        "Clase A en agarre en mojado",
+        "Clase B en eficiencia energética",
+        "Marca premium por debajo del precio del Michelin"
+      ],
+      "cons": [
+        "Sin ventaja de etiqueta sobre sus rivales directos",
+        "71 dB de ruido exterior"
+      ],
+      "specs": [
+        {"label": "Medida de referencia", "value": "215/65 R16C"},
+        {"label": "Eficiencia energética (etiqueta UE)", "value": "B"},
+        {"label": "Agarre en mojado (etiqueta UE)", "value": "A"},
+        {"label": "Ruido exterior", "value": "71 dB"},
+        {"label": "Temporada", "value": "Verano"}
+      ],
+      "stores": [
+        {"store": "neumaticos", "external_id": "continental-215-65-16-vancontact_ultra", "url": "https://www.neumaticos.es/neumaticos/continental-215-65-16-vancontact_ultra/108+200+201+202+205", "note": "Precio para 215/65 R16C"}
+      ]
+    },
+    {
+      "position": 5,
+      "name": "Nexen Roadian CT8",
+      "award": "La opción económica",
+      "summary_md": "Nexen es una marca de gama económica y el Roadian CT8 es, con diferencia, el más asequible de la guía. Su etiqueta UE sorprende para lo que cuesta: A en agarre en mojado y 69 dB, empatado con el Bridgestone como el más silencioso. Donde cede es en eficiencia energética, con una C. Encaja en una furgoneta particular o de uso ocasional que no hace tantos kilómetros. La pega: esa clase C se traduce en algo más de consumo, y en un uso profesional intensivo puede compensar más un modelo con mejor eficiencia.",
+      "pros": [
+        "El más asequible de la lista",
+        "Clase A en agarre en mojado",
+        "69 dB, empatado como el más silencioso de la guía"
+      ],
+      "cons": [
+        "Clase C en eficiencia, la más baja entre las variantes principales",
+        "Marca de gama económica"
+      ],
+      "specs": [
+        {"label": "Medida de referencia", "value": "215/65 R16C"},
+        {"label": "Eficiencia energética (etiqueta UE)", "value": "C"},
+        {"label": "Agarre en mojado (etiqueta UE)", "value": "A"},
+        {"label": "Ruido exterior", "value": "69 dB"},
+        {"label": "Temporada", "value": "Verano"}
+      ],
+      "stores": [
+        {"store": "neumaticos", "external_id": "nexen-215-65-16-roadian_ct8", "url": "https://www.neumaticos.es/neumaticos/nexen-215-65-16-roadian_ct8/108+200+201+202+205", "note": "Precio para 215/65 R16C"}
+      ]
+    }
+  ]
+}

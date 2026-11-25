@@ -74,7 +74,7 @@ export function guideSql(entry, guide) {
 
 export function build(dir = DEFAULT_DIR, header = DEFAULT_HEADER) {
   const calendar = JSON.parse(readFileSync(join(dir, '_calendar.json'), 'utf8'))
-  const out = [header, '']
+  const out = [header.startsWith('--') ? header : `-- ${header}`, '']
   const files = new Set(readdirSync(dir).filter((f) => f.endsWith('.json') && !f.startsWith('_')))
   for (const entry of calendar) {
     const file = `${entry.slug}.json`

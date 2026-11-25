@@ -1,0 +1,251 @@
+{
+  "slug": "neumaticos-turismo-205-55-r16",
+  "title": "Neumáticos para turismo compacto (205/55 R16)",
+  "subtitle": "Cinco neumáticos de verano en la medida más habitual de los compactos, comparados por su etiqueta europea y su posicionamiento.",
+  "category": "Motor",
+  "reading_minutes": 7,
+  "intro_md": "La 205/55 R16 es una de las medidas más comunes en España: la llevan muchos compactos y berlinas pequeñas de los últimos años. Precisamente por eso hay muchísima oferta, y elegir entre tantos modelos con nombres parecidos no es fácil.\n\nPara esta guía hemos repasado la etiqueta europea de cinco neumáticos de verano de Michelin, Continental, Bridgestone, Goodyear y Hankook. Todos tienen una A en agarre en mojado, así que la diferencia está en el consumo, el ruido y el posicionamiento de cada marca. Cuatro son de marcas premium y el quinto es una alternativa más económica de una marca intermedia consolidada.\n\nLos precios que ves en la guía son para la medida de referencia, 205/55 R16. Si tu coche lleva otra, usa el buscador de esta página para ver el precio en tu medida. Y si no sabes leer la que llevas, empieza por [cómo elegir neumáticos](/guias/como-elegir-neumaticos).",
+  "how_to_choose_md": "## Comprueba primero tu medida\n\nAntes de comparar modelos, mira el flanco de tus neumáticos o la ficha técnica. Además de 205/55 R16, fíjate en el índice de carga y en el de velocidad: el neumático nuevo tiene que igualarlos o superarlos. El mismo modelo puede venderse con varios índices, y eso cambia la etiqueta y el precio.\n\n## Prioriza el agarre en mojado\n\nDe las tres clases de la etiqueta, la del agarre en mojado es la que más pesa en seguridad. En esta guía todos los modelos tienen una A, así que puedes elegir el resto con tranquilidad. Si comparas con otros neumáticos fuera de la lista, no bajes de una B en este apartado si conduces a menudo con lluvia.\n\n## Consumo y ruido: cuánto importan\n\nPasar de una C a una B en eficiencia energética se nota poco en un trayecto, pero suma a lo largo de la vida del neumático, sobre todo si haces muchos kilómetros. En ruido, los cinco modelos están entre 69 y 71 dB, una diferencia pequeña que se percibe más en autovía que en ciudad.\n\n## Premium, intermedio o económico\n\nLas marcas premium suelen mantener mejor sus prestaciones a medida que el neumático se gasta y cuidan aspectos que la etiqueta no mide, como la estabilidad en seco o la duración. Una marca intermedia o económica bien valorada puede ser una compra muy sensata si haces pocos kilómetros al año o el coche es sobre todo urbano.\n\n## Cuándo comprar\n\nCambia al menos los dos del mismo eje a la vez y compara siempre el precio con montaje incluido. Si no tienes prisa, los neumáticos suelen bajar en Black Friday y antes del verano: echa un ojo a [los chollos](/chollos).",
+  "faq": [
+    {
+      "q": "¿Puedo montar 205/55 R16 si mi coche lleva otra medida?",
+      "a_md": "Solo si esa medida aparece como homologada en la ficha técnica de tu coche. Montar una medida que no figura en ella puede darte problemas en la ITV y con el seguro, y además altera el cuentakilómetros y el comportamiento del coche."
+    },
+    {
+      "q": "¿Un mismo modelo puede tener etiquetas distintas?",
+      "a_md": "Sí. La etiqueta se asigna a cada referencia concreta, así que el mismo modelo puede tener clases distintas según la medida, el índice de carga o si es reforzado. Por eso en algunos modelos verás que la etiqueta varía según la variante; comprueba la de la referencia exacta que vas a comprar."
+    },
+    {
+      "q": "¿Me compensa un neumático premium si hago pocos kilómetros?",
+      "a_md": "Depende de cómo conduzcas. Si haces sobre todo ciudad y pocos kilómetros al año, un modelo económico de una marca conocida y con buena etiqueta en mojado suele ser suficiente. Si haces mucha autovía o conduces a menudo con lluvia, la diferencia de un premium se aprovecha más."
+    }
+  ],
+  "widget": "neumaticos",
+  "items": [
+    {
+      "position": 1,
+      "name": "Michelin Primacy 5",
+      "award": "Mejor en general",
+      "summary_md": "El Primacy 5 es la gama de confort y seguridad de Michelin para turismos, y en esta medida tiene una de las etiquetas más equilibradas de la guía: B en eficiencia energética, A en agarre en mojado y 70 dB de ruido exterior. Es una opción premium pensada para quien quiere un neumático que funcione bien en cualquier situación sin tener que darle muchas vueltas. La pega: está en la parte alta de precio de la lista y no es el más silencioso según la etiqueta.",
+      "pros": [
+        "A en agarre en mojado según la etiqueta UE",
+        "B en eficiencia energética, por encima de varios rivales",
+        "Gama premium orientada al confort y la seguridad"
+      ],
+      "cons": [
+        "De los más caros de la guía",
+        "70 dB, un decibelio por encima de los más silenciosos"
+      ],
+      "specs": [
+        {
+          "label": "Medida de referencia",
+          "value": "205/55 R16"
+        },
+        {
+          "label": "Eficiencia energética (etiqueta UE)",
+          "value": "B"
+        },
+        {
+          "label": "Agarre en mojado (etiqueta UE)",
+          "value": "A"
+        },
+        {
+          "label": "Ruido exterior",
+          "value": "70 dB"
+        },
+        {
+          "label": "Temporada",
+          "value": "Verano"
+        }
+      ],
+      "stores": [
+        {
+          "store": "neumaticos",
+          "external_id": "michelin-205-55-16-primacy_5",
+          "url": "https://www.neumaticos.es/neumaticos/michelin-205-55-16-primacy_5/108+200+201+202+205",
+          "note": "Precio para 205/55 R16"
+        }
+      ]
+    },
+    {
+      "position": 2,
+      "name": "Bridgestone Turanza 6",
+      "award": "Mejor relación calidad-precio",
+      "summary_md": "El Turanza 6 es el neumático de turismo de gama alta de Bridgestone, y en la 205/55 R16 tiene una etiqueta muy completa: B en eficiencia, A en mojado y 69 dB, que es el ruido más bajo de la lista, empatado con otros dos modelos. Lo interesante es que suele venderse por debajo de Michelin y Continental, así que te da una etiqueta de nivel premium sin pagar lo máximo. La pega: no tiene una A en eficiencia, y el ahorro frente a los otros premium varía según la tienda.",
+      "pros": [
+        "B/A con 69 dB, la mejor combinación de la guía junto al Goodyear",
+        "Suele costar menos que los otros premium",
+        "Gama alta de una marca premium"
+      ],
+      "cons": [
+        "Sin A en eficiencia energética",
+        "El ahorro frente a Michelin y Continental varía según la tienda"
+      ],
+      "specs": [
+        {
+          "label": "Medida de referencia",
+          "value": "205/55 R16"
+        },
+        {
+          "label": "Eficiencia energética (etiqueta UE)",
+          "value": "B"
+        },
+        {
+          "label": "Agarre en mojado (etiqueta UE)",
+          "value": "A"
+        },
+        {
+          "label": "Ruido exterior",
+          "value": "69 dB"
+        },
+        {
+          "label": "Temporada",
+          "value": "Verano"
+        }
+      ],
+      "stores": [
+        {
+          "store": "neumaticos",
+          "external_id": "bridgestone-205-55-16-turanza_6",
+          "url": "https://www.neumaticos.es/neumaticos/bridgestone-205-55-16-turanza_6/108+200+201+202+205",
+          "note": "Precio para 205/55 R16"
+        }
+      ]
+    },
+    {
+      "position": 3,
+      "name": "Goodyear EfficientGrip Performance 2",
+      "award": "Para hacer muchos kilómetros",
+      "summary_md": "Según Goodyear, la gama EfficientGrip se orienta a la eficiencia y a la duración, lo que encaja con quien hace muchos trayectos por autovía. En esta medida la referencia principal tiene B en eficiencia, A en mojado y 69 dB, y algunas variantes llegan a una A en eficiencia, aunque otras bajan a una C. La pega: tienes que mirar bien la etiqueta de la referencia exacta que compras, porque no todas son iguales.",
+      "pros": [
+        "A en agarre en mojado y 69 dB en todas las variantes",
+        "Algunas variantes llegan a una A en eficiencia",
+        "Gama enfocada a la eficiencia y la duración"
+      ],
+      "cons": [
+        "La clase de eficiencia varía entre A y C según la variante",
+        "No es el más barato de la guía"
+      ],
+      "specs": [
+        {
+          "label": "Medida de referencia",
+          "value": "205/55 R16"
+        },
+        {
+          "label": "Eficiencia energética (etiqueta UE)",
+          "value": "B (entre A y C según la variante)"
+        },
+        {
+          "label": "Agarre en mojado (etiqueta UE)",
+          "value": "A"
+        },
+        {
+          "label": "Ruido exterior",
+          "value": "69 dB"
+        },
+        {
+          "label": "Temporada",
+          "value": "Verano"
+        }
+      ],
+      "stores": [
+        {
+          "store": "neumaticos",
+          "external_id": "goodyear-205-55-16-efficientgrip_performance_2",
+          "url": "https://www.neumaticos.es/neumaticos/goodyear-205-55-16-efficientgrip_performance_2/108+200+201+202+205",
+          "note": "Precio para 205/55 R16"
+        }
+      ]
+    },
+    {
+      "position": 4,
+      "name": "Continental PremiumContact 7",
+      "award": "Para una conducción más dinámica",
+      "summary_md": "El PremiumContact 7 es el neumático premium de Continental para turismos y berlinas, con un enfoque más dinámico que el de otros modelos de confort de la lista. Su etiqueta en esta medida tiene una A en agarre en mojado, pero una C en eficiencia energética y 71 dB, la cifra de ruido más alta de la guía. Es una opción para quien da prioridad al comportamiento del coche y confía en la marca. La pega: sobre el papel consume y suena algo más que sus rivales, y su precio es de los más altos.",
+      "pros": [
+        "A en agarre en mojado según la etiqueta UE",
+        "Gama premium con enfoque dinámico",
+        "Marca de referencia en neumáticos de turismo"
+      ],
+      "cons": [
+        "C en eficiencia energética",
+        "71 dB, el más ruidoso de la guía según la etiqueta"
+      ],
+      "specs": [
+        {
+          "label": "Medida de referencia",
+          "value": "205/55 R16"
+        },
+        {
+          "label": "Eficiencia energética (etiqueta UE)",
+          "value": "C"
+        },
+        {
+          "label": "Agarre en mojado (etiqueta UE)",
+          "value": "A"
+        },
+        {
+          "label": "Ruido exterior",
+          "value": "71 dB"
+        },
+        {
+          "label": "Temporada",
+          "value": "Verano"
+        }
+      ],
+      "stores": [
+        {
+          "store": "neumaticos",
+          "external_id": "continental-205-55-16-premiumcontact_7",
+          "url": "https://www.neumaticos.es/neumaticos/continental-205-55-16-premiumcontact_7/108+200+201+202+205",
+          "note": "Precio para 205/55 R16"
+        }
+      ]
+    },
+    {
+      "position": 5,
+      "name": "Hankook Ventus Prime 4",
+      "award": "La opción económica",
+      "summary_md": "Hankook es una marca intermedia muy asentada en Europa, y el Ventus Prime 4 es su neumático de verano para turismos de uso diario. Es el más asequible de la guía y aun así tiene una A en agarre en mojado y 69 dB, empatado con los más silenciosos de la lista. Es una buena elección si haces pocos kilómetros al año o usas el coche sobre todo en ciudad. La pega: la C en eficiencia energética implica algo más de consumo que los modelos con B.",
+      "pros": [
+        "El más asequible de la guía",
+        "A en agarre en mojado según la etiqueta UE",
+        "69 dB, entre los más silenciosos de la lista"
+      ],
+      "cons": [
+        "C en eficiencia energética",
+        "Marca intermedia, con menos prestigio que las premium"
+      ],
+      "specs": [
+        {
+          "label": "Medida de referencia",
+          "value": "205/55 R16"
+        },
+        {
+          "label": "Eficiencia energética (etiqueta UE)",
+          "value": "C"
+        },
+        {
+          "label": "Agarre en mojado (etiqueta UE)",
+          "value": "A"
+        },
+        {
+          "label": "Ruido exterior",
+          "value": "69 dB"
+        },
+        {
+          "label": "Temporada",
+          "value": "Verano"
+        }
+      ],
+      "stores": [
+        {
+          "store": "neumaticos",
+          "external_id": "hankook-205-55-16-ventus_prime_4_k135",
+          "url": "https://www.neumaticos.es/neumaticos/hankook-205-55-16-ventus_prime_4_k135/108+200+201+202+205",
+          "note": "Precio para 205/55 R16"
+        }
+      ]
+    }
+  ]
+}

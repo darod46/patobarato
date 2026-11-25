@@ -1,0 +1,251 @@
+{
+  "slug": "neumaticos-suv-235-55-r18",
+  "title": "Neumáticos para SUV (235/55 R18)",
+  "subtitle": "Cinco neumáticos de verano para SUV medianos en la medida 235/55 R18, comparados por su etiqueta europea y su posicionamiento.",
+  "category": "Motor",
+  "reading_minutes": 7,
+  "intro_md": "Un SUV pesa más y tiene el centro de gravedad más alto que un turismo, así que pide más a sus neumáticos en frenada y en curva. Además, las llantas grandes encarecen cada cambio, por lo que merece la pena elegir bien. La 235/55 R18 es una de las medidas más habituales en los SUV medianos.\n\nPara esta guía hemos repasado la etiqueta europea de cinco neumáticos de verano de Michelin, Continental, Bridgestone, Goodyear y Nexen. Cuatro son de marcas premium (uno de ellos, de una gama específica para SUV) y el quinto es una alternativa económica. La etiqueta varía bastante entre ellos, sobre todo en eficiencia energética.\n\nLos precios que ves en la guía son para la medida de referencia, 235/55 R18. Si tu SUV lleva otra, usa el buscador de esta página para ver el precio en tu medida. Si tienes dudas sobre cómo leerla, repasa [cómo elegir neumáticos](/guias/como-elegir-neumaticos).",
+  "how_to_choose_md": "## Revisa la carga y la versión XL\n\nEn un SUV el índice de carga importa más que en un turismo. Comprueba en la ficha técnica qué índice pide tu coche y si exige neumáticos XL (reforzados). Algunos modelos de esta guía se venden en versión normal y XL, con etiquetas ligeramente distintas, así que mira la referencia exacta antes de comprar.\n\n## Agarre en mojado: no bajes de una B\n\nUn SUV pesa más que un turismo y eso exige más a los neumáticos en cada frenada; el agarre en mojado es la clase de la etiqueta que más tiene que ver con ello. Cuatro de los cinco modelos de la lista tienen una A; el Michelin Primacy 4 tiene una B. Si conduces a menudo con lluvia, dale prioridad a este dato.\n\n## Eficiencia: aquí hay más diferencias\n\nEn esta medida la eficiencia energética va de la A a la D según el modelo. Con un coche pesado, la resistencia a la rodadura se nota más en el consumo, y si tu SUV es híbrido enchufable o eléctrico también influye en la autonomía. Si haces muchos kilómetros, compensa mirar esta clase con calma.\n\n## Premium o económico\n\nLas marcas premium suelen cuidar aspectos que la etiqueta no mide, como la estabilidad en seco o cómo envejece el neumático. Un modelo económico con buena nota en mojado puede ser suficiente si haces pocos kilómetros o el SUV es sobre todo para ciudad.\n\n## Cuándo comprar\n\nCambia al menos los dos neumáticos del mismo eje, y los cuatro si tu SUV tiene tracción total y el fabricante lo recomienda. Compara el precio con montaje incluido y, si puedes esperar, mira [los chollos](/chollos) en Black Friday o antes del verano.",
+  "faq": [
+    {
+      "q": "¿Necesito neumáticos específicos para SUV?",
+      "a_md": "No es obligatorio: lo que tiene que cumplir el neumático es la medida y los índices de carga y velocidad de la ficha técnica. Algunos modelos están diseñados pensando en SUV, con un dibujo y una estructura adaptados al peso, pero un neumático de turismo en la medida correcta también es válido."
+    },
+    {
+      "q": "Si mi SUV tiene tracción total, ¿tengo que cambiar las cuatro ruedas?",
+      "a_md": "Muchos fabricantes de coches con tracción total recomiendan que los cuatro neumáticos tengan un desgaste parecido para no forzar la transmisión. Consulta el manual de tu coche: en algunos casos basta con cambiar por ejes y en otros conviene cambiar los cuatro a la vez."
+    },
+    {
+      "q": "¿Qué cambia entre la versión normal y la XL de un mismo neumático?",
+      "a_md": "La versión XL está reforzada para soportar más carga y suele tener un índice de carga más alto. A cambio, puede tener una etiqueta algo distinta, por ejemplo un decibelio más de ruido. Si tu ficha técnica pide XL, tienes que montarla; si no, puedes elegir cualquiera de las dos."
+    }
+  ],
+  "widget": "neumaticos",
+  "items": [
+    {
+      "position": 1,
+      "name": "Bridgestone Turanza 6",
+      "award": "Mejor en general",
+      "summary_md": "El Turanza 6 es el neumático de gama alta de Bridgestone para turismos y SUV, y en la 235/55 R18 tiene la etiqueta más equilibrada de la guía: B en eficiencia energética, A en agarre en mojado y 69 dB, el ruido más bajo de la lista junto al del Michelin. Además, suele venderse por debajo de Michelin y Continental, lo que lo convierte en una compra muy razonable para un SUV de uso familiar. La pega: no llega a la A en eficiencia, algo que en un coche pesado se nota en el consumo.",
+      "pros": [
+        "A en agarre en mojado y B en eficiencia energética",
+        "69 dB, el ruido más bajo de la lista junto al Michelin",
+        "Suele costar menos que los otros premium"
+      ],
+      "cons": [
+        "Sin A en eficiencia energética",
+        "No es el más barato de la guía"
+      ],
+      "specs": [
+        {
+          "label": "Medida de referencia",
+          "value": "235/55 R18"
+        },
+        {
+          "label": "Eficiencia energética (etiqueta UE)",
+          "value": "B"
+        },
+        {
+          "label": "Agarre en mojado (etiqueta UE)",
+          "value": "A"
+        },
+        {
+          "label": "Ruido exterior",
+          "value": "69 dB"
+        },
+        {
+          "label": "Temporada",
+          "value": "Verano"
+        }
+      ],
+      "stores": [
+        {
+          "store": "neumaticos",
+          "external_id": "bridgestone-235-55-18-turanza_6",
+          "url": "https://www.neumaticos.es/neumaticos/bridgestone-235-55-18-turanza_6/108+200+201+202+205",
+          "note": "Precio para 235/55 R18"
+        }
+      ]
+    },
+    {
+      "position": 2,
+      "name": "Michelin Primacy 4",
+      "award": "El de menor consumo según la etiqueta",
+      "summary_md": "El Primacy 4 es la generación anterior de la gama de confort de Michelin, pero sigue muy presente en medidas de SUV. Es el único de la guía con una A en eficiencia energética, algo interesante en un coche pesado o en un SUV híbrido o eléctrico, y su ruido se queda en 69 dB. Es una opción premium para quien hace muchos kilómetros y quiere gastar menos. La pega: tiene una B en agarre en mojado, la única de la lista, y es de los más caros.",
+      "pros": [
+        "A en eficiencia energética, la única de la guía",
+        "69 dB, entre los más silenciosos de la lista",
+        "Gama premium orientada al confort"
+      ],
+      "cons": [
+        "B en agarre en mojado, por debajo del resto",
+        "Es el más caro de la guía"
+      ],
+      "specs": [
+        {
+          "label": "Medida de referencia",
+          "value": "235/55 R18"
+        },
+        {
+          "label": "Eficiencia energética (etiqueta UE)",
+          "value": "A"
+        },
+        {
+          "label": "Agarre en mojado (etiqueta UE)",
+          "value": "B"
+        },
+        {
+          "label": "Ruido exterior",
+          "value": "69 dB"
+        },
+        {
+          "label": "Temporada",
+          "value": "Verano"
+        }
+      ],
+      "stores": [
+        {
+          "store": "neumaticos",
+          "external_id": "michelin-235-55-18-primacy_4",
+          "url": "https://www.neumaticos.es/neumaticos/michelin-235-55-18-primacy_4/108+200+201+202+205",
+          "note": "Precio para 235/55 R18"
+        }
+      ]
+    },
+    {
+      "position": 3,
+      "name": "Goodyear EfficientGrip 2 SUV",
+      "award": "Gama específica para SUV",
+      "summary_md": "A diferencia de los otros modelos premium de la lista, este Goodyear pertenece a una gama desarrollada específicamente para SUV, dentro de la familia EfficientGrip, orientada a la eficiencia. En esta medida tiene B en eficiencia energética, A en agarre en mojado y 70 dB. Es una alternativa sólida si prefieres un neumático concebido para el peso y el uso de un SUV. La pega: su etiqueta es muy parecida a la del Bridgestone y suele costar más.",
+      "pros": [
+        "Gama diseñada específicamente para SUV",
+        "A en agarre en mojado según la etiqueta UE",
+        "B en eficiencia energética"
+      ],
+      "cons": [
+        "70 dB, un decibelio por encima de los más silenciosos",
+        "Suele costar más que el Bridgestone"
+      ],
+      "specs": [
+        {
+          "label": "Medida de referencia",
+          "value": "235/55 R18"
+        },
+        {
+          "label": "Eficiencia energética (etiqueta UE)",
+          "value": "B"
+        },
+        {
+          "label": "Agarre en mojado (etiqueta UE)",
+          "value": "A"
+        },
+        {
+          "label": "Ruido exterior",
+          "value": "70 dB"
+        },
+        {
+          "label": "Temporada",
+          "value": "Verano"
+        }
+      ],
+      "stores": [
+        {
+          "store": "neumaticos",
+          "external_id": "goodyear-235-55-18-efficientgrip_2_suv",
+          "url": "https://www.neumaticos.es/neumaticos/goodyear-235-55-18-efficientgrip_2_suv/108+200+201+202+205",
+          "note": "Precio para 235/55 R18"
+        }
+      ]
+    },
+    {
+      "position": 4,
+      "name": "Continental PremiumContact 7",
+      "award": "Para una conducción más dinámica",
+      "summary_md": "El PremiumContact 7 es el neumático premium de Continental para turismos y SUV, con un enfoque más dinámico que el de los modelos de confort de esta lista. En la 235/55 R18 tiene una A en agarre en mojado, pero una C en eficiencia energética y 71 dB, o 72 dB en la versión XL. Es una opción para quien da prioridad al comportamiento del coche y confía en la marca. La pega: sobre el papel consume y suena algo más que sus rivales premium.",
+      "pros": [
+        "A en agarre en mojado según la etiqueta UE",
+        "Gama premium con enfoque dinámico",
+        "Disponible en versión normal y XL"
+      ],
+      "cons": [
+        "C en eficiencia energética",
+        "71 dB, o 72 dB en la versión XL"
+      ],
+      "specs": [
+        {
+          "label": "Medida de referencia",
+          "value": "235/55 R18"
+        },
+        {
+          "label": "Eficiencia energética (etiqueta UE)",
+          "value": "C"
+        },
+        {
+          "label": "Agarre en mojado (etiqueta UE)",
+          "value": "A"
+        },
+        {
+          "label": "Ruido exterior",
+          "value": "71 dB (72 dB en la versión XL)"
+        },
+        {
+          "label": "Temporada",
+          "value": "Verano"
+        }
+      ],
+      "stores": [
+        {
+          "store": "neumaticos",
+          "external_id": "continental-235-55-18-premiumcontact_7",
+          "url": "https://www.neumaticos.es/neumaticos/continental-235-55-18-premiumcontact_7/108+200+201+202+205",
+          "note": "Precio para 235/55 R18"
+        }
+      ]
+    },
+    {
+      "position": 5,
+      "name": "Nexen N'Fera Sport SUV",
+      "award": "La opción económica",
+      "summary_md": "Nexen es una marca económica coreana, y el N'Fera Sport SUV es su neumático de verano para SUV. Es el más asequible de la guía y su referencia principal tiene una A en agarre en mojado, aunque alguna variante baja a una B. Tiene sentido si haces pocos kilómetros al año y quieres que el cambio de cuatro ruedas no se dispare. La pega: tiene una D en eficiencia energética, la peor de la lista, y 71 dB de ruido.",
+      "pros": [
+        "El más asequible de la guía",
+        "A en agarre en mojado en la referencia principal",
+        "Diseñado para SUV"
+      ],
+      "cons": [
+        "D en eficiencia energética, la más baja de la guía",
+        "71 dB, entre los más ruidosos de la lista"
+      ],
+      "specs": [
+        {
+          "label": "Medida de referencia",
+          "value": "235/55 R18"
+        },
+        {
+          "label": "Eficiencia energética (etiqueta UE)",
+          "value": "D"
+        },
+        {
+          "label": "Agarre en mojado (etiqueta UE)",
+          "value": "A (B en alguna variante)"
+        },
+        {
+          "label": "Ruido exterior",
+          "value": "71 dB"
+        },
+        {
+          "label": "Temporada",
+          "value": "Verano"
+        }
+      ],
+      "stores": [
+        {
+          "store": "neumaticos",
+          "external_id": "nexen-235-55-18-n_fera_sport_suv",
+          "url": "https://www.neumaticos.es/neumaticos/nexen-235-55-18-n_fera_sport_suv/108+200+201+202+205",
+          "note": "Precio para 235/55 R18"
+        }
+      ]
+    }
+  ]
+}
