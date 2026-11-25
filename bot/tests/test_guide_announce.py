@@ -10,8 +10,16 @@ SITE = "https://patobarato.com"
 
 
 class FakePublisher:
-    def __init__(self, fail_publish=False, fail_pin=False, fail_unpin=False, message_id=500):
+    def __init__(
+        self,
+        fail_publish=False,
+        fail_pin=False,
+        fail_unpin=False,
+        message_id=500,
+        reject_photo=False,
+    ):
         self.fail_publish = fail_publish
+        self.reject_photo = reject_photo
         self.fail_pin = fail_pin
         self.fail_unpin = fail_unpin
         self.message_id = message_id
@@ -21,6 +29,8 @@ class FakePublisher:
         self.calls.append(("publish", caption, photo))
         if self.fail_publish:
             raise ConnectionError("down")
+        if self.reject_photo and photo is not None:
+            raise RuntimeError("PhotoInvalidDimensionsError")
         return (-100123, self.message_id)
 
     async def pin(self, message_id):
@@ -235,3 +245,44 @@ async def test_site_url_trailing_slash_is_ignored():
 
     assert download.urls == [f"{SITE}/guias/teles.jpeg"]
     assert publisher.calls[0][1].endswith(f"👉 {SITE}/guias/teles")
+
+
+async def test_photo_rejected_is_announced_without_photo(caplog):
+    repo = InMemoryRepository()
+    repo.add_guide(1, "teles", "Teles", None, published_at=NOW)
+    publisher = FakePublisher(reject_photo=True)
+
+    with caplog.at_level(logging.WARNING):
+        await _announcer(repo, publisher).run(_source())
+
+    publishes = [c for c in publisher.calls if c[0] == "publish"]
+    assert [c[2] for c in publishes] == [b"jpeg", None]
+    assert publishes[0][1] == publishes[1][1]
+    assert ("pin", 500) in publisher.calls
+    assert await repo.list_guides_to_announce(NOW) == []
+    assert "without photo" in caplog.text
+
+
+async def test_transient_publish_error_with_photo_is_not_retried_without_photo():
+    repo = InMemoryRepository()
+    repo.add_guide(1, "teles", "Teles", None, published_at=NOW)
+    publisher = FakePublisher(fail_publish=True)
+
+    await _announcer(repo, publisher).run(_source())
+
+    assert [c[2] for c in publisher.calls] == [b"jpeg"]
+    assert [g.id for g in await repo.list_guides_to_announce(NOW)] == [1]
+
+
+async def test_mark_failure_is_logged_with_message_id(caplog):
+    class BrokenMark(InMemoryRepository):
+        async def mark_guide_announced(self, guide_id, message_id, now):
+            raise RuntimeError("db down")
+
+    repo = BrokenMark()
+    repo.add_guide(1, "teles", "Teles", None, published_at=NOW)
+
+    with caplog.at_level(logging.ERROR):
+        await _announcer(repo, FakePublisher()).run(_source())
+
+    assert "teles announced (message 500) but not marked" in caplog.text

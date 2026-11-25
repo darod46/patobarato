@@ -9,6 +9,7 @@ from typing import Protocol
 
 from patobarato.core.pipeline import utcnow
 from patobarato.models import ApiSource, GuideToAnnounce
+from patobarato.publishing.telegram_publisher import can_retry_without_photo
 from patobarato.storage.repository import Repository
 
 logger = logging.getLogger("patobarato.guide_announce")
@@ -69,20 +70,48 @@ class GuideAnnouncer:
         # One per pass: a backlog never floods the channel.
         guide = candidates[0]
         photo = await self._photo(guide)
+        message_id = await self._publish(guide, guide_caption(guide, self._site_url), photo)
+        if message_id is None:
+            return
+        await self._pin(guide, message_id)
         try:
-            _, message_id = await self._publisher.publish(
-                guide_caption(guide, self._site_url), photo
+            await self._repo.mark_guide_announced(guide.id, message_id, self._clock())
+        except Exception as e:
+            # The post is out: without the mark it would be announced again next pass.
+            logger.error(
+                "GuideAnnounce: %s announced (message %d) but not marked, fix it by hand: %s",
+                guide.slug,
+                message_id,
+                _describe(e),
             )
+            return
+        logger.info("GuideAnnounce: %s announced (message %d)", guide.slug, message_id)
+
+    async def _publish(
+        self, guide: GuideToAnnounce, caption: str, photo: bytes | None
+    ) -> int | None:
+        """The new message's id, or None (logged) if it could not be sent."""
+        try:
+            try:
+                _, message_id = await self._publisher.publish(caption, photo)
+            except Exception as e:
+                if photo is None or not can_retry_without_photo(e):
+                    raise
+                # A cover Telegram rejects would otherwise block every later guide.
+                logger.warning(
+                    "GuideAnnounce: %s rejected with photo (%s); sending without photo",
+                    guide.slug,
+                    _describe(e),
+                )
+                _, message_id = await self._publisher.publish(caption, None)
         except Exception as e:
             logger.warning(
                 "GuideAnnounce: %s not announced, retrying next pass: %s",
                 guide.slug,
                 _describe(e),
             )
-            return
-        await self._pin(guide, message_id)
-        await self._repo.mark_guide_announced(guide.id, message_id, self._clock())
-        logger.info("GuideAnnounce: %s announced (message %d)", guide.slug, message_id)
+            return None
+        return message_id
 
     async def _photo(self, guide: GuideToAnnounce) -> bytes | None:
         try:
