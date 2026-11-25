@@ -13,7 +13,7 @@ import { optional } from '../../lib/optional'
 import { primary } from '../../lib/primary'
 
 // Regenerated at most every 60 s, like the listings.
-export const revalidate = 60
+export const revalidate = 3600
 
 // Shared by generateMetadata and the page within one request. Optional: a failure renders the default h1.
 const loadCopy = cache(async () => (await optional('guias', () => fetchPageCopy(getSupabase(), 'static', 'guias'))) ?? null)

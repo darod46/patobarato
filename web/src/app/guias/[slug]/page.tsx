@@ -11,7 +11,7 @@ import { SITE_URL } from '../../../lib/urls'
 import { optional } from '../../../lib/optional'
 
 // Regenerated at most every 60 s, like the listings.
-export const revalidate = 60
+export const revalidate = 3600
 
 // Nothing is prerendered at build time; an empty list still enables on-demand ISR caching.
 export function generateStaticParams() {

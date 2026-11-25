@@ -14,7 +14,7 @@ import { optional } from '../../lib/optional'
 import { primary } from '../../lib/primary'
 
 // Regenerated at most every 60 s, like the listings.
-export const revalidate = 60
+export const revalidate = 600
 
 // Shared by generateMetadata and the page within one request. The stores are the primary read: a failure
 // throws at runtime (Next keeps the last ISR version); during the build it renders the empty state. The copy is secondary.

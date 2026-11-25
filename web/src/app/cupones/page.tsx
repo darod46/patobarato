@@ -13,7 +13,7 @@ import { storeInfo } from '../../lib/stores'
 import { getSupabase } from '../../lib/supabase'
 import type { Coupon } from '../../lib/types'
 
-export const revalidate = 600
+export const revalidate = 1800
 
 // Shared by generateMetadata and the page within one request. Optional: a failure renders the default h1.
 const loadCopy = cache(async () => (await optional('cupones', () => fetchPageCopy(getSupabase(), 'static', 'cupones'))) ?? null)

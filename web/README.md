@@ -68,10 +68,13 @@ Notas:
 
 ## Caché (ISR)
 
-- Listados (`/`, `/chollos/{hashtag}`, `/tiendas`, `/tiendas/{tienda}`): 60 s.
+Cada regeneración de una página ISR cuenta como una escritura en Vercel (200.000 al mes en el plan Hobby), así que los intervalos son largos y los cambios urgentes llegan por revalidación bajo demanda.
+
+- Portada (`/`): 300 s. Etiquetas y tiendas (`/chollos/{hashtag}`, `/tiendas`, `/tiendas/{tienda}`): 600 s.
 - `/chollos` y `/buscar`: dinámicos (por petición); `/api/buscar/aliexpress`: 15 min.
-- Cupones (`/cupones`): 600 s.
-- Producto (`/oferta/...`): 600 s.
+- Cupones (`/cupones`): 1800 s.
+- Producto (`/oferta/...`): 3600 s (el precio mostrado es el publicado y no cambia; una oferta terminada se ve al instante gracias a la revalidación que lanza `check-deals` o el admin).
+- Guías (`/guias`, `/guias/{slug}`): 3600 s (los precios se refrescan cada 6 h en el bot; una edición desde el admin llega con `/api/revalidate`).
 - Sitemaps (`/sitemap.xml` y `/sitemaps/*.xml`): 3600 s.
 - Revalidación bajo demanda: `POST /api/revalidate` con la cabecera `x-revalidate-secret` (debe coincidir con `REVALIDATE_SECRET`; sin variable, siempre 401) revalida todo el sitio (`revalidatePath('/', 'layout')`). Lo llama el bot tras cada cambio del admin, para que las ediciones se vean al instante.
 
@@ -94,7 +97,7 @@ Los listados llevan título SEO, `h1`, introducción y FAQ propios, editables de
 | `store` | el id de `src/lib/stores.ts` (`amazon`, `aliexpress`…) | `/tiendas/{tienda}` |
 | `static` | `chollos`, `tiendas`, `cupones`, `guias`, `eventos`, `sobre-nosotros` | `/chollos`, `/tiendas`, `/cupones`, `/guias`, `/eventos`, `/sobre-nosotros` |
 
-Campos: `title` (el `<title>` sin el sufijo « · PatoBarato», que añade la web), `h1`, `intro_md` (Markdown), `faq` (`[{"q": "...", "a_md": "..."}]`, con `FAQPage` JSON-LD) y `status` (`draft` no sale en la web). Para publicar o cambiar un texto basta un `insert`/`update` en `page_copy`; las páginas lo recogen en su siguiente revalidación (60 s en listados; 600 s en `/cupones`) o al instante con `/api/revalidate`.
+Campos: `title` (el `<title>` sin el sufijo « · PatoBarato», que añade la web), `h1`, `intro_md` (Markdown), `faq` (`[{"q": "...", "a_md": "..."}]`, con `FAQPage` JSON-LD) y `status` (`draft` no sale en la web). Para publicar o cambiar un texto basta un `insert`/`update` en `page_copy`; las páginas lo recogen en su siguiente revalidación (300-600 s en listados; 1800 s en `/cupones`) o al instante con `/api/revalidate`.
 
 **Marcadores.** `intro_md` admite `{deals}` (número de chollos activos de la página) y `{stores}` (lista de tiendas, «Amazon y AliExpress»). Reglas:
 
@@ -172,7 +175,7 @@ Hoy una guía se publica con SQL, hasta que exista el panel de administración:
 2. Añade los productos en `guide_items` (`guide_id`, `position`, `name`, `award`, `summary_md`, `pros`, `cons`, `specs`) y sus tiendas en `guide_item_stores` (`store`, `external_id` = ASIN o id de la tienda, `url` canónica, `note`).
 3. Cuando el contenido esté listo, pon `status = 'published'` y `published_at`. La guía aparece en `/guias`, y en el sitemap en cuanto sus precios estén frescos.
 
-Una guía con `status = 'published'` y un `published_at` futuro está programada: es invisible (las vistas `web_guides`, `web_guide_items` y `web_guides_by_product` la filtran con `published_at <= now()`) hasta esa hora y después aparece sola, con la caché ISR de 60 s.
+Una guía con `status = 'published'` y un `published_at` futuro está programada: es invisible (las vistas `web_guides`, `web_guide_items` y `web_guides_by_product` la filtran con `published_at <= now()`) hasta esa hora y después aparece sola, con la caché ISR de una hora (o al instante con `/api/revalidate`).
 
 El ejemplo completo es `supabase/migrations/20261108000001_guides_seed.sql` (la guía de freidoras de aire, como borrador con los valores entre corchetes por rellenar).
 

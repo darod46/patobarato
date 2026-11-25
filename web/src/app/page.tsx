@@ -14,7 +14,7 @@ import { fetchChannelRecent, fetchChannelStats } from '../lib/telegram'
 
 // Listings are regenerated at most every 60 s. Requests with `?q=`, `?tag=`, `?orden=` or `?tienda=` are
 // redirected (308) to `/buscar` or `/chollos` (see next.config), so this page never depends on the query string.
-export const revalidate = 60
+export const revalidate = 300
 
 
 const loadCoupons = () => optional('home', () => fetchCoupons(getSupabase(), 4))

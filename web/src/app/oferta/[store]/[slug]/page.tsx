@@ -11,7 +11,7 @@ import { getSupabase } from '../../../../lib/supabase'
 import { SITE_URL, parseProductSlug, productPath, tagPath } from '../../../../lib/urls'
 
 // Product pages render on demand and are regenerated at most every 10 minutes.
-export const revalidate = 600
+export const revalidate = 3600
 
 // Nothing is prerendered at build time; an empty list still enables on-demand ISR caching.
 export function generateStaticParams() {

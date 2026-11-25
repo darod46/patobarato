@@ -13,7 +13,7 @@ import { getSupabase } from '../../../lib/supabase'
 import { parseTagParam, tagPath } from '../../../lib/urls'
 
 // Listings are regenerated at most every 60 s.
-export const revalidate = 60
+export const revalidate = 600
 
 // Nothing is prerendered at build time; an empty list still enables on-demand ISR caching.
 export function generateStaticParams() {
