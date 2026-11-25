@@ -1,20 +1,27 @@
-import { Eye, ListChecks, Send } from 'lucide-react'
+import { GUIDE_COVER_BG } from '../lib/guide-covers'
+
+/** Illustrations in `public/como-funciona/<slug>.jpeg` (800×597, same duck and cream background as the guide covers). */
+const IMAGE_WIDTH = 800
+const IMAGE_HEIGHT = 597
 
 const STEPS = [
   {
+    slug: 'vigilamos',
     title: '1 · Vigilamos',
     text: 'Seguimos los canales de chollos de Telegram y leemos cada oferta en cuanto se publica.',
-    Icon: Eye,
+    alt: 'El pato de PatoBarato con prismáticos, mirando un móvil lleno de mensajes con etiquetas de precio',
   },
   {
+    slug: 'filtramos',
     title: '2 · Filtramos',
     text: 'Extraemos precio, precio anterior y cupón, y descartamos duplicados y ofertas caducadas. «Mínimo histórico» solo aparece cuando hay publicaciones anteriores con las que comparar.',
-    Icon: ListChecks,
+    alt: 'El pato de PatoBarato revisando etiquetas de precio con una lupa y tirando las repetidas a la papelera',
   },
   {
+    slug: 'publicamos',
     title: '3 · Publicamos',
     text: 'La oferta sale aquí y en el canal con un botón directo a la tienda. Tú decides si compras.',
-    Icon: Send,
+    alt: 'El pato de PatoBarato lanzando un avión de papel con una etiqueta de precio hacia un carrito de la compra',
   },
 ]
 
@@ -28,12 +35,21 @@ export function HowItWorks() {
         </div>
         <div className="grid gap-4 md:grid-cols-3 md:gap-6">
           {STEPS.map((step) => (
-            <div key={step.title} className="flex flex-col gap-3.5 rounded-2xl border border-line bg-white p-6 md:p-7">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-soft text-primary">
-                <step.Icon size={22} aria-hidden="true" />
-              </span>
-              <h3 className="text-lg font-semibold text-ink">{step.title}</h3>
-              <p className="text-[15px] leading-relaxed text-muted">{step.text}</p>
+            <div key={step.slug} className="flex flex-col overflow-hidden rounded-2xl border border-line bg-white">
+              <img
+                src={`/como-funciona/${step.slug}.jpeg`}
+                width={IMAGE_WIDTH}
+                height={IMAGE_HEIGHT}
+                alt={step.alt}
+                loading="lazy"
+                decoding="async"
+                className="aspect-[800/597] h-auto w-full object-cover"
+                style={{ backgroundColor: GUIDE_COVER_BG }}
+              />
+              <div className="flex flex-col gap-3.5 p-6 md:p-7">
+                <h3 className="text-lg font-semibold text-ink">{step.title}</h3>
+                <p className="text-[15px] leading-relaxed text-muted">{step.text}</p>
+              </div>
             </div>
           ))}
         </div>
