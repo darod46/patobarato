@@ -20,10 +20,10 @@ export function LatestGuideBanner({ guide, now }: Props) {
   return (
     <section aria-labelledby="ultima-guia" className="mx-auto max-w-[1200px] px-4 pb-12 md:px-8">
       <div
-        className="relative grid overflow-hidden rounded-3xl border border-warm-line md:grid-cols-[minmax(0,1fr)_minmax(340px,46%)]"
+        className="relative grid overflow-hidden rounded-3xl border border-warm-line md:grid-cols-[minmax(0,1fr)_minmax(380px,55%)]"
         style={{ backgroundColor: COVER_BG }}
       >
-        <div className="order-2 flex flex-col justify-center gap-3 p-6 md:order-1 md:p-12">
+        <div className="order-2 flex flex-col justify-center gap-3 p-6 md:order-1 md:p-10">
           <p className="flex flex-wrap items-center gap-2 text-xs font-bold tracking-wide text-primary uppercase">
             <span className="inline-flex items-center gap-1.5">
               <BookOpen size={14} aria-hidden="true" />
@@ -36,7 +36,7 @@ export function LatestGuideBanner({ guide, now }: Props) {
               </span>
             )}
           </p>
-          <h2 id="ultima-guia" className="font-display text-2xl leading-tight font-bold tracking-[-0.02em] md:text-4xl">
+          <h2 id="ultima-guia" className="font-display text-2xl leading-tight font-bold tracking-[-0.02em] md:text-[34px]">
             {guide.title}
           </h2>
           {guide.subtitle && <p className="max-w-[52ch] text-muted md:text-lg">{guide.subtitle}</p>}
@@ -64,7 +64,7 @@ export function LatestGuideBanner({ guide, now }: Props) {
             width={cover.width}
             height={cover.height}
             loading="lazy"
-            className="order-1 aspect-video w-full object-cover md:order-2 md:h-full md:[mask-image:linear-gradient(to_right,transparent,black_18%)]"
+            className="order-1 aspect-video w-full object-cover md:order-2 md:h-full"
           />
         )}
       </div>
