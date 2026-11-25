@@ -26,6 +26,9 @@ export const GUIDE_COVER_SLUGS: ReadonlySet<string> = new Set([
   'zapatillas-running-empezar-a-correr',
 ])
 
+/** The illustrations share this cream background; cards that hold one use it so the drawing blends in. */
+export const GUIDE_COVER_BG = '#f9e8bd'
+
 export const GUIDE_COVER_WIDTH = 1376
 export const GUIDE_COVER_HEIGHT = 768
 

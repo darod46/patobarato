@@ -1,6 +1,6 @@
 import { ArrowRight, BookOpen, Sparkles } from 'lucide-react'
 import { timeAgo } from '../lib/format'
-import { guideCover } from '../lib/guide-covers'
+import { GUIDE_COVER_BG, guideCover } from '../lib/guide-covers'
 import { guidePath } from '../lib/guides'
 import type { GuideSummary } from '../lib/types'
 
@@ -8,9 +8,6 @@ type Props = { guide: GuideSummary; now: Date }
 
 /** A guide counts as new for a week after publication. */
 export const NEW_GUIDE_DAYS = 7
-
-/** The illustrations share this cream background, so the card uses it and the drawing blends in uncropped. */
-const COVER_BG = '#f9e8bd'
 
 /** Home banner pointing to the newest published guide, with its illustrated cover when it has one. */
 export function LatestGuideBanner({ guide, now }: Props) {
@@ -21,7 +18,7 @@ export function LatestGuideBanner({ guide, now }: Props) {
     <section aria-labelledby="ultima-guia" className="mx-auto max-w-[1200px] px-4 pb-12 md:px-8">
       <div
         className="relative grid overflow-hidden rounded-3xl border border-warm-line md:grid-cols-[minmax(0,1fr)_minmax(380px,55%)]"
-        style={{ backgroundColor: COVER_BG }}
+        style={{ backgroundColor: GUIDE_COVER_BG }}
       >
         <div className="order-2 flex flex-col justify-center gap-3 p-6 md:order-1 md:p-10">
           <p className="flex flex-wrap items-center gap-2 text-xs font-bold tracking-wide text-primary uppercase">

@@ -1,7 +1,7 @@
 import { ChevronRight } from 'lucide-react'
 import { formatLongDate } from '../lib/format'
 import { freshnessLabel } from '../lib/guides'
-import { guideCover } from '../lib/guide-covers'
+import { GUIDE_COVER_BG, guideCover } from '../lib/guide-covers'
 import type { Guide } from '../lib/types'
 import { Footer } from './Footer'
 import { Header } from './Header'
@@ -52,28 +52,40 @@ export function GuideView({ guide, now, stores }: Props) {
           </ol>
         </nav>
 
-        <header className="mt-4 max-w-[720px]">
-          <p className="text-xs font-bold tracking-wide text-primary uppercase">{`Guía de compra · ${guide.category}`}</p>
-          <h1 className="mt-2 font-display text-3xl leading-tight font-bold tracking-[-0.03em] md:text-5xl">{guide.title}</h1>
-          {guide.subtitle && <p className="mt-3 text-lg text-muted">{guide.subtitle}</p>}
-          <p className="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted">
-            <span>{`Por ${guide.author} · equipo PatoBarato`}</span>
-            <span>{`Actualizado el ${formatLongDate(guide.updatedAt)}`}</span>
-            <span>{`${guide.readingMinutes} min de lectura`}</span>
-            <span>{freshnessLabel(guide.pricesCheckedAt, now)}</span>
-          </p>
+        <header
+          className={
+            cover
+              ? 'mt-4 grid overflow-hidden rounded-3xl border border-warm-line md:grid-cols-[minmax(0,1fr)_minmax(380px,55%)]'
+              : 'mt-4 max-w-[720px]'
+          }
+          style={cover ? { backgroundColor: GUIDE_COVER_BG } : undefined}
+        >
+          <div className={cover ? 'order-2 flex flex-col justify-center gap-3 p-6 md:order-1 md:p-10' : ''}>
+            <p className="text-xs font-bold tracking-wide text-primary uppercase">{`Guía de compra · ${guide.category}`}</p>
+            <h1
+              className={`font-display leading-tight font-bold tracking-[-0.03em] ${cover ? 'text-2xl md:text-[34px]' : 'mt-2 text-3xl md:text-5xl'}`}
+            >
+              {guide.title}
+            </h1>
+            {guide.subtitle && <p className={`text-lg text-muted ${cover ? 'max-w-[52ch]' : 'mt-3'}`}>{guide.subtitle}</p>}
+            <p className={`flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted ${cover ? '' : 'mt-4'}`}>
+              <span>{`Por ${guide.author} · equipo PatoBarato`}</span>
+              <span>{`Actualizado el ${formatLongDate(guide.updatedAt)}`}</span>
+              <span>{`${guide.readingMinutes} min de lectura`}</span>
+              <span>{freshnessLabel(guide.pricesCheckedAt, now)}</span>
+            </p>
+          </div>
+          {cover && (
+            <img
+              src={cover.url}
+              alt={cover.alt}
+              width={cover.width}
+              height={cover.height}
+              fetchPriority="high"
+              className="order-1 aspect-video w-full object-cover md:order-2 md:h-full"
+            />
+          )}
         </header>
-
-        {cover && (
-          <img
-            src={cover.url}
-            alt={cover.alt}
-            width={cover.width}
-            height={cover.height}
-            fetchPriority="high"
-            className="mt-6 w-full max-w-[720px] rounded-2xl border border-line"
-          />
-        )}
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[260px_minmax(0,720px)] lg:gap-12">
           <aside className="lg:sticky lg:top-24 lg:self-start">
