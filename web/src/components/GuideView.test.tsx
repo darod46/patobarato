@@ -44,6 +44,14 @@ describe('GuideView', () => {
     for (const id of ['eleccion-rapida', 'comparativa', 'faq']) expect(document.getElementById(id)).not.toBeNull()
   })
 
+  it('shows the cover under the header when the guide has one, and nothing otherwise', () => {
+    const { unmount } = render(<GuideView guide={{ ...guide(), slug: 'freidoras-de-aire-menos-100' }} now={NOW} stores={['amazon']} />)
+    const cover = screen.getByRole('img', { name: /El pato de PatoBarato con el producto/ })
+    expect(cover).toHaveAttribute('src', '/guias/freidoras-de-aire-menos-100.jpeg')
+    unmount()
+    render(<GuideView guide={guide()} now={NOW} stores={['amazon']} />)
+    expect(screen.queryByRole('img', { name: /El pato de PatoBarato/ })).toBeNull()
+  })
   it('shows the stale-price label and still renders the guide', () => {
     const stale = guide({ pricesCheckedAt: null, items: [item(1, { stores: [offer({ checkedAt: null })] })] })
     render(<GuideView guide={stale} now={NOW} stores={[]} />)

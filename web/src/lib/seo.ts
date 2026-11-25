@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { discountPercent, formatPrice } from './format'
 import { isDealIndexable } from './deals'
 import { eventPath, eventYear } from './events'
+import { guideCover } from './guide-covers'
 import { guidePath } from './guides'
 import { storeInfo } from './stores'
 import { renderCopy, pageTitle, type CopyValues } from './page-copy'
@@ -211,12 +212,14 @@ export function guideMetadata(guide: Guide, indexable: boolean): Metadata {
   const title = `${guide.title} · Guías PatoBarato`
   const description = truncate(guide.subtitle ?? firstSentence(guide.introMd), MAX_DESCRIPTION)
   const path = guidePath(guide.slug)
+  const cover = guideCover(guide.slug, guide.title)
+  const image = cover ?? OG_IMAGE
   return {
     title,
     description,
     alternates: withHreflang(path),
-    openGraph: { type: 'article', siteName: 'PatoBarato', locale: 'es_ES', url: path, title, description, images: [OG_IMAGE] },
-    twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE.url] },
+    openGraph: { type: 'article', siteName: 'PatoBarato', locale: 'es_ES', url: path, title, description, images: [image] },
+    twitter: { card: 'summary_large_image', title, description, images: [image.url] },
     ...(!indexable && { robots: NOINDEX }),
   }
 }
@@ -236,11 +239,13 @@ export function faqJsonLd(faq: { q: string; aMd: string }[]): Record<string, unk
 
 /** Article, ItemList and (when there are questions) FAQPage structured data for a guide page. */
 export function guideJsonLd(guide: Guide, url: string): Record<string, unknown>[] {
+  const cover = guideCover(guide.slug, guide.title)
   const data: Record<string, unknown>[] = [
     {
       '@context': 'https://schema.org',
       '@type': 'Article',
       headline: guide.title,
+      ...(cover && { image: SITE_URL + cover.url }),
       author: { '@type': 'Organization', name: 'PatoBarato' },
       datePublished: guide.publishedAt,
       dateModified: guide.updatedAt,

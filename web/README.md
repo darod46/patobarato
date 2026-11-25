@@ -206,6 +206,10 @@ Páginas editoriales de eventos de compras (`/eventos` y `/eventos/{slug}`). Los
 - La página de administración `/clics` (en `admin/`) lee la vista `cta_clicks_daily` (últimos 14 días).
 - En el cliente, el helper `trackCtaClick` envía el clic y el componente `TelegramCta` lo usa en cada botón que lleva al canal. Ubicaciones (`placement`): `header`, `hero`, `block`, `recent`, `deal`, `footer` y `contact`.
 
+### Portadas de las guías
+
+Cada guía puede tener una ilustración del pato con el producto en `public/guias/<slug>.jpeg` (1376 × 768, generada con los prompts de `docs/guias-portadas-prompts.md`). La lista de guías con portada está en `src/lib/guide-covers.ts`: al añadir una imagen nueva, añade su slug ahí. La portada se usa como imagen Open Graph y `Article.image` de la guía, bajo la cabecera de la ficha y arriba de la tarjeta en `/guias`; sin portada se usa la imagen genérica del sitio.
+
 ## Seguridad
 
 La web solo usa la clave pública (anon) de Supabase y solo lee las vistas `web_deals`, `web_hashtags`, `web_coupons`, `web_stores`, `web_guides`, `web_guide_items`, `web_guides_by_product`, `web_events`, `web_event_promos` y `web_page_copy`. Nunca pongas la clave `service_role` en la web ni en Vercel. `node scripts/check-views.mjs` comprueba con la clave anon que esas vistas se leen y que la tabla `coupons` no; también cubre las vistas y tablas de guías (`web_guides*` legibles; `guides`, `guide_items`, `guide_item_stores` y `product_prices` no) de eventos (`web_events` y `web_event_promos` legibles; `events` y `event_promos` no) y de textos editoriales (`web_page_copy` legible; `page_copy` no).

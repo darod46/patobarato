@@ -1,6 +1,7 @@
 import { ChevronRight } from 'lucide-react'
 import { formatLongDate } from '../lib/format'
 import { freshnessLabel } from '../lib/guides'
+import { guideCover } from '../lib/guide-covers'
 import type { Guide } from '../lib/types'
 import { Footer } from './Footer'
 import { Header } from './Header'
@@ -25,6 +26,7 @@ export function GuideView({ guide, now, stores }: Props) {
   const hasComparison = guide.items.some((it) => it.specs.length > 0)
   const hasHowToChoose = guide.howToChooseMd.trim() !== ''
   const hasFaq = guide.faq.length > 0
+  const cover = guideCover(guide.slug, guide.title)
   const hasItems = guide.items.length > 0
   return (
     <div className="min-h-screen bg-white font-sans text-ink">
@@ -61,6 +63,17 @@ export function GuideView({ guide, now, stores }: Props) {
             <span>{freshnessLabel(guide.pricesCheckedAt, now)}</span>
           </p>
         </header>
+
+        {cover && (
+          <img
+            src={cover.url}
+            alt={cover.alt}
+            width={cover.width}
+            height={cover.height}
+            fetchPriority="high"
+            className="mt-6 w-full max-w-[720px] rounded-2xl border border-line"
+          />
+        )}
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[260px_minmax(0,720px)] lg:gap-12">
           <aside className="lg:sticky lg:top-24 lg:self-start">

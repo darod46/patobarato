@@ -181,6 +181,15 @@ describe('guideMetadata', () => {
     expect(m.alternates?.canonical).toBe('/guias/freidoras')
     expect(m.robots).toBeUndefined()
   })
+  it('uses the guide cover as Open Graph image when there is one, the site image otherwise', () => {
+    const generic = guideMetadata(guide, true)
+    expect(generic.openGraph?.images).toEqual([OG_IMAGE])
+    const withCover = guideMetadata({ ...guide, slug: 'freidoras-de-aire-menos-100' }, true)
+    expect(withCover.openGraph?.images).toEqual([
+      expect.objectContaining({ url: '/guias/freidoras-de-aire-menos-100.jpeg', width: 1376, height: 768 }),
+    ])
+    expect(withCover.twitter?.images).toEqual(['/guias/freidoras-de-aire-menos-100.jpeg'])
+  })
   it('prefers the subtitle and is noindex when not indexable', () => {
     const m = guideMetadata({ ...guide, subtitle: 'Sub' }, false)
     expect(m.description).toBe('Sub')
