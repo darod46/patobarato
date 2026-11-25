@@ -93,3 +93,27 @@ calendario comercial español; objetivo de negocio: clics de afiliado Amazon des
 
 - Texto exacto de cada guía dentro de las reglas de copy; nombres de los premios.
 - Formato del datetime-local en el admin y su test.
+
+## Adenda (25 nov): anuncio en Telegram al publicarse una guía
+
+Cuando una guía programada llega a su hora, el bot del servidor publica en el canal un mensaje con
+la portada ilustrada y el enlace, y lo deja fijado (desfijando el anuncio de la guía anterior, para
+que solo haya una guía fijada).
+
+- Ejecutor `guide_announce` (`sources.type = 'guide_announce'`, cada 30 min, alta en la migración
+  `20261128000000_guide_announce.sql`), construido solo cuando `build_runners` recibe `bot=`.
+- `guides` gana `announced_at timestamptz` y `announce_message_id bigint`. Candidatas: `status =
+  'published'`, `published_at <= now()`, `announced_at is null`. Se anuncian de más antigua a más
+  nueva; como mucho una por pasada (así la primera ejecución no inunda el canal: las guías ya
+  publicadas antes de esta migración se marcan como anunciadas en la propia migración, salvo la
+  más reciente, que sí se anuncia).
+- Mensaje: foto = `https://patobarato.com/guias/<slug>.jpeg` descargada con `download_photo` (si
+  falla, se envía sin foto); pie en HTML: `📘 <b>Nueva guía: {title}</b>\n\n{subtitle}\n\n👉
+  https://patobarato.com/guias/{slug}` (sin subtítulo, se omite esa línea). La URL se construye
+  desde `Settings.site_url` (nuevo, por defecto `https://patobarato.com`).
+- Tras enviar: `pin_message(channel, message_id, notify=False)`; si otra guía tenía
+  `announce_message_id`, `unpin_message` de ese id antes (fallo al desfijar → aviso en el registro
+  y se sigue). Guardar `announced_at` y `announce_message_id`. Si falla el envío, no se marca y se
+  reintenta en la siguiente pasada; si falla el fijado, se marca igualmente (el mensaje ya está
+  publicado) y se registra.
+- Requisito operativo: el bot debe ser administrador del canal con permiso para fijar mensajes.
