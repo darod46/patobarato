@@ -480,7 +480,7 @@ def test_build_runners_adds_telegram_runners_only_with_bot():
     without = main_module.build_runners(registry, repo, settings, lambda: None)
     with_bot = main_module.build_runners(registry, repo, settings, lambda: None, bot=object())
 
-    for runner_type in ("channel_stats", "ended_posts"):
+    for runner_type in ("channel_stats", "ended_posts", "guide_announce"):
         assert runner_type not in [r.type for r in without]
         assert runner_type in [r.type for r in with_bot]
 

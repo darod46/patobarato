@@ -217,3 +217,36 @@ async def test_edit_raises_bad_request(sleep):
 
     assert len(client.calls) == 1
     sleep.assert_not_called()
+
+
+class PinClient(FakeClient):
+    async def pin_message(self, *args, **kwargs):
+        return await self._respond("pin_message", args, kwargs)
+
+    async def unpin_message(self, *args, **kwargs):
+        return await self._respond("unpin_message", args, kwargs)
+
+
+async def test_pin_pins_silently_in_target(sleep):
+    client = PinClient()
+    await TelegramPublisher(client, "@patobarato").pin(77)
+    assert client.calls == [("pin_message", ("@patobarato", 77), {"notify": False})]
+
+
+async def test_unpin_unpins_in_target(sleep):
+    client = PinClient()
+    await TelegramPublisher(client, "@patobarato").unpin(77)
+    assert client.calls == [("unpin_message", ("@patobarato", 77), {})]
+
+
+async def test_pin_retries_flood_wait(sleep):
+    client = PinClient([FloodWaitError(None, capture=3)])
+    await TelegramPublisher(client, "@patobarato").pin(77)
+    assert len(client.calls) == 2
+    sleep.assert_awaited_once_with(3)
+
+
+async def test_unpin_raises_bad_request(sleep):
+    client = PinClient([ChatWriteForbiddenError(None)])
+    with pytest.raises(ChatWriteForbiddenError):
+        await TelegramPublisher(client, "@patobarato").unpin(77)

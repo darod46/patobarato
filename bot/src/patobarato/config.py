@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     web_revalidate_url: str | None = None
     revalidate_secret: str | None = None
     admin_jobs_poll_seconds: float = 3.0
+    # Public web, for the guide links and covers announced in the channel.
+    site_url: str = "https://patobarato.com"
     # JSON in env: {"pccomponentes": 1234}. A null/missing mid still publishes plain links.
     awin_merchants: dict[str, int | None] = Field(
         default_factory=lambda: {"pccomponentes": None, "mediamarkt": None, "elcorteingles": None}

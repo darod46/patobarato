@@ -34,6 +34,7 @@ from patobarato.sources.channel_stats import ChannelStatsSource
 from patobarato.sources.deal_check import DealChecker
 from patobarato.sources.ended_posts import EndedPostsSource
 from patobarato.sources.event_promos import EventPromosSource
+from patobarato.sources.guide_announce import GuideAnnouncer
 from patobarato.sources.guide_prices import GuidePriceRefresher
 from patobarato.sources.telegram_listener import TelegramListener, make_photo_provider
 from patobarato.storage.repository import Repository
@@ -143,14 +144,14 @@ def build_runners(
     if bot is not None:
         runners.append(ChannelStatsSource(bot, repo, settings.target_channel, clock))
         download_http = http or httpx.AsyncClient(timeout=settings.http_timeout_seconds)
-        posts = PostService(
-            repo,
-            TelegramPublisher(bot, settings.target_channel),
-            registry,
-            lambda url: download_photo(download_http, url),
-            utcnow,
-        )
+        publisher = TelegramPublisher(bot, settings.target_channel)
+
+        def download(url: str):
+            return download_photo(download_http, url)
+
+        posts = PostService(repo, publisher, registry, download, utcnow)
         runners.append(EndedPostsSource(repo, posts, clock))
+        runners.append(GuideAnnouncer(repo, publisher, download, settings.site_url, clock))
     return runners
 
 

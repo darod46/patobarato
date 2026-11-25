@@ -15,6 +15,7 @@ from patobarato.models import (
     EventPromoRow,
     EventRef,
     GuideProduct,
+    GuideToAnnounce,
     LastPublication,
     OfferStatus,
     ParsedOffer,
@@ -882,6 +883,52 @@ class SupabaseRepository:
 
     async def mark_post_synced(self, publication_id: int, now: datetime) -> None:
         await self._update_publication(publication_id, {"post_synced_at": now.isoformat()})
+
+    async def list_guides_to_announce(self, now: datetime) -> list[GuideToAnnounce]:
+        def run():
+            # lte also leaves out guides without published_at.
+            return (
+                self._client.table("guides")
+                .select("id, slug, title, subtitle")
+                .eq("status", "published")
+                .lte("published_at", now.isoformat())
+                .is_("announced_at", "null")
+                .order("published_at")
+                .execute()
+            )
+
+        response = await asyncio.to_thread(run)
+        return [
+            GuideToAnnounce(row["id"], row["slug"], row["title"], row.get("subtitle"))
+            for row in response.data
+        ]
+
+    async def last_announced_guide_message(self) -> int | None:
+        def run():
+            return (
+                self._client.table("guides")
+                .select("announce_message_id")
+                .not_.is_("announce_message_id", "null")
+                .order("announced_at", desc=True)
+                .limit(1)
+                .execute()
+            )
+
+        data = (await asyncio.to_thread(run)).data
+        return data[0]["announce_message_id"] if data else None
+
+    async def mark_guide_announced(
+        self, guide_id: int, message_id: int | None, now: datetime
+    ) -> None:
+        def run():
+            return (
+                self._client.table("guides")
+                .update({"announced_at": now.isoformat(), "announce_message_id": message_id})
+                .eq("id", guide_id)
+                .execute()
+            )
+
+        await asyncio.to_thread(run)
 
     async def find_catalog_product(self, store: str, url: str) -> CatalogRow | None:
         def run():

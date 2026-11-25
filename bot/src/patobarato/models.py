@@ -154,6 +154,16 @@ class GuideProduct:
 
 
 @dataclass(frozen=True)
+class GuideToAnnounce:
+    """A published guide not yet announced in the Telegram channel."""
+
+    id: int
+    slug: str
+    title: str
+    subtitle: str | None
+
+
+@dataclass(frozen=True)
 class EventRef:
     """An event with an AliExpress campaign configured (``events``)."""
 

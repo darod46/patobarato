@@ -565,3 +565,42 @@ async def test_count_ended_posts_to_edit_query():
         ("message_id", "null"),
         ("post_synced_at", "null"),
     ]
+
+
+async def test_list_guides_to_announce_query_and_rows():
+    from patobarato.models import GuideToAnnounce
+
+    client = _Client([{"id": 3, "slug": "teles", "title": "Teles", "subtitle": None}])
+    assert await SupabaseRepository(client).list_guides_to_announce(NOW) == [
+        GuideToAnnounce(3, "teles", "Teles", None)
+    ]
+    assert ("table", ("guides",), {}) in client.log
+    assert _calls(client, "select")[0][0] == ("id, slug, title, subtitle",)
+    assert [a for a, _ in _calls(client, "eq")] == [("status", "published")]
+    assert [a for a, _ in _calls(client, "lte")] == [("published_at", NOW.isoformat())]
+    assert [a for a, _ in _calls(client, "is_")] == [("announced_at", "null")]
+    assert _calls(client, "order") == [(("published_at",), {})]
+    assert _calls(client, "limit") == []
+
+
+async def test_last_announced_guide_message_query():
+    client = _Client([{"announce_message_id": 77}])
+    assert await SupabaseRepository(client).last_announced_guide_message() == 77
+    names = [n for n, _, _ in client.log]
+    assert names.index("not_") + 1 == names.index("is_")
+    assert [a for a, _ in _calls(client, "is_")] == [("announce_message_id", "null")]
+    assert _calls(client, "order") == [(("announced_at",), {"desc": True})]
+    assert _calls(client, "limit")[0][0] == (1,)
+    assert await SupabaseRepository(_Client([])).last_announced_guide_message() is None
+
+
+async def test_mark_guide_announced_row():
+    client = _Client([])
+    await SupabaseRepository(client).mark_guide_announced(3, 77, NOW)
+    await SupabaseRepository(client).mark_guide_announced(4, None, NOW)
+    updates = [a[0] for a, _ in _calls(client, "update")]
+    assert updates == [
+        {"announced_at": NOW.isoformat(), "announce_message_id": 77},
+        {"announced_at": NOW.isoformat(), "announce_message_id": None},
+    ]
+    assert [a for a, _ in _calls(client, "eq")] == [("id", 3), ("id", 4)]

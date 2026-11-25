@@ -13,6 +13,7 @@ from patobarato.models import (
     EventPromoRow,
     EventRef,
     GuideProduct,
+    GuideToAnnounce,
     LastPublication,
     OfferStatus,
     ParsedOffer,
@@ -237,6 +238,18 @@ class Repository(Protocol):
 
     async def mark_post_synced(self, publication_id: int, now: datetime) -> None: ...
 
+    async def list_guides_to_announce(self, now: datetime) -> list[GuideToAnnounce]:
+        """Published guides with ``published_at <= now`` not yet announced, oldest first."""
+        ...
+
+    async def last_announced_guide_message(self) -> int | None:
+        """``announce_message_id`` of the most recently announced guide that has one."""
+        ...
+
+    async def mark_guide_announced(
+        self, guide_id: int, message_id: int | None, now: datetime
+    ) -> None: ...
+
 
 class InMemoryRepository(Repository):
     """Test double that mirrors the database uniqueness rules."""
@@ -255,6 +268,7 @@ class InMemoryRepository(Repository):
         self.source_runs: dict[int, tuple[datetime, str | None]] = {}
         self.coupons: dict[int, dict] = {}
         self._guide_products: list[tuple[GuideProduct, bool, datetime | None]] = []
+        self._guides: list[dict] = []
         self.prices: dict[int, dict] = {}
         self.catalog: dict[tuple[str, str], CatalogRow] = {}
         self._events: dict[int, tuple[str, str | None, str]] = {}
@@ -772,6 +786,59 @@ class InMemoryRepository(Repository):
 
     async def mark_post_synced(self, publication_id: int, now: datetime) -> None:
         self._pub_by_id(publication_id)["post_synced_at"] = now
+
+    def add_guide(
+        self,
+        guide_id: int,
+        slug: str,
+        title: str,
+        subtitle: str | None = None,
+        *,
+        status: str = "published",
+        published_at: datetime | None = None,
+        announced_at: datetime | None = None,
+        announce_message_id: int | None = None,
+    ) -> None:
+        self._guides.append(
+            {
+                "id": guide_id,
+                "slug": slug,
+                "title": title,
+                "subtitle": subtitle,
+                "status": status,
+                "published_at": published_at,
+                "announced_at": announced_at,
+                "announce_message_id": announce_message_id,
+            }
+        )
+
+    async def list_guides_to_announce(self, now: datetime) -> list[GuideToAnnounce]:
+        picked = [
+            g
+            for g in self._guides
+            if g["status"] == "published"
+            and g["published_at"] is not None
+            and g["published_at"] <= now
+            and g["announced_at"] is None
+        ]
+        picked.sort(key=lambda g: g["published_at"])
+        return [GuideToAnnounce(g["id"], g["slug"], g["title"], g["subtitle"]) for g in picked]
+
+    async def last_announced_guide_message(self) -> int | None:
+        announced = [
+            g
+            for g in self._guides
+            if g["announced_at"] is not None and g["announce_message_id"] is not None
+        ]
+        if not announced:
+            return None
+        return max(announced, key=lambda g: g["announced_at"])["announce_message_id"]
+
+    async def mark_guide_announced(
+        self, guide_id: int, message_id: int | None, now: datetime
+    ) -> None:
+        guide = next(g for g in self._guides if g["id"] == guide_id)
+        guide.update(announced_at=now, announce_message_id=message_id)
 
     async def find_catalog_product(self, store: str, url: str) -> CatalogRow | None:
         matches = [r for (s, _), r in self.catalog.items() if s == store and r.url == url]

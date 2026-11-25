@@ -92,6 +92,22 @@ class TelegramPublisher:
 
         await self._with_retries(attempt)
 
+    async def pin(self, message_id: int) -> None:
+        """Pin a message of the target channel without notifying subscribers."""
+
+        async def attempt() -> None:
+            await self._client.pin_message(self._target, message_id, notify=False)
+
+        await self._with_retries(attempt)
+
+    async def unpin(self, message_id: int) -> None:
+        """Unpin a message of the target channel."""
+
+        async def attempt() -> None:
+            await self._client.unpin_message(self._target, message_id)
+
+        await self._with_retries(attempt)
+
     async def _with_retries[T](self, fn: Callable[[], Awaitable[T]]) -> T:
         attempt = 0
         while True:
