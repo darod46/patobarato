@@ -1,3 +1,5 @@
+import { readdirSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { GUIDE_COVER_SLUGS, guideCover } from './guide-covers'
 
@@ -13,7 +15,11 @@ describe('guideCover', () => {
   it('returns null for a guide without cover', () => {
     expect(guideCover('guia-sin-portada', 'Lo que sea')).toBeNull()
   })
-  it('lists the 24 calendar guides', () => {
-    expect(GUIDE_COVER_SLUGS.size).toBe(24)
+  it('lists exactly the covers present in public/guias', () => {
+    const onDisk = readdirSync(join(__dirname, '../../public/guias'))
+      .filter((f) => f.endsWith('.jpeg'))
+      .map((f) => f.slice(0, -'.jpeg'.length))
+      .sort()
+    expect([...GUIDE_COVER_SLUGS].sort()).toEqual(onDisk)
   })
 })
