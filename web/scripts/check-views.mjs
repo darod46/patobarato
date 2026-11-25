@@ -45,6 +45,8 @@ for (const view of ['web_guides', 'web_guide_items', 'web_guides_by_product']) {
   const r = await rest(`${view}?select=*&limit=1`)
   if (r.status !== 200 || !Array.isArray(r.body)) problems.push(`${view}: HTTP ${r.status}`)
 }
+const guidesRow = await rest('web_guides?select=*&limit=1')
+if (guidesRow.body?.[0] && !('widget' in guidesRow.body[0])) problems.push('web_guides: missing column widget')
 for (const t of ['guides', 'guide_items', 'guide_item_stores', 'product_prices']) {
   const r = await rest(`${t}?select=*&limit=1`)
   if (![401, 403].includes(r.status)) problems.push(`${t} table: HTTP ${r.status} (expected 401/403)`)
