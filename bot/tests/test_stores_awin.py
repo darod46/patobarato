@@ -17,6 +17,7 @@ def test_constants():
         "pccomponentes": ["pccomponentes.com"],
         "mediamarkt": ["mediamarkt.es"],
         "elcorteingles": ["elcorteingles.es"],
+        "neumaticos": ["neumaticos.es"],
     }
     assert set(AWIN_NAMES) == set(AWIN_HOSTS)
 
