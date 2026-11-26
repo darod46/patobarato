@@ -1,8 +1,8 @@
-import { Check, Send, TrendingDown, Zap } from 'lucide-react'
+import { Check, TrendingDown, Zap } from 'lucide-react'
 import { eventPath } from '../lib/events'
 import { joinNames } from '../lib/text'
 import type { SiteEvent } from '../lib/types'
-import { TelegramCta } from './TelegramCta'
+import { ChannelButton } from './ChannelButton'
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
 /** Facts taken from the current listing; a null/false value hides its badge. */
@@ -55,19 +55,15 @@ export function Hero({ highlights, storeNames, activeEvent = null, members = nul
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
             <a
               href={activeEvent ? eventPath(activeEvent.slug) : '/#chollos'}
-              className={`inline-flex h-13 items-center justify-center gap-2 rounded-xl bg-primary px-6 text-base font-semibold text-white hover:bg-primary-hover ${FOCUS}`}
+              className={`inline-flex h-14 items-center justify-center gap-2 rounded-full bg-primary px-7 text-base font-semibold text-white shadow-sm shadow-primary/30 hover:bg-primary-hover ${FOCUS}`}
             >
               {activeEvent && <Zap size={18} aria-hidden="true" />}
               {activeEvent ? `Chollos del ${activeEvent.name}` : 'Ver chollos de hoy'}
             </a>
             <div className="flex flex-col gap-1.5">
-              <TelegramCta
-                placement="hero"
-                className={`inline-flex h-13 items-center justify-center gap-2 rounded-xl border border-[#d7dae0] bg-white px-6 text-base font-semibold text-ink hover:bg-surface ${FOCUS}`}
-              >
-                <Send size={18} aria-hidden="true" />
+              <ChannelButton placement="hero" variant="light" size="lg" className="justify-center sm:justify-start">
                 Recibirlos en Telegram
-              </TelegramCta>
+              </ChannelButton>
               {members && <p className="text-center text-[13px] text-muted">{members} suscriptores · gratis</p>}
             </div>
           </div>

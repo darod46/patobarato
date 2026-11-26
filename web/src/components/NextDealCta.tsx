@@ -1,8 +1,6 @@
 import { Bell } from 'lucide-react'
 import { categoryLabel } from '../lib/telegram'
-import { TelegramCta } from './TelegramCta'
-
-const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+import { ChannelButton } from './ChannelButton'
 
 /** Card on deal pages inviting visitors who missed the offer to follow the Telegram channel. */
 export function NextDealCta({ hashtags }: { hashtags: string[] }) {
@@ -13,12 +11,9 @@ export function NextDealCta({ hashtags }: { hashtags: string[] }) {
       <Bell size={24} aria-hidden="true" className="text-primary" />
       <h2 className="font-display text-xl font-bold tracking-[-0.02em]">¿Se te ha escapado?</h2>
       <p className="text-sm text-muted">{`${subject} también saldrá en el canal, con su precio y su cupón.`}</p>
-      <TelegramCta
-        placement="deal"
-        className={`inline-flex h-13 items-center justify-center gap-2 rounded-xl bg-primary px-6 text-base font-semibold text-white hover:bg-primary-hover ${FOCUS}`}
-      >
+      <ChannelButton placement="deal" size="lg">
         Avísame del próximo
-      </TelegramCta>
+      </ChannelButton>
     </section>
   )
 }

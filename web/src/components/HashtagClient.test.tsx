@@ -63,7 +63,7 @@ it('has no search field of its own; the only one is the header search to /buscar
   setup()
   const banner = screen.getByRole('banner')
   expect(screen.getAllByRole('searchbox').every((box) => banner.contains(box))).toBe(true)
-  expect(screen.getByRole('link', { name: /Buscar chollos/ })).toHaveAttribute('href', '/buscar')
+  expect(screen.getByRole('search', { name: 'Buscar chollos' })).toHaveAttribute('action', '/buscar')
 })
 
 

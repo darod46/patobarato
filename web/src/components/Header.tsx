@@ -1,14 +1,13 @@
-import { Send } from 'lucide-react'
 import { MobileNav } from './MobileNav'
 import { SearchTrigger } from './SearchTrigger'
-import { TelegramCta } from './TelegramCta'
+import { ChannelButton } from './ChannelButton'
 
 import { NAV_LINKS } from '../lib/nav'
 
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
 type Props = {
-  /** Show the link to `/buscar`; the search page itself hides it. */
+  /** Show the search field (header on `md+`, menu panel below); the search page itself hides it. */
   searchTrigger?: boolean
 }
 
@@ -29,17 +28,15 @@ export function Header({ searchTrigger = true }: Props) {
         </nav>
         <div className="flex min-w-0 flex-1 items-center justify-end gap-1 sm:gap-3">
           {searchTrigger && <SearchTrigger />}
-          <TelegramCta
+          <ChannelButton
             placement="header"
             aria-label="Unirme al canal"
-            className={`group inline-flex h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full bg-primary p-1 text-sm font-semibold text-white shadow-sm shadow-primary/30 transition-colors hover:bg-primary-hover sm:pr-4 lg:pr-1 xl:pr-4 ${FOCUS}`}
+            labelClassName="hidden sm:inline lg:hidden xl:inline"
+            className="sm:pr-4 lg:pr-1 xl:pr-4"
           >
-            <span className="flex size-9 items-center justify-center rounded-full bg-white/15 transition-transform group-hover:-translate-y-px group-hover:translate-x-px">
-              <Send size={17} aria-hidden="true" className="-translate-x-px translate-y-px" />
-            </span>
-            <span className="hidden sm:inline lg:hidden xl:inline">Unirme al canal</span>
-          </TelegramCta>
-          <MobileNav links={NAV_LINKS} />
+            Unirme al canal
+          </ChannelButton>
+          <MobileNav links={NAV_LINKS} search={searchTrigger} />
         </div>
       </div>
     </header>

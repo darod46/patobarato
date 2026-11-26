@@ -37,7 +37,7 @@ it('renders the H1, the subtitle, the header search link, feed with sort and foo
   )
   expect(screen.getByRole('heading', { level: 1, name: 'Chollos de hoy' })).toBeInTheDocument()
   expect(screen.getByText('Se actualiza automáticamente')).toBeInTheDocument()
-  expect(within(screen.getByRole('banner')).getByRole('link', { name: /Buscar chollos/ })).toHaveAttribute('href', '/buscar')
+  expect(within(screen.getByRole('banner')).getByRole('search', { name: 'Buscar chollos' })).toHaveAttribute('action', '/buscar')
   expect(screen.getAllByRole('searchbox').every((box) => screen.getByRole('banner').contains(box))).toBe(true)
   expect(await screen.findByText('Auriculares Sony')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Cargar más chollos' })).toBeInTheDocument()

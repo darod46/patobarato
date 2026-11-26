@@ -16,9 +16,3 @@ it('is a GET form to /buscar with a typeable q field on md+', () => {
   expect(new FormData(form as HTMLFormElement).get('q')).toBe('freidora')
 })
 
-it('is a round link to /buscar below md', () => {
-  render(<SearchTrigger />)
-  const link = screen.getByRole('link', { name: 'Buscar chollos' })
-  expect(link).toHaveAttribute('href', '/buscar')
-  expect(link).toHaveClass('size-11', 'md:hidden')
-})

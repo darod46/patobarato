@@ -29,10 +29,8 @@ describe('Header', () => {
 
   it('shows the search trigger by default and hides it with searchTrigger={false}', () => {
     const { rerender } = render(<Header />)
-    expect(screen.getByRole('link', { name: /Buscar chollos/ })).toHaveAttribute('href', '/buscar')
     expect(screen.getByRole('searchbox', { name: 'Buscar chollos' })).toHaveAttribute('name', 'q')
     rerender(<Header searchTrigger={false} />)
-    expect(screen.queryByRole('link', { name: /Buscar chollos/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('searchbox')).not.toBeInTheDocument()
   })
 })

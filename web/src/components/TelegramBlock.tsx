@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { formatPrice, timeAgo } from '../lib/format'
 import { formatMembers, messageUrl, type ChannelLive } from '../lib/telegram'
 import type { Deal } from '../lib/types'
+import { ChannelButton } from './ChannelButton'
 import { TelegramCta } from './TelegramCta'
 import { TelegramPreview } from './TelegramPreview'
 
@@ -76,12 +77,9 @@ export function TelegramBlock({
               ))}
             </ul>
           )}
-          <TelegramCta
-            placement="block"
-            className="inline-flex h-14 items-center rounded-xl bg-white px-7 text-base font-semibold text-primary hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-          >
+          <ChannelButton placement="block" variant="inverse" size="lg">
             Unirme al canal gratis
-          </TelegramCta>
+          </ChannelButton>
         </div>
         {(deal || posts.length > 0) && (
           <div className="flex flex-col gap-6">
