@@ -82,3 +82,19 @@ export function hasFreshPrices(checkedAt: string | null, now: Date): boolean {
   const age = now.getTime() - new Date(checkedAt).getTime()
   return !Number.isNaN(age) && age >= 0 && age < FRESH_MS
 }
+
+/**
+ * Splits guide Markdown at its `## ` headings: the text before the first one (`lead`) and one section per
+ * heading. A text without `## ` headings is all `lead`.
+ */
+export function splitSections(md: string): { lead: string; sections: { title: string; body: string }[] } {
+  const parts = md.split(/^## +/m)
+  const lead = parts[0].trim()
+  const sections = parts.slice(1).map((part) => {
+    const newline = part.indexOf('\n')
+    const title = (newline < 0 ? part : part.slice(0, newline)).trim()
+    const body = newline < 0 ? '' : part.slice(newline + 1).trim()
+    return { title, body }
+  })
+  return { lead, sections }
+}

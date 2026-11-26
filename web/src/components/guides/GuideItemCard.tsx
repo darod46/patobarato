@@ -1,4 +1,4 @@
-import { ThumbsDown, ThumbsUp, Trophy } from 'lucide-react'
+import { Check, ThumbsDown, ThumbsUp, Trophy, X } from 'lucide-react'
 import { formatPrice } from '../../lib/format'
 import { bestOffer, discountPct, isLowest } from '../../lib/guides'
 import { storeInfo } from '../../lib/stores'
@@ -20,7 +20,7 @@ export function GuideItemCard({ item, index, now }: { item: GuideItem; index: nu
   )
 
   return (
-    <section id={`producto-${item.position}`} aria-labelledby={`producto-${item.position}-titulo`} className="scroll-mt-24 rounded-2xl border border-line bg-white p-5">
+    <section id={`producto-${item.position}`} aria-labelledby={`producto-${item.position}-titulo`} className={`scroll-mt-24 rounded-3xl border bg-white p-5 shadow-[0_2px_12px_rgba(20,22,26,0.05)] md:p-6 ${index === 1 ? 'border-accent ring-2 ring-accent/30' : 'border-line'}`}>
       <div className="grid gap-4 sm:grid-cols-[160px_1fr]">
         {item.imageUrl ? (
           <div className="relative mx-auto aspect-square w-full max-w-40 overflow-hidden rounded-xl border border-line bg-white">
@@ -94,23 +94,37 @@ export function GuideItemCard({ item, index, now }: { item: GuideItem; index: nu
       <Markdown source={item.summaryMd} className="mt-4" />
 
       {(item.pros.length > 0 || item.cons.length > 0) && (
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
           {item.pros.length > 0 && (
-            <div>
+            <div className="rounded-2xl bg-success-soft/60 p-4">
               <h4 className="flex items-center gap-1.5 text-sm font-bold text-success">
                 <ThumbsUp size={16} aria-hidden="true" />
                 Lo mejor
               </h4>
-              <ul className="mt-2 list-disc pl-5 text-sm">{item.pros.map((p) => <li key={p}>{p}</li>)}</ul>
+              <ul className="mt-2.5 flex flex-col gap-1.5 text-sm">
+                {item.pros.map((p) => (
+                  <li key={p} className="flex gap-2">
+                    <Check size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-success" />
+                    {p}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
           {item.cons.length > 0 && (
-            <div>
+            <div className="rounded-2xl bg-[#fdecea]/70 p-4">
               <h4 className="flex items-center gap-1.5 text-sm font-bold text-danger">
                 <ThumbsDown size={16} aria-hidden="true" />
                 Lo peor
               </h4>
-              <ul className="mt-2 list-disc pl-5 text-sm">{item.cons.map((c) => <li key={c}>{c}</li>)}</ul>
+              <ul className="mt-2.5 flex flex-col gap-1.5 text-sm">
+                {item.cons.map((c) => (
+                  <li key={c} className="flex gap-2">
+                    <X size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-danger" />
+                    {c}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
         </div>

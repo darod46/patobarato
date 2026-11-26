@@ -1,8 +1,9 @@
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Lightbulb, Trophy } from 'lucide-react'
 import { formatLongDate } from '../lib/format'
-import { freshnessLabel } from '../lib/guides'
+import { freshnessLabel, splitSections } from '../lib/guides'
 import { GUIDE_COVER_BG, guideCover } from '../lib/guide-covers'
 import type { Guide } from '../lib/types'
+import { slugify } from '../lib/urls'
 import { Footer } from './Footer'
 import { Header } from './Header'
 import { Markdown } from './Markdown'
@@ -12,6 +13,7 @@ import { GuideFaq } from './guides/GuideFaq'
 import { GuideItemCard } from './guides/GuideItemCard'
 import { GuideToc } from './guides/GuideToc'
 import { QuickPicks } from './guides/QuickPicks'
+import { SectionHeading } from './guides/SectionHeading'
 import { TyreFinder } from './guides/TyreFinder'
 
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
@@ -30,6 +32,7 @@ export function GuideView({ guide, now, stores }: Props) {
   const cover = guideCover(guide.slug, guide.title)
   const hasItems = guide.items.length > 0
   const finder = guide.widget === 'neumaticos'
+  const howToChoose = splitSections(guide.howToChooseMd)
   return (
     <div className="min-h-screen bg-white font-sans text-ink">
       <Header />
@@ -100,13 +103,14 @@ export function GuideView({ guide, now, stores }: Props) {
             {hasItems && <QuickPicks items={guide.items} now={now} />}
             {finder && hasItems && <TyreFinder />}
             <AffiliateNotice />
-            <Markdown source={guide.introMd} />
+            {/* The first paragraph reads as a lead. */}
+            <Markdown source={guide.introMd} className="[&>p:first-child]:text-lg [&>p:first-child]:leading-relaxed md:[&>p:first-child]:text-xl" />
             {finder && !hasItems && <TyreFinder />}
             {hasItems && (
             <section aria-labelledby="recomendaciones-titulo" className="flex flex-col gap-6">
-              <h2 id="recomendaciones-titulo" className="font-display text-2xl font-bold tracking-[-0.02em]">
+              <SectionHeading id="recomendaciones-titulo" icon={Trophy}>
                 Nuestras recomendaciones
-              </h2>
+              </SectionHeading>
               {guide.items.map((it, i) => (
                 <GuideItemCard key={it.id} item={it} index={i + 1} now={now} />
               ))}
@@ -115,10 +119,28 @@ export function GuideView({ guide, now, stores }: Props) {
             {hasComparison && <ComparisonTable items={guide.items} />}
             {hasHowToChoose && (
               <section id="como-elegir" aria-labelledby="como-elegir-titulo" className="scroll-mt-24">
-                <h2 id="como-elegir-titulo" className="font-display text-2xl font-bold tracking-[-0.02em]">
+                <SectionHeading id="como-elegir-titulo" icon={Lightbulb}>
                   Cómo elegir
-                </h2>
-                <Markdown source={guide.howToChooseMd} className="mt-4" />
+                </SectionHeading>
+                {howToChoose.lead && <Markdown source={howToChoose.lead} className="mt-5" />}
+                {howToChoose.sections.length > 0 && (
+                  <ol className="mt-5 flex flex-col gap-3 rounded-3xl border border-warm-line bg-warm p-3 md:p-4">
+                    {howToChoose.sections.map((s, i) => (
+                      <li key={s.title} className="flex gap-4 rounded-2xl bg-white p-4 md:p-5">
+                        <span
+                          aria-hidden="true"
+                          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent font-display text-sm font-bold text-accent-ink"
+                        >
+                          {i + 1}
+                        </span>
+                        <div className="min-w-0">
+                          <h3 id={slugify(s.title)} className="scroll-mt-24 font-display text-lg font-bold">{s.title}</h3>
+                          {s.body && <Markdown source={s.body} className="mt-2" />}
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                )}
               </section>
             )}
             {finder && <TyreFinder />}

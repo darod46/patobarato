@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { GuideCoupon, GuideStoreOffer } from './types'
-import { bestOffer, discountPct, finalPrice, freshnessLabel, guidePath, hasFreshPrices, isLowest, isRecent } from './guides'
+import { bestOffer, discountPct, finalPrice, freshnessLabel, guidePath, hasFreshPrices, isLowest, isRecent, splitSections } from './guides'
 
 const now = new Date('2026-11-07T12:00:00Z')
 const hoursAgo = (h: number) => new Date(now.getTime() - h * 3_600_000).toISOString()
@@ -183,5 +183,21 @@ describe('hasFreshPrices', () => {
     expect(hasFreshPrices(null, now)).toBe(false)
     expect(hasFreshPrices('2026-11-08T12:00:00Z', now)).toBe(false)
     expect(hasFreshPrices('nope', now)).toBe(false)
+  })
+})
+
+describe('splitSections', () => {
+  it('splits at ## headings and keeps the text before them as the lead', () => {
+    expect(splitSections('Intro\n\n## Uno\n\nTexto uno\n\n## Dos: más\n\nTexto *dos*\n')).toEqual({
+      lead: 'Intro',
+      sections: [
+        { title: 'Uno', body: 'Texto uno' },
+        { title: 'Dos: más', body: 'Texto *dos*' },
+      ],
+    })
+  })
+
+  it('leaves a text without headings as lead and never splits on ### or inline ##', () => {
+    expect(splitSections('Solo texto con ## en medio\n\n### Sub')).toEqual({ lead: 'Solo texto con ## en medio\n\n### Sub', sections: [] })
   })
 })
