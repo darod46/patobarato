@@ -326,5 +326,45 @@
       "priced_at": "2026-11-26T09:42:00Z"
     },
     "expected": "❌ <b>OFERTA TERMINADA</b>\n<b>Sony WH-1000XM5</b>\n✅ Precio: <s>149,00 €</s>\n❌ Antes: <s>199,00 €</s> (-25%)\n🎟️ Cupón: <code>SONY10</code>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\n🕒 Precio y disponibilidad a las 10:42 del 26/11; pueden cambiar.\nℹ️ Enlace de afiliado\n\n#auriculares #sony"
+  },
+  {
+    "name": "amazon post linking to the web",
+    "input": {
+      "title": "Sony WH-1000XM5",
+      "price": "149.00",
+      "previous_price": "199.00",
+      "coupon": "SONY10",
+      "hashtags": [
+        "auriculares",
+        "sony"
+      ],
+      "link": "https://www.patobarato.com/oferta/amazon/sony-wh-1000xm5-b09xs7jwhh",
+      "store_name": "Amazon",
+      "price_before_coupon": false,
+      "ended": false,
+      "priced_at": "2026-11-26T09:42:00Z",
+      "web": true
+    },
+    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio: <b>149,00 €</b>\n❌ Antes: <s>199,00 €</s> (-25%)\n🎟️ Cupón: <code>SONY10</code>\n🛒 Ver la oferta: https://www.patobarato.com/oferta/amazon/sony-wh-1000xm5-b09xs7jwhh\n🕒 Precio y disponibilidad a las 10:42 del 26/11; pueden cambiar.\n\n#auriculares #sony"
+  },
+  {
+    "name": "ended amazon post linking to the web",
+    "input": {
+      "title": "Sony WH-1000XM5",
+      "price": "149.00",
+      "previous_price": "199.00",
+      "coupon": "SONY10",
+      "hashtags": [
+        "auriculares",
+        "sony"
+      ],
+      "link": "https://www.patobarato.com/oferta/amazon/sony-wh-1000xm5-b09xs7jwhh",
+      "store_name": "Amazon",
+      "price_before_coupon": false,
+      "ended": true,
+      "priced_at": "2026-11-26T09:42:00Z",
+      "web": true
+    },
+    "expected": "❌ <b>OFERTA TERMINADA</b>\n<b>Sony WH-1000XM5</b>\n✅ Precio: <s>149,00 €</s>\n❌ Antes: <s>199,00 €</s> (-25%)\n🎟️ Cupón: <code>SONY10</code>\n🛒 Ver la oferta: https://www.patobarato.com/oferta/amazon/sony-wh-1000xm5-b09xs7jwhh\n🕒 Precio y disponibilidad a las 10:42 del 26/11; pueden cambiar.\n\n#auriculares #sony"
   }
 ]

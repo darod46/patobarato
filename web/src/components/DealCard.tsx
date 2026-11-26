@@ -68,6 +68,11 @@ export function DealCard({ deal, now }: Props) {
         <h3 className="line-clamp-2 min-h-[2lh] text-[13px] leading-snug font-medium text-ink group-hover:underline sm:text-[15px]">
           {deal.title}
         </h3>
+        {deal.priceHidden ? (
+          <p data-testid="price-hidden" className="mt-auto text-sm font-semibold text-muted">
+            {`Precio en ${storeInfo(deal.store).short}`}
+          </p>
+        ) : (
         <div className="mt-auto flex items-baseline gap-2">
           <span className="price font-display text-xl leading-tight font-bold tracking-[-0.02em] text-ink sm:text-2xl">
             {formatPrice(deal.price)}
@@ -81,6 +86,7 @@ export function DealCard({ deal, now }: Props) {
             <s className="price text-xs text-muted sm:text-sm">{formatPrice(deal.previousPrice)}</s>
           )}
         </div>
+        )}
         {deal.coupon && (
           <div
             data-testid="coupon"

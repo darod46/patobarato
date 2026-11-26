@@ -41,6 +41,8 @@ const base: OfferDetail = {
   channel: 'telegram',
   messageId: 123,
   publishedAt: '2026-11-01T10:00:00Z',
+  asin: 'B0LOGI0001',
+  slug: 'raton-logitech',
   botPublishedAt: null,
 }
 
@@ -105,6 +107,14 @@ describe('OfferPanel', () => {
     expect(screen.queryByRole('button', { name: 'Guardar y actualizar Telegram' })).not.toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
     await waitFor(() => expect(m.enqueueJob).toHaveBeenCalledWith(expect.anything(), 'revalidate', {}))
+  })
+
+  it('previews an Amazon post with the link to its deal page, like the bot', async () => {
+    setup()
+    const text = (await screen.findByTestId('preview')).textContent ?? ''
+    expect(text).toContain('🛒 Ver la oferta: https://www.patobarato.com/oferta/amazon/raton-logitech-b0logi0001')
+    expect(text).not.toContain('amzn.to')
+    expect(text).not.toContain('Enlace de afiliado')
   })
 
   it('preview updates as price changes', async () => {

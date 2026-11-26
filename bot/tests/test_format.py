@@ -229,6 +229,17 @@ def test_plain_price_label_by_default():
     assert "✅ Precio: <b>249,99 €</b>" in cap(make_offer())
 
 
+
+def test_web_link_mode_has_its_label_and_no_affiliate_line():
+    web = "https://www.patobarato.com/oferta/amazon/sony-wh-1000xm5-b09xs7jwhh"
+    lines = format_caption(make_offer(), web, "Amazon", web=True, priced_at=datetime(2026, 11, 26, 9, 42, tzinfo=UTC)).split("\n")
+    assert lines[2:] == [
+        f"🛒 Ver la oferta: {web}",
+        "🕒 Precio y disponibilidad a las 10:42 del 26/11; pueden cambiar.",
+    ]
+    ended = format_ended_caption(make_offer(), web, "Amazon", web=True)
+    assert f"🛒 Ver la oferta: {web}" in ended and AFFILIATE_LINE not in ended
+
 # --- shared golden cases (also pinned by the admin's TypeScript port) --------------
 
 CASES_PATH = Path(__file__).resolve().parents[2] / "shared" / "post-format-cases.json"
@@ -253,4 +264,4 @@ def test_shared_cases(case):
     )
     fmt = format_ended_caption if i["ended"] else format_caption
     at = datetime.fromisoformat(i["priced_at"].replace("Z", "+00:00")) if i["priced_at"] else None
-    assert fmt(offer, i["link"], i["store_name"], priced_at=at) == case["expected"]
+    assert fmt(offer, i["link"], i["store_name"], priced_at=at, web=i.get("web", False)) == case["expected"]

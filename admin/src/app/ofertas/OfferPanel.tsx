@@ -17,6 +17,7 @@ import { storeName } from '../../lib/stores'
 import { createBrowserSupabase } from '../../lib/supabase/browser'
 import { cleanHashtags, telegramCaption, type PostInput } from '../../lib/telegram-format'
 import { whatsappOffer } from '../../lib/whatsapp'
+import { webDealUrl } from '../../lib/web-links'
 
 const BTN = 'min-h-11 rounded-md border border-neutral-300 px-4 text-sm font-medium hover:bg-neutral-100 disabled:opacity-50'
 const PRIMARY = 'min-h-11 rounded-md bg-neutral-900 px-4 text-sm font-medium text-white disabled:opacity-50'
@@ -111,13 +112,16 @@ function OfferForm({ detail, onRefresh }: { detail: OfferDetail; onRefresh: () =
   const syncsTelegram = detail.channel === 'telegram' && detail.messageId !== null
   const payload = { publication_id: detail.id }
 
+  // Like the bot: Amazon posts link to the deal page on the web while AMAZON_LINKS_TO_WEB is on.
+  const webUrl = webDealUrl(detail.store, detail.asin, detail.slug)
   const input: PostInput = {
     title,
     price: priceNum ?? 0,
     previousPrice: previousNum !== null && priceNum !== null && previousNum > priceNum ? previousNum : null,
     coupon: coupon.trim() || null,
     hashtags: parseHashtags(hashtags),
-    link: detail.affiliateUrl,
+    link: webUrl ?? detail.affiliateUrl,
+    web: webUrl !== null,
     storeName: storeName(detail.store),
     priceBeforeCoupon: beforeCoupon,
     ended: detail.status === 'ended',

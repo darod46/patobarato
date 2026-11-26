@@ -261,7 +261,7 @@ class SupabaseRepository:
                     "id, offer_id, product_id, status, chat_id, message_id, country, published_at, "
                     "published_price::text, price_before_coupon, affiliate_url, "
                     "offers(previous_price::text, coupon, hashtags), "
-                    "products(title, store, image_url)"
+                    "products(title, store, image_url, asin, slug)"
                 )
                 .eq("id", publication_id)
                 .limit(1)
@@ -292,7 +292,24 @@ class SupabaseRepository:
             country=row["country"],
             image_url=product["image_url"],
             published_at=_parse_timestamp(row["published_at"]) if row.get("published_at") else None,
+            asin=product.get("asin") or "",
+            slug=product.get("slug"),
         )
+
+    async def get_product_slug(self, product_id: int) -> str | None:
+        def run():
+            return (
+                self._client.table("products").select("slug").eq("id", product_id).limit(1).execute()
+            )
+
+        response = await asyncio.to_thread(run)
+        return response.data[0]["slug"] if response.data else None
+
+    async def delete_publication(self, publication_id: int) -> None:
+        def run():
+            return self._client.table("publications").delete().eq("id", publication_id).execute()
+
+        await asyncio.to_thread(run)
 
     async def mark_post_published(
         self, publication_id: int, chat_id: int, message_id: int, published_at: datetime

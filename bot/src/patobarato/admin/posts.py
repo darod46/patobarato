@@ -9,6 +9,7 @@ from patobarato.core.pipeline import ImageDownloader
 from patobarato.models import ParsedOffer, PostData, PublicationStatus
 from patobarato.publishing.format import format_caption, format_ended_caption
 from patobarato.publishing.telegram_publisher import ChannelMismatchError, can_retry_without_photo
+from patobarato.publishing.web_links import deal_url
 from patobarato.storage.repository import Repository
 from patobarato.stores.registry import StoreRegistry
 
@@ -25,8 +26,13 @@ class PostPublisher(Protocol):
     async def edit(self, chat_id: int, message_id: int, caption: str) -> None: ...
 
 
-def caption_for(post: PostData, registry: StoreRegistry, now: datetime) -> str:
-    """An ended post keeps the time its price was published; a new or edited one shows ``now``."""
+def caption_for(
+    post: PostData, registry: StoreRegistry, now: datetime, site_url: str | None = None
+) -> str:
+    """An ended post keeps the time its price was published; a new or edited one shows ``now``.
+
+    With ``site_url`` (AMAZON_LINKS_TO_WEB on), an Amazon post links to its deal page on the web.
+    """
     store = registry.get(post.store)
     store_name = store.name if store is not None else post.store.capitalize()
     offer = ParsedOffer(
@@ -44,11 +50,18 @@ def caption_for(post: PostData, registry: StoreRegistry, now: datetime) -> str:
         affiliate_url=post.affiliate_url,
         price_before_coupon=post.price_before_coupon,
     )
+    web_url = (
+        deal_url(site_url, post.store, post.asin, post.slug)
+        if site_url and post.store == "amazon" and post.slug and post.asin
+        else None
+    )
+    link = web_url or post.affiliate_url
+    web = web_url is not None
     if post.status == PublicationStatus.ENDED:
         return format_ended_caption(
-            offer, post.affiliate_url, store_name, priced_at=post.published_at or now
+            offer, link, store_name, priced_at=post.published_at or now, web=web
         )
-    return format_caption(offer, post.affiliate_url, store_name, priced_at=now)
+    return format_caption(offer, link, store_name, priced_at=now, web=web)
 
 
 class PostService:
@@ -59,7 +72,9 @@ class PostService:
         registry: StoreRegistry,
         image_downloader: ImageDownloader,
         clock: Callable[[], datetime],
+        site_url: str | None = None,
     ) -> None:
+        self._site_url = site_url
         self._repo = repo
         self._publisher = publisher
         self._registry = registry
@@ -76,7 +91,7 @@ class PostService:
         post = await self._load(publication_id)
         if post.status != PublicationStatus.DRAFT:
             raise PostError("La oferta no es un borrador")
-        caption = caption_for(post, self._registry, self._clock())
+        caption = caption_for(post, self._registry, self._clock(), self._site_url)
         photo = await self._download(post.image_url) if post.image_url else None
         try:
             chat_id, message_id = await self._publisher.publish(caption, photo)
@@ -101,7 +116,7 @@ class PostService:
             return {"edited": False}
         try:
             await self._publisher.edit(
-                post.chat_id, post.message_id, caption_for(post, self._registry, self._clock())
+                post.chat_id, post.message_id, caption_for(post, self._registry, self._clock(), self._site_url)
             )
         except ChannelMismatchError:
             raise PostError("No se encuentra el canal del post") from None

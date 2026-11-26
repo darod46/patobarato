@@ -13,6 +13,7 @@ import { GuideFaq } from '../guides/GuideFaq'
 import { CatalogBlock } from '../search/CatalogBlock'
 import { EventStatusLine } from './EventStatusLine'
 import { EventTelegram } from './EventTelegram'
+import { FLAGS } from '../../lib/flags'
 
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 const CONTAINER = 'mx-auto max-w-[1200px] px-4 md:px-8'
@@ -123,7 +124,7 @@ export function EventView({ event, phase, next, deals, coupons, promos, now, sto
           {hasIntro && <Markdown source={event.introMd} className="mt-8 max-w-[720px]" />}
         </div>
         {blocks}
-        <EventTelegram />
+        {FLAGS.telegram && <EventTelegram />}
       </main>
       <Footer year={now.getUTCFullYear()} stores={stores} />
     </div>

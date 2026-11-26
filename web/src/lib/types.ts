@@ -25,6 +25,8 @@ export type Deal = {
   endedAt: string | null
   /** The product's URL slug, fixed when it was created (titles change, URLs must not). Absent in older data. */
   slug?: string | null
+  /** The web may not show this store's prices (lib/flags.ts): `price` is 0 and every price field empty. */
+  priceHidden?: boolean
 }
 
 export type HashtagCount = { tag: string; count: number }

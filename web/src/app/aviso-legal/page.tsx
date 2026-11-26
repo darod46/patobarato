@@ -1,5 +1,6 @@
 import { LegalLayout } from '../../components/LegalLayout'
 import { legalMetadata } from '../../lib/seo'
+import { FLAGS } from '../../lib/flags'
 
 /** Static page: the year is fixed at build time, which is also when the texts were last reviewed. */
 const YEAR = new Date().getUTCFullYear()
@@ -35,7 +36,7 @@ export default function AvisoLegalPage() {
       </p>
       <h2>Enlaces externos</h2>
       <p>
-        Los enlaces a tiendas y a Telegram conducen a sitios ajenos a PatoBarato, sobre cuyo contenido y
+        {FLAGS.telegram ? 'Los enlaces a tiendas y a Telegram' : 'Los enlaces a tiendas'} conducen a sitios ajenos a PatoBarato, sobre cuyo contenido y
         funcionamiento no tenemos control ni responsabilidad. Parte de esos enlaces son enlaces de afiliado;
         consulta la <a href="/afiliados">política de afiliación</a>.
       </p>

@@ -1,5 +1,6 @@
 import { LegalLayout } from '../../components/LegalLayout'
 import { legalMetadata } from '../../lib/seo'
+import { FLAGS } from '../../lib/flags'
 
 /** Static page: the year is fixed at build time, which is also when the texts were last reviewed. */
 const YEAR = new Date().getUTCFullYear()
@@ -17,7 +18,7 @@ export default function CookiesPage() {
       </p>
       <h2>Cookies de terceros</h2>
       <p>
-        Al pulsar un enlace hacia una tienda o hacia Telegram, esos sitios pueden instalar sus propias cookies
+        {FLAGS.telegram ? 'Al pulsar un enlace hacia una tienda o hacia Telegram' : 'Al pulsar un enlace hacia una tienda'}, esos sitios pueden instalar sus propias cookies
         bajo sus condiciones. Los enlaces de afiliado permiten a la tienda atribuir la visita a PatoBarato;
         consulta la <a href="/afiliados">política de afiliación</a>.
       </p>

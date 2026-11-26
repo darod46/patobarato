@@ -1,5 +1,6 @@
 import { LegalLayout } from '../../components/LegalLayout'
 import { legalMetadata } from '../../lib/seo'
+import { FLAGS } from '../../lib/flags'
 
 /** Static page: the year is fixed at build time, which is also when the texts were last reviewed. */
 const YEAR = new Date().getUTCFullYear()
@@ -16,14 +17,18 @@ export default function PrivacidadPage() {
         Navegar por patobarato.com no requiere registro ni facilitar datos personales. El sitio no tiene
         formularios ni cuentas de usuario. El proveedor de alojamiento (Vercel) registra de forma automática
         datos técnicos de las conexiones (dirección IP, navegador, páginas visitadas) con la única finalidad
-        de prestar el servicio, garantizar su seguridad y obtener estadísticas agregadas. Contamos los clics en los botones de Telegram (botón y página) sin
-        guardar ningún dato que te identifique.
+        de prestar el servicio, garantizar su seguridad y obtener estadísticas agregadas.
+        {FLAGS.telegram && ' Contamos los clics en los botones de Telegram (botón y página) sin guardar ningún dato que te identifique.'}
       </p>
-      <h2>Telegram</h2>
-      <p>
-        El canal de Telegram de PatoBarato es un servicio de Telegram. Al unirte, tus datos los trata Telegram
-        conforme a su propia política de privacidad; PatoBarato no recibe datos personales de los miembros del canal.
-      </p>
+      {FLAGS.telegram && (
+        <>
+          <h2>Telegram</h2>
+          <p>
+            El canal de Telegram de PatoBarato es un servicio de Telegram. Al unirte, tus datos los trata Telegram
+            conforme a su propia política de privacidad; PatoBarato no recibe datos personales de los miembros del canal.
+          </p>
+        </>
+      )}
       <h2>Tiendas y enlaces de afiliado</h2>
       <p>
         Al pulsar un enlace a una tienda, la tienda y su programa de afiliados pueden registrar que la visita

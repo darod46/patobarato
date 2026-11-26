@@ -3,6 +3,7 @@ import { eventPath } from '../lib/events'
 import { joinNames } from '../lib/text'
 import type { SiteEvent } from '../lib/types'
 import { ChannelButton } from './ChannelButton'
+import { FLAGS } from '../lib/flags'
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
 /** Facts taken from the current listing; a null/false value hides its badge. */
@@ -13,7 +14,12 @@ export type HeroHighlights = {
   hasLowest: boolean
 }
 
-const GUARANTEES = ['Precio comprobado', 'Cupón incluido cuando existe', 'Gratis, sin cuenta']
+// «Precio comprobado» only while the web shows prices of every store (see lib/flags.ts).
+const guarantees = () => [
+  FLAGS.amazonPrices ? 'Precio comprobado' : 'Enlace directo a la tienda',
+  'Cupón incluido cuando existe',
+  'Gratis, sin cuenta',
+]
 
 function Badge({ className, children }: { className: string; children: React.ReactNode }) {
   return (
@@ -49,8 +55,10 @@ export function Hero({ highlights, storeNames, activeEvent = null, members = nul
             El pato que caza los chollos antes de que vuelen
           </h1>
           <p className="max-w-xl text-base leading-relaxed text-muted md:text-lg">
-            {joinNames(storeNames.length > 0 ? storeNames : ['Amazon'])}. Cada oferta con su precio, el precio anterior y el
-            cupón si lo hay. Sin registros ni spam.
+            {joinNames(storeNames.length > 0 ? storeNames : ['Amazon'])}.{' '}
+            {FLAGS.amazonPrices
+              ? 'Cada oferta con su precio, el precio anterior y el cupón si lo hay. Sin registros ni spam.'
+              : 'Cada oferta con su cupón si lo hay y un enlace directo a la tienda. Sin registros ni spam.'}
           </p>
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
             <a
@@ -60,15 +68,17 @@ export function Hero({ highlights, storeNames, activeEvent = null, members = nul
               {activeEvent && <Zap size={18} aria-hidden="true" />}
               {activeEvent ? `Chollos del ${activeEvent.name}` : 'Ver chollos de hoy'}
             </a>
-            <div className="flex flex-col gap-1.5">
-              <ChannelButton placement="hero" variant="light" size="lg" className="justify-center sm:justify-start">
-                Recibirlos en Telegram
-              </ChannelButton>
-              {members && <p className="text-center text-[13px] text-muted">{members} suscriptores · gratis</p>}
-            </div>
+            {FLAGS.telegram && (
+              <div className="flex flex-col gap-1.5">
+                <ChannelButton placement="hero" variant="light" size="lg" className="justify-center sm:justify-start">
+                  Recibirlos en Telegram
+                </ChannelButton>
+                {members && <p className="text-center text-[13px] text-muted">{members} suscriptores · gratis</p>}
+              </div>
+            )}
           </div>
           <ul className="flex flex-col gap-2 text-sm text-muted sm:flex-row sm:flex-wrap sm:gap-x-6">
-            {GUARANTEES.map((text) => (
+            {guarantees().map((text) => (
               <li key={text} className="flex items-center gap-2">
                 <Check size={18} className="text-success" aria-hidden="true" />
                 {text}

@@ -1,6 +1,7 @@
 import { LegalLayout } from '../../components/LegalLayout'
 import { TelegramCta } from '../../components/TelegramCta'
 import { legalMetadata } from '../../lib/seo'
+import { FLAGS } from '../../lib/flags'
 
 /** Static page: the year is fixed at build time, which is also when the texts were last reviewed. */
 const YEAR = new Date().getUTCFullYear()
@@ -10,11 +11,13 @@ export const metadata = legalMetadata('Contacto', '/contacto', 'Cómo contactar 
 export default function ContactoPage() {
   return (
     <LegalLayout title="Contacto" updated="6 de noviembre de 2026" year={YEAR}>
-      <p>
-        La forma más rápida de hablar con nosotros es el canal de Telegram:{' '}
-        <TelegramCta placement="contact">t.me/patobarato</TelegramCta>
-        .
-      </p>
+      {FLAGS.telegram && (
+        <p>
+          La forma más rápida de hablar con nosotros es el canal de Telegram:{' '}
+          <TelegramCta placement="contact">t.me/patobarato</TelegramCta>
+          .
+        </p>
+      )}
       <p>
         Para consultas sobre un chollo, un cupón, una tienda o un asunto legal, escribe a [EMAIL].
         Solemos responder en un plazo de [PLAZO] días laborables.

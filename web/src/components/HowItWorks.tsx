@@ -1,4 +1,5 @@
 import { GUIDE_COVER_BG } from '../lib/guide-covers'
+import { FLAGS } from '../lib/flags'
 
 /** Illustrations in `public/como-funciona/<slug>.jpeg` (800×597, same duck and cream background as the guide covers). */
 const IMAGE_WIDTH = 800
@@ -20,7 +21,11 @@ const STEPS = [
   {
     slug: 'publicamos',
     title: '3 · Publicamos',
-    text: 'La oferta sale aquí y en el canal con un botón directo a la tienda. Tú decides si compras.',
+    get text() {
+      return FLAGS.telegram
+        ? 'La oferta sale aquí y en el canal con un botón directo a la tienda. Tú decides si compras.'
+        : 'La oferta sale aquí con un botón directo a la tienda. Tú decides si compras.'
+    },
     alt: 'El pato de PatoBarato lanzando un avión de papel con una etiqueta de precio hacia un carrito de la compra',
   },
 ]

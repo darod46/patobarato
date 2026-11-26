@@ -3,6 +3,7 @@ import { SearchTrigger } from './SearchTrigger'
 import { ChannelButton } from './ChannelButton'
 
 import { NAV_LINKS } from '../lib/nav'
+import { FLAGS } from '../lib/flags'
 
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
@@ -28,6 +29,7 @@ export function Header({ searchTrigger = true }: Props) {
         </nav>
         <div className="flex min-w-0 flex-1 items-center justify-end gap-1 sm:gap-3">
           {searchTrigger && <SearchTrigger />}
+          {FLAGS.telegram && (
           <ChannelButton
             placement="header"
             aria-label="Unirme al canal"
@@ -36,6 +38,7 @@ export function Header({ searchTrigger = true }: Props) {
           >
             Unirme al canal
           </ChannelButton>
+          )}
           <MobileNav links={NAV_LINKS} search={searchTrigger} />
         </div>
       </div>

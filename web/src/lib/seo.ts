@@ -10,6 +10,7 @@ import { stripMarkdown } from './text'
 import type { StoreStats } from './stores-data'
 import type { Deal, Guide, PageCopy, PageCopyKind, SiteEvent } from './types'
 import { PLACEHOLDER_ART } from './category-art'
+import { FLAGS } from './flags'
 import { SITE_URL, productPath } from './urls'
 
 export const MAX_DESCRIPTION = 160
@@ -42,6 +43,10 @@ export function truncate(text: string, max: number): string {
 }
 
 function productDescription(deal: Deal): string {
+  if (deal.priceHidden) {
+    const tail = ` en ${storeInfo(deal.store).name}.${deal.coupon ? ` ${deal.coupon}.` : ''} Consulta el precio en la tienda.`
+    return truncate(`${truncate(deal.title, Math.max(20, MAX_DESCRIPTION - tail.length))}${tail}`, MAX_DESCRIPTION)
+  }
   const discount = dealDiscount(deal)
   const before =
     discount !== null ? ` (antes ${formatPrice(deal.previousPrice!)}, -${discount}%)` : ''
@@ -57,7 +62,8 @@ function productDescription(deal: Deal): string {
 
 function endedDescription(deal: Deal): string {
   const date = new Date(deal.publishedAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', timeZone: 'Europe/Madrid' })
-  return `Esta oferta de ${storeInfo(deal.store).name} ya ha terminado. Se publicó a ${formatPrice(deal.price)} el ${date}. Mira el precio actual o las ofertas vigentes.`
+  const at = deal.priceHidden ? '' : ` a ${formatPrice(deal.price)}`
+  return `Esta oferta de ${storeInfo(deal.store).name} ya ha terminado. Se publicó${at} el ${date}. Mira el precio actual o las ofertas vigentes.`
 }
 
 export function productMetadata(deal: Deal, now: Date = new Date()): Metadata {
@@ -66,7 +72,9 @@ export function productMetadata(deal: Deal, now: Date = new Date()): Metadata {
   const ended = deal.status === 'ended'
   const title = ended
     ? `${deal.title} · Oferta caducada · PatoBarato`
-    : `${deal.title} por ${formatPrice(deal.price)}${sinCupon}${discount !== null ? ` (-${discount}%)` : ''} · PatoBarato`
+    : deal.priceHidden
+      ? `${deal.title} · Oferta en ${storeInfo(deal.store).short} · PatoBarato`
+      : `${deal.title} por ${formatPrice(deal.price)}${sinCupon}${discount !== null ? ` (-${discount}%)` : ''} · PatoBarato`
   const description = ended ? endedDescription(deal) : productDescription(deal)
   const path = productPath(deal)
   const image = shareableImage(deal.imageUrl)
@@ -101,7 +109,8 @@ export function productJsonLd(deal: Deal, url: string): Record<string, unknown> 
     name: deal.title,
     ...(shareableImage(deal.imageUrl) && { image: shareableImage(deal.imageUrl) }),
     sku: deal.asin,
-    offers: {
+    // No Offer without a price we may show (lib/flags.ts).
+    ...(!deal.priceHidden && { offers: {
       '@type': 'Offer',
       price: deal.price.toFixed(2),
       priceCurrency: 'EUR',
@@ -110,7 +119,7 @@ export function productJsonLd(deal: Deal, url: string): Record<string, unknown> 
       ...(deal.status === 'ended' && deal.endedAt && { priceValidUntil: deal.endedAt.slice(0, 10) }),
       url,
       seller: { '@type': 'Organization', name: storeInfo(deal.store).name },
-    },
+    } }),
   }
 }
 
@@ -191,7 +200,7 @@ export function aboutJsonLd(url: string): Record<string, unknown>[] {
       '@type': 'Organization',
       name: 'PatoBarato',
       url: SITE_URL,
-      sameAs: ['https://t.me/patobarato'],
+      ...(FLAGS.telegram && { sameAs: ['https://t.me/patobarato'] }),
     },
   ]
 }

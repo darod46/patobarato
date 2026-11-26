@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     admin_jobs_poll_seconds: float = 3.0
     # Public web, for the guide links and covers announced in the channel.
     site_url: str = "https://www.patobarato.com"
+    # While Amazon Associates reviews the web (the only registered site), Amazon posts link to the deal
+    # page on the web instead of Amazon. Set AMAZON_LINKS_TO_WEB=false once the account is approved.
+    amazon_links_to_web: bool = True
     # JSON in env: {"pccomponentes": 1234}. A null/missing mid still publishes plain links.
     awin_merchants: dict[str, int | None] = Field(
         default_factory=lambda: {"pccomponentes": None, "mediamarkt": None, "elcorteingles": None}

@@ -3,6 +3,7 @@
 import { ChevronRight, Menu, Search, X } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { ChannelButton } from './ChannelButton'
+import { FLAGS } from '../lib/flags'
 
 type Props = {
   links: { label: string; href: string }[]
@@ -90,9 +91,11 @@ export function MobileNav({ links, search = true }: Props) {
               </ul>
             </nav>
             {/* The bar only fits the plane icon on phones; here it gets its label. Counted as a header click. */}
-            <ChannelButton placement="header" size="lg" className="w-full justify-center sm:hidden">
-              Unirme al canal
-            </ChannelButton>
+            {FLAGS.telegram && (
+              <ChannelButton placement="header" size="lg" className="w-full justify-center sm:hidden">
+                Unirme al canal
+              </ChannelButton>
+            )}
           </div>
         </div>
       )}

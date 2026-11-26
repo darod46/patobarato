@@ -16,6 +16,7 @@ from patobarato.parsing.links import UrlResolver
 from patobarato.parsing.title_match import titles_mismatch
 from patobarato.publishing.format import format_caption
 from patobarato.publishing.telegram_publisher import can_retry_without_photo
+from patobarato.publishing.web_links import deal_url
 from patobarato.storage.repository import Repository
 from patobarato.stores.base import Store
 from patobarato.stores.registry import StoreRegistry
@@ -248,7 +249,29 @@ class Pipeline:
             if image_url:
                 photo = await self._download_photo(image_url)
         await self._wait_publish_slot()
-        caption = format_caption(offer, affiliate_url, store.name, priced_at=self._clock())
+        web_url = await self._web_link(offer, product_id)
+        link = web_url or affiliate_url
+        caption = format_caption(offer, link, store.name, priced_at=self._clock(), web=web_url is not None)
+        # A post that links to the web needs its deal page before anyone (or Telegram's link preview) can
+        # open it: the publication goes in first and is removed if the post never goes out.
+        early_id: int | None = None
+        if web_url is not None:
+            try:
+                early_id = await self._repo.insert_publication(
+                    offer_id,
+                    product_id,
+                    offer.country,
+                    None,
+                    None,
+                    offer.price,
+                    affiliate_url,
+                    self._clock(),
+                    price_before_coupon=offer.price_before_coupon,
+                )
+            except Exception:
+                # Without its deal page the post's only link would be broken: do not publish.
+                logger.exception("Publication insert failed for offer %s (%s)", offer_id, offer.asin)
+                return OfferStatus.PUBLISH_FAILED
         try:
             try:
                 chat_id, message_id = await self._publisher.publish(caption, photo)
@@ -265,26 +288,37 @@ class Pipeline:
                 chat_id, message_id = await self._publisher.publish(caption, None)
         except Exception:
             logger.exception("Failed to publish offer %s (%s)", offer_id, offer.asin)
+            if early_id is not None:
+                await self._retry_once(
+                    lambda: self._repo.delete_publication(early_id),
+                    f"Publicación {early_id} sin post en el canal: bórrala a mano",
+                )
             return OfferStatus.PUBLISH_FAILED
         finally:
             self._last_publish = self._monotonic()
 
         # The post is already live: a storage failure must not crash the worker.
         what = f"offer {offer_id} ({offer.asin}) chat_id={chat_id} message_id={message_id}"
-        await self._retry_once(
-            lambda: self._repo.insert_publication(
-                offer_id,
-                product_id,
-                offer.country,
-                chat_id,
-                message_id,
-                offer.price,
-                affiliate_url,
-                self._clock(),
-                price_before_coupon=offer.price_before_coupon,
-            ),
-            f"Mensaje publicado pero no registrado (publications): {what}",
-        )
+        if early_id is not None:
+            await self._retry_once(
+                lambda: self._repo.mark_post_published(early_id, chat_id, message_id, self._clock()),
+                f"Mensaje publicado pero sin ids en publications: {what}",
+            )
+        else:
+            await self._retry_once(
+                lambda: self._repo.insert_publication(
+                    offer_id,
+                    product_id,
+                    offer.country,
+                    chat_id,
+                    message_id,
+                    offer.price,
+                    affiliate_url,
+                    self._clock(),
+                    price_before_coupon=offer.price_before_coupon,
+                ),
+                f"Mensaje publicado pero no registrado (publications): {what}",
+            )
         await self._retry_once(
             lambda: self._repo.set_offer_status(offer_id, OfferStatus.PUBLISHED),
             f"Mensaje publicado pero no registrado (estado de la oferta): {what}",
@@ -297,6 +331,17 @@ class Pipeline:
             except Exception:
                 logger.error("Image store failed for %s", offer.asin, exc_info=True)
         return OfferStatus.PUBLISHED
+
+    async def _web_link(self, offer: ParsedOffer, product_id: int) -> str | None:
+        """The deal page on the web for Amazon posts while AMAZON_LINKS_TO_WEB is on; otherwise None."""
+        if offer.store != "amazon" or not self._settings.amazon_links_to_web:
+            return None
+        try:
+            slug = await self._repo.get_product_slug(product_id)
+        except Exception:
+            logger.error("Slug lookup failed for %s", offer.asin, exc_info=True)
+            return None
+        return deal_url(self._settings.site_url, offer.store, offer.asin, slug) if slug else None
 
     async def _find_image(self, offer: ParsedOffer, store: Store) -> str | None:
         try:

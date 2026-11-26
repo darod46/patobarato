@@ -20,6 +20,6 @@ describe('QuickPicks', () => {
     expect(screen.getByText('Mejor en general')).toBeInTheDocument()
     expect(screen.getByText('89,90 €')).toBeInTheDocument()
     expect(screen.getByText('en Amazon con cupón')).toBeInTheDocument()
-    expect(screen.getByText('Sin precio ahora mismo')).toBeInTheDocument()
+    expect(screen.getByText('Consulta el precio en la tienda')).toBeInTheDocument()
   })
 })

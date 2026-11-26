@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { describe, expect, it } from 'vitest'
 import { fakeClient, type FakeResult } from '../test-utils/fakeClient'
+import { FLAGS } from './flags'
 import { fetchGuide, fetchGuides, fetchGuidesByProduct, fetchLatestGuide } from './guides-data'
 
 /** Routes `from(table)` to a per-table fake so one client can answer several queries. */
@@ -134,6 +135,21 @@ describe('fetchGuides', () => {
 })
 
 describe('fetchGuide', () => {
+  it('review mode: Amazon offers come without any price, other stores keep theirs', async () => {
+    FLAGS.amazonPrices = false
+    const m = multiClient({
+      web_guides: { data: [summaryRow], error: null },
+      web_guide_items: { data: itemRows, error: null },
+    })
+    const guide = await fetchGuide(m.client, 'mejores-aspiradoras')
+    expect(guide!.items[0].stores[0]).toMatchObject({ store: 'amazon', price: null, previousPrice: null, previousMinPrice: null })
+    // Same rows with the flag on: the Amazon price is there, and other stores never change.
+    FLAGS.amazonPrices = true
+    const shown = await fetchGuide(multiClient({ web_guides: { data: [summaryRow], error: null }, web_guide_items: { data: itemRows, error: null } }).client, 'mejores-aspiradoras')
+    expect(shown!.items[0].stores[0]).toMatchObject({ store: 'amazon', price: 99.5, previousPrice: 120 })
+    expect(shown!.items[0].stores[1]).toEqual(guide!.items[0].stores[1])
+  })
+
   it('queries both views by slug and groups store rows into ordered items', async () => {
     const m = multiClient({
       web_guides: { data: [summaryRow], error: null },

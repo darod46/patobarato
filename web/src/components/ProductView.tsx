@@ -8,6 +8,7 @@ import { tagPath } from '../lib/urls'
 import { BuyButton } from './BuyButton'
 import { DealCard } from './DealCard'
 import { NextDealCta } from './NextDealCta'
+import { FLAGS } from '../lib/flags'
 
 const PLACEHOLDER = '/pato-placeholder.svg'
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
@@ -107,6 +108,13 @@ export function ProductView({ deal, related, now, guides = [] }: Props) {
               <span>{`Oferta caducada · terminó el ${formatDayMonth(deal.endedAt ?? now)}`}</span>
             </p>
           )}
+          {deal.priceHidden ? (
+            <p data-testid="price-hidden" className="text-base text-muted">
+              {ended
+                ? `Consulta el precio actual en ${store.name}.`
+                : `Consulta el precio y la disponibilidad en ${store.name}.`}
+            </p>
+          ) : (
           <div className="flex flex-wrap items-baseline justify-center gap-3 md:justify-start">
             {ended ? (
               <s className="price font-display text-4xl font-bold tracking-[-0.02em] text-muted">
@@ -130,6 +138,7 @@ export function ProductView({ deal, related, now, guides = [] }: Props) {
               </span>
             )}
           </div>
+          )}
           {saving !== null && (
             <p className="price text-sm font-semibold text-success">{`Ahorras ${formatPrice(saving)}`}</p>
           )}
@@ -139,7 +148,9 @@ export function ProductView({ deal, related, now, guides = [] }: Props) {
           <p className="text-sm text-muted">
             {ended
               ? `Publicado ${timeAgo(deal.publishedAt, clock)}`
-              : `Publicado ${timeAgo(deal.publishedAt, clock)} · El precio puede cambiar`}
+              : deal.priceHidden
+                ? `Publicado ${timeAgo(deal.publishedAt, clock)}`
+                : `Publicado ${timeAgo(deal.publishedAt, clock)} · El precio puede cambiar`}
           </p>
 
           {ended ? (
@@ -155,7 +166,12 @@ export function ProductView({ deal, related, now, guides = [] }: Props) {
           ) : (
             /* Mobile: fixed bottom bar (above the home indicator); desktop: inline. */
             <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur md:static md:z-auto md:w-full md:max-w-sm md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
-              <BuyButton url={deal.affiliateUrl} store={deal.store} className="w-full" />
+              <BuyButton
+                url={deal.affiliateUrl}
+                store={deal.store}
+                className="w-full"
+                {...(deal.priceHidden && { label: `Ver precio en ${store.short}` })}
+              />
             </div>
           )}
           {guides.length > 0 && (
@@ -191,7 +207,7 @@ export function ProductView({ deal, related, now, guides = [] }: Props) {
         </div>
       </article>
 
-      <NextDealCta hashtags={deal.hashtags} />
+      {FLAGS.telegram && <NextDealCta hashtags={deal.hashtags} />}
 
       {related.length > 0 && (
         <section className="mt-12">

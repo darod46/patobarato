@@ -69,7 +69,9 @@ async def _no_photo(msg: SourceMessage, url: str) -> bytes | None:
     return None
 
 
-def _settings() -> Settings:
+def _settings(**overrides) -> Settings:
+    # Store links by default (the long-term mode); the web-link tests turn amazon_links_to_web on.
+    values = dict(amazon_links_to_web=False) | overrides
     return Settings(
         _env_file=None,
         telegram_api_id=1,
@@ -77,6 +79,7 @@ def _settings() -> Settings:
         telegram_bot_token="token",
         supabase_url="https://example.supabase.co",
         supabase_service_key="key",
+        **values,
     )
 
 
@@ -142,6 +145,7 @@ def make_pipeline(repo, resolver, publisher, fake_time):
         image_finder=None,
         registry=None,
         image_downloader=None,
+        settings=None,
         **extra,
     ) -> Pipeline:
         if registry is None:
@@ -151,7 +155,7 @@ def make_pipeline(repo, resolver, publisher, fake_time):
             resolver,
             pub or publisher,
             photo_provider,
-            _settings(),
+            settings or _settings(),
             clock=lambda: NOW,
             sleep=fake_time.sleep,
             monotonic=fake_time.monotonic,
@@ -1069,3 +1073,63 @@ async def test_create_draft_no_affiliate_raises(make_pipeline, repo):
         await pipeline.create_draft(FAKE_URL, 1)
     assert repo.publications() == []
     assert repo.offer_statuses() == []
+
+
+
+# --- Amazon posts link to the web while Amazon Associates reviews it (AMAZON_LINKS_TO_WEB) ---
+
+
+async def test_amazon_post_links_to_its_deal_page_without_affiliate_line(make_pipeline, publisher, repo):
+    pipeline = make_pipeline(settings=_settings(amazon_links_to_web=True))
+    assert await pipeline.process(_msg()) == [OfferStatus.PUBLISHED]
+    caption = publisher.calls[0][0]
+    [pub] = repo.publications()
+    slug = await repo.get_product_slug(pub["product_id"])
+    assert f"🛒 Ver la oferta: https://www.patobarato.com/oferta/amazon/{slug}-" in caption
+    assert "amazon.es" not in caption and "amzn" not in caption
+    assert "Enlace de afiliado" not in caption
+    assert "🕒 Precio y disponibilidad a las" in caption
+    # The web's buy button still needs the affiliate link, and the ids of the post.
+    assert "tag=" in pub["affiliate_url"]
+    assert (pub["chat_id"], pub["message_id"]) != (None, None)
+    assert pub["status"] == PublicationStatus.ACTIVE
+
+
+async def test_deal_page_exists_before_the_post_goes_out(make_pipeline, repo):
+    seen: list[int] = []
+
+    class Watching:
+        calls: list = []
+
+        async def publish(self, caption, photo):
+            seen.append(len(repo.publications()))
+            return -100, 7
+
+    pipeline = make_pipeline(pub=Watching(), settings=_settings(amazon_links_to_web=True))
+    await pipeline.process(_msg())
+    assert seen == [1]
+
+
+async def test_failed_post_removes_the_early_publication(make_pipeline, repo):
+    class Failing:
+        async def publish(self, caption, photo):
+            raise RuntimeError("telegram caído")
+
+    pipeline = make_pipeline(pub=Failing(), settings=_settings(amazon_links_to_web=True))
+    assert await pipeline.process(_msg()) == [OfferStatus.PUBLISH_FAILED]
+    assert repo.publications() == []
+
+
+async def test_store_link_mode_keeps_the_affiliate_link(make_pipeline, publisher):
+    await make_pipeline().process(_msg())
+    caption = publisher.calls[0][0]
+    assert "Ver la oferta" not in caption
+    assert "Enlace de afiliado" in caption
+
+
+async def test_no_post_when_the_deal_page_cannot_be_created_first(make_pipeline, publisher):
+    flaky = FlakyRepository(publication_failures=1)
+    pipeline = make_pipeline(repository=flaky, settings=_settings(amazon_links_to_web=True))
+    assert await pipeline.process(_msg()) == [OfferStatus.PUBLISH_FAILED]
+    assert publisher.calls == []
+    assert flaky.publications() == []

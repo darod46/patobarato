@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { isAmazonImage } from './category-art'
 import { numOrNull } from './coupons'
+import { pricesVisible } from './flags'
 import type { Guide, GuideItem, GuideStoreOffer, GuideSummary } from './types'
 
 type Num = number | string | null | undefined
@@ -81,6 +82,8 @@ function toSummary(row: GuideRow): GuideSummary {
 }
 
 function toOffer(row: GuideItemRow): GuideStoreOffer {
+  // Hidden prices never leave the server (lib/flags.ts): the row shows «Ver precio en …» instead.
+  const hide = !pricesVisible(row.store)
   return {
     store: row.store,
     externalId: row.external_id,
@@ -88,12 +91,12 @@ function toOffer(row: GuideItemRow): GuideStoreOffer {
     affiliateUrl: row.affiliate_url ?? null,
     note: row.note,
     productId: numOrNull(row.product_id),
-    price: numOrNull(row.price),
-    previousPrice: numOrNull(row.previous_price),
+    price: hide ? null : numOrNull(row.price),
+    previousPrice: hide ? null : numOrNull(row.previous_price),
     currency: row.currency,
     checkedAt: row.checked_at,
     priceError: row.price_error === true,
-    previousMinPrice: numOrNull(row.previous_min_price),
+    previousMinPrice: hide ? null : numOrNull(row.previous_min_price),
     coupon:
       row.coupon_code === null
         ? null

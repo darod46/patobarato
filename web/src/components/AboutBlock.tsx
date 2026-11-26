@@ -1,4 +1,5 @@
 import { ArrowRight } from 'lucide-react'
+import { FLAGS } from '../lib/flags'
 /** "Hola, soy el Pato": who is behind the site and how it is funded. */
 export function AboutBlock() {
   return (
@@ -9,9 +10,9 @@ export function AboutBlock() {
           <div className="flex flex-col gap-3">
             <h2 className="font-display text-2xl font-bold tracking-[-0.02em] text-ink md:text-[28px]">Hola, soy el Pato</h2>
             <p className="text-[15px] leading-relaxed text-muted md:text-base">
-              PatoBarato nació como un canal de Telegram para no perderse ningún chollo de Amazon. Vigilo los
-              canales de ofertas y publico cada chollo con su precio, el precio anterior y el cupón si lo hay,
-              sin trucos ni cifras inventadas.
+              {FLAGS.telegram
+                ? 'PatoBarato nació como un canal de Telegram para no perderse ningún chollo de Amazon. Vigilo los canales de ofertas y publico cada chollo con su precio, el precio anterior y el cupón si lo hay, sin trucos ni cifras inventadas.'
+                : 'PatoBarato es una web para no perderse ningún chollo. Vigilo las ofertas de Amazon y de otras tiendas y publico cada una con su cupón si lo hay y un enlace directo a la tienda, sin trucos ni cifras inventadas.'}
             </p>
             <p className="text-[15px] leading-relaxed text-muted md:text-base">
               Nos financiamos con enlaces de afiliado: si compras, la tienda nos da una pequeña comisión y a ti no

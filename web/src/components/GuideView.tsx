@@ -74,7 +74,10 @@ export function GuideView({ guide, now, stores }: Props) {
               <span>{`Por ${guide.author} · equipo PatoBarato`}</span>
               <span>{`Actualizado el ${formatLongDate(guide.updatedAt)}`}</span>
               <span>{`${guide.readingMinutes} min de lectura`}</span>
-              {hasItems && <span>{freshnessLabel(guide.pricesCheckedAt, now)}</span>}
+              {/* Only when some price is on show (Amazon prices may be hidden, lib/flags.ts). */}
+              {hasItems && guide.items.some((i) => i.stores.some((s) => s.price !== null)) && (
+                <span>{freshnessLabel(guide.pricesCheckedAt, now)}</span>
+              )}
             </p>
           </div>
           {cover && (

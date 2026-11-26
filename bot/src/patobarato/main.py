@@ -157,7 +157,7 @@ def build_runners(
         def download(url: str):
             return download_photo(download_http, url)
 
-        posts = PostService(repo, publisher, registry, download, utcnow)
+        posts = PostService(repo, publisher, registry, download, utcnow, web_links_site(settings))
         runners.append(EndedPostsSource(repo, posts, clock))
         runners.append(GuideAnnouncer(repo, publisher, download, settings.site_url, clock))
     return runners
@@ -205,7 +205,12 @@ async def run(settings: Settings) -> int:
         runner = JobRunner(
             repo,
             PostService(
-                repo, publisher, registry, lambda url: download_photo(http, url), utcnow
+                repo,
+                publisher,
+                registry,
+                lambda url: download_photo(http, url),
+                utcnow,
+                web_links_site(settings),
             ),
             pipeline,
             UserAdmin(supabase_client, repo, settings.admin_url),
@@ -350,6 +355,11 @@ async def check_deals(settings: Settings, dry_run: bool = False) -> int:
                 print(REVALIDATE_BY_HAND_MESSAGE)
         print(summary.format())
     return 0
+
+
+def web_links_site(settings: Settings) -> str | None:
+    """The site Amazon posts link to while AMAZON_LINKS_TO_WEB is on; None sends them to Amazon."""
+    return settings.site_url if settings.amazon_links_to_web else None
 
 
 def _config_error_message(error: ValidationError) -> str:

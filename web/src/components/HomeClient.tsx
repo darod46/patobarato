@@ -19,6 +19,7 @@ import { Hero, type HeroHighlights } from './Hero'
 import { HowItWorks } from './HowItWorks'
 import { LatestGuideBanner } from './LatestGuideBanner'
 import { TelegramBlock } from './TelegramBlock'
+import { FLAGS } from '../lib/flags'
 
 type Props = {
   /** Server render time (ISO); the first client render uses it so hydration matches. */
@@ -95,7 +96,7 @@ export function HomeClient({
         <HowItWorks />
         {upcoming.length > 0 && <EventsBlock next={upcoming[0]} upcoming={upcoming} now={renderTime} />}
         <AboutBlock />
-        <TelegramBlock fetchLatestDeal={fetchLatestDeal} live={live} now={clock} />
+        {FLAGS.telegram && <TelegramBlock fetchLatestDeal={fetchLatestDeal} live={live} now={clock} />}
       </main>
       <Footer year={renderTime.getUTCFullYear()} stores={stores.map((s) => s.store)} />
     </div>

@@ -109,6 +109,9 @@ class PostData:
     image_url: str | None
     # When the post went out (None for a draft): the price time an ended post keeps.
     published_at: datetime | None = None
+    # Product id within its store and its fixed URL slug: the post's link to the deal page on the web.
+    asin: str = ""
+    slug: str | None = None
 
 
 @dataclass(frozen=True)

@@ -33,6 +33,9 @@ export type OfferDetail = {
   channel: Channel
   messageId: number | null
   publishedAt: string
+  /** Product id in its store and fixed URL slug, for the post's link to the deal page on the web. */
+  asin: string | null
+  slug: string | null
   /** Draft only: when the bot auto-published the same product after this draft was created. */
   botPublishedAt: string | null
 }
@@ -46,8 +49,8 @@ export type OfferPatch = {
   hashtags: string[]
 }
 
-const JOINED = '*, offers(previous_price, coupon, hashtags), products(title, store, image_url)'
-const JOINED_INNER = '*, offers(previous_price, coupon, hashtags), products!inner(title, store, image_url)'
+const JOINED = '*, offers(previous_price, coupon, hashtags), products(title, store, image_url, asin, slug)'
+const JOINED_INNER = '*, offers(previous_price, coupon, hashtags), products!inner(title, store, image_url, asin, slug)'
 const LIMIT = 200
 
 // oxlint-disable-next-line no-explicit-any
@@ -101,6 +104,8 @@ export async function getOffer(client: SupabaseClient, publicationId: number | s
     channel: r.channel,
     messageId: r.message_id ?? null,
     publishedAt: r.published_at,
+    asin: r.products?.asin ?? null,
+    slug: r.products?.slug ?? null,
     botPublishedAt: null,
   }
   if (detail.status === 'draft') {

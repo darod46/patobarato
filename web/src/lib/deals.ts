@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { categoryArt, categoryKey, displayImage } from './category-art'
 import { madridDayBounds } from './events'
+import { pricesVisible } from './flags'
 import { escapeIlike } from './format'
 import type { Deal, HashtagCount } from './types'
 
@@ -48,11 +49,13 @@ type DealRow = {
 
 function toDeal(row: DealRow): Deal {
   const key = categoryKey(row.hashtags ?? [])
+  // Hidden prices never leave the server, not even in the page payload (lib/flags.ts).
+  const hide = !pricesVisible(row.store)
   return {
     publicationId: Number(row.publication_id),
     publishedAt: row.published_at,
-    price: Number(row.price),
-    previousPrice: row.previous_price == null ? null : Number(row.previous_price),
+    price: hide ? 0 : Number(row.price),
+    previousPrice: hide || row.previous_price == null ? null : Number(row.previous_price),
     coupon: row.coupon,
     hashtags: row.hashtags ?? [],
     affiliateUrl: row.affiliate_url,
@@ -63,13 +66,14 @@ function toDeal(row: DealRow): Deal {
     country: row.country,
     store: row.store,
     productId: Number(row.product_id),
-    discountPct: row.discount_pct == null ? null : Number(row.discount_pct),
-    previousMinPrice: row.previous_min_price == null ? null : Number(row.previous_min_price),
-    isLowest: row.is_lowest === true,
-    priceBeforeCoupon: row.price_before_coupon === true,
+    discountPct: hide || row.discount_pct == null ? null : Number(row.discount_pct),
+    previousMinPrice: hide || row.previous_min_price == null ? null : Number(row.previous_min_price),
+    isLowest: !hide && row.is_lowest === true,
+    priceBeforeCoupon: !hide && row.price_before_coupon === true,
     status: row.status === 'ended' ? 'ended' : 'active',
     endedAt: row.ended_at ?? null,
     slug: row.slug ?? null,
+    ...(hide && { priceHidden: true }),
   }
 }
 

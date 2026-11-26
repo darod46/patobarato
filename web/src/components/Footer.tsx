@@ -2,6 +2,7 @@ import { storeNames } from '../lib/stores'
 import { TELEGRAM_URL } from '../lib/telegram'
 import { joinNames } from '../lib/text'
 import { TelegramCta } from './TelegramCta'
+import { FLAGS } from '../lib/flags'
 
 const FOCUS = 'rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
@@ -62,7 +63,7 @@ export function Footer({ year, stores = [] }: Props) {
           {COLUMNS.map((col) => (
             <nav key={col.title} aria-label={col.title} className="flex flex-col gap-2.5 text-sm">
               <span className="font-semibold text-ink">{col.title}</span>
-              {col.links.map((link) =>
+              {col.links.filter((link) => FLAGS.telegram || !link.telegram).map((link) =>
                 link.telegram ? (
                   <TelegramCta key={link.href} placement="footer" className={`text-muted hover:text-ink ${FOCUS}`}>
                     {link.label}

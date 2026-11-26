@@ -12,6 +12,7 @@ import { listingMetadata } from '../../lib/seo'
 import { storeInfo } from '../../lib/stores'
 import { getSupabase } from '../../lib/supabase'
 import type { Coupon } from '../../lib/types'
+import { FLAGS } from '../../lib/flags'
 
 export const revalidate = 1800
 
@@ -50,7 +51,8 @@ export default async function CouponsPage() {
         <PageIntro h1={copy?.h1 ?? defaultH1('static', 'cupones')} copy={copy} values={{}} />
         {coupons.length === 0 ? (
           <p className="mt-10 rounded-2xl border border-line bg-surface p-6 text-muted">
-            Ahora mismo no hay cupones vigentes. Los publicamos en el canal en cuanto salen.
+            Ahora mismo no hay cupones vigentes.{' '}
+            {FLAGS.telegram ? 'Los publicamos en el canal en cuanto salen.' : 'Los publicamos aquí en cuanto salen.'}
           </p>
         ) : (
           groupByStore(coupons).map(([store, list]) => (

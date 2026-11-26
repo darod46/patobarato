@@ -13,6 +13,10 @@ def link_label(store_name: str) -> str:
     return f"🛒 Ver en {store_name}:"
 
 
+# Label of a link to the deal page on our web (not an affiliate link, so no disclosure line).
+WEB_LINK_LABEL = "🛒 Ver la oferta:"
+
+
 _INVALID_TAG_CHARS = re.compile(r"[^a-z0-9_áéíóúñü]")
 
 MADRID = ZoneInfo("Europe/Madrid")
@@ -50,6 +54,7 @@ def _build(
     store_name: str,
     ended: bool = False,
     priced_at: datetime | None = None,
+    web: bool = False,
 ) -> str:
     assert offer.price is not None, "format_caption requires a price"
     label = "Precio sin cupón" if offer.price_before_coupon else "Precio"
@@ -68,10 +73,12 @@ def _build(
         )
     if coupon:
         lines.append(f"🎟️ Cupón: <code>{html.escape(coupon)}</code>")
-    lines.append(f"{link_label(store_name)} {html.escape(link, quote=False)}")
+    label = WEB_LINK_LABEL if web else link_label(store_name)
+    lines.append(f"{label} {html.escape(link, quote=False)}")
     if priced_at is not None:
         lines.append(priced_at_line(priced_at))
-    lines.append(AFFILIATE_LINE)
+    if not web:
+        lines.append(AFFILIATE_LINE)
     tags = [t for t in (normalize_hashtag(h) for h in offer.hashtags) if t]
     if tags:
         lines.append("")
@@ -86,6 +93,7 @@ def _format(
     max_len: int,
     ended: bool,
     priced_at: datetime | None,
+    web: bool = False,
 ) -> str:
     """Builds the HTML caption.
 
@@ -96,7 +104,7 @@ def _format(
     """
     title = strip_urls(offer.title)
     coupon = strip_urls(offer.coupon) if offer.coupon else None
-    caption = _build(offer, title, coupon, link, store_name, ended, priced_at)
+    caption = _build(offer, title, coupon, link, store_name, ended, priced_at, web)
     if len(caption) <= max_len:
         return caption
     # Trim only the (unescaped) title, longest prefix that fits.
@@ -104,11 +112,11 @@ def _format(
     while lo < hi:
         mid = (lo + hi + 1) // 2
         trimmed = title[:mid].rstrip() + "…"
-        if len(_build(offer, trimmed, coupon, link, store_name, ended, priced_at)) <= max_len:
+        if len(_build(offer, trimmed, coupon, link, store_name, ended, priced_at, web)) <= max_len:
             lo = mid
         else:
             hi = mid - 1
-    return _build(offer, title[:lo].rstrip() + "…", coupon, link, store_name, ended, priced_at)
+    return _build(offer, title[:lo].rstrip() + "…", coupon, link, store_name, ended, priced_at, web)
 
 
 def format_caption(
@@ -117,9 +125,11 @@ def format_caption(
     store_name: str = "Amazon",
     max_len: int = 1024,
     priced_at: datetime | None = None,
+    web: bool = False,
 ) -> str:
-    """``priced_at``: when the price was read (shown in Madrid time); omitted, the time line is left out."""
-    return _format(offer, link, store_name, max_len, ended=False, priced_at=priced_at)
+    """``priced_at``: when the price was read (shown in Madrid time); omitted, the time line is left out.
+    ``web``: ``link`` is our deal page, not the store's affiliate link."""
+    return _format(offer, link, store_name, max_len, ended=False, priced_at=priced_at, web=web)
 
 
 def format_ended_caption(
@@ -128,6 +138,7 @@ def format_ended_caption(
     store_name: str = "Amazon",
     max_len: int = 1024,
     priced_at: datetime | None = None,
+    web: bool = False,
 ) -> str:
     """Same caption with an OFERTA TERMINADA header and the price struck through."""
-    return _format(offer, link, store_name, max_len, ended=True, priced_at=priced_at)
+    return _format(offer, link, store_name, max_len, ended=True, priced_at=priced_at, web=web)

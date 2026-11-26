@@ -33,7 +33,7 @@ export function QuickPicks({ items, now }: { items: GuideItem[]; now: Date }) {
                   <span className="text-xs text-muted">{`en ${storeInfo(best.store).short}${best.withCoupon ? ' con cupón' : ''}`}</span>
                 </>
               ) : (
-                <span className="text-sm text-muted">Sin precio ahora mismo</span>
+                <span className="text-sm text-muted">Consulta el precio en la tienda</span>
               )}
             </li>
           )

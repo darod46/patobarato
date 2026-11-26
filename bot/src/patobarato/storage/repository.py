@@ -23,6 +23,7 @@ from patobarato.models import (
     Source,
 )
 from patobarato.publishing.format import normalize_hashtag
+from patobarato.publishing.web_links import product_slug
 
 logger = logging.getLogger("patobarato.repository")
 
@@ -84,6 +85,14 @@ class Repository(Protocol):
 
     async def get_post(self, publication_id: int) -> PostData | None:
         """Publication joined with its offer and product, or None."""
+        ...
+
+    async def get_product_slug(self, product_id: int) -> str | None:
+        """The product's fixed URL slug (set by the database when the product is created)."""
+        ...
+
+    async def delete_publication(self, publication_id: int) -> None:
+        """Removes a publication that never reached the channel."""
         ...
 
     async def mark_post_published(
@@ -264,6 +273,7 @@ class InMemoryRepository(Repository):
         self.product_titles: dict[int, str] = {}
         self.product_images: dict[int, str] = {}
         self.product_urls: dict[int, str] = {}
+        self.product_slugs: dict[int, str] = {}
         self._offers: dict[int, dict] = {}
         self._offer_keys: dict[tuple[int, int, int], int] = {}
         self._publications: list[dict] = []
@@ -348,6 +358,8 @@ class InMemoryRepository(Repository):
         if product_id is None:
             product_id = self._new_id("product")
             self._products[key] = product_id
+            # Like the database trigger: the slug is fixed when the product is created.
+            self.product_slugs[product_id] = product_slug(offer.title)
         self.product_titles[product_id] = offer.title
         self.product_urls[product_id] = offer.product_url
         return product_id
@@ -495,7 +507,15 @@ class InMemoryRepository(Repository):
             country=pub["country"],
             image_url=self.product_images.get(product_id),
             published_at=pub.get("published_at"),
+            asin=next(k[2] for k, v in self._products.items() if v == product_id),
+            slug=self.product_slugs.get(product_id),
         )
+
+    async def get_product_slug(self, product_id: int) -> str | None:
+        return self.product_slugs.get(product_id)
+
+    async def delete_publication(self, publication_id: int) -> None:
+        self._publications = [p for p in self._publications if p["id"] != publication_id]
 
     async def mark_post_published(
         self, publication_id: int, chat_id: int, message_id: int, published_at: datetime

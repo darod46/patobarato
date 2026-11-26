@@ -39,6 +39,7 @@ async def make_service(
     image: bytes | None = b"img",
     publisher=None,
     clock: datetime = NOW,
+    site_url: str | None = None,
 ):
     repo = InMemoryRepository()
     source = repo.add_source("@canal")
@@ -55,7 +56,7 @@ async def make_service(
         return image
 
     publisher = publisher or FakePublisher()
-    service = PostService(repo, publisher, StoreRegistry([]), downloader, lambda: clock)
+    service = PostService(repo, publisher, StoreRegistry([]), downloader, lambda: clock, site_url)
     return service, repo, publisher, pid
 
 
@@ -193,3 +194,30 @@ async def test_ending_a_post_keeps_the_time_it_was_published():
     caption = publisher.edits[0][2]
     assert "OFERTA TERMINADA" in caption
     assert "a las 11:00 del 09/11" in caption
+
+
+SITE = "https://www.patobarato.com"
+
+
+async def test_with_web_links_a_draft_links_to_its_deal_page():
+    service, _, publisher, pid = await make_service(site_url=SITE)
+    await service.publish_draft(pid)
+    caption = publisher.published[0][0]
+    assert f"🛒 Ver la oferta: {SITE}/oferta/amazon/pato-b000000001" in caption
+    assert "Enlace de afiliado" not in caption and "amazon.es" not in caption
+
+
+async def test_with_web_links_an_ended_post_is_edited_to_the_deal_page():
+    service, _, publisher, pid = await make_service(
+        status=PublicationStatus.ENDED, chat_id=-1001, message_id=55, site_url=SITE
+    )
+    await service.sync_post(pid)
+    caption = publisher.edits[0][2]
+    assert "OFERTA TERMINADA" in caption
+    assert f"{SITE}/oferta/amazon/pato-b000000001" in caption
+
+
+async def test_without_web_links_posts_keep_the_affiliate_link():
+    service, _, publisher, pid = await make_service()
+    await service.publish_draft(pid)
+    assert URL in publisher.published[0][0]

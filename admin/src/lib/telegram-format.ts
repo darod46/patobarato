@@ -14,6 +14,8 @@ export type PostInput = {
   ended: boolean
   /** ISO instant the price was read (shown in Madrid time); null leaves the time line out. */
   pricedAt?: string | null
+  /** `link` is the deal page on our web, not the store's affiliate link (no disclosure line). */
+  web?: boolean
 }
 
 const LINK_TLDS = 'es|com|net|org|eu|to|ly|co|io|me|gl|link|info|shop|store|de|fr|it|uk'
@@ -57,6 +59,8 @@ export function pricedAtLine(iso: string): string {
   return `🕒 Precio y disponibilidad a las ${parts.hour}:${parts.minute} del ${parts.day}/${parts.month}; pueden cambiar.`
 }
 
+export const WEB_LINK_LABEL = '🛒 Ver la oferta:'
+
 export function linkLabel(storeName: string): string {
   return `🛒 Ver en ${storeName}:`
 }
@@ -87,9 +91,9 @@ function build(p: PostInput, title: string, coupon: string | null): string {
     lines.push(`❌ Antes: <s>${formatPrice(p.previousPrice)} €</s> (-${discountPercent(p.price, p.previousPrice)}%)`)
   }
   if (coupon) lines.push(`🎟️ Cupón: <code>${escapeHtml(coupon)}</code>`)
-  lines.push(`${linkLabel(p.storeName)} ${escapeHtml(p.link, false)}`)
+  lines.push(`${p.web ? WEB_LINK_LABEL : linkLabel(p.storeName)} ${escapeHtml(p.link, false)}`)
   if (p.pricedAt) lines.push(pricedAtLine(p.pricedAt))
-  lines.push(AFFILIATE_LINE)
+  if (!p.web) lines.push(AFFILIATE_LINE)
   const tags = cleanHashtags(p.hashtags)
   if (tags.length) {
     lines.push('')
