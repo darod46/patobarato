@@ -1,5 +1,4 @@
 import { ThumbsDown, ThumbsUp, Trophy } from 'lucide-react'
-import { isCategoryArt } from '../../lib/category-art'
 import { formatPrice } from '../../lib/format'
 import { bestOffer, discountPct, isLowest } from '../../lib/guides'
 import { storeInfo } from '../../lib/stores'
@@ -13,39 +12,57 @@ export function GuideItemCard({ item, index, now }: { item: GuideItem; index: nu
   const winner = best?.offer
   const discount = winner ? discountPct(winner.price, winner.previousPrice) : null
   const lowest = winner && winner.price !== null ? isLowest(winner.price, winner.previousMinPrice) : false
+  const discountBadge = discount !== null && (
+    <span
+      aria-label={`Descuento del ${discount} %`}
+      className="absolute top-2 right-2 rounded-lg bg-danger px-2 py-0.5 text-xs font-bold text-white sm:right-auto sm:left-2"
+    >{`-${discount} %`}</span>
+  )
 
   return (
     <section id={`producto-${item.position}`} aria-labelledby={`producto-${item.position}-titulo`} className="scroll-mt-24 rounded-2xl border border-line bg-white p-5">
       <div className="grid gap-4 sm:grid-cols-[160px_1fr]">
-        <div className="relative mx-auto aspect-square w-full max-w-40 overflow-hidden rounded-xl border border-line bg-white">
-          {item.imageUrl ? (
+        {item.imageUrl ? (
+          <div className="relative mx-auto aspect-square w-full max-w-40 overflow-hidden rounded-xl border border-line bg-white">
             <img
               src={item.imageUrl}
               alt={item.name}
               width={320}
               height={320}
               loading="lazy"
-              className={
-                isCategoryArt(item.imageUrl)
-                  ? 'absolute inset-0 h-full w-full object-cover'
-                  : 'absolute inset-0 h-full w-full object-contain p-3 mix-blend-multiply'
-              }
+              className="absolute inset-0 h-full w-full object-contain p-3 mix-blend-multiply"
             />
-          ) : (
-            <img src="/pato-placeholder.svg" alt="" width={160} height={160} loading="lazy" className="absolute inset-0 m-auto h-1/2 w-1/2 object-contain opacity-90" />
-          )}
-          {discount !== null && (
-            <span aria-label={`Descuento del ${discount} %`} className="absolute top-2 left-2 rounded-lg bg-danger px-2 py-0.5 text-xs font-bold text-white">{`-${discount} %`}</span>
-          )}
-        </div>
+            {discountBadge}
+          </div>
+        ) : (
+          // No licensed photo (Amazon images need its API): the rank and award stand in for it.
+          <div
+            data-testid="rank-tile"
+            className="relative flex items-center gap-3 rounded-xl border border-warm-line bg-warm px-4 py-3 sm:aspect-square sm:flex-col sm:justify-center sm:gap-2 sm:p-4 sm:text-center"
+          >
+            <span aria-hidden="true" className="font-display text-4xl leading-none font-bold text-primary sm:text-6xl">
+              {index}
+            </span>
+            {item.award && (
+              <span className="flex items-center gap-1.5 text-sm leading-tight font-bold text-ink sm:flex-col sm:gap-1">
+                <Trophy size={18} aria-hidden="true" className="shrink-0 text-accent-ink" />
+                {item.award}
+              </span>
+            )}
+            {discountBadge}
+          </div>
+        )}
         <div className="flex flex-col gap-2">
-          {item.award && (
+          {item.award && item.imageUrl && (
             <span className="inline-flex items-center gap-1.5 text-xs font-bold text-ink">
               <Trophy size={14} aria-hidden="true" />
               {item.award}
             </span>
           )}
-          <h3 id={`producto-${item.position}-titulo`} className="font-display text-xl font-bold tracking-[-0.02em]">{`${index}. ${item.name}`}</h3>
+          <h3 id={`producto-${item.position}-titulo`} className="font-display text-xl font-bold tracking-[-0.02em]">
+            {/* The rank tile already shows the number; screen readers still get it. */}
+            <span className={item.imageUrl ? undefined : 'sr-only'}>{`${index}.`}</span> {item.name}
+          </h3>
           {best && (
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <span className="text-xs font-semibold text-muted">Mejor precio hoy</span>

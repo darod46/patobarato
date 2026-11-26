@@ -53,8 +53,22 @@ describe('GuideItemCard', () => {
     expect(screen.getAllByText('50,00 €').length).toBeGreaterThan(0)
   })
 
-  it('falls back to the placeholder image', () => {
-    render(<GuideItemCard item={item(1)} index={1} now={NOW} />)
-    expect(document.querySelector('img')).toHaveAttribute('src', '/pato-placeholder.svg')
+  it('without a licensed photo shows the rank tile: big number and award, no image', () => {
+    render(<GuideItemCard item={item(3, { award: 'Mejor en general' })} index={3} now={NOW} />)
+    const tile = screen.getByTestId('rank-tile')
+    expect(tile).toHaveTextContent('3')
+    expect(tile).toHaveTextContent('Mejor en general')
+    expect(screen.getAllByText('Mejor en general')).toHaveLength(1)
+    expect(document.querySelector('img')).toBeNull()
+    // The visible title drops the number the tile shows, but its accessible name keeps it.
+    expect(screen.getByRole('heading', { name: '3. Freidora 3' })).toBeInTheDocument()
+    expect(screen.getByText('3.')).toHaveClass('sr-only')
+  })
+
+  it('with a photo shows it and the award above the title, without the tile', () => {
+    render(<GuideItemCard item={item(1, { award: 'Mejor en general', imageUrl: 'https://ae-pic-a1.aliexpress-media.com/kf/x.jpg' })} index={1} now={NOW} />)
+    expect(screen.getByRole('img', { name: 'Freidora 1' })).toHaveAttribute('src', 'https://ae-pic-a1.aliexpress-media.com/kf/x.jpg')
+    expect(screen.queryByTestId('rank-tile')).toBeNull()
+    expect(screen.getByText('1.')).not.toHaveClass('sr-only')
   })
 })
