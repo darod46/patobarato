@@ -16,7 +16,7 @@
       "ended": false,
       "priced_at": null
     },
-    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio: <b>149,00 €</b>\n❌ Antes: <s>199,00 €</s> (-25%)\n🎟️ Cupón: <code>SONY10</code>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado: si compras, ganamos una comisión sin coste para ti.\n\n#auriculares #sony"
+    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio: <b>149,00 €</b>\n❌ Antes: <s>199,00 €</s> (-25%)\n🎟️ Cupón: <code>SONY10</code>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado\n\n#auriculares #sony"
   },
   {
     "name": "no previous price",
@@ -32,7 +32,7 @@
       "ended": false,
       "priced_at": null
     },
-    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio: <b>149,00 €</b>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado: si compras, ganamos una comisión sin coste para ti."
+    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio: <b>149,00 €</b>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado"
   },
   {
     "name": "coupon present",
@@ -48,7 +48,7 @@
       "ended": false,
       "priced_at": null
     },
-    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio: <b>149,00 €</b>\n🎟️ Cupón: <code>SONY10</code>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado: si compras, ganamos una comisión sin coste para ti."
+    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio: <b>149,00 €</b>\n🎟️ Cupón: <code>SONY10</code>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado"
   },
   {
     "name": "price before coupon",
@@ -64,7 +64,7 @@
       "ended": false,
       "priced_at": null
     },
-    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio sin cupón: <b>149,00 €</b>\n🎟️ Cupón: <code>AEES03</code>\n🛒 Ver en AliExpress: https://s.click.aliexpress.com/e/_abc\nℹ️ Enlace de afiliado: si compras, ganamos una comisión sin coste para ti."
+    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio sin cupón: <b>149,00 €</b>\n🎟️ Cupón: <code>AEES03</code>\n🛒 Ver en AliExpress: https://s.click.aliexpress.com/e/_abc\nℹ️ Enlace de afiliado"
   },
   {
     "name": "hashtags normalised",
@@ -84,7 +84,7 @@
       "ended": false,
       "priced_at": null
     },
-    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio: <b>149,00 €</b>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado: si compras, ganamos una comisión sin coste para ti.\n\n#blackfriday #café"
+    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio: <b>149,00 €</b>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado\n\n#blackfriday #café"
   },
   {
     "name": "title with html chars",
@@ -100,7 +100,7 @@
       "ended": false,
       "priced_at": null
     },
-    "expected": "<b>Cable &lt;USB&gt; &amp; más</b>\n✅ Precio: <b>149,00 €</b>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado: si compras, ganamos una comisión sin coste para ti."
+    "expected": "<b>Cable &lt;USB&gt; &amp; más</b>\n✅ Precio: <b>149,00 €</b>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado"
   },
   {
     "name": "long title trimmed",
@@ -118,7 +118,7 @@
       "ended": false,
       "priced_at": null
     },
-    "expected": "<b>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa…</b>\n✅ Precio: <b>149,00 €</b>\n❌ Antes: <s>199,00 €</s> (-25%)\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado: si compras, ganamos una comisión sin coste para ti.\n\n#x"
+    "expected": "<b>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa…</b>\n✅ Precio: <b>149,00 €</b>\n❌ Antes: <s>199,00 €</s> (-25%)\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado\n\n#x"
   },
   {
     "name": "ended full",
@@ -136,7 +136,7 @@
       "ended": true,
       "priced_at": null
     },
-    "expected": "❌ <b>OFERTA TERMINADA</b>\n<b>Sony WH-1000XM5</b>\n✅ Precio: <s>149,00 €</s>\n❌ Antes: <s>199,00 €</s> (-25%)\n🎟️ Cupón: <code>SONY10</code>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado: si compras, ganamos una comisión sin coste para ti.\n\n#sony"
+    "expected": "❌ <b>OFERTA TERMINADA</b>\n<b>Sony WH-1000XM5</b>\n✅ Precio: <s>149,00 €</s>\n❌ Antes: <s>199,00 €</s> (-25%)\n🎟️ Cupón: <code>SONY10</code>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado\n\n#sony"
   },
   {
     "name": "ended minimal",
@@ -152,7 +152,7 @@
       "ended": true,
       "priced_at": null
     },
-    "expected": "❌ <b>OFERTA TERMINADA</b>\n<b>Sony WH-1000XM5</b>\n✅ Precio: <s>149,00 €</s>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado: si compras, ganamos una comisión sin coste para ti."
+    "expected": "❌ <b>OFERTA TERMINADA</b>\n<b>Sony WH-1000XM5</b>\n✅ Precio: <s>149,00 €</s>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado"
   },
   {
     "name": "ended long title trimmed",
@@ -170,7 +170,7 @@
       "ended": true,
       "priced_at": null
     },
-    "expected": "❌ <b>OFERTA TERMINADA</b>\n<b>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa…</b>\n✅ Precio: <s>149,00 €</s>\n❌ Antes: <s>199,00 €</s> (-25%)\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado: si compras, ganamos una comisión sin coste para ti.\n\n#x"
+    "expected": "❌ <b>OFERTA TERMINADA</b>\n<b>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa…</b>\n✅ Precio: <s>149,00 €</s>\n❌ Antes: <s>199,00 €</s> (-25%)\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado\n\n#x"
   },
   {
     "name": "trim with space at cut point",
@@ -186,7 +186,7 @@
       "ended": false,
       "priced_at": null
     },
-    "expected": "<b>b cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd…</b>\n✅ Precio: <b>149,00 €</b>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado: si compras, ganamos una comisión sin coste para ti."
+    "expected": "<b>b cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd c…</b>\n✅ Precio: <b>149,00 €</b>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado"
   },
   {
     "name": "long title with emoji counts code points",
@@ -202,7 +202,7 @@
       "ended": false,
       "priced_at": null
     },
-    "expected": "<b>🔥 oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta…</b>\n✅ Precio: <b>149,00 €</b>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado: si compras, ganamos una comisión sin coste para ti."
+    "expected": "<b>🔥 oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ oferta increíble ✅ of…</b>\n✅ Precio: <b>149,00 €</b>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado"
   },
   {
     "name": "urls stripped from title and coupon",
@@ -220,7 +220,7 @@
       "ended": false,
       "priced_at": null
     },
-    "expected": "<b>Sony WH-1000XM5 bluetooth</b>\n✅ Precio: <b>149,00 €</b>\n🎟️ Cupón: <code>SONY10</code>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado: si compras, ganamos una comisión sin coste para ti.\n\n#sony"
+    "expected": "<b>Sony WH-1000XM5 bluetooth</b>\n✅ Precio: <b>149,00 €</b>\n🎟️ Cupón: <code>SONY10</code>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado\n\n#sony"
   },
   {
     "name": "coupon that is only a link is dropped",
@@ -236,7 +236,7 @@
       "ended": false,
       "priced_at": null
     },
-    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio: <b>149,00 €</b>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado: si compras, ganamos una comisión sin coste para ti."
+    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio: <b>149,00 €</b>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado"
   },
   {
     "name": "price rounds half up",
@@ -252,7 +252,7 @@
       "ended": false,
       "priced_at": null
     },
-    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio: <b>1,01 €</b>\n❌ Antes: <s>1.300,00 €</s> (-100%)\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado: si compras, ganamos una comisión sin coste para ti."
+    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio: <b>1,01 €</b>\n❌ Antes: <s>1.300,00 €</s> (-100%)\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado"
   },
   {
     "name": "half percent rounds up",
@@ -268,7 +268,7 @@
       "ended": false,
       "priced_at": null
     },
-    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio: <b>199,00 €</b>\n❌ Antes: <s>200,00 €</s> (-1%)\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado: si compras, ganamos una comisión sin coste para ti."
+    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio: <b>199,00 €</b>\n❌ Antes: <s>200,00 €</s> (-1%)\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\nℹ️ Enlace de afiliado"
   },
   {
     "name": "price time in winter (CET)",
@@ -287,7 +287,7 @@
       "ended": false,
       "priced_at": "2026-11-26T09:42:00Z"
     },
-    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio: <b>149,00 €</b>\n❌ Antes: <s>199,00 €</s> (-25%)\n🎟️ Cupón: <code>SONY10</code>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\n🕒 Precio y disponibilidad a las 10:42 del 26/11; pueden cambiar.\nℹ️ Enlace de afiliado: si compras, ganamos una comisión sin coste para ti.\n\n#auriculares #sony"
+    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio: <b>149,00 €</b>\n❌ Antes: <s>199,00 €</s> (-25%)\n🎟️ Cupón: <code>SONY10</code>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\n🕒 Precio y disponibilidad a las 10:42 del 26/11; pueden cambiar.\nℹ️ Enlace de afiliado\n\n#auriculares #sony"
   },
   {
     "name": "price time in summer (CEST)",
@@ -306,7 +306,7 @@
       "ended": false,
       "priced_at": "2026-07-03T21:05:00Z"
     },
-    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio: <b>149,00 €</b>\n❌ Antes: <s>199,00 €</s> (-25%)\n🎟️ Cupón: <code>SONY10</code>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\n🕒 Precio y disponibilidad a las 23:05 del 03/07; pueden cambiar.\nℹ️ Enlace de afiliado: si compras, ganamos una comisión sin coste para ti.\n\n#auriculares #sony"
+    "expected": "<b>Sony WH-1000XM5</b>\n✅ Precio: <b>149,00 €</b>\n❌ Antes: <s>199,00 €</s> (-25%)\n🎟️ Cupón: <code>SONY10</code>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\n🕒 Precio y disponibilidad a las 23:05 del 03/07; pueden cambiar.\nℹ️ Enlace de afiliado\n\n#auriculares #sony"
   },
   {
     "name": "ended keeps its price time",
@@ -325,6 +325,6 @@
       "ended": true,
       "priced_at": "2026-11-26T09:42:00Z"
     },
-    "expected": "❌ <b>OFERTA TERMINADA</b>\n<b>Sony WH-1000XM5</b>\n✅ Precio: <s>149,00 €</s>\n❌ Antes: <s>199,00 €</s> (-25%)\n🎟️ Cupón: <code>SONY10</code>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\n🕒 Precio y disponibilidad a las 10:42 del 26/11; pueden cambiar.\nℹ️ Enlace de afiliado: si compras, ganamos una comisión sin coste para ti.\n\n#auriculares #sony"
+    "expected": "❌ <b>OFERTA TERMINADA</b>\n<b>Sony WH-1000XM5</b>\n✅ Precio: <s>149,00 €</s>\n❌ Antes: <s>199,00 €</s> (-25%)\n🎟️ Cupón: <code>SONY10</code>\n🛒 Ver en Amazon: https://www.amazon.es/dp/B09XS7JWHH?tag=patobarato-21\n🕒 Precio y disponibilidad a las 10:42 del 26/11; pueden cambiar.\nℹ️ Enlace de afiliado\n\n#auriculares #sony"
   }
 ]

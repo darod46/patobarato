@@ -40,7 +40,7 @@ export function normalizeHashtag(tag: string): string {
 }
 
 // Amazon Associates: affiliate disclosure next to the link, and prices with their date/time (see format.py).
-export const AFFILIATE_LINE = 'ℹ️ Enlace de afiliado: si compras, ganamos una comisión sin coste para ti.'
+export const AFFILIATE_LINE = 'ℹ️ Enlace de afiliado'
 
 const MADRID_TIME = new Intl.DateTimeFormat('es-ES', {
   timeZone: 'Europe/Madrid',

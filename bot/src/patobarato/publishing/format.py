@@ -19,7 +19,7 @@ MADRID = ZoneInfo("Europe/Madrid")
 
 # Amazon Associates: an affiliate disclosure next to the link, and prices shown with the date/time they
 # were read and a note that they may change (we do not read them from the API). Applies to every store.
-AFFILIATE_LINE = "ℹ️ Enlace de afiliado: si compras, ganamos una comisión sin coste para ti."
+AFFILIATE_LINE = "ℹ️ Enlace de afiliado"
 
 
 def priced_at_line(priced_at: datetime) -> str:
