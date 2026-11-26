@@ -1,4 +1,5 @@
 import json
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -7,6 +8,7 @@ import pytest
 from patobarato.models import ParsedOffer
 from patobarato.parsing.text import parse_title
 from patobarato.publishing.format import (
+    AFFILIATE_LINE,
     discount_percent,
     format_caption,
     format_ended_caption,
@@ -50,6 +52,7 @@ def test_full_caption():
         "❌ Antes: <s>419,99 €</s> (-40%)\n"
         "🎟️ Cupón: <code>SONY10</code>\n"
         f"{LINK_LINE}\n"
+        f"{AFFILIATE_LINE}\n"
         "\n"
         "#auriculares #sony"
     )
@@ -61,7 +64,36 @@ def test_minimal_caption():
         "<b>Sony WH-1000XM5</b>",
         "✅ Precio: <b>249,99 €</b>",
         LINK_LINE,
+        AFFILIATE_LINE,
     ]
+
+
+def test_price_time_in_madrid_and_affiliate_disclosure_follow_the_link():
+    lines = cap(make_offer(), priced_at=datetime(2026, 11, 26, 9, 42, tzinfo=UTC)).split("\n")
+    assert lines[2:] == [
+        LINK_LINE,
+        "🕒 Precio y disponibilidad a las 10:42 del 26/11; pueden cambiar.",
+        AFFILIATE_LINE,
+    ]
+
+
+def test_price_time_follows_summer_time_and_crosses_midnight():
+    caption = cap(make_offer(), priced_at=datetime(2026, 7, 3, 22, 30, tzinfo=UTC))
+    assert "a las 00:30 del 04/07" in caption
+
+
+def test_disclosure_on_every_store_and_on_ended_posts():
+    ali = format_caption(make_offer(store="aliexpress"), LINK, "AliExpress")
+    ended = format_ended_caption(make_offer(), LINK, priced_at=datetime(2026, 11, 26, 9, 42, tzinfo=UTC))
+    assert AFFILIATE_LINE in ali
+    assert AFFILIATE_LINE in ended
+    assert "a las 10:42 del 26/11" in ended
+
+
+def test_long_title_still_fits_with_the_extra_lines():
+    caption = cap(make_offer(title="x" * 2000), priced_at=datetime(2026, 11, 26, 9, 42, tzinfo=UTC))
+    assert len(caption) <= 1024
+    assert caption.endswith(AFFILIATE_LINE)
 
 
 def test_html_escaped():
@@ -220,4 +252,5 @@ def test_shared_cases(case):
         price_before_coupon=i["price_before_coupon"],
     )
     fmt = format_ended_caption if i["ended"] else format_caption
-    assert fmt(offer, i["link"], i["store_name"]) == case["expected"]
+    at = datetime.fromisoformat(i["priced_at"].replace("Z", "+00:00")) if i["priced_at"] else None
+    assert fmt(offer, i["link"], i["store_name"], priced_at=at) == case["expected"]

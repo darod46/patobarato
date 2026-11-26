@@ -12,6 +12,8 @@ export type PostInput = {
   storeName: string
   priceBeforeCoupon: boolean
   ended: boolean
+  /** ISO instant the price was read (shown in Madrid time); null leaves the time line out. */
+  pricedAt?: string | null
 }
 
 const LINK_TLDS = 'es|com|net|org|eu|to|ly|co|io|me|gl|link|info|shop|store|de|fr|it|uk'
@@ -35,6 +37,24 @@ export function stripUrls(text: string): string {
 
 export function normalizeHashtag(tag: string): string {
   return tag.toLowerCase().replace(INVALID_TAG_CHARS, '')
+}
+
+// Amazon Associates: affiliate disclosure next to the link, and prices with their date/time (see format.py).
+export const AFFILIATE_LINE = 'ℹ️ Enlace de afiliado: si compras, ganamos una comisión sin coste para ti.'
+
+const MADRID_TIME = new Intl.DateTimeFormat('es-ES', {
+  timeZone: 'Europe/Madrid',
+  hour: '2-digit',
+  minute: '2-digit',
+  day: '2-digit',
+  month: '2-digit',
+  hourCycle: 'h23',
+})
+
+export function pricedAtLine(iso: string): string {
+  // es-ES ignores '2-digit' for day and month in some ICU builds ("3/7"), so pad every part.
+  const parts = Object.fromEntries(MADRID_TIME.formatToParts(new Date(iso)).map((p) => [p.type, p.value.padStart(2, '0')]))
+  return `🕒 Precio y disponibilidad a las ${parts.hour}:${parts.minute} del ${parts.day}/${parts.month}; pueden cambiar.`
 }
 
 export function linkLabel(storeName: string): string {
@@ -68,6 +88,8 @@ function build(p: PostInput, title: string, coupon: string | null): string {
   }
   if (coupon) lines.push(`🎟️ Cupón: <code>${escapeHtml(coupon)}</code>`)
   lines.push(`${linkLabel(p.storeName)} ${escapeHtml(p.link, false)}`)
+  if (p.pricedAt) lines.push(pricedAtLine(p.pricedAt))
+  lines.push(AFFILIATE_LINE)
   const tags = cleanHashtags(p.hashtags)
   if (tags.length) {
     lines.push('')

@@ -494,6 +494,7 @@ class InMemoryRepository(Repository):
             store=store,
             country=pub["country"],
             image_url=self.product_images.get(product_id),
+            published_at=pub.get("published_at"),
         )
 
     async def mark_post_published(

@@ -38,6 +38,7 @@ async def make_service(
     channel="telegram",
     image: bytes | None = b"img",
     publisher=None,
+    clock: datetime = NOW,
 ):
     repo = InMemoryRepository()
     source = repo.add_source("@canal")
@@ -54,7 +55,7 @@ async def make_service(
         return image
 
     publisher = publisher or FakePublisher()
-    service = PostService(repo, publisher, StoreRegistry([]), downloader, lambda: NOW)
+    service = PostService(repo, publisher, StoreRegistry([]), downloader, lambda: clock)
     return service, repo, publisher, pid
 
 
@@ -163,3 +164,32 @@ async def test_sync_post_active_does_not_mark_post_synced():
     )
     await service.sync_post(pid)
     assert repo.publications()[0]["post_synced_at"] is None
+
+
+LATER = datetime(2026, 11, 12, 18, 30, tzinfo=UTC)  # 19:30 in Madrid; NOW (publication time) is 11:00
+
+
+async def test_publish_draft_caption_has_the_publish_time_and_the_affiliate_line():
+    service, _, publisher, pid = await make_service(clock=LATER)
+    await service.publish_draft(pid)
+    caption = publisher.published[0][0]
+    assert "🕒 Precio y disponibilidad a las 19:30 del 12/11; pueden cambiar." in caption
+    assert "ℹ️ Enlace de afiliado" in caption
+
+
+async def test_editing_an_active_post_shows_the_edit_time():
+    service, _, publisher, pid = await make_service(
+        status=PublicationStatus.ACTIVE, chat_id=-1001, message_id=55, clock=LATER
+    )
+    await service.sync_post(pid)
+    assert "a las 19:30 del 12/11" in publisher.edits[0][2]
+
+
+async def test_ending_a_post_keeps_the_time_it_was_published():
+    service, _, publisher, pid = await make_service(
+        status=PublicationStatus.ENDED, chat_id=-1001, message_id=55, clock=LATER
+    )
+    await service.sync_post(pid)
+    caption = publisher.edits[0][2]
+    assert "OFERTA TERMINADA" in caption
+    assert "a las 11:00 del 09/11" in caption

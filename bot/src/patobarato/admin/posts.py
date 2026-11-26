@@ -25,7 +25,8 @@ class PostPublisher(Protocol):
     async def edit(self, chat_id: int, message_id: int, caption: str) -> None: ...
 
 
-def caption_for(post: PostData, registry: StoreRegistry) -> str:
+def caption_for(post: PostData, registry: StoreRegistry, now: datetime) -> str:
+    """An ended post keeps the time its price was published; a new or edited one shows ``now``."""
     store = registry.get(post.store)
     store_name = store.name if store is not None else post.store.capitalize()
     offer = ParsedOffer(
@@ -44,8 +45,10 @@ def caption_for(post: PostData, registry: StoreRegistry) -> str:
         price_before_coupon=post.price_before_coupon,
     )
     if post.status == PublicationStatus.ENDED:
-        return format_ended_caption(offer, post.affiliate_url, store_name)
-    return format_caption(offer, post.affiliate_url, store_name)
+        return format_ended_caption(
+            offer, post.affiliate_url, store_name, priced_at=post.published_at or now
+        )
+    return format_caption(offer, post.affiliate_url, store_name, priced_at=now)
 
 
 class PostService:
@@ -73,7 +76,7 @@ class PostService:
         post = await self._load(publication_id)
         if post.status != PublicationStatus.DRAFT:
             raise PostError("La oferta no es un borrador")
-        caption = caption_for(post, self._registry)
+        caption = caption_for(post, self._registry, self._clock())
         photo = await self._download(post.image_url) if post.image_url else None
         try:
             chat_id, message_id = await self._publisher.publish(caption, photo)
@@ -98,7 +101,7 @@ class PostService:
             return {"edited": False}
         try:
             await self._publisher.edit(
-                post.chat_id, post.message_id, caption_for(post, self._registry)
+                post.chat_id, post.message_id, caption_for(post, self._registry, self._clock())
             )
         except ChannelMismatchError:
             raise PostError("No se encuentra el canal del post") from None

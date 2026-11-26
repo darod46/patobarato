@@ -1,6 +1,8 @@
 import html
 import re
+from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
+from zoneinfo import ZoneInfo
 
 from patobarato.models import ParsedOffer
 from patobarato.parsing.text import strip_urls
@@ -12,6 +14,17 @@ def link_label(store_name: str) -> str:
 
 
 _INVALID_TAG_CHARS = re.compile(r"[^a-z0-9_áéíóúñü]")
+
+MADRID = ZoneInfo("Europe/Madrid")
+
+# Amazon Associates: an affiliate disclosure next to the link, and prices shown with the date/time they
+# were read and a note that they may change (we do not read them from the API). Applies to every store.
+AFFILIATE_LINE = "ℹ️ Enlace de afiliado: si compras, ganamos una comisión sin coste para ti."
+
+
+def priced_at_line(priced_at: datetime) -> str:
+    local = priced_at.astimezone(MADRID)
+    return f"🕒 Precio y disponibilidad a las {local:%H:%M} del {local:%d/%m}; pueden cambiar."
 
 
 def format_price(value: Decimal) -> str:
@@ -36,6 +49,7 @@ def _build(
     link: str,
     store_name: str,
     ended: bool = False,
+    priced_at: datetime | None = None,
 ) -> str:
     assert offer.price is not None, "format_caption requires a price"
     label = "Precio sin cupón" if offer.price_before_coupon else "Precio"
@@ -55,6 +69,9 @@ def _build(
     if coupon:
         lines.append(f"🎟️ Cupón: <code>{html.escape(coupon)}</code>")
     lines.append(f"{link_label(store_name)} {html.escape(link, quote=False)}")
+    if priced_at is not None:
+        lines.append(priced_at_line(priced_at))
+    lines.append(AFFILIATE_LINE)
     tags = [t for t in (normalize_hashtag(h) for h in offer.hashtags) if t]
     if tags:
         lines.append("")
@@ -63,7 +80,12 @@ def _build(
 
 
 def _format(
-    offer: ParsedOffer, link: str, store_name: str, max_len: int, ended: bool
+    offer: ParsedOffer,
+    link: str,
+    store_name: str,
+    max_len: int,
+    ended: bool,
+    priced_at: datetime | None,
 ) -> str:
     """Builds the HTML caption.
 
@@ -74,28 +96,38 @@ def _format(
     """
     title = strip_urls(offer.title)
     coupon = strip_urls(offer.coupon) if offer.coupon else None
-    caption = _build(offer, title, coupon, link, store_name, ended)
+    caption = _build(offer, title, coupon, link, store_name, ended, priced_at)
     if len(caption) <= max_len:
         return caption
     # Trim only the (unescaped) title, longest prefix that fits.
     lo, hi = 0, len(title)
     while lo < hi:
         mid = (lo + hi + 1) // 2
-        if len(_build(offer, title[:mid].rstrip() + "…", coupon, link, store_name, ended)) <= max_len:
+        trimmed = title[:mid].rstrip() + "…"
+        if len(_build(offer, trimmed, coupon, link, store_name, ended, priced_at)) <= max_len:
             lo = mid
         else:
             hi = mid - 1
-    return _build(offer, title[:lo].rstrip() + "…", coupon, link, store_name, ended)
+    return _build(offer, title[:lo].rstrip() + "…", coupon, link, store_name, ended, priced_at)
 
 
 def format_caption(
-    offer: ParsedOffer, link: str, store_name: str = "Amazon", max_len: int = 1024
+    offer: ParsedOffer,
+    link: str,
+    store_name: str = "Amazon",
+    max_len: int = 1024,
+    priced_at: datetime | None = None,
 ) -> str:
-    return _format(offer, link, store_name, max_len, ended=False)
+    """``priced_at``: when the price was read (shown in Madrid time); omitted, the time line is left out."""
+    return _format(offer, link, store_name, max_len, ended=False, priced_at=priced_at)
 
 
 def format_ended_caption(
-    offer: ParsedOffer, link: str, store_name: str = "Amazon", max_len: int = 1024
+    offer: ParsedOffer,
+    link: str,
+    store_name: str = "Amazon",
+    max_len: int = 1024,
+    priced_at: datetime | None = None,
 ) -> str:
     """Same caption with an OFERTA TERMINADA header and the price struck through."""
-    return _format(offer, link, store_name, max_len, ended=True)
+    return _format(offer, link, store_name, max_len, ended=True, priced_at=priced_at)

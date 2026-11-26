@@ -121,6 +121,8 @@ function OfferForm({ detail, onRefresh }: { detail: OfferDetail; onRefresh: () =
     storeName: storeName(detail.store),
     priceBeforeCoupon: beforeCoupon,
     ended: detail.status === 'ended',
+    // Like the bot: an ended post keeps its publish time; publishing or editing shows the current time.
+    pricedAt: detail.status === 'ended' ? detail.publishedAt : new Date().toISOString(),
   }
 
   function validate(): OfferPatch | null {

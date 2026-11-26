@@ -15,6 +15,7 @@ type Case = {
     store_name: string
     price_before_coupon: boolean
     ended: boolean
+    priced_at: string | null
   }
   expected: string
 }
@@ -30,6 +31,7 @@ function toPost(i: Case['input']): PostInput {
     storeName: i.store_name,
     priceBeforeCoupon: i.price_before_coupon,
     ended: i.ended,
+    pricedAt: i.priced_at,
   }
 }
 

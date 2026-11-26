@@ -594,6 +594,8 @@ async def test_store_affiliate_url_and_name_used_in_caption(make_pipeline, publi
     caption = publisher.calls[0][0]
     assert "🛒 Ver en Tienda Fake:" in caption
     assert "https://fake.example/p/P1?aff=1" in caption
+    assert "🕒 Precio y disponibilidad a las 13:00 del 04/11; pueden cambiar." in caption  # NOW in Madrid
+    assert "ℹ️ Enlace de afiliado" in caption
 
 
 async def test_prefilled_affiliate_url_is_used_as_is(make_pipeline, publisher):

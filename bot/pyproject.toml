@@ -11,6 +11,8 @@ dependencies = [
     "supabase==2.34.0",
     "httpx[http2]==0.28.1",
     "pydantic-settings==2.16.2",
+    # IANA zones for zoneinfo on systems without them (python:slim image, Windows).
+    "tzdata==2025.2",
 ]
 
 [project.optional-dependencies]

@@ -248,7 +248,7 @@ class Pipeline:
             if image_url:
                 photo = await self._download_photo(image_url)
         await self._wait_publish_slot()
-        caption = format_caption(offer, affiliate_url, store.name)
+        caption = format_caption(offer, affiliate_url, store.name, priced_at=self._clock())
         try:
             try:
                 chat_id, message_id = await self._publisher.publish(caption, photo)

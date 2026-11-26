@@ -258,7 +258,7 @@ class SupabaseRepository:
             return (
                 self._client.table("publications")
                 .select(
-                    "id, offer_id, product_id, status, chat_id, message_id, country, "
+                    "id, offer_id, product_id, status, chat_id, message_id, country, published_at, "
                     "published_price::text, price_before_coupon, affiliate_url, "
                     "offers(previous_price::text, coupon, hashtags), "
                     "products(title, store, image_url)"
@@ -291,6 +291,7 @@ class SupabaseRepository:
             store=product["store"],
             country=row["country"],
             image_url=product["image_url"],
+            published_at=_parse_timestamp(row["published_at"]) if row.get("published_at") else None,
         )
 
     async def mark_post_published(
