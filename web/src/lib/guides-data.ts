@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { type ArtKey, categoryArt, displayImage, guideArtKey } from './category-art'
 import { numOrNull } from './coupons'
 import type { Guide, GuideItem, GuideStoreOffer, GuideSummary } from './types'
 
@@ -108,7 +109,7 @@ function toOffer(row: GuideItemRow): GuideStoreOffer {
 }
 
 /** Groups the item×store rows (already ordered by position, store_position) into items, keeping that order. */
-function groupItems(rows: GuideItemRow[]): GuideItem[] {
+function groupItems(rows: GuideItemRow[], art: ArtKey): GuideItem[] {
   const items = new Map<number, GuideItem>()
   for (const row of rows) {
     const id = Number(row.item_id)
@@ -123,7 +124,8 @@ function groupItems(rows: GuideItemRow[]): GuideItem[] {
         pros: row.pros ?? [],
         cons: row.cons ?? [],
         specs: jsonList<{ label: string; value: string }>(row.specs),
-        imageUrl: row.image_url,
+        // Never an Amazon-hosted image (see category-art.ts): Amazon items show the guide category's duck.
+        imageUrl: row.image_url === null && row.store === 'amazon' ? categoryArt(art) : displayImage(row.image_url, art),
         stores: [],
       }
       items.set(id, item)
@@ -174,7 +176,7 @@ export async function fetchGuide(client: SupabaseClient, slug: string): Promise<
     introMd: row.intro_md,
     howToChooseMd: row.how_to_choose_md,
     faq: jsonList<{ q: string; a_md: string }>(row.faq).map((f) => ({ q: f.q, aMd: f.a_md })),
-    items: groupItems((itemsRes.data ?? []) as GuideItemRow[]),
+    items: groupItems((itemsRes.data ?? []) as GuideItemRow[], guideArtKey(row.category)),
     widget: row.widget === 'neumaticos' ? 'neumaticos' : null,
   }
 }

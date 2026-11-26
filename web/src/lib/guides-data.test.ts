@@ -167,7 +167,7 @@ describe('fetchGuide', () => {
       discountPct: null,
       minPurchase: 40,
     })
-    expect(guide!.items[0]).toMatchObject({ award: 'Mejor', pros: ['p'], cons: ['c'], imageUrl: null })
+    expect(guide!.items[0]).toMatchObject({ award: 'Mejor', pros: ['p'], cons: ['c'], imageUrl: '/pato-placeholder.svg' })
     expect(guide!.items[0].specs).toEqual([{ label: 'Potencia', value: '100 W' }])
     expect(guide!.items[1].specs).toEqual([{ label: 'Peso', value: '2 kg' }])
   })

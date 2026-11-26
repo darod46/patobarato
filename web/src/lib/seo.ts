@@ -9,6 +9,7 @@ import { renderCopy, pageTitle, type CopyValues } from './page-copy'
 import { stripMarkdown } from './text'
 import type { StoreStats } from './stores-data'
 import type { Deal, Guide, PageCopy, PageCopyKind, SiteEvent } from './types'
+import { PLACEHOLDER_ART } from './category-art'
 import { SITE_URL, productPath } from './urls'
 
 export const MAX_DESCRIPTION = 160
@@ -23,6 +24,12 @@ export function withHreflang(path: string): NonNullable<Metadata['alternates']> 
 }
 
 /** Default Open Graph image; child metadata replaces the layout's `openGraph`, so pages repeat it. */
+/** A deal image fit for previews and structured data: absolute, and never the generic placeholder SVG. */
+function shareableImage(url: string | null): string | null {
+  if (url === null || url === PLACEHOLDER_ART) return null
+  return url.startsWith('/') ? SITE_URL + url : url
+}
+
 export const OG_IMAGE = { url: '/og.png', width: 1200, height: 630, alt: 'PatoBarato · El pato que caza los chollos de Amazon antes de que vuelen' }
 
 function dealDiscount(deal: Deal): number | null {
@@ -62,7 +69,8 @@ export function productMetadata(deal: Deal, now: Date = new Date()): Metadata {
     : `${deal.title} por ${formatPrice(deal.price)}${sinCupon}${discount !== null ? ` (-${discount}%)` : ''} · PatoBarato`
   const description = ended ? endedDescription(deal) : productDescription(deal)
   const path = productPath(deal)
-  const images = deal.imageUrl ? [{ url: deal.imageUrl, alt: deal.title }] : [OG_IMAGE]
+  const image = shareableImage(deal.imageUrl)
+  const images = image ? [{ url: image, alt: deal.title }] : [OG_IMAGE]
   return {
     title,
     description,
@@ -91,7 +99,7 @@ export function productJsonLd(deal: Deal, url: string): Record<string, unknown> 
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: deal.title,
-    ...(deal.imageUrl && { image: deal.imageUrl }),
+    ...(shareableImage(deal.imageUrl) && { image: shareableImage(deal.imageUrl) }),
     sku: deal.asin,
     offers: {
       '@type': 'Offer',

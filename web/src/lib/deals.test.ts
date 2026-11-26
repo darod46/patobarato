@@ -34,6 +34,16 @@ const row = (i: number) => ({
 })
 
 describe('fetchDeals', () => {
+  it('never exposes an Amazon-hosted image: Amazon deals get their category art, other stores keep theirs', async () => {
+    const amazon = { ...row(1), hashtags: ['#hogar'], image_url: 'https://m.media-amazon.com/images/I/71abc.jpg' }
+    const ali = { ...row(2), store: 'aliexpress', image_url: 'https://ae-pic-a1.aliexpress-media.com/kf/x.jpg' }
+    const { client } = fakeClient({ data: [amazon, ali], error: null })
+    const { deals } = await fetchDeals(client, { page: 0 })
+    expect(deals[0].imageUrl).not.toMatch(/amazon/)
+    expect(deals[0].imageUrl).toBe('/pato-placeholder.svg')
+    expect(deals[1].imageUrl).toBe('https://ae-pic-a1.aliexpress-media.com/kf/x.jpg')
+  })
+
   it('filters by hashtags or date range', async () => {
     const { client, calls } = fakeClient({ data: [], error: null })
     await fetchDeals(client, { page: 0, event: { hashtags: ['blackfriday', 'bf'], stores: [], from: '2026-11-27', to: '2026-11-29' } })
@@ -98,7 +108,7 @@ describe('fetchDeals', () => {
       hashtags: ['lego'],
       affiliateUrl: 'https://amzn.to/x',
       title: 'Item 0',
-      imageUrl: null,
+      imageUrl: '/pato-placeholder.svg',
       asin: 'B000000000',
       country: 'ES',
       store: 'amazon',

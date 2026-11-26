@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { categoryArt, categoryKey, displayImage } from './category-art'
 import { madridDayBounds } from './events'
 import { escapeIlike } from './format'
 import type { Deal, HashtagCount } from './types'
@@ -45,6 +46,7 @@ type DealRow = {
 }
 
 function toDeal(row: DealRow): Deal {
+  const key = categoryKey(row.hashtags ?? [])
   return {
     publicationId: Number(row.publication_id),
     publishedAt: row.published_at,
@@ -54,7 +56,8 @@ function toDeal(row: DealRow): Deal {
     hashtags: row.hashtags ?? [],
     affiliateUrl: row.affiliate_url,
     title: row.title,
-    imageUrl: row.image_url,
+    // Never an Amazon-hosted image (see category-art.ts): Amazon deals show their category's duck.
+    imageUrl: row.store === 'amazon' ? categoryArt(key) : displayImage(row.image_url, key),
     asin: row.asin,
     country: row.country,
     store: row.store,
