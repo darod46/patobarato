@@ -119,6 +119,7 @@ describe('fetchDeals', () => {
       priceBeforeCoupon: false,
       status: 'active',
       endedAt: null,
+      slug: null,
     })
   })
 
@@ -301,7 +302,7 @@ describe('fetchAllDealRefs', () => {
     const refs = await fetchAllDealRefs(client, NOW)
     expect(ranges).toEqual([[0, 999], [1000, 1999]])
     expect(refs).toHaveLength(1001)
-    expect(refs[0]).toEqual({ store: 'amazon', asin: 'B000000000', title: 'Item 0', publishedAt: '2026-11-04T10:00:00Z', status: 'active', endedAt: null })
+    expect(refs[0]).toEqual({ store: 'amazon', asin: 'B000000000', title: 'Item 0', slug: null, publishedAt: '2026-11-04T10:00:00Z', status: 'active', endedAt: null })
   })
   it('reads web_deal_pages keeping active and recently ended deals', async () => {
     const { client, calls } = fakeClient({ data: [{ ...row(1), status: 'ended', ended_at: '2026-11-20T00:00:00Z' }], error: null })

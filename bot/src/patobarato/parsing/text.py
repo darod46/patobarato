@@ -118,6 +118,11 @@ TITLE_MAX_LENGTH = 200
 BRAND_SEPARATOR_RE = re.compile("\\s*\u25ab\ufe0f?\\s*")
 
 HASHTAG_RE = re.compile(r"(?<!\w)#(\w+)")
+# Hashtags inside a title line ("… | 200 ml | #Amazon #Publicidad #BlackFriday", also cut ones like
+# "#publici"): never part of the product name. "#1" or "C#" are kept (a tag starts with a letter).
+TITLE_HASHTAG_RE = re.compile(r"\s*(?<!\w)#[^\W\d_]\w*")
+# Separators left dangling at the end once the tags are gone ("Negro metalizado |").
+TITLE_END_SEPARATORS_RE = re.compile(r"[\s|·\-–—,;:]+$")
 # Tags channels use to mark a post as an ad ("📢 #pub"): never our hashtags.
 AD_MARKER_TAGS = frozenset(
     {"pub", "publi", "publicidad", "ad", "ads", "anuncio", "patrocinado", "sponsored"}
@@ -298,13 +303,14 @@ def _strip_marketing(title: str) -> str:
 
 def _clean_title_line(line: str) -> str:
     line = URL_RE.sub("", line)
+    line = TITLE_HASHTAG_RE.sub("", line)
     line = MONEY_RE.sub("", line).replace(STRIKE_MARK, "")
     line = _strip_emojis(line)
     line = LEADING_NOISE_RE.sub("", line)
     line = TITLE_FORMULA_RE.sub("", line)
     line = TITLE_TRAILING_RE.sub("", " ".join(line.split()))
     line = _strip_marketing(line)
-    return line[:TITLE_MAX_LENGTH].rstrip()
+    return TITLE_END_SEPARATORS_RE.sub("", line[:TITLE_MAX_LENGTH])
 
 
 def _is_brand_line(line: str) -> bool:

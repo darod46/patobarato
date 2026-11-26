@@ -23,6 +23,8 @@ export type Deal = {
   /** 'ended' once the publication was marked as no longer available. */
   status: 'active' | 'ended'
   endedAt: string | null
+  /** The product's URL slug, fixed when it was created (titles change, URLs must not). Absent in older data. */
+  slug?: string | null
 }
 
 export type HashtagCount = { tag: string; count: number }

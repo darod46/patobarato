@@ -16,12 +16,14 @@ export function slugify(title: string): string {
 }
 
 /**
- * Amazon `/oferta/amazon/{slug}-{asin}` and AliExpress `/oferta/aliexpress/{slug}-{id}` carry a title slug;
- * every other store uses the deal's `asin` (already a readable id) as the whole path segment.
+ * Amazon `/oferta/amazon/{slug}-{asin}` and AliExpress `/oferta/aliexpress/{slug}-{id}` carry a slug: the
+ * product's stored one (fixed at creation, so a new title never moves the URL) or, without it, the title's.
+ * Every other store uses the deal's `asin` (already a readable id) as the whole path segment.
  */
-export function productPath(deal: Pick<Deal, 'store' | 'asin' | 'title'>): string {
-  if (deal.store === 'amazon') return `/oferta/amazon/${slugify(deal.title)}-${deal.asin.toLowerCase()}`
-  if (deal.store === 'aliexpress') return `/oferta/aliexpress/${slugify(deal.title)}-${deal.asin}`
+export function productPath(deal: Pick<Deal, 'store' | 'asin' | 'title' | 'slug'>): string {
+  const slug = deal.slug || slugify(deal.title)
+  if (deal.store === 'amazon') return `/oferta/amazon/${slug}-${deal.asin.toLowerCase()}`
+  if (deal.store === 'aliexpress') return `/oferta/aliexpress/${slug}-${deal.asin}`
   return `/oferta/${deal.store}/${encodeURIComponent(deal.asin)}`
 }
 

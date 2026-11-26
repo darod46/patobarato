@@ -18,6 +18,17 @@ describe('slugify', () => {
 })
 
 describe('productPath / parseProductSlug / tagPath', () => {
+  it('uses the stored slug so a new title never moves the URL, and the title slug without one', () => {
+    const deal = { store: 'amazon', asin: 'B0090ISZY6', title: 'San Miguel Especial, Cerveza Lager Premium, Pack 24 Latas x 33cl' }
+    expect(productPath({ ...deal, slug: 'pack-x24-san-miguel-especial-cerveza-dorada-lager' })).toBe(
+      '/oferta/amazon/pack-x24-san-miguel-especial-cerveza-dorada-lager-b0090iszy6',
+    )
+    expect(productPath({ ...deal, slug: null })).toBe('/oferta/amazon/san-miguel-especial-cerveza-lager-premium-pack-24-b0090iszy6')
+    expect(productPath({ store: 'aliexpress', asin: '1005009098142844', title: 'x', slug: 'la-flor-de-malaga' })).toBe(
+      '/oferta/aliexpress/la-flor-de-malaga-1005009098142844',
+    )
+  })
+
   it('percent-encodes ids of non-slug stores', () => {
     expect(productPath({ store: 'mediamarkt', asin: 'camiseta-ñ 1', title: 'x' })).toBe('/oferta/mediamarkt/camiseta-%C3%B1%201')
   })

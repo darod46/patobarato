@@ -43,6 +43,7 @@ type DealRow = {
   price_before_coupon?: boolean | null
   status?: string
   ended_at?: string | null
+  slug?: string | null
 }
 
 function toDeal(row: DealRow): Deal {
@@ -68,6 +69,7 @@ function toDeal(row: DealRow): Deal {
     priceBeforeCoupon: row.price_before_coupon === true,
     status: row.status === 'ended' ? 'ended' : 'active',
     endedAt: row.ended_at ?? null,
+    slug: row.slug ?? null,
   }
 }
 
@@ -201,12 +203,12 @@ async function fetchAllPages<T>(
 export async function fetchAllDealRefs(
   client: SupabaseClient,
   now: Date,
-): Promise<Pick<Deal, 'store' | 'asin' | 'title' | 'publishedAt' | 'status' | 'endedAt'>[]> {
+): Promise<Pick<Deal, 'store' | 'asin' | 'title' | 'slug' | 'publishedAt' | 'status' | 'endedAt'>[]> {
   const cutoff = new Date(now.getTime() - ENDED_INDEXABLE_DAYS * 86400000).toISOString()
   const rows = await fetchAllPages<DealRow>((from, to) =>
     client
       .from('web_deal_pages')
-      .select('store, asin, title, published_at, status, ended_at')
+      .select('store, asin, title, slug, published_at, status, ended_at')
       .or(`status.eq.active,ended_at.gt.${cutoff}`)
       .order('published_at', { ascending: false })
       .order('publication_id', { ascending: false })
@@ -216,6 +218,7 @@ export async function fetchAllDealRefs(
     store: r.store,
     asin: r.asin,
     title: r.title,
+    slug: r.slug ?? null,
     publishedAt: r.published_at,
     status: r.status === 'ended' ? ('ended' as const) : ('active' as const),
     endedAt: r.ended_at ?? null,

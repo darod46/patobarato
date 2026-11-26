@@ -425,3 +425,23 @@ def test_coupon_values_are_never_the_price(text):
 )
 def test_coupon_amount_text_is_the_amount_or_the_code(text, coupon):
     assert parse_prices(text).coupon == coupon
+
+
+@pytest.mark.parametrize(
+    ("line", "title"),
+    [
+        (
+            "CALVIN KLEIN CK ONE Eau de Toilette unisex | 200 ml | #Amazon #Publicidad #BlackFriday",
+            "CALVIN KLEIN CK ONE Eau de Toilette unisex | 200 ml",
+        ),
+        ("Proyector 4K, Cine Portátil | #AliExpress #OnceDelOnce", "Proyector 4K, Cine Portátil"),
+        ("Mando PS4, PS3, Windows - Negro | #A", "Mando PS4, PS3, Windows - Negro"),
+        ("Tekken 8 PS5 (Standard Edition) | #Amazon #Publicidad", "Tekken 8 PS5 (Standard Edition)"),
+    ],
+)
+def test_title_drops_hashtags_and_dangling_separators(line, title):
+    assert parse_title(line) == title
+
+
+def test_title_keeps_numbers_after_hash_and_skips_a_hashtag_only_line():
+    assert parse_title("#Amazon #Publicidad\nFunko Pop #25 Pikachu") == "Funko Pop #25 Pikachu"

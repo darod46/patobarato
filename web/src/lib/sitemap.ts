@@ -7,7 +7,7 @@ import { guidePath, isGuideIndexable } from './guides'
 import { storeFromSlug, storeInfo } from './stores'
 import { productPath, tagPath } from './urls'
 
-export type DealRef = Pick<Deal, 'store' | 'asin' | 'title' | 'publishedAt'> & Partial<Pick<Deal, 'status' | 'endedAt'>>
+export type DealRef = Pick<Deal, 'store' | 'asin' | 'title' | 'publishedAt'> & Partial<Pick<Deal, 'status' | 'endedAt' | 'slug'>>
 
 /** The sitemaps listed by the index at `/sitemap.xml`, each served at `/sitemaps/{name}.xml`. */
 export const SITEMAP_NAMES = ['chollos', 'paginas', 'eventos'] as const

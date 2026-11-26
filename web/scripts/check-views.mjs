@@ -25,7 +25,7 @@ const rest = async (path) => {
 const problems = []
 const deals = await rest('web_deals?select=*&limit=1')
 if (deals.status !== 200) problems.push(`web_deals: HTTP ${deals.status}`)
-for (const col of ['discount_pct', 'previous_min_price', 'is_lowest', 'price_before_coupon']) {
+for (const col of ['discount_pct', 'previous_min_price', 'is_lowest', 'price_before_coupon', 'slug']) {
   if (deals.body?.[0] && !(col in deals.body[0])) problems.push(`web_deals: missing column ${col}`)
 }
 const coupons = await rest('web_coupons?select=*&limit=1')
@@ -71,6 +71,7 @@ for (const view of ['web_events', 'web_event_promos', 'web_channel_stats', 'web_
 const dealPages = await rest('web_deal_pages?select=*&limit=1')
 if (dealPages.status !== 200 || !Array.isArray(dealPages.body)) problems.push(`web_deal_pages: HTTP ${dealPages.status}`)
 else if (dealPages.body[0] && !('status' in dealPages.body[0] && 'ended_at' in dealPages.body[0])) problems.push('web_deal_pages: missing status/ended_at')
+if (Array.isArray(dealPages.body) && dealPages.body[0] && !('slug' in dealPages.body[0])) problems.push('web_deal_pages: missing column slug')
 for (const t of ['events', 'event_promos', 'cta_clicks', 'cta_clicks_daily', 'channel_stats']) {
   const r = await rest(`${t}?select=*&limit=1`)
   if (r.status === 200) problems.push(`${t} table is readable by anon (expected permission denied)`)
