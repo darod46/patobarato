@@ -32,7 +32,7 @@ export default function AfiliadosPage() {
         Las ofertas se seleccionan por su precio y su descuento real, no por la comisión que generen.
         Ninguna tienda paga por aparecer en PatoBarato ni revisa lo que publicamos.
       </p>
-      <p>Dudas: [EMAIL].</p>
+      <p>Dudas: <a href="mailto:hola@patobarato.com">hola@patobarato.com</a>.</p>
     </LegalLayout>
   )
 }

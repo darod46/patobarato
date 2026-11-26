@@ -11,7 +11,7 @@ export default function PrivacidadPage() {
   return (
     <LegalLayout title="Política de privacidad" updated="25 de noviembre de 2026" year={YEAR}>
       <h2>Responsable</h2>
-      <p>El responsable del tratamiento es [TITULAR], NIF [NIF], [DIRECCIÓN], correo [EMAIL].</p>
+      <p>El responsable del tratamiento es David Rodríguez, NIF 46456500L, Carrer Canigó, 15, 08901 L'Hospitalet de Llobregat (Barcelona), correo <a href="mailto:hola@patobarato.com">hola@patobarato.com</a>.</p>
       <h2>Qué datos tratamos</h2>
       <p>
         Navegar por patobarato.com no requiere registro ni facilitar datos personales. El sitio no tiene
@@ -43,7 +43,7 @@ export default function PrivacidadPage() {
       <h2>Tus derechos</h2>
       <p>
         Puedes ejercer tus derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad
-        escribiendo a [EMAIL]. También puedes reclamar ante la Agencia Española de Protección de Datos
+        escribiendo a <a href="mailto:hola@patobarato.com">hola@patobarato.com</a>. También puedes reclamar ante la Agencia Española de Protección de Datos
         (aepd.es).
       </p>
     </LegalLayout>

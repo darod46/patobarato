@@ -15,10 +15,11 @@ const pages = [
 ]
 
 describe('legal pages', () => {
-  it.each(pages)('$path renders its heading, placeholders and metadata', ({ Page, meta, h1, path }) => {
+  it.each(pages)('$path renders its heading, the owner details and metadata', ({ Page, meta, h1, path }) => {
     const { container, unmount } = render(<Page />)
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(h1)
-    expect(container.textContent).toMatch(/\[(EMAIL|TITULAR)\]/)
+    expect(container.textContent).not.toMatch(/\[[A-ZÁÉÍÓÚÑ ]{3,}\]/)
+    expect(container.textContent).toMatch(/hola@patobarato\.com|David Rodríguez/)
     expect(screen.getByText(/Última actualización/)).toBeInTheDocument()
     expect(meta.title).toBe(`${h1} · PatoBarato`)
     expect(meta.alternates?.canonical).toBe(path)

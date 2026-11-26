@@ -19,11 +19,11 @@ export default function ContactoPage() {
         </p>
       )}
       <p>
-        Para consultas sobre un chollo, un cupón, una tienda o un asunto legal, escribe a [EMAIL].
-        Solemos responder en un plazo de [PLAZO] días laborables.
+        Para consultas sobre un chollo, un cupón, una tienda o un asunto legal, escribe a <a href="mailto:hola@patobarato.com">hola@patobarato.com</a>.
+        Solemos responder en un plazo de 3 días laborables.
       </p>
       <p>Si has visto un chollo que deberíamos publicar, mándanos el enlace y el precio que has visto.</p>
-      <p>Titular: [TITULAR].</p>
+      <p>Titular: David Rodríguez.</p>
     </LegalLayout>
   )
 }

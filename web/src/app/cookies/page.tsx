@@ -31,7 +31,7 @@ export default function CookiesPage() {
         Puedes bloquear o eliminar las cookies desde la configuración de tu navegador. Hacerlo no afecta a la
         navegación por patobarato.com.
       </p>
-      <p>Responsable: [TITULAR], [EMAIL].</p>
+      <p>Responsable: David Rodríguez, <a href="mailto:hola@patobarato.com">hola@patobarato.com</a>.</p>
     </LegalLayout>
   )
 }

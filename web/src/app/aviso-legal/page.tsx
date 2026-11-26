@@ -13,8 +13,8 @@ export default function AvisoLegalPage() {
       <h2>Titular del sitio</h2>
       <p>
         En cumplimiento de la Ley 34/2002, de Servicios de la Sociedad de la Información y de Comercio
-        Electrónico (LSSI-CE), se informa de que el titular de patobarato.com es [TITULAR], con NIF [NIF],
-        domicilio en [DIRECCIÓN] y correo electrónico de contacto [EMAIL].
+        Electrónico (LSSI-CE), se informa de que el titular de patobarato.com es David Rodríguez, con NIF 46456500L,
+        domicilio en Carrer Canigó, 15, 08901 L'Hospitalet de Llobregat (Barcelona) y correo electrónico de contacto <a href="mailto:hola@patobarato.com">hola@patobarato.com</a>.
       </p>
       <h2>Objeto</h2>
       <p>
@@ -30,7 +30,7 @@ export default function AvisoLegalPage() {
       </p>
       <h2>Propiedad intelectual</h2>
       <p>
-        El diseño, los textos y la mascota de PatoBarato son propiedad de [TITULAR]. Las imágenes, nombres y
+        El diseño, los textos y la mascota de PatoBarato son propiedad de David Rodríguez. Las imágenes, nombres y
         marcas de los productos pertenecen a sus respectivos titulares y se muestran únicamente con fines
         identificativos.
       </p>
@@ -41,7 +41,7 @@ export default function AvisoLegalPage() {
         consulta la <a href="/afiliados">política de afiliación</a>.
       </p>
       <h2>Legislación aplicable</h2>
-      <p>Este aviso se rige por la legislación española. Para cualquier controversia serán competentes los juzgados y tribunales de [CIUDAD].</p>
+      <p>Este aviso se rige por la legislación española. Para cualquier controversia serán competentes los juzgados y tribunales que correspondan conforme a la normativa aplicable; cuando la otra parte sea un consumidor, los de su domicilio.</p>
     </LegalLayout>
   )
 }
