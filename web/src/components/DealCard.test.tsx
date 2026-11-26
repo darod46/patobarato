@@ -40,6 +40,14 @@ const minimal: Deal = {
 }
 
 describe('DealCard', () => {
+  it('shows a category illustration edge to edge and a product photo inset', () => {
+    const { rerender } = render(<DealCard deal={{ ...full, imageUrl: '/categorias/hogar.jpeg' }} now={now} />)
+    expect(screen.getByRole('img')).toHaveClass('object-cover')
+    expect(screen.getByRole('img')).not.toHaveClass('mix-blend-multiply')
+    rerender(<DealCard deal={full} now={now} />)
+    expect(screen.getByRole('img')).toHaveClass('object-contain', 'mix-blend-multiply')
+  })
+
   it('renders a full deal as a single link to the product page', () => {
     render(<DealCard deal={full} now={now} />)
     const links = screen.getAllByRole('link')

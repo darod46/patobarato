@@ -1,5 +1,7 @@
+import { readdirSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { PLACEHOLDER_ART, categoryArt, categoryKey, displayImage, guideArtKey, isAmazonImage } from './category-art'
+import { ART_KEYS, CATEGORY_ART_KEYS, categoryArt, categoryKey, displayImage, guideArtKey, isAmazonImage } from './category-art'
 
 describe('category art', () => {
   it('takes the first known category hashtag, or general', () => {
@@ -29,7 +31,10 @@ describe('category art', () => {
     expect(displayImage(null, 'hogar')).toBeNull()
   })
 
-  it('uses the placeholder duck while a category has no illustration yet', () => {
-    expect(categoryArt('moda')).toBe(PLACEHOLDER_ART)
+  it('has an illustration on disk for every category, general included', () => {
+    const onDisk = readdirSync(join(__dirname, '../../public/categorias')).map((f) => f.replace(/\.jpeg$/, '')).sort()
+    expect([...CATEGORY_ART_KEYS].sort()).toEqual(onDisk)
+    expect(onDisk).toEqual([...ART_KEYS].sort())
+    expect(categoryArt('moda')).toBe('/categorias/moda.jpeg')
   })
 })

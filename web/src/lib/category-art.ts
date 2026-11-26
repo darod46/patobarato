@@ -6,8 +6,8 @@
 export const ART_KEYS = ['tecnologia', 'hogar', 'belleza', 'juguetes', 'alimentacion', 'deporte', 'moda', 'bricolaje', 'general'] as const
 export type ArtKey = (typeof ART_KEYS)[number]
 
-/** Illustrations present in `public/categorias/<key>.jpeg` (1:1). A key not listed here uses the generic placeholder duck. */
-export const CATEGORY_ART_KEYS: ReadonlySet<ArtKey> = new Set<ArtKey>([])
+/** Illustrations present in `public/categorias/<key>.jpeg` (640×640). A key not listed here uses the generic placeholder duck. */
+export const CATEGORY_ART_KEYS: ReadonlySet<ArtKey> = new Set<ArtKey>(ART_KEYS)
 
 export const PLACEHOLDER_ART = '/pato-placeholder.svg'
 
@@ -46,6 +46,11 @@ export function isAmazonImage(url: string): boolean {
 /** The illustration for a category, or the generic placeholder duck while that one does not exist. */
 export function categoryArt(key: ArtKey): string {
   return CATEGORY_ART_KEYS.has(key) ? `/categorias/${key}.jpeg` : PLACEHOLDER_ART
+}
+
+/** True for one of our category illustrations: shown edge to edge, unlike product photos. */
+export function isCategoryArt(url: string | null): boolean {
+  return url !== null && url.startsWith('/categorias/')
 }
 
 /** The image the web may show: Amazon-hosted images are replaced by the category illustration; the rest pass through. */

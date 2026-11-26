@@ -40,7 +40,7 @@ describe('fetchDeals', () => {
     const { client } = fakeClient({ data: [amazon, ali], error: null })
     const { deals } = await fetchDeals(client, { page: 0 })
     expect(deals[0].imageUrl).not.toMatch(/amazon/)
-    expect(deals[0].imageUrl).toBe('/pato-placeholder.svg')
+    expect(deals[0].imageUrl).toBe('/categorias/hogar.jpeg')
     expect(deals[1].imageUrl).toBe('https://ae-pic-a1.aliexpress-media.com/kf/x.jpg')
   })
 
@@ -108,7 +108,7 @@ describe('fetchDeals', () => {
       hashtags: ['lego'],
       affiliateUrl: 'https://amzn.to/x',
       title: 'Item 0',
-      imageUrl: '/pato-placeholder.svg',
+      imageUrl: '/categorias/general.jpeg',
       asin: 'B000000000',
       country: 'ES',
       store: 'amazon',

@@ -1,4 +1,5 @@
 import { ChevronRight, Clock, Store, TrendingDown } from 'lucide-react'
+import { isCategoryArt } from '../lib/category-art'
 import { discountPercent, formatDayMonth, formatPrice, timeAgo } from '../lib/format'
 import { guidePath } from '../lib/guides'
 import { storeInfo } from '../lib/stores'
@@ -72,7 +73,11 @@ export function ProductView({ deal, related, now, guides = [] }: Props) {
               width={500}
               height={500}
               fetchPriority="high"
-              className="absolute inset-0 h-full w-full object-contain p-6 mix-blend-multiply"
+              className={
+                isCategoryArt(deal.imageUrl)
+                  ? 'absolute inset-0 h-full w-full object-cover'
+                  : 'absolute inset-0 h-full w-full object-contain p-6 mix-blend-multiply'
+              }
             />
           ) : (
             <img

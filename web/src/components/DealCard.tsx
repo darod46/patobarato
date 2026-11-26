@@ -1,6 +1,7 @@
 'use client'
 
 import { ArrowUpRight } from 'lucide-react'
+import { isCategoryArt } from '../lib/category-art'
 import Link from 'next/link'
 import { useState } from 'react'
 import { formatPrice, timeAgo } from '../lib/format'
@@ -35,7 +36,9 @@ export function DealCard({ deal, now }: Props) {
           className={
             isPlaceholder
               ? 'absolute inset-0 m-auto h-[55%] w-[55%] object-contain opacity-90'
-              : 'absolute inset-0 h-full w-full object-contain p-2 mix-blend-multiply sm:p-3'
+              : isCategoryArt(src)
+                ? 'absolute inset-0 h-full w-full object-cover'
+                : 'absolute inset-0 h-full w-full object-contain p-2 mix-blend-multiply sm:p-3'
           }
         />
         {deal.discountPct !== null && (

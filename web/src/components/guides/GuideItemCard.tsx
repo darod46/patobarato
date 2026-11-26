@@ -1,4 +1,5 @@
 import { ThumbsDown, ThumbsUp, Trophy } from 'lucide-react'
+import { isCategoryArt } from '../../lib/category-art'
 import { formatPrice } from '../../lib/format'
 import { bestOffer, discountPct, isLowest } from '../../lib/guides'
 import { storeInfo } from '../../lib/stores'
@@ -18,7 +19,18 @@ export function GuideItemCard({ item, index, now }: { item: GuideItem; index: nu
       <div className="grid gap-4 sm:grid-cols-[160px_1fr]">
         <div className="relative mx-auto aspect-square w-full max-w-40 overflow-hidden rounded-xl border border-line bg-white">
           {item.imageUrl ? (
-            <img src={item.imageUrl} alt={item.name} width={320} height={320} loading="lazy" className="absolute inset-0 h-full w-full object-contain p-3 mix-blend-multiply" />
+            <img
+              src={item.imageUrl}
+              alt={item.name}
+              width={320}
+              height={320}
+              loading="lazy"
+              className={
+                isCategoryArt(item.imageUrl)
+                  ? 'absolute inset-0 h-full w-full object-cover'
+                  : 'absolute inset-0 h-full w-full object-contain p-3 mix-blend-multiply'
+              }
+            />
           ) : (
             <img src="/pato-placeholder.svg" alt="" width={160} height={160} loading="lazy" className="absolute inset-0 m-auto h-1/2 w-1/2 object-contain opacity-90" />
           )}
