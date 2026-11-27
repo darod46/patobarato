@@ -1,5 +1,7 @@
-import { Calculator } from 'lucide-react'
-import { useId } from 'react'
+'use client'
+
+import { Calculator, Cookie } from 'lucide-react'
+import { useEffect, useId, useState } from 'react'
 
 /**
  * Neumaticos.es configurator through Awin's click URL (creative 2718820). It is what Awin's own iframe
@@ -13,29 +15,96 @@ export const AWIN_FINDER =
 /** The configurator's own height (Awin's wrapper used a 580 px frame). */
 export const FINDER_HEIGHT = 580
 
-/** Neumaticos.es tyre finder (Awin), shown straight away; the affiliate and cookie note goes below it. */
+/**
+ * The reader's choice about Awin's cookies, kept in this browser. Storing the choice itself is technical
+ * (no consent needed); it is the only thing the web stores, and only after the reader decides.
+ */
+export const CONSENT_KEY = 'pb-consent-awin'
+
+function readConsent(): boolean {
+  try {
+    return window.localStorage.getItem(CONSENT_KEY) === 'yes'
+  } catch {
+    return false
+  }
+}
+
+function writeConsent(value: boolean): void {
+  try {
+    if (value) window.localStorage.setItem(CONSENT_KEY, 'yes')
+    else window.localStorage.removeItem(CONSENT_KEY)
+  } catch {
+    // Private mode or blocked storage: the choice just lasts until the page is closed.
+  }
+}
+
+const LINK = 'font-semibold text-primary underline underline-offset-2 hover:text-primary-hover'
+
+/**
+ * Neumaticos.es tyre finder (Awin). Awin's affiliate cookies are the web's only non-essential cookies, so
+ * consent is asked here, inline, instead of a site-wide banner: the finder loads once the reader accepts,
+ * and loads straight away on later visits until the reader withdraws it.
+ */
 export function TyreFinder() {
   const headingId = useId()
+  // null until the browser's stored choice is read (the server render never loads the finder).
+  const [accepted, setAccepted] = useState<boolean | null>(null)
+  useEffect(() => setAccepted(readConsent()), [])
+
+  function decide(value: boolean) {
+    writeConsent(value)
+    setAccepted(value)
+  }
+
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-4">
       <h2 id={headingId} className="flex items-center gap-2 font-display text-xl font-bold tracking-[-0.02em]">
         <Calculator size={20} aria-hidden="true" className="text-primary" />
         Calcula el precio en tu medida
       </h2>
-      <iframe
-        src={AWIN_FINDER}
-        width="100%"
-        height={FINDER_HEIGHT}
-        title="Buscador de neumáticos de Neumaticos.es"
-        loading="lazy"
-        sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation-by-user-activation"
-        referrerPolicy="strict-origin-when-cross-origin"
-        className="w-full rounded-xl border border-line bg-white"
-      />
-      <p className="text-xs leading-relaxed text-muted">
-        Buscador de Neumaticos.es con enlace de afiliado: si compras tras usarlo, PatoBarato puede recibir una
-        comisión. Lo sirve Awin, que establece cookies de seguimiento de afiliado en su propio dominio.
-      </p>
+      {accepted ? (
+        <>
+          <iframe
+            src={AWIN_FINDER}
+            width="100%"
+            height={FINDER_HEIGHT}
+            title="Buscador de neumáticos de Neumaticos.es"
+            loading="lazy"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation-by-user-activation"
+            referrerPolicy="strict-origin-when-cross-origin"
+            className="w-full rounded-xl border border-line bg-white"
+          />
+          <p className="text-xs leading-relaxed text-muted">
+            Buscador de Neumaticos.es con enlace de afiliado: si compras tras usarlo, PatoBarato puede recibir una
+            comisión. Lo sirve Awin, que usa cookies de seguimiento de afiliado.{' '}
+            <button type="button" onClick={() => decide(false)} className={LINK}>
+              Retirar consentimiento
+            </button>
+          </p>
+        </>
+      ) : (
+        <div className="flex flex-col gap-3 rounded-xl border border-dashed border-line bg-white p-4">
+          <p className="flex gap-2 text-sm leading-relaxed text-muted">
+            <Cookie size={18} aria-hidden="true" className="mt-0.5 shrink-0 text-muted" />
+            <span>
+              Elige la medida de tu neumático y verás el precio actual en Neumaticos.es. El buscador lo sirve Awin,
+              que usa cookies de afiliado, por eso solo lo cargamos si aceptas. Más información en la{' '}
+              <a href="/cookies" className={LINK}>
+                política de cookies
+              </a>
+              .
+            </span>
+          </p>
+          <button
+            type="button"
+            onClick={() => decide(true)}
+            disabled={accepted === null}
+            className="inline-flex min-h-11 items-center justify-center self-start rounded-xl bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+          >
+            Aceptar y mostrar el buscador
+          </button>
+        </div>
+      )}
     </section>
   )
 }
