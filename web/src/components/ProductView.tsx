@@ -168,8 +168,9 @@ export function ProductView({ deal, related, now, guides = [] }: Props) {
               />
             </div>
           ) : (
-            /* Mobile: fixed bottom bar (above the home indicator); desktop: inline. */
-            <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur md:static md:z-auto md:w-full md:max-w-sm md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
+            /* Mobile: fixed bottom bar (above the home indicator), solid and extended downwards so the page never
+               shows through under in-app browsers' floating toolbars (Telegram on iOS); desktop: inline. */
+            <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(20,22,26,0.06)] after:absolute after:inset-x-0 after:top-full after:h-40 after:bg-white md:static md:z-auto md:w-full md:max-w-sm md:border-0 md:bg-transparent md:p-0 md:shadow-none md:after:hidden">
               <BuyButton
                 url={deal.affiliateUrl}
                 store={deal.store}
