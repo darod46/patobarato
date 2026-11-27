@@ -48,10 +48,15 @@ async def test_writes_description_and_category_newest_first():
     repo = InMemoryRepository()
     old = await _product(repo, "A1", "Freidora Cosori 5,5 L")
     new = await _product(repo, "A2", "Aspiradora Conga")
-    client = _FakeClient([{"description": GOOD, "category": "hogar"}] * 2)
+    client = _FakeClient([{"description": GOOD, "category": "hogar", "short_title": "Conga aspiradora"}] * 2)
     await ProductEnricher(client, repo, lambda: NOW).run(_source())
     assert "Aspiradora Conga" in client.prompts[0] and "Freidora Cosori" in client.prompts[1]
-    assert repo.product_texts[new] == {"description": GOOD, "category": "hogar", "at": NOW}
+    assert repo.product_texts[new] == {
+        "description": GOOD,
+        "category": "hogar",
+        "short_title": "Conga aspiradora",
+        "at": NOW,
+    }
     assert old in repo.product_texts
 
 

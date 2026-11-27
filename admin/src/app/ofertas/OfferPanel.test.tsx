@@ -45,6 +45,7 @@ const base: OfferDetail = {
   slug: 'raton-logitech',
   description: 'Un ratón inalámbrico cómodo para el día a día.',
   category: 'tecnologia',
+  shortTitle: 'Logitech ratón inalámbrico',
   descriptionManual: false,
   botPublishedAt: null,
 }
@@ -120,7 +121,24 @@ describe('OfferPanel', () => {
       expect(m.saveOffer).toHaveBeenCalledWith(
         expect.anything(),
         5,
-        expect.objectContaining({ text: { description: 'Ratón ligero y silencioso.', category: 'hogar' } }),
+        expect.objectContaining({
+          text: { description: 'Ratón ligero y silencioso.', category: 'hogar', shortTitle: 'Logitech ratón inalámbrico' },
+        }),
+      ),
+    )
+  })
+
+  it('edits the short title shown on the web', async () => {
+    setup()
+    const input = await screen.findByLabelText('Título corto en la web')
+    await userEvent.clear(input)
+    await userEvent.type(input, 'Ratón Logitech M185')
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar y actualizar Telegram' }))
+    await waitFor(() =>
+      expect(m.saveOffer).toHaveBeenCalledWith(
+        expect.anything(),
+        5,
+        expect.objectContaining({ text: expect.objectContaining({ shortTitle: 'Ratón Logitech M185' }) }),
       ),
     )
   })
@@ -134,7 +152,7 @@ describe('OfferPanel', () => {
       expect(m.saveOffer).toHaveBeenCalledWith(
         expect.anything(),
         5,
-        expect.objectContaining({ text: { description: null, category: 'tecnologia' } }),
+        expect.objectContaining({ text: { description: null, category: 'tecnologia', shortTitle: 'Logitech ratón inalámbrico' } }),
       ),
     )
   })

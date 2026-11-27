@@ -52,7 +52,9 @@ class ProductEnricher:
                 failed += 1
                 await self._repo.record_enrich_failure(product.id, product.attempts + 1)
                 continue
-            await self._repo.save_product_text(product.id, text.description, text.category, self._clock())
+            await self._repo.save_product_text(
+                product.id, text.description, text.category, self._clock(), short_title=text.short_title
+            )
             done += 1
         if products:
             logger.info("ProductEnrich: %d descripciones, %d fallidas", done, failed)

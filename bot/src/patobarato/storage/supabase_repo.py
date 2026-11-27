@@ -782,12 +782,21 @@ class SupabaseRepository:
         ]
 
     async def save_product_text(
-        self, product_id: int, description: str, category: str, at: datetime
+        self,
+        product_id: int,
+        description: str,
+        category: str,
+        at: datetime,
+        short_title: str | None = None,
     ) -> None:
+        row = {"description": description, "category": category, "enriched_at": at.isoformat()}
+        if short_title:
+            row["short_title"] = short_title
+
         def run():
-            self._client.table("products").update(
-                {"description": description, "category": category, "enriched_at": at.isoformat()}
-            ).eq("id", product_id).eq("description_manual", False).execute()
+            self._client.table("products").update(row).eq("id", product_id).eq(
+                "description_manual", False
+            ).execute()
 
         await asyncio.to_thread(run)
 

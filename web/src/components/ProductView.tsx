@@ -6,6 +6,7 @@ import { storeInfo } from '../lib/stores'
 import type { Deal } from '../lib/types'
 import { tagPath } from '../lib/urls'
 import { BuyButton } from './BuyButton'
+import { CouponCode } from './CouponCode'
 import { DealCard } from './DealCard'
 import { NextDealCta } from './NextDealCta'
 import { FLAGS } from '../lib/flags'
@@ -147,9 +148,7 @@ export function ProductView({ deal, related, now, guides = [] }: Props) {
           {saving !== null && (
             <p className="price text-sm font-semibold text-success">{`Ahorras ${formatPrice(saving)}`}</p>
           )}
-          {deal.coupon && (
-            <p className="rounded-md bg-surface px-3 py-1.5 text-sm text-muted">{deal.coupon}</p>
-          )}
+          {deal.coupon && <CouponCode coupon={deal.coupon} />}
           <p className="text-sm text-muted">
             {ended
               ? `Publicado ${timeAgo(deal.publishedAt, clock)}`

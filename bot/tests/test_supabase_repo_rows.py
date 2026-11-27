@@ -653,6 +653,12 @@ async def test_save_product_text_skips_manual_edits():
     assert ("id", 9) in eqs and ("description_manual", False) in eqs
 
 
+async def test_save_product_text_writes_the_short_title_only_when_there_is_one():
+    client = _Client([])
+    await SupabaseRepository(client).save_product_text(9, "Texto", "hogar", NOW, short_title="Conga 1500")
+    assert _calls(client, "update")[0][0][0]["short_title"] == "Conga 1500"
+
+
 async def test_record_enrich_failure_sets_attempts():
     client = _Client([])
     await SupabaseRepository(client).record_enrich_failure(9, 2)

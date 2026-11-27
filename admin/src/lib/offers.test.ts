@@ -36,7 +36,7 @@ const op = (call: Call, name: string) => call.ops.find(([n]) => n === name)?.[1]
 
 describe('saveOffer', () => {
   const patch = { title: 'T', price: 1, previousPrice: null, coupon: null, priceBeforeCoupon: false, hashtags: [] }
-  const productUpdate = async (text: { description: string | null; category: string | null }) => {
+  const productUpdate = async (text: { description: string | null; category: string | null; shortTitle: string | null }) => {
     const { client, calls } = mockClient((c) =>
       c.ops.some(([n]) => n === 'select') ? { data: { offer_id: 7, product_id: 9 } } : { data: null },
     )
@@ -45,19 +45,21 @@ describe('saveOffer', () => {
   }
 
   it('a hand-written description is marked manual so the bot never rewrites it', async () => {
-    expect(await productUpdate({ description: '  Texto nuevo. ', category: 'hogar' })).toEqual({
+    expect(await productUpdate({ description: '  Texto nuevo. ', category: 'hogar', shortTitle: ' Corto ' })).toEqual({
       title: 'T',
       description: 'Texto nuevo.',
       category: 'hogar',
+      short_title: 'Corto',
       description_manual: true,
     })
   })
 
   it('an emptied description goes back to the bot queue', async () => {
-    expect(await productUpdate({ description: '  ', category: null })).toEqual({
+    expect(await productUpdate({ description: '  ', category: null, shortTitle: '' })).toEqual({
       title: 'T',
       description: null,
       category: null,
+      short_title: null,
       description_manual: false,
       enrich_attempts: 0,
       enriched_at: null,

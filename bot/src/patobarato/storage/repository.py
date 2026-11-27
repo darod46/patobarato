@@ -101,7 +101,12 @@ class Repository(Protocol):
         ...
 
     async def save_product_text(
-        self, product_id: int, description: str, category: str, at: datetime
+        self,
+        product_id: int,
+        description: str,
+        category: str,
+        at: datetime,
+        short_title: str | None = None,
     ) -> None:
         """Stores the generated text unless an admin edited it meanwhile (``description_manual``)."""
         ...
@@ -550,11 +555,21 @@ class InMemoryRepository(Repository):
         return queue[:limit]
 
     async def save_product_text(
-        self, product_id: int, description: str, category: str, at: datetime
+        self,
+        product_id: int,
+        description: str,
+        category: str,
+        at: datetime,
+        short_title: str | None = None,
     ) -> None:
         if product_id in self.manual_texts:
             return
-        self.product_texts[product_id] = {"description": description, "category": category, "at": at}
+        self.product_texts[product_id] = {
+            "description": description,
+            "category": category,
+            "short_title": short_title,
+            "at": at,
+        }
 
     async def record_enrich_failure(self, product_id: int, attempts: int) -> None:
         self.enrich_attempts[product_id] = attempts

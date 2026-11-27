@@ -39,6 +39,8 @@ export type OfferDetail = {
   /** Short description shown on the web's deal page (DeepSeek or hand-written) and its category. */
   description: string | null
   category: string | null
+  /** Short product name shown on the web instead of the title (DeepSeek or hand-written). */
+  shortTitle: string | null
   /** True once someone edited the description here: the bot never rewrites it. */
   descriptionManual: boolean
   /** Draft only: when the bot auto-published the same product after this draft was created. */
@@ -53,13 +55,13 @@ export type OfferPatch = {
   priceBeforeCoupon: boolean
   hashtags: string[]
   /** Only when the description or the category changed. An empty description lets the bot write a new one. */
-  text?: { description: string | null; category: string | null }
+  text?: { description: string | null; category: string | null; shortTitle: string | null }
 }
 
 const JOINED = '*, offers(previous_price, coupon, hashtags), products(title, store, image_url, asin, slug)'
 const JOINED_INNER = '*, offers(previous_price, coupon, hashtags), products!inner(title, store, image_url, asin, slug)'
 const JOINED_DETAIL =
-  '*, offers(previous_price, coupon, hashtags), products(title, store, image_url, asin, slug, description, category, description_manual)'
+  '*, offers(previous_price, coupon, hashtags), products(title, store, image_url, asin, slug, description, category, short_title, description_manual)'
 const LIMIT = 200
 
 // oxlint-disable-next-line no-explicit-any
@@ -117,6 +119,7 @@ export async function getOffer(client: SupabaseClient, publicationId: number | s
     slug: r.products?.slug ?? null,
     description: r.products?.description ?? null,
     category: r.products?.category ?? null,
+    shortTitle: r.products?.short_title ?? null,
     descriptionManual: Boolean(r.products?.description_manual),
     botPublishedAt: null,
   }
@@ -129,10 +132,12 @@ export async function getOffer(client: SupabaseClient, publicationId: number | s
 function productText(text: OfferPatch['text']): Record<string, unknown> {
   if (!text) return {}
   const description = text.description?.trim() || null
-  // Emptied: back in the bot's queue (it also rewrites the category). Otherwise the hand edit is kept for good.
+  const short_title = text.shortTitle?.trim() || null
+  // Emptied: back in the bot's queue (it also rewrites the category and the short title). Otherwise the hand
+  // edit is kept for good.
   return description === null
-    ? { description: null, category: text.category, description_manual: false, enrich_attempts: 0, enriched_at: null }
-    : { description, category: text.category, description_manual: true }
+    ? { description: null, category: text.category, short_title, description_manual: false, enrich_attempts: 0, enriched_at: null }
+    : { description, category: text.category, short_title, description_manual: true }
 }
 
 /** Writes the title (products), price (publications) and previous price, coupon and hashtags (offers). */

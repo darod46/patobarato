@@ -22,6 +22,8 @@ CATEGORIES = (
 
 MIN_CHARS = 80
 MAX_CHARS = 420
+SHORT_MIN_CHARS = 8
+SHORT_MAX_CHARS = 70
 
 SYSTEM = (
     "Eres redactor de PatoBarato, una web española de ofertas. Escribes en español de España, "
@@ -29,6 +31,7 @@ SYSTEM = (
 )
 
 _EXAMPLE = {
+    "short_title": "Cosori freidora de aire 5,5 L",
     "description": (
         "Una freidora de aire de 5,5 litros con cesta antiadherente, pensada para cocinar para "
         "tres o cuatro personas con muy poco aceite. Sus programas automáticos facilitan el día a día "
@@ -47,10 +50,19 @@ FORBIDDEN = re.compile(
 )
 
 
+# The short name may mention a store brand (Amazon Echo) but no sales talk.
+SHORT_FORBIDDEN = re.compile(
+    r"€|%|\$|\bprecio|\bdescuento|\brebaj|\bofert|\bchollo|\bgratis\b|\bmejor\b|\bn[º°o]\.?\s?1\b",
+    re.IGNORECASE,
+)
+
+
 @dataclass(frozen=True)
 class ProductText:
     description: str
     category: str
+    # None when the model gave no usable short name: the web keeps the full title.
+    short_title: str | None = None
 
 
 def build_prompt(title: str) -> str:
@@ -65,8 +77,12 @@ def build_prompt(title: str) -> str:
             "ni digas que lo hemos probado.",
             "- No repitas el título entero ni uses emojis, hashtags o comillas.",
             f"- category: una de {', '.join(CATEGORIES)}. Usa «otros» si ninguna encaja.",
+            "- short_title: nombre corto del producto para la web, de 3 a 8 palabras y como mucho 60 "
+            "caracteres: marca, modelo si lo hay y qué es, con el dato clave (capacidad, tamaño) si cabe. "
+            "Sin adjetivos comerciales, sin listas de características y sin punto final.",
             "",
-            "Devuelve solo un objeto json con las claves description y category, como en este ejemplo:",
+            "Devuelve solo un objeto json con las claves short_title, description y category, "
+            "como en este ejemplo:",
             json.dumps(_EXAMPLE, ensure_ascii=False),
             "",
             f"Título del producto: {title}",
@@ -87,4 +103,13 @@ def parse_answer(answer: dict) -> ProductText | None:
     category = category.strip().lower() if isinstance(category, str) else ""
     if category not in CATEGORIES:
         category = "otros"
-    return ProductText(description, category)
+    return ProductText(description, category, _short_title(answer.get("short_title")))
+
+
+def _short_title(value: object) -> str | None:
+    if not isinstance(value, str):
+        return None
+    title = " ".join(value.split()).rstrip(".")
+    if not SHORT_MIN_CHARS <= len(title) <= SHORT_MAX_CHARS or SHORT_FORBIDDEN.search(title):
+        return None
+    return title

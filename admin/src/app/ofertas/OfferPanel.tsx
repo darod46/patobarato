@@ -94,6 +94,7 @@ function OfferForm({ detail, onRefresh }: { detail: OfferDetail; onRefresh: () =
   const [hashtags, setHashtags] = useState(detail.hashtags.join(' '))
   const [description, setDescription] = useState(detail.description ?? '')
   const [category, setCategory] = useState(detail.category ?? '')
+  const [shortTitle, setShortTitle] = useState(detail.shortTitle ?? '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [jobId, setJobId] = useState<number | null>(null)
@@ -144,8 +145,10 @@ function OfferForm({ detail, onRefresh }: { detail: OfferDetail; onRefresh: () =
       coupon: coupon.trim() || null,
       priceBeforeCoupon: beforeCoupon,
       hashtags: parseHashtags(hashtags),
-      ...((description.trim() !== (detail.description ?? '') || category !== (detail.category ?? '')) && {
-        text: { description: description.trim() || null, category: category || null },
+      ...((description.trim() !== (detail.description ?? '') ||
+        category !== (detail.category ?? '') ||
+        shortTitle.trim() !== (detail.shortTitle ?? '')) && {
+        text: { description: description.trim() || null, category: category || null, shortTitle: shortTitle.trim() || null },
       }),
     }
   }
@@ -233,6 +236,15 @@ function OfferForm({ detail, onRefresh }: { detail: OfferDetail; onRefresh: () =
         <label className="block text-sm font-medium">
           Hashtags
           <input value={hashtags} onChange={(e) => setHashtags(e.target.value)} className={INPUT} />
+        </label>
+        <label className="block text-sm font-medium">
+          Título corto en la web
+          <input
+            value={shortTitle}
+            onChange={(e) => setShortTitle(e.target.value)}
+            placeholder="Vacío: se muestra el título completo"
+            className={INPUT}
+          />
         </label>
         <label className="block text-sm font-medium">
           Descripción en la web

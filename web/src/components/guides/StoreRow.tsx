@@ -37,16 +37,15 @@ export function StoreRow({ offer, now }: { offer: GuideStoreOffer; now: Date }) 
   const store = storeInfo(offer.store)
   if (!isRecent(offer, now) || offer.price === null) {
     return (
-      <li className="flex items-center justify-between gap-3 rounded-xl border border-line bg-white p-3">
+      <li className="flex flex-col gap-3 rounded-xl border border-line bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
         <StoreName offer={offer} />
-        <a
-          href={buyUrl(offer)}
-          target="_blank"
-          rel="sponsored noopener noreferrer"
-          className="inline-flex min-h-11 items-center rounded-xl bg-primary-soft px-4 text-sm font-semibold text-primary hover:text-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-          {offer.price === null ? `Ver precio en ${store.short}` : `Ver en ${store.short}`}
-        </a>
+        {/* Same yellow button as the deal pages. */}
+        <BuyButton
+          url={buyUrl(offer)}
+          store={offer.store}
+          label={offer.price === null ? `Ver precio en ${store.short}` : `Ver en ${store.short}`}
+          className="sm:min-h-11 sm:px-5 sm:py-2.5"
+        />
       </li>
     )
   }

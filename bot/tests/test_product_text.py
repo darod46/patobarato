@@ -24,6 +24,22 @@ def test_valid_answer_is_trimmed_and_kept():
     assert text.category == "hogar"
 
 
+def test_short_title_is_kept_trimmed_or_dropped():
+    text = parse_answer({"description": GOOD, "category": "hogar", "short_title": "  Cecotec Conga 1500 robot aspirador. "})
+    assert text.short_title == "Cecotec Conga 1500 robot aspirador"
+    assert parse_answer({"description": GOOD, "short_title": "Amazon Echo Dot 5.ª generación"}).short_title == (
+        "Amazon Echo Dot 5.ª generación"
+    )
+    for bad in (None, 3, "Tv", "x" * 71, "Oferta Cecotec Conga", "Conga 1500 al mejor precio", "Conga -30%"):
+        text = parse_answer({"description": GOOD, "category": "hogar", "short_title": bad})
+        assert text is not None and text.short_title is None
+
+
+def test_prompt_asks_for_a_short_title():
+    prompt = build_prompt("Cecotec Conga 1500")
+    assert '"short_title"' in prompt and "short_title:" in prompt
+
+
 def test_unknown_category_becomes_otros():
     assert parse_answer({"description": GOOD, "category": "jardín"}).category == "otros"
     assert parse_answer({"description": GOOD}).category == "otros"

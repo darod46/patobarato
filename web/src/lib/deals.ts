@@ -47,6 +47,7 @@ type DealRow = {
   slug?: string | null
   description?: string | null
   category?: string | null
+  short_title?: string | null
 }
 
 function toDeal(row: DealRow): Deal {
@@ -61,7 +62,8 @@ function toDeal(row: DealRow): Deal {
     coupon: row.coupon,
     hashtags: row.hashtags ?? [],
     affiliateUrl: row.affiliate_url,
-    title: row.title,
+    // The short name DeepSeek writes for the web (or the admin); the store's long title until there is one.
+    title: row.short_title?.trim() || row.title,
     // Never an Amazon-hosted image (see category-art.ts): Amazon deals show their category's duck.
     imageUrl: row.store === 'amazon' ? categoryArt(key) : displayImage(row.image_url, key),
     asin: row.asin,
