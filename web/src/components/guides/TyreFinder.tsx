@@ -41,16 +41,19 @@ export function TyreFinder() {
       </h2>
       {accepted ? (
         <>
-          <iframe
-            src={AWIN_FINDER}
-            width="100%"
-            height={FINDER_HEIGHT}
-            title="Buscador de neumáticos de Neumaticos.es"
-            loading="lazy"
-            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation-by-user-activation"
-            referrerPolicy="strict-origin-when-cross-origin"
-            className="w-full bg-white md:rounded-xl md:border md:border-line"
-          />
+          {/* The configurator draws its fields edge to edge: the white frame around it gives it side margins. */}
+          <div className="bg-white px-4 py-2 md:rounded-xl md:border md:border-line md:px-6 md:py-4">
+            <iframe
+              src={AWIN_FINDER}
+              width="100%"
+              height={FINDER_HEIGHT}
+              title="Buscador de neumáticos de Neumaticos.es"
+              loading="lazy"
+              sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation-by-user-activation"
+              referrerPolicy="strict-origin-when-cross-origin"
+              className="block w-full"
+            />
+          </div>
           <p className="px-4 text-xs leading-relaxed text-muted md:px-0">
             Buscador de Neumaticos.es con enlace de afiliado: si compras tras usarlo, PatoBarato puede recibir una
             comisión. Lo sirve Awin, que usa cookies de seguimiento de afiliado.{' '}
