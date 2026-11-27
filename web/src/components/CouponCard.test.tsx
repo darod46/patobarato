@@ -26,7 +26,21 @@ describe('CouponCard', () => {
     expect(screen.getByText('−6 € en 40 €')).toBeInTheDocument()
     expect(screen.getByText('Todos los productos. Un uso por cuenta.')).toBeInTheDocument()
     expect(screen.getByText('PATO6')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Ir a AliExpress' })).toHaveAttribute('href', coupon.url)
+    const link = screen.getByRole('link', { name: 'Copiar código e ir a AliExpress' })
+    expect(link).toHaveAttribute('href', coupon.url)
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link).toHaveAttribute('rel', 'sponsored noopener noreferrer')
+  })
+
+  it('the store button copies the code as it opens the store', async () => {
+    const writeText = vi.fn(async () => {})
+    vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } })
+    render(<CouponCard coupon={coupon} />)
+    const link = screen.getByRole('link', { name: 'Copiar código e ir a AliExpress' })
+    link.addEventListener('click', (e) => e.preventDefault()) // jsdom cannot open tabs
+    await userEvent.click(link)
+    expect(writeText).toHaveBeenCalledWith('PATO6')
+    expect(screen.getByRole('button', { name: 'Copiado' })).toBeInTheDocument()
   })
 
   it('copies the code and confirms', async () => {

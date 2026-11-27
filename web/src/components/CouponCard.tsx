@@ -1,6 +1,6 @@
 'use client'
 
-import { Check, Copy } from 'lucide-react'
+import { Check, Copy, ExternalLink } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { storeInfo } from '../lib/stores'
 import type { Coupon } from '../lib/types'
@@ -72,13 +72,17 @@ export function CouponCard({ coupon }: { coupon: Coupon }) {
         </button>
       </div>
       {coupon.url && (
+        // One tap: the code goes to the clipboard and the store opens in a new tab with our affiliate link,
+        // ready to paste the code at checkout. The copy starts inside the click, before the tab opens.
         <a
           href={coupon.url}
           target="_blank"
           rel="sponsored noopener noreferrer"
-          className="text-sm font-semibold text-primary hover:text-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          onClick={() => void copy()}
+          className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-sm font-extrabold text-ink shadow-sm transition-colors hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
-          {store.cta}
+          {`Copiar código e ir a ${store.short}`}
+          <ExternalLink size={16} aria-hidden="true" />
         </a>
       )}
     </article>
