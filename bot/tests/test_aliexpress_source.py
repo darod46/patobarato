@@ -335,3 +335,70 @@ async def test_api_publications_are_marked_price_before_coupon():
     repo, source, _, runner = _setup([_product("1", 50)])
     await runner.run(source)
     assert [p["price_before_coupon"] for p in repo.publications()] == [True]
+
+
+from patobarato.sources.aliexpress_source import aliexpress_coupon, coupon_values  # noqa: E402
+from patobarato.stores.aliexpress_client import AliPromoCode  # noqa: E402
+
+
+def _promo(code="AECODE7", text="On order over EUR 40, get EUR 7 off", kind="1", minimum="40", end=None, qty=10, url="https://s.click/code"):
+    return AliPromoCode(
+        code=code,
+        campaign_type=kind,
+        value_text=text,
+        min_spend=Decimal(minimum) if minimum else None,
+        starts_at=None,
+        ends_at=end,
+        quantity=qty,
+        url=url,
+    )
+
+
+def test_coupon_values_reads_euro_amounts_and_percentages_but_not_dollars():
+    assert coupon_values(_promo()) == (Decimal("7"), None, Decimal("40"))
+    assert coupon_values(_promo(text="On order over 40€, get 7,50€ off")) == (Decimal("7.50"), None, Decimal("40"))
+    assert coupon_values(_promo(kind="2", text="10% off on orders over EUR 20", minimum="20")) == (
+        None,
+        Decimal("10"),
+        Decimal("20"),
+    )
+    assert coupon_values(_promo(text="On order over USD 10, get USD 7 off")) == (None, None, None)
+    assert coupon_values(_promo(text="Descuento especial")) == (None, None, None)
+    assert coupon_values(_promo(minimum="1")) == (Decimal("7"), None, None)
+
+
+def test_aliexpress_coupon_builds_a_spanish_title_and_skips_used_up_or_expired_codes():
+    product = dataclasses.replace(_product("9", 50), promo_code=_promo(end=NOW + timedelta(days=2)))
+    coupon = aliexpress_coupon(4, product, NOW)
+    assert coupon is not None
+    assert (coupon.store, coupon.code, coupon.external_id, coupon.source_id) == ("aliexpress", "AECODE7", "AECODE7", 4)
+    assert coupon.title == "−7 € en pedidos desde 40 €"
+    assert coupon.conditions == "Para «Producto 9»."
+    assert coupon.url == "https://s.click/code"
+    assert coupon.expires_at == NOW + timedelta(days=2)
+    assert (coupon.discount_amount, coupon.min_purchase) == (Decimal("7"), Decimal("40"))
+    usd = dataclasses.replace(product, promo_code=_promo(text="On order over USD 10, get USD 7 off"))
+    assert aliexpress_coupon(4, usd, NOW).title == "On order over USD 10, get USD 7 off"
+    undated = aliexpress_coupon(4, dataclasses.replace(product, promo_code=_promo(url=None)), NOW)
+    assert undated.expires_at == NOW + timedelta(days=3)
+    assert undated.url == product.promotion_link
+    assert aliexpress_coupon(4, dataclasses.replace(product, promo_code=_promo(qty=0)), NOW) is None
+    assert aliexpress_coupon(4, dataclasses.replace(product, promo_code=_promo(end=NOW)), NOW) is None
+    assert aliexpress_coupon(4, _product("9", 50), NOW) is None
+
+
+async def test_run_stores_promo_codes_as_coupons_and_on_the_offer(caplog):
+    coded = dataclasses.replace(_product("1", 50), promo_code=_promo(end=NOW + timedelta(days=5)))
+    # A product below the discount threshold is not published but its code still reaches the coupons.
+    low = dataclasses.replace(_product("2", 10), promo_code=_promo(code="OTHER5", end=NOW + timedelta(days=5)))
+    repo, source, _client, src = _setup([coded, low, _product("3", 40)])
+    with caplog.at_level(logging.INFO):
+        await src.run(source)
+    assert sorted(c["code"] for c in repo.coupons.values()) == ["AECODE7", "OTHER5"]
+    coupons = {o["source_message_id"]: o["coupon"] for o in repo._offers.values()}
+    assert coupons[offer_message_id("1", NOW.date())] == "AECODE7"
+    assert coupons[offer_message_id("3", NOW.date())] is None
+    assert "3 products, 2 with promo code" in caplog.text
+    # Seen again: updated, not duplicated.
+    await src.run(source)
+    assert len(repo.coupons) == 2

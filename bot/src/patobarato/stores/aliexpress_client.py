@@ -5,7 +5,7 @@ import logging
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal, InvalidOperation
 from hashlib import sha256
 from typing import Any
@@ -26,6 +26,23 @@ class AliExpressError(Exception):
         self.msg = msg
 
 
+@dataclass(frozen=True)
+class AliPromoCode:
+    """A product's affiliate promo code (``promo_code_info`` in product.query / hotproduct.query)."""
+
+    code: str
+    # 1: amount off over a minimum spend; 2: percentage off over a minimum spend.
+    campaign_type: str | None
+    # The API's own wording, e.g. "On order over USD 10, get USD 7 off".
+    value_text: str | None
+    min_spend: Decimal | None
+    starts_at: datetime | None
+    ends_at: datetime | None
+    quantity: int | None
+    # Product page with the code applied (affiliate link).
+    url: str | None
+
+
 @dataclass
 class AliProduct:
     product_id: str
@@ -36,6 +53,7 @@ class AliProduct:
     image_url: str | None
     url: str
     promotion_link: str | None
+    promo_code: AliPromoCode | None = None
 
 
 @dataclass
@@ -69,6 +87,40 @@ def _discount(value: Any) -> int | None:
         return None
 
 
+def _time(value: Any) -> datetime | None:
+    # "2020-04-30 23:59:59"; the API gives no zone, read as UTC (a few hours either way is fine for
+    # an expiry date).
+    try:
+        return datetime.strptime(str(value).strip()[:19], "%Y-%m-%d %H:%M:%S").replace(tzinfo=UTC)
+    except ValueError:
+        return None
+
+
+def _int(value: Any) -> int | None:
+    try:
+        return int(str(value).strip())
+    except (TypeError, ValueError):
+        return None
+
+
+def _promo_code(raw: Any) -> AliPromoCode | None:
+    if not isinstance(raw, dict):
+        return None
+    code = str(raw.get("promo_code") or "").strip()
+    if not code:
+        return None
+    return AliPromoCode(
+        code=code,
+        campaign_type=str(raw.get("code_campaigntype") or "").strip() or None,
+        value_text=str(raw.get("code_value") or "").strip() or None,
+        min_spend=_decimal(raw.get("code_mini_spend")),
+        starts_at=_time(raw.get("code_availabletime_start")),
+        ends_at=_time(raw.get("code_availabletime_end")),
+        quantity=_int(raw.get("code_quantity")),
+        url=str(raw.get("code_promotionurl") or "").strip() or None,
+    )
+
+
 def _product(raw: dict[str, Any]) -> AliProduct:
     return AliProduct(
         product_id=str(raw["product_id"]),
@@ -79,6 +131,7 @@ def _product(raw: dict[str, Any]) -> AliProduct:
         image_url=raw.get("product_main_image_url") or None,
         url=raw.get("product_detail_url", ""),
         promotion_link=raw.get("promotion_link") or None,
+        promo_code=_promo_code(raw.get("promo_code_info")),
     )
 
 

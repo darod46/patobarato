@@ -1,6 +1,6 @@
 import hmac
 import json
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from hashlib import sha256
 from pathlib import Path
@@ -214,3 +214,34 @@ async def test_featured_promo_products_logs_skipped_count_only(caplog):
     messages = [r.getMessage() for r in caplog.records]
     assert "featuredpromo 11.11 Big Sale: skipped 2 products without price or link" in messages
     assert not any("s.click" in m for m in messages)
+
+
+def test_promo_code_info_is_parsed_and_missing_or_empty_is_none():
+    from patobarato.stores.aliexpress_client import _product
+
+    base = {"product_id": 1, "target_sale_price": "9.99", "promotion_link": "https://s.click/x"}
+    product = _product(
+        {
+            **base,
+            "promo_code_info": {
+                "promo_code": "GMG20207",
+                "code_campaigntype": "1",
+                "code_value": "On order over EUR 40, get EUR 7 off",
+                "code_availabletime_start": "2026-11-20 00:00:00",
+                "code_availabletime_end": "2026-11-30 23:59:59",
+                "code_mini_spend": "40",
+                "code_quantity": "120",
+                "code_promotionurl": "https://s.click.aliexpress.com/e/_code",
+            },
+        }
+    )
+    promo = product.promo_code
+    assert promo is not None
+    assert (promo.code, promo.campaign_type, promo.min_spend, promo.quantity) == ("GMG20207", "1", Decimal("40"), 120)
+    assert promo.value_text == "On order over EUR 40, get EUR 7 off"
+    assert promo.starts_at == datetime(2026, 11, 20, tzinfo=UTC)
+    assert promo.ends_at == datetime(2026, 11, 30, 23, 59, 59, tzinfo=UTC)
+    assert promo.url == "https://s.click.aliexpress.com/e/_code"
+    assert _product(base).promo_code is None
+    assert _product({**base, "promo_code_info": {"promo_code": ""}}).promo_code is None
+    assert _product({**base, "promo_code_info": "x"}).promo_code is None

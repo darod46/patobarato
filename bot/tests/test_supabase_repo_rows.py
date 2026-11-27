@@ -677,3 +677,17 @@ async def test_mark_post_published_turns_the_early_web_row_into_the_telegram_one
         "published_at": NOW.isoformat(),
         "status": "active",
     }
+
+
+async def test_upsert_coupon_writes_structured_values_only_when_present():
+    from patobarato.models import CouponUpsert
+
+    base = dict(source_id=1, external_id="C1", store="aliexpress", code="C1", title="t", conditions=None,
+                url="https://u", starts_at=None, expires_at=None)
+    client = _Client([{"id": 3}])  # the select finds it: update path
+    await SupabaseRepository(client).upsert_coupon(
+        CouponUpsert(**base, discount_amount=Decimal("7"), min_purchase=Decimal("40"))
+    )
+    row = next(a[0] for n, a, _ in client.log if n == "update")
+    assert (row["discount_amount"], row["min_purchase"]) == ("7", "40")
+    assert "discount_pct" not in row

@@ -4,6 +4,7 @@ import dataclasses
 import hashlib
 import json
 import logging
+import re
 from collections.abc import Callable
 from datetime import date, datetime, timedelta
 from decimal import Decimal
@@ -11,9 +12,9 @@ from typing import Protocol
 
 from patobarato.config import Settings
 from patobarato.core.decision import decide
-from patobarato.models import ApiSource, OfferStatus, ParsedOffer
+from patobarato.models import ApiSource, CouponUpsert, OfferStatus, ParsedOffer
 from patobarato.storage.repository import Repository
-from patobarato.stores.aliexpress_client import AliExpressError, AliProduct
+from patobarato.stores.aliexpress_client import AliExpressError, AliProduct, AliPromoCode
 
 logger = logging.getLogger("patobarato.aliexpress_source")
 
@@ -21,6 +22,8 @@ DEFAULT_MIN_DISCOUNT = 30
 DEFAULT_MAX_RESULTS = 20
 MAX_PAGE_SIZE = 50  # API limit per page
 STORE_ID = "aliexpress"
+# A code with no end date stays on the web this long after the last time the API showed it.
+UNDATED_COUPON_DAYS = 3
 
 
 class _HotProductsClient(Protocol):
@@ -119,6 +122,11 @@ class AliExpressSource:
             and (min_price is None or p.price >= min_price)
             and (max_price is None or p.price <= max_price)
         ][:max_results]
+        with_code = sum(1 for p in products if p.promo_code is not None)
+        logger.info(
+            "AliExpress source %s: %d products, %d with promo code", source.id, len(products), with_code
+        )
+        await self._sync_coupons(source, products)
         for product in wanted:
             try:
                 await self._process(source, product)
@@ -142,7 +150,7 @@ class AliExpressSource:
             # The API's original_price is often an inflated list price (a fake -50 %):
             # it only filters by discount above, never shown as the previous price.
             previous_price=None,
-            coupon=None,
+            coupon=promo.code if (promo := _usable(product.promo_code, now)) else None,
             hashtags=[*source.hashtags, "aliexpress"],
             canonical_url=f"https://es.aliexpress.com/item/{product.product_id}.html",
             product_url=product.url,
@@ -212,6 +220,18 @@ class AliExpressSource:
             status = OfferStatus.PUBLISHED_WEB
         await self._repo.set_offer_status(offer_id, status)
 
+    async def _sync_coupons(self, source: ApiSource, products: list[AliProduct]) -> None:
+        """Stores every usable promo code the API returned (not only the published products')."""
+        now = self._clock()
+        for product in products:
+            coupon = aliexpress_coupon(source.id, product, now)
+            if coupon is None:
+                continue
+            try:
+                await self._repo.upsert_coupon(coupon)
+            except Exception as e:
+                logger.error("AliExpress coupon %s failed: %s: %s", coupon.code, type(e).__name__, e)
+
     async def _generate_link(self, offer: ParsedOffer) -> str | None:
         try:
             return await self._client.link_generate(offer.canonical_url)
@@ -233,3 +253,77 @@ def _category_ids(value: object) -> list[str]:
     if isinstance(value, (str, int)):
         return [str(value)]
     return [str(c) for c in value]  # type: ignore[attr-defined]
+
+
+def _usable(promo: AliPromoCode | None, now: datetime) -> AliPromoCode | None:
+    """The code if it can still be used: not run out, not expired."""
+    if promo is None or promo.quantity == 0:
+        return None
+    if promo.ends_at is not None and promo.ends_at <= now:
+        return None
+    return promo
+
+
+_AMOUNT_RE = re.compile(r"get\s*(?:EUR|€)\s*([\d.,]+)\s*off|get\s*([\d.,]+)\s*(?:EUR|€)\s*off", re.IGNORECASE)
+_PCT_RE = re.compile(r"([\d.,]+)\s*%")
+
+
+def _number(text: str) -> Decimal | None:
+    try:
+        return Decimal(text.replace(",", "."))
+    except Exception:
+        return None
+
+
+def _euros(value: Decimal) -> str:
+    text = f"{value:.2f}".rstrip("0").rstrip(".")
+    return text.replace(".", ",")
+
+
+def coupon_values(promo: AliPromoCode) -> tuple[Decimal | None, Decimal | None, Decimal | None]:
+    """``(discount_amount, discount_pct, min_purchase)`` in euros, or all None when the code's text is in
+    another currency (USD) or says nothing we can read."""
+    text = promo.value_text or ""
+    if re.search(r"USD|US\$|\$", text):
+        return None, None, None
+    amount = pct = None
+    if promo.campaign_type == "2" or "%" in text:
+        match = _PCT_RE.search(text)
+        pct = _number(match.group(1)) if match else None
+    else:
+        match = _AMOUNT_RE.search(text)
+        amount = _number(match.group(1) or match.group(2)) if match else None
+    if amount is None and pct is None:
+        return None, None, None
+    minimum = promo.min_spend if promo.min_spend and promo.min_spend > 1 else None
+    return amount, pct, minimum
+
+
+def aliexpress_coupon(source_id: int, product: AliProduct, now: datetime) -> CouponUpsert | None:
+    """The product's promo code as a coupon of the web, or None when there is none or it is used up."""
+    promo = _usable(product.promo_code, now)
+    link = (promo.url if promo else None) or product.promotion_link
+    if promo is None or not link:
+        return None
+    amount, pct, minimum = coupon_values(promo)
+    if amount is not None:
+        title = f"−{_euros(amount)} €" + (f" en pedidos desde {_euros(minimum)} €" if minimum else "")
+    elif pct is not None:
+        title = f"−{_euros(pct)} %" + (f" en pedidos desde {_euros(minimum)} €" if minimum else "")
+    else:
+        title = promo.value_text or "Cupón de AliExpress"
+    name = product.title if len(product.title) <= 90 else product.title[:89].rstrip() + "…"
+    return CouponUpsert(
+        source_id=source_id,
+        external_id=promo.code,
+        store=STORE_ID,
+        code=promo.code,
+        title=title,
+        conditions=f"Para «{name}».",
+        url=link,
+        starts_at=promo.starts_at,
+        expires_at=promo.ends_at or now + timedelta(days=UNDATED_COUPON_DAYS),
+        discount_amount=amount,
+        discount_pct=pct,
+        min_purchase=minimum,
+    )

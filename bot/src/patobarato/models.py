@@ -137,6 +137,10 @@ class CouponUpsert:
     url: str
     starts_at: datetime | None
     expires_at: datetime | None
+    # Structured value, when the source gives one (the web shows "−7 € en 40 €" and the final price).
+    discount_amount: Decimal | None = None
+    discount_pct: Decimal | None = None
+    min_purchase: Decimal | None = None
 
 
 @dataclass(frozen=True)

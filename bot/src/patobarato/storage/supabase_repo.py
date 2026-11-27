@@ -494,6 +494,10 @@ class SupabaseRepository:
         }
         if c.starts_at is not None:  # otherwise the column default (now()) applies
             row["starts_at"] = c.starts_at.isoformat()
+        for column in ("discount_amount", "discount_pct", "min_purchase"):
+            value = getattr(c, column)
+            if value is not None:
+                row[column] = str(value)
 
         def run() -> int:
             # Select-then-write: PostgREST on_conflict cannot target the partial unique index.
