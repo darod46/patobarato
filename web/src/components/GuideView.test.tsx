@@ -89,36 +89,40 @@ describe('GuideView', () => {
   const FINDER = 'Calcula el precio en tu medida'
   const follows = (a: Node, b: Node) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
 
-  it('shows the tyre finder twice in a guide without items: after the intro and before the FAQ', () => {
+  const BANNER = '¿Ya sabes qué neumático buscas?'
+
+  it('shows the finder once after the intro and the Neumaticos.es banner before the FAQ (no items)', () => {
     render(<GuideView guide={guide({ items: [], widget: 'neumaticos' })} now={NOW} stores={[]} />)
-    expect(screen.getAllByRole('heading', { level: 2, name: FINDER })).toHaveLength(2)
-    expect(screen.queryByRole('heading', { name: 'Nuestras recomendaciones' })).toBeNull()
-    const [first, second] = screen.getAllByRole('region', { name: FINDER })
-    expect(follows(screen.getByText('Introducción de la guía.'), first!)).toBe(true)
-    expect(follows(first!, document.getElementById('como-elegir')!)).toBe(true)
-    expect(follows(document.getElementById('como-elegir')!, second!)).toBe(true)
-    expect(follows(second!, document.getElementById('faq')!)).toBe(true)
+    const finders = screen.getAllByRole('region', { name: FINDER })
+    expect(finders).toHaveLength(1)
+    const banner = screen.getByRole('region', { name: BANNER })
+    expect(follows(screen.getByText('Introducción de la guía.'), finders[0]!)).toBe(true)
+    expect(follows(document.getElementById('como-elegir')!, banner)).toBe(true)
+    expect(follows(banner, document.getElementById('faq')!)).toBe(true)
+    expect(screen.getByRole('link', { name: 'Ir a Neumaticos.es' })).toHaveAttribute(
+      'href',
+      'https://www.awin1.com/cread.php?awinmid=11552&awinaffid=3145511',
+    )
   })
 
-  it('places the first finder right after the quick picks when there are items', () => {
+  it('places the finder right after the quick picks when there are items', () => {
     render(<GuideView guide={guide({ widget: 'neumaticos' })} now={NOW} stores={[]} />)
     const finders = screen.getAllByRole('region', { name: FINDER })
-    expect(finders).toHaveLength(2)
+    expect(finders).toHaveLength(1)
     expect(follows(document.getElementById('eleccion-rapida')!, finders[0]!)).toBe(true)
     expect(follows(finders[0]!, screen.getByText('Introducción de la guía.'))).toBe(true)
-    expect(follows(finders[1]!, document.getElementById('faq')!)).toBe(true)
+    expect(follows(screen.getByRole('region', { name: BANNER }), document.getElementById('faq')!)).toBe(true)
   })
 
-  it('puts the second finder at the end when there is no FAQ', () => {
+  it('puts the banner at the end when there is no FAQ', () => {
     render(<GuideView guide={guide({ items: [], faq: [], widget: 'neumaticos' })} now={NOW} stores={[]} />)
-    const finders = screen.getAllByRole('region', { name: FINDER })
-    expect(finders).toHaveLength(2)
-    expect(follows(document.getElementById('como-elegir')!, finders[1]!)).toBe(true)
+    expect(follows(document.getElementById('como-elegir')!, screen.getByRole('region', { name: BANNER }))).toBe(true)
   })
 
   it('shows no finder without widget', () => {
     render(<GuideView guide={guide()} now={NOW} stores={[]} />)
     expect(screen.queryByRole('heading', { name: FINDER })).toBeNull()
+    expect(screen.queryByRole('link', { name: 'Ir a Neumaticos.es' })).toBeNull()
     expect(document.querySelector('iframe')).toBeNull()
   })
 })

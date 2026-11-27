@@ -15,6 +15,7 @@ import { GuideToc } from './guides/GuideToc'
 import { QuickPicks } from './guides/QuickPicks'
 import { SectionHeading } from './guides/SectionHeading'
 import { TyreFinder } from './guides/TyreFinder'
+import { TyreStoreBanner } from './guides/TyreStoreBanner'
 
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
@@ -143,7 +144,7 @@ export function GuideView({ guide, now, stores }: Props) {
                 )}
               </section>
             )}
-            {finder && <TyreFinder />}
+            {finder && <TyreStoreBanner />}
             {hasFaq && <GuideFaq faq={guide.faq} />}
             <AffiliateNotice />
           </div>
