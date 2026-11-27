@@ -30,8 +30,12 @@ export function TyreFinder() {
   const decide = (value: boolean) => writeConsent(value ? 'yes' : 'no')
 
   return (
-    <section aria-labelledby={headingId} className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-4">
-      <h2 id={headingId} className="flex items-center gap-2 font-display text-xl font-bold tracking-[-0.02em]">
+    // Phones: a full-width band (the configurator already has its own frame and margins), not a card in a card.
+    <section
+      aria-labelledby={headingId}
+      className="-mx-4 flex flex-col gap-3 border-y border-line bg-surface py-4 md:mx-0 md:rounded-2xl md:border md:p-4"
+    >
+      <h2 id={headingId} className="flex items-center gap-2 px-4 font-display text-xl font-bold tracking-[-0.02em] md:px-0">
         <Calculator size={20} aria-hidden="true" className="text-primary" />
         Calcula el precio en tu medida
       </h2>
@@ -45,9 +49,9 @@ export function TyreFinder() {
             loading="lazy"
             sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation-by-user-activation"
             referrerPolicy="strict-origin-when-cross-origin"
-            className="w-full rounded-xl border border-line bg-white"
+            className="w-full bg-white md:rounded-xl md:border md:border-line"
           />
-          <p className="text-xs leading-relaxed text-muted">
+          <p className="px-4 text-xs leading-relaxed text-muted md:px-0">
             Buscador de Neumaticos.es con enlace de afiliado: si compras tras usarlo, PatoBarato puede recibir una
             comisión. Lo sirve Awin, que usa cookies de seguimiento de afiliado.{' '}
             <button type="button" onClick={() => decide(false)} className={LINK}>
@@ -56,7 +60,7 @@ export function TyreFinder() {
           </p>
         </>
       ) : (
-        <div className="flex flex-col gap-3 rounded-xl border border-dashed border-line bg-white p-4">
+        <div className="mx-4 flex flex-col gap-3 rounded-xl border border-dashed border-line bg-white p-4 md:mx-0">
           <p className="flex gap-2 text-sm leading-relaxed text-muted">
             <Cookie size={18} aria-hidden="true" className="mt-0.5 shrink-0 text-muted" />
             <span>
