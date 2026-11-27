@@ -35,7 +35,7 @@ describe('legal pages', () => {
     render(<CookiesPage />)
     expect(
       screen.getByText(
-        'Las guías de neumáticos incluyen el buscador de Neumaticos.es a través de Awin, que usa cookies de seguimiento de afiliado en su propio dominio. Solo se carga si lo aceptas en la propia guía; recordamos tu elección en tu navegador y puedes retirarla con «Retirar consentimiento», debajo del buscador.',
+        'Las guías de neumáticos incluyen el buscador de Neumaticos.es a través de Awin, que usa cookies de seguimiento de afiliado en su propio dominio. Solo se carga si las aceptas, en el aviso de cookies o en la propia guía. Recordamos tu elección en tu navegador y puedes cambiarla aquí o con «Retirar consentimiento», debajo del buscador.',
       ),
     ).toBeInTheDocument()
   })

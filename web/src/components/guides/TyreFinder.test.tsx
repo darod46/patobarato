@@ -1,7 +1,8 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { AWIN_FINDER, CONSENT_KEY, TyreFinder } from './TyreFinder'
+import { CONSENT_KEY } from '../../lib/consent'
+import { AWIN_FINDER, TyreFinder } from './TyreFinder'
 
 const SANDBOX =
   'allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation-by-user-activation'
@@ -56,8 +57,15 @@ describe('TyreFinder', () => {
     expect(container.querySelector('iframe')).not.toBeNull()
     fireEvent.click(screen.getByRole('button', { name: WITHDRAW }))
     expect(container.querySelector('iframe')).toBeNull()
-    expect(window.localStorage.getItem(CONSENT_KEY)).toBeNull()
+    expect(window.localStorage.getItem(CONSENT_KEY)).toBe('no')
     expect(screen.getByRole('button', { name: ACCEPT })).toBeInTheDocument()
+  })
+
+  it('a rejection stored from the banner keeps the finder unloaded but still offers to accept here', () => {
+    window.localStorage.setItem(CONSENT_KEY, 'no')
+    const { container } = render(<TyreFinder />)
+    expect(container.querySelector('iframe')).toBeNull()
+    expect(screen.getByRole('button', { name: ACCEPT })).toBeEnabled()
   })
 
   it('gives each instance its own heading id', () => {

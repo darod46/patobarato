@@ -1,7 +1,8 @@
 'use client'
 
 import { Calculator, Cookie } from 'lucide-react'
-import { useEffect, useId, useState } from 'react'
+import { useId } from 'react'
+import { useConsent, writeConsent } from '../../lib/consent'
 
 /**
  * Neumaticos.es configurator through Awin's click URL (creative 2718820). It is what Awin's own iframe
@@ -15,46 +16,18 @@ export const AWIN_FINDER =
 /** The configurator's own height (Awin's wrapper used a 580 px frame). */
 export const FINDER_HEIGHT = 580
 
-/**
- * The reader's choice about Awin's cookies, kept in this browser. Storing the choice itself is technical
- * (no consent needed); it is the only thing the web stores, and only after the reader decides.
- */
-export const CONSENT_KEY = 'pb-consent-awin'
-
-function readConsent(): boolean {
-  try {
-    return window.localStorage.getItem(CONSENT_KEY) === 'yes'
-  } catch {
-    return false
-  }
-}
-
-function writeConsent(value: boolean): void {
-  try {
-    if (value) window.localStorage.setItem(CONSENT_KEY, 'yes')
-    else window.localStorage.removeItem(CONSENT_KEY)
-  } catch {
-    // Private mode or blocked storage: the choice just lasts until the page is closed.
-  }
-}
-
 const LINK = 'font-semibold text-primary underline underline-offset-2 hover:text-primary-hover'
 
 /**
- * Neumaticos.es tyre finder (Awin). Awin's affiliate cookies are the web's only non-essential cookies, so
- * consent is asked here, inline, instead of a site-wide banner: the finder loads once the reader accepts,
- * and loads straight away on later visits until the reader withdraws it.
+ * Neumaticos.es tyre finder (Awin). Awin's affiliate cookies need consent: the finder loads once the reader
+ * accepts, in the site's cookie banner or right here, and can be withdrawn below it.
  */
 export function TyreFinder() {
   const headingId = useId()
-  // null until the browser's stored choice is read (the server render never loads the finder).
-  const [accepted, setAccepted] = useState<boolean | null>(null)
-  useEffect(() => setAccepted(readConsent()), [])
-
-  function decide(value: boolean) {
-    writeConsent(value)
-    setAccepted(value)
-  }
+  // undefined during the server render: the finder never loads there.
+  const consent = useConsent()
+  const accepted = consent === 'yes'
+  const decide = (value: boolean) => writeConsent(value ? 'yes' : 'no')
 
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-4">
@@ -98,7 +71,7 @@ export function TyreFinder() {
           <button
             type="button"
             onClick={() => decide(true)}
-            disabled={accepted === null}
+            disabled={consent === undefined}
             className="inline-flex min-h-11 items-center justify-center self-start rounded-xl bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
           >
             Aceptar y mostrar el buscador

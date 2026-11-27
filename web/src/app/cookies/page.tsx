@@ -1,4 +1,5 @@
 import { LegalLayout } from '../../components/LegalLayout'
+import { CookiePreferences } from '../../components/consent/CookiePreferences'
 import { legalMetadata } from '../../lib/seo'
 import { FLAGS } from '../../lib/flags'
 
@@ -9,12 +10,12 @@ export const metadata = legalMetadata('Política de cookies', '/cookies', 'Las c
 
 export default function CookiesPage() {
   return (
-    <LegalLayout title="Política de cookies" updated="25 de noviembre de 2026" year={YEAR}>
+    <LegalLayout title="Política de cookies" updated="27 de noviembre de 2026" year={YEAR}>
       <h2>Qué cookies usamos</h2>
       <p>
         patobarato.com solo utiliza cookies y almacenamiento técnicos, imprescindibles para que el sitio
-        funcione (por ejemplo, para servir las páginas desde la caché del alojamiento). No utilizamos cookies
-        de analítica ni de publicidad propias, por lo que no se muestra ningún aviso de consentimiento.
+        funcione (por ejemplo, para servir las páginas desde la caché del alojamiento) y para recordar tu
+        elección sobre las cookies de terceros. No utilizamos cookies de analítica ni de publicidad propias.
       </p>
       <h2>Cookies de terceros</h2>
       <p>
@@ -24,10 +25,12 @@ export default function CookiesPage() {
       </p>
       <p>
         Las guías de neumáticos incluyen el buscador de Neumaticos.es a través de Awin, que usa cookies de
-        seguimiento de afiliado en su propio dominio. Solo se carga si lo aceptas en la propia guía; recordamos
-        tu elección en tu navegador y puedes retirarla con «Retirar consentimiento», debajo del buscador.
+        seguimiento de afiliado en su propio dominio. Solo se carga si las aceptas, en el aviso de cookies o en
+        la propia guía. Recordamos tu elección en tu navegador y puedes cambiarla aquí o con «Retirar
+        consentimiento», debajo del buscador.
       </p>
       <h2>Cómo gestionarlas</h2>
+      <CookiePreferences />
       <p>
         Puedes bloquear o eliminar las cookies desde la configuración de tu navegador. Hacerlo no afecta a la
         navegación por patobarato.com.
