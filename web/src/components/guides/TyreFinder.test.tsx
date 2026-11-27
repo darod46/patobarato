@@ -10,7 +10,7 @@ const NOTE = 'Al cargarlo, Awin establece cookies de seguimiento de afiliado en 
 
 describe('TyreFinder', () => {
   it('exports the exact Awin iframe URL', () => {
-    expect(AWIN_FINDER).toBe('https://www.awin1.com/cawshow.php?v=11552&s=3743674&q=397643&r=3145511&iframe=1')
+    expect(AWIN_FINDER).toBe('https://www.awin1.com/cawshow.php?v=11552&s=2718820&q=397643&r=3145511&iframe=1')
   })
 
   it('renders a labelled section with heading, affiliate text, a load button and the cookie note, without iframe', () => {

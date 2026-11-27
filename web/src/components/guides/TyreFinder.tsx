@@ -3,8 +3,13 @@
 import { Calculator, Search } from 'lucide-react'
 import { useId, useState } from 'react'
 
-/** Awin iframe version of the Neumaticos.es finder (never the `<script>` one: it uses document.write). The page embeds Neumaticos.es's responsive configurator. */
-export const AWIN_FINDER = 'https://www.awin1.com/cawshow.php?v=11552&s=3743674&q=397643&r=3145511&iframe=1'
+/**
+ * Awin iframe version of the Neumaticos.es finder (never the `<script>` one: it uses document.write). This
+ * creative (2718820) embeds Neumaticos.es's own configurator, which adapts to the width and keeps its
+ * accents; the 728×90 banner one (3743674) rendered a fixed bar with broken encoding («BÃºsqueda»).
+ * The configurator is a 580 px iframe inside Awin's page (8 px body margin), hence the 600 px height.
+ */
+export const AWIN_FINDER = 'https://www.awin1.com/cawshow.php?v=11552&s=2718820&q=397643&r=3145511&iframe=1'
 
 /**
  * Neumaticos.es tyre finder (Awin), loaded on demand: a button first, so Awin's affiliate cookies are only
