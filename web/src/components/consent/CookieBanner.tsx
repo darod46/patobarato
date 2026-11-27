@@ -15,7 +15,7 @@ const BUTTON = `inline-flex min-h-10 flex-1 items-center justify-center rounded-
 export function CookieBanner() {
   const pathname = usePathname() ?? ''
   const consent = useConsent()
-  if (consent !== null || pathname.startsWith('/oferta/') || pathname.startsWith('/diagnostico')) return null
+  if (consent !== null || pathname.startsWith('/oferta/')) return null
   return (
     <div
       role="region"

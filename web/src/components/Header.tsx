@@ -15,9 +15,7 @@ type Props = {
 /** Fixed header: logo, main navigation (collapsed into a menu on small screens), the search entry and the channel button. */
 export function Header({ searchTrigger = true }: Props) {
   return (
-    // The white block above the bar fills the area some in-app browsers (Telegram's on iOS) draw
-    // under their own translucent toolbar, so the page never shows through above the header.
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-white shadow-[0_1px_8px_rgba(20,22,26,0.06)] before:absolute before:inset-x-0 before:bottom-full before:h-40 before:bg-white">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-white shadow-[0_1px_8px_rgba(20,22,26,0.06)]">
       <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-x-5 px-4 py-2 md:px-8 md:py-3">
         <a href="/" className={`shrink-0 rounded-md ${FOCUS}`}>
           <img src="/logo.svg" alt="PatoBarato" className="h-8 w-auto md:h-11" />
