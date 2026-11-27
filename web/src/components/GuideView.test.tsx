@@ -101,7 +101,7 @@ describe('GuideView', () => {
     expect(follows(banner, document.getElementById('faq')!)).toBe(true)
     expect(screen.getByRole('link', { name: 'Ir a Neumaticos.es' })).toHaveAttribute(
       'href',
-      'https://www.awin1.com/cread.php?awinmid=11552&awinaffid=3145511',
+      'https://www.awin1.com/cread.php?awinmid=11552&awinaffid=3145511&campaign=winter+sale+2027&ued=https%3A%2F%2Fwww.neumaticos.es%2F&platform=ma',
     )
   })
 

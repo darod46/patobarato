@@ -1,8 +1,8 @@
 import { ArrowRight } from 'lucide-react'
 import { useId } from 'react'
 
-/** Awin deep link to Neumaticos.es's home page (affiliate). */
-export const NEUMATICOS_HOME = 'https://www.awin1.com/cread.php?awinmid=11552&awinaffid=3145511'
+/** Awin link to Neumaticos.es's home page (affiliate, campaign «winter sale 2027»). */
+export const NEUMATICOS_HOME = 'https://www.awin1.com/cread.php?awinmid=11552&awinaffid=3145511&campaign=winter+sale+2027&ued=https%3A%2F%2Fwww.neumaticos.es%2F&platform=ma'
 
 /** End-of-guide banner of the tyre guides: a straight link to Neumaticos.es (the finder is already above). */
 export function TyreStoreBanner() {
