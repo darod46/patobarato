@@ -35,13 +35,13 @@ describe('legal pages', () => {
     render(<CookiesPage />)
     expect(
       screen.getByText(
-        'En las guías de neumáticos puedes cargar el buscador de Neumaticos.es a través de Awin. Solo se carga si pulsas el botón; al hacerlo, Awin establece cookies de seguimiento de afiliado en su propio dominio.',
+        'Las guías de neumáticos incluyen el buscador de Neumaticos.es a través de Awin. Se carga al llegar a él en la página, y Awin establece entonces cookies de seguimiento de afiliado en su propio dominio.',
       ),
     ).toBeInTheDocument()
   })
 
   it('privacy states that loading the tyre finder sends connection data to Awin', () => {
     render(<PrivacidadPage />)
-    expect(screen.getByText(/Si pulsas «Cargar el buscador de Neumaticos.es»/)).toBeInTheDocument()
+    expect(screen.getByText(/Las guías de neumáticos incluyen el buscador de Neumaticos.es, servido por Awin/)).toBeInTheDocument()
   })
 })

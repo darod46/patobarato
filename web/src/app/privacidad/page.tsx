@@ -36,9 +36,9 @@ export default function PrivacidadPage() {
         identifiquen, solo información agregada sobre comisiones.
       </p>
       <p>
-        Si pulsas «Cargar el buscador de Neumaticos.es» en una guía de neumáticos, tu navegador se conecta a
-        Awin, que recibe los datos técnicos de la conexión (dirección IP, navegador) y establece sus cookies de
-        afiliado. Mientras no lo pulses, no se envía nada a Awin.
+        Las guías de neumáticos incluyen el buscador de Neumaticos.es, servido por Awin: al mostrarse, tu
+        navegador se conecta a Awin, que recibe los datos técnicos de la conexión (dirección IP, navegador) y
+        establece sus cookies de afiliado. El resto de páginas no envían nada a Awin.
       </p>
       <h2>Tus derechos</h2>
       <p>
