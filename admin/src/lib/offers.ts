@@ -36,6 +36,11 @@ export type OfferDetail = {
   /** Product id in its store and fixed URL slug, for the post's link to the deal page on the web. */
   asin: string | null
   slug: string | null
+  /** Short description shown on the web's deal page (DeepSeek or hand-written) and its category. */
+  description: string | null
+  category: string | null
+  /** True once someone edited the description here: the bot never rewrites it. */
+  descriptionManual: boolean
   /** Draft only: when the bot auto-published the same product after this draft was created. */
   botPublishedAt: string | null
 }
@@ -47,10 +52,14 @@ export type OfferPatch = {
   coupon: string | null
   priceBeforeCoupon: boolean
   hashtags: string[]
+  /** Only when the description or the category changed. An empty description lets the bot write a new one. */
+  text?: { description: string | null; category: string | null }
 }
 
 const JOINED = '*, offers(previous_price, coupon, hashtags), products(title, store, image_url, asin, slug)'
 const JOINED_INNER = '*, offers(previous_price, coupon, hashtags), products!inner(title, store, image_url, asin, slug)'
+const JOINED_DETAIL =
+  '*, offers(previous_price, coupon, hashtags), products(title, store, image_url, asin, slug, description, category, description_manual)'
 const LIMIT = 200
 
 // oxlint-disable-next-line no-explicit-any
@@ -83,7 +92,7 @@ export async function listOffers(
 }
 
 export async function getOffer(client: SupabaseClient, publicationId: number | string): Promise<OfferDetail> {
-  const { data, error } = await client.from('publications').select(JOINED).eq('id', publicationId).single()
+  const { data, error } = await client.from('publications').select(JOINED_DETAIL).eq('id', publicationId).single()
   fail(error)
   const r = data as Row
   const previous = r.offers?.previous_price
@@ -106,6 +115,9 @@ export async function getOffer(client: SupabaseClient, publicationId: number | s
     publishedAt: r.published_at,
     asin: r.products?.asin ?? null,
     slug: r.products?.slug ?? null,
+    description: r.products?.description ?? null,
+    category: r.products?.category ?? null,
+    descriptionManual: Boolean(r.products?.description_manual),
     botPublishedAt: null,
   }
   if (detail.status === 'draft') {
@@ -114,12 +126,21 @@ export async function getOffer(client: SupabaseClient, publicationId: number | s
   return detail
 }
 
+function productText(text: OfferPatch['text']): Record<string, unknown> {
+  if (!text) return {}
+  const description = text.description?.trim() || null
+  // Emptied: back in the bot's queue (it also rewrites the category). Otherwise the hand edit is kept for good.
+  return description === null
+    ? { description: null, category: text.category, description_manual: false, enrich_attempts: 0, enriched_at: null }
+    : { description, category: text.category, description_manual: true }
+}
+
 /** Writes the title (products), price (publications) and previous price, coupon and hashtags (offers). */
 export async function saveOffer(client: SupabaseClient, id: number, patch: OfferPatch): Promise<void> {
   const { data, error } = await client.from('publications').select('offer_id, product_id').eq('id', id).single()
   fail(error)
   const { offer_id, product_id } = data as Row
-  const products = await client.from('products').update({ title: patch.title }).eq('id', product_id)
+  const products = await client.from('products').update({ title: patch.title, ...productText(patch.text) }).eq('id', product_id)
   fail(products.error)
   const publications = await client
     .from('publications')

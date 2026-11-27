@@ -22,6 +22,7 @@ from patobarato.admin.users import UserAdmin
 from patobarato.config import Settings, get_settings
 from patobarato.core.backfill import backfill_images
 from patobarato.core.pipeline import Pipeline, utcnow
+from patobarato.enrich.deepseek import DeepSeekClient
 from patobarato.models import ApiSource
 from patobarato.parsing.links import UrlResolver
 from patobarato.publishing.photo_download import download_photo
@@ -36,6 +37,7 @@ from patobarato.sources.ended_posts import EndedPostsSource
 from patobarato.sources.event_promos import EventPromosSource
 from patobarato.sources.guide_announce import GuideAnnouncer
 from patobarato.sources.guide_prices import GuidePriceRefresher
+from patobarato.sources.product_enrich import ProductEnricher
 from patobarato.sources.telegram_listener import TelegramListener, make_photo_provider
 from patobarato.storage.repository import Repository
 from patobarato.storage.supabase_repo import SupabaseRepository
@@ -149,6 +151,13 @@ def build_runners(
     runners.append(
         GuidePriceRefresher(registry, repo, clock, delay_seconds=settings.guide_price_delay_seconds)
     )
+    if settings.deepseek_api_key:
+        deepseek = DeepSeekClient(
+            httpx.AsyncClient(timeout=60.0),  # LLM answers take longer than the shared timeout
+            settings.deepseek_api_key,
+            model=settings.deepseek_model,
+        )
+        runners.append(ProductEnricher(deepseek, repo, clock))
     if bot is not None:
         runners.append(ChannelStatsSource(bot, repo, settings.target_channel, clock))
         download_http = http or httpx.AsyncClient(timeout=settings.http_timeout_seconds)

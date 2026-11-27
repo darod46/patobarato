@@ -18,6 +18,7 @@ from patobarato.models import (
     OfferStatus,
     ParsedOffer,
     PostData,
+    ProductToEnrich,
     PublicationChannel,
     PublicationStatus,
     Source,
@@ -93,6 +94,20 @@ class Repository(Protocol):
 
     async def delete_publication(self, publication_id: int) -> None:
         """Removes a publication that never reached the channel."""
+        ...
+
+    async def products_to_enrich(self, limit: int) -> list[ProductToEnrich]:
+        """Newest products with a non-draft publication, no description, not edited by hand and < 3 attempts."""
+        ...
+
+    async def save_product_text(
+        self, product_id: int, description: str, category: str, at: datetime
+    ) -> None:
+        """Stores the generated text unless an admin edited it meanwhile (``description_manual``)."""
+        ...
+
+    async def record_enrich_failure(self, product_id: int, attempts: int) -> None:
+        """Sets ``enrich_attempts``; the product leaves the queue at 3."""
         ...
 
     async def mark_post_published(
@@ -274,6 +289,9 @@ class InMemoryRepository(Repository):
         self.product_images: dict[int, str] = {}
         self.product_urls: dict[int, str] = {}
         self.product_slugs: dict[int, str] = {}
+        self.product_texts: dict[int, dict] = {}
+        self.enrich_attempts: dict[int, int] = {}
+        self.manual_texts: set[int] = set()
         self._offers: dict[int, dict] = {}
         self._offer_keys: dict[tuple[int, int, int], int] = {}
         self._publications: list[dict] = []
@@ -516,6 +534,27 @@ class InMemoryRepository(Repository):
 
     async def delete_publication(self, publication_id: int) -> None:
         self._publications = [p for p in self._publications if p["id"] != publication_id]
+
+    async def products_to_enrich(self, limit: int) -> list[ProductToEnrich]:
+        shown = {p["product_id"] for p in self._publications if p["status"] != "draft"}
+        queue = [
+            ProductToEnrich(pid, self.product_titles.get(pid, ""), self.enrich_attempts.get(pid, 0))
+            for pid in sorted(shown, reverse=True)
+            if pid not in self.product_texts
+            and pid not in self.manual_texts
+            and self.enrich_attempts.get(pid, 0) < 3
+        ]
+        return queue[:limit]
+
+    async def save_product_text(
+        self, product_id: int, description: str, category: str, at: datetime
+    ) -> None:
+        if product_id in self.manual_texts:
+            return
+        self.product_texts[product_id] = {"description": description, "category": category, "at": at}
+
+    async def record_enrich_failure(self, product_id: int, attempts: int) -> None:
+        self.enrich_attempts[product_id] = attempts
 
     async def mark_post_published(
         self, publication_id: int, chat_id: int, message_id: int, published_at: datetime

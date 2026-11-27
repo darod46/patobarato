@@ -150,6 +150,15 @@ class PriceQuote:
 
 
 @dataclass(frozen=True)
+class ProductToEnrich:
+    """A product shown on the web that still has no description (``product_enrich`` runner)."""
+
+    id: int
+    title: str
+    attempts: int
+
+
+@dataclass(frozen=True)
 class GuideProduct:
     store: str
     external_id: str

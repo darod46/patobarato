@@ -13,8 +13,9 @@ export const PLACEHOLDER_ART = '/pato-placeholder.svg'
 
 const CATEGORY_KEYS = new Set<string>(ART_KEYS.filter((k) => k !== 'general'))
 
-/** Category of a deal from its hashtags (first known category tag), or `general`. */
-export function categoryKey(hashtags: string[]): ArtKey {
+/** Category of a deal: the product's assigned category, else its first known category hashtag, else `general`. */
+export function categoryKey(hashtags: string[], category?: string | null): ArtKey {
+  if (category && CATEGORY_KEYS.has(category)) return category as ArtKey
   for (const tag of hashtags) {
     const key = tag.replace(/^#/, '').toLowerCase()
     if (CATEGORY_KEYS.has(key)) return key as ArtKey

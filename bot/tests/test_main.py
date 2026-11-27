@@ -316,6 +316,24 @@ def test_build_runners_is_empty_without_credentials():
     ] == ["guide_prices"]
 
 
+def test_build_runners_includes_product_enrich_only_with_deepseek_key():
+    import httpx
+
+    from patobarato.storage.repository import InMemoryRepository
+    from patobarato.stores.registry import build_registry
+
+    http = httpx.AsyncClient()
+    without = _ali_settings()
+    with_key = _ali_settings(deepseek_api_key="sk-test")
+
+    def types(settings):
+        registry = build_registry(settings, http, http)
+        return [r.type for r in main_module.build_runners(registry, InMemoryRepository(), settings, lambda: None)]
+
+    assert "product_enrich" not in types(without)
+    assert "product_enrich" in types(with_key)
+
+
 def test_build_runners_includes_awin_with_publisher_and_token():
     import httpx
 

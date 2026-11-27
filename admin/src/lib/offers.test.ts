@@ -35,6 +35,35 @@ function mockClient(respond: (call: Call) => { data?: unknown; error?: { message
 const op = (call: Call, name: string) => call.ops.find(([n]) => n === name)?.[1]
 
 describe('saveOffer', () => {
+  const patch = { title: 'T', price: 1, previousPrice: null, coupon: null, priceBeforeCoupon: false, hashtags: [] }
+  const productUpdate = async (text: { description: string | null; category: string | null }) => {
+    const { client, calls } = mockClient((c) =>
+      c.ops.some(([n]) => n === 'select') ? { data: { offer_id: 7, product_id: 9 } } : { data: null },
+    )
+    await saveOffer(client, 5, { ...patch, text })
+    return op(calls.find((c) => c.table === 'products' && op(c, 'update'))!, 'update')?.[0]
+  }
+
+  it('a hand-written description is marked manual so the bot never rewrites it', async () => {
+    expect(await productUpdate({ description: '  Texto nuevo. ', category: 'hogar' })).toEqual({
+      title: 'T',
+      description: 'Texto nuevo.',
+      category: 'hogar',
+      description_manual: true,
+    })
+  })
+
+  it('an emptied description goes back to the bot queue', async () => {
+    expect(await productUpdate({ description: '  ', category: null })).toEqual({
+      title: 'T',
+      description: null,
+      category: null,
+      description_manual: false,
+      enrich_attempts: 0,
+      enriched_at: null,
+    })
+  })
+
   it('saveOffer writes the three tables', async () => {
     const { client, calls } = mockClient((c) =>
       c.ops.some(([n]) => n === 'select') ? { data: { offer_id: 7, product_id: 9 } } : { data: null },

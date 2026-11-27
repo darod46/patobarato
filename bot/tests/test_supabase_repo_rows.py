@@ -618,3 +618,43 @@ async def test_upsert_product_price_error_includes_affiliate_url_when_given():
         "error": "HTTP 403",
         "affiliate_url": "https://aff.example/x",
     }
+
+
+async def test_upsert_product_never_clears_category_or_brand():
+    client = _Client([{"id": 5}])
+    await SupabaseRepository(client).upsert_product(_offer())
+    row = next(a[0] for n, a, _ in client.log if n == "upsert")
+    assert "category" not in row and "brand" not in row and "description" not in row
+
+
+async def test_products_to_enrich_query_and_rows():
+    client = _Client([{"id": 9, "title": "Freidora", "enrich_attempts": 1, "publications": [{"id": 3}]}])
+    products = await SupabaseRepository(client).products_to_enrich(40)
+    assert [(p.id, p.title, p.attempts) for p in products] == [(9, "Freidora", 1)]
+    assert ("table", ("products",), {}) in client.log
+    assert "publications!inner(id)" in _calls(client, "select")[0][0][0]
+    assert _calls(client, "is_")[0][0] == ("description", "null")
+    assert ("description_manual", False) in [a for a, _ in _calls(client, "eq")]
+    assert _calls(client, "lt")[0][0] == ("enrich_attempts", 3)
+    assert _calls(client, "neq")[0][0] == ("publications.status", "draft")
+    assert _calls(client, "order")[0] == (("id",), {"desc": True})
+    assert _calls(client, "limit")[0][0] == (40,)
+
+
+async def test_save_product_text_skips_manual_edits():
+    client = _Client([])
+    await SupabaseRepository(client).save_product_text(9, "Texto", "hogar", NOW)
+    assert _calls(client, "update")[0][0][0] == {
+        "description": "Texto",
+        "category": "hogar",
+        "enriched_at": NOW.isoformat(),
+    }
+    eqs = [a for a, _ in _calls(client, "eq")]
+    assert ("id", 9) in eqs and ("description_manual", False) in eqs
+
+
+async def test_record_enrich_failure_sets_attempts():
+    client = _Client([])
+    await SupabaseRepository(client).record_enrich_failure(9, 2)
+    assert _calls(client, "update")[0][0][0] == {"enrich_attempts": 2}
+    assert ("id", 9) in [a for a, _ in _calls(client, "eq")]

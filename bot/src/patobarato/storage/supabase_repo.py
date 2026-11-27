@@ -20,6 +20,7 @@ from patobarato.models import (
     OfferStatus,
     ParsedOffer,
     PostData,
+    ProductToEnrich,
     PublicationChannel,
     PublicationStatus,
     Source,
@@ -83,8 +84,6 @@ class SupabaseRepository:
             "asin": offer.asin,
             "title": offer.title,
             "url": offer.product_url,
-            "category": None,
-            "brand": None,
             "updated_at": datetime.now(UTC).isoformat(),
         }
 
@@ -756,6 +755,45 @@ class SupabaseRepository:
                     "last_error": error,
                 },
                 on_conflict="store,advertiser_id",
+            ).execute()
+
+        await asyncio.to_thread(run)
+
+    async def products_to_enrich(self, limit: int) -> list[ProductToEnrich]:
+        def run():
+            return (
+                self._client.table("products")
+                .select("id, title, enrich_attempts, publications!inner(id)")
+                .is_("description", "null")
+                .eq("description_manual", False)
+                .lt("enrich_attempts", 3)
+                .neq("publications.status", "draft")
+                .order("id", desc=True)
+                .limit(limit)
+                .limit(1, foreign_table="publications")
+                .execute()
+            )
+
+        response = await asyncio.to_thread(run)
+        return [
+            ProductToEnrich(r["id"], r["title"] or "", r["enrich_attempts"] or 0)
+            for r in response.data or []
+        ]
+
+    async def save_product_text(
+        self, product_id: int, description: str, category: str, at: datetime
+    ) -> None:
+        def run():
+            self._client.table("products").update(
+                {"description": description, "category": category, "enriched_at": at.isoformat()}
+            ).eq("id", product_id).eq("description_manual", False).execute()
+
+        await asyncio.to_thread(run)
+
+    async def record_enrich_failure(self, product_id: int, attempts: int) -> None:
+        def run():
+            self._client.table("products").update({"enrich_attempts": attempts}).eq(
+                "id", product_id
             ).execute()
 
         await asyncio.to_thread(run)

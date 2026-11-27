@@ -102,6 +102,11 @@ export function ProductView({ deal, related, now, guides = [] }: Props) {
             <span>{store.name}</span>
           </span>
           <h1 className="font-display text-2xl leading-tight font-bold tracking-[-0.02em] md:text-3xl">{deal.title}</h1>
+          {deal.description && (
+            <p data-testid="product-description" className="text-base leading-relaxed text-ink md:text-[17px]">
+              {deal.description}
+            </p>
+          )}
           {ended && (
             <p className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3 py-1.5 text-sm font-semibold text-ink">
               <Clock size={16} aria-hidden="true" className="text-muted" />

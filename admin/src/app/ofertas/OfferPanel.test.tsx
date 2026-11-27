@@ -43,6 +43,9 @@ const base: OfferDetail = {
   publishedAt: '2026-11-01T10:00:00Z',
   asin: 'B0LOGI0001',
   slug: 'raton-logitech',
+  description: 'Un ratón inalámbrico cómodo para el día a día.',
+  category: 'tecnologia',
+  descriptionManual: false,
   botPublishedAt: null,
 }
 
@@ -94,6 +97,44 @@ describe('OfferPanel', () => {
         expect.anything(),
         5,
         expect.objectContaining({ hashtags: ['tech', 'ratóngamer', 'ñandú'] }),
+      ),
+    )
+  })
+
+  it('saves no product text when the description and category are untouched', async () => {
+    setup()
+    await userEvent.click(await screen.findByRole('button', { name: 'Guardar y actualizar Telegram' }))
+    await waitFor(() => expect(m.saveOffer).toHaveBeenCalled())
+    expect(m.saveOffer.mock.calls[0][2]).not.toHaveProperty('text')
+    expect(screen.getByText(/Escrita por DeepSeek/)).toBeInTheDocument()
+  })
+
+  it('edits the description and the category', async () => {
+    setup()
+    const text = await screen.findByLabelText(/Descripción en la web/)
+    await userEvent.clear(text)
+    await userEvent.type(text, '  Ratón ligero y silencioso.  ')
+    await userEvent.selectOptions(screen.getByLabelText('Categoría'), 'hogar')
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar y actualizar Telegram' }))
+    await waitFor(() =>
+      expect(m.saveOffer).toHaveBeenCalledWith(
+        expect.anything(),
+        5,
+        expect.objectContaining({ text: { description: 'Ratón ligero y silencioso.', category: 'hogar' } }),
+      ),
+    )
+  })
+
+  it('an emptied description is sent as null so the bot writes it again', async () => {
+    setup({ descriptionManual: true })
+    expect(await screen.findByText(/Editada a mano/)).toBeInTheDocument()
+    await userEvent.clear(screen.getByLabelText(/Descripción en la web/))
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar y actualizar Telegram' }))
+    await waitFor(() =>
+      expect(m.saveOffer).toHaveBeenCalledWith(
+        expect.anything(),
+        5,
+        expect.objectContaining({ text: { description: null, category: 'tecnologia' } }),
       ),
     )
   })

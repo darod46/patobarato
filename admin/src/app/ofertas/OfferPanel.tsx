@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { JobStatus } from '../../components/JobStatus'
 import { WhatsAppActions } from '../../components/WhatsAppActions'
 import { enqueueJob, useJob, type JobType } from '../../lib/jobs'
+import { PRODUCT_CATEGORIES } from '../../lib/categories'
 import { parseMoney } from '../../lib/money'
 import {
   getOffer,
@@ -91,6 +92,8 @@ function OfferForm({ detail, onRefresh }: { detail: OfferDetail; onRefresh: () =
   const [coupon, setCoupon] = useState(detail.coupon ?? '')
   const [beforeCoupon, setBeforeCoupon] = useState(detail.priceBeforeCoupon)
   const [hashtags, setHashtags] = useState(detail.hashtags.join(' '))
+  const [description, setDescription] = useState(detail.description ?? '')
+  const [category, setCategory] = useState(detail.category ?? '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [jobId, setJobId] = useState<number | null>(null)
@@ -141,6 +144,9 @@ function OfferForm({ detail, onRefresh }: { detail: OfferDetail; onRefresh: () =
       coupon: coupon.trim() || null,
       priceBeforeCoupon: beforeCoupon,
       hashtags: parseHashtags(hashtags),
+      ...((description.trim() !== (detail.description ?? '') || category !== (detail.category ?? '')) && {
+        text: { description: description.trim() || null, category: category || null },
+      }),
     }
   }
   function fail(message: string): null {
@@ -227,6 +233,34 @@ function OfferForm({ detail, onRefresh }: { detail: OfferDetail; onRefresh: () =
         <label className="block text-sm font-medium">
           Hashtags
           <input value={hashtags} onChange={(e) => setHashtags(e.target.value)} className={INPUT} />
+        </label>
+        <label className="block text-sm font-medium">
+          Descripción en la web
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={4}
+            className={INPUT}
+          />
+          <span className="mt-1 block text-xs font-normal text-neutral-600">
+            {detail.descriptionManual
+              ? 'Editada a mano: el bot no la cambia.'
+              : detail.description
+                ? 'Escrita por DeepSeek. Si la editas, el bot ya no la cambia.'
+                : 'El bot la escribirá en unos minutos.'}{' '}
+            Déjala vacía para que se genere de nuevo. Sin precios ni porcentajes.
+          </span>
+        </label>
+        <label className="block text-sm font-medium">
+          Categoría
+          <select value={category} onChange={(e) => setCategory(e.target.value)} className={INPUT}>
+            <option value="">Sin categoría</option>
+            {PRODUCT_CATEGORIES.map(([key, label]) => (
+              <option key={key} value={key}>
+                {label}
+              </option>
+            ))}
+          </select>
         </label>
       </div>
 

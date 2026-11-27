@@ -27,6 +27,10 @@ export type Deal = {
   slug?: string | null
   /** The web may not show this store's prices (lib/flags.ts): `price` is 0 and every price field empty. */
   priceHidden?: boolean
+  /** Short product description (written by DeepSeek or by hand in the admin); null until there is one. */
+  description?: string | null
+  /** Product category (one of the web's category keys or `otros`); null until assigned. */
+  category?: string | null
 }
 
 export type HashtagCount = { tag: string; count: number }

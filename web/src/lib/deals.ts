@@ -45,10 +45,12 @@ type DealRow = {
   status?: string
   ended_at?: string | null
   slug?: string | null
+  description?: string | null
+  category?: string | null
 }
 
 function toDeal(row: DealRow): Deal {
-  const key = categoryKey(row.hashtags ?? [])
+  const key = categoryKey(row.hashtags ?? [], row.category)
   // Hidden prices never leave the server, not even in the page payload (lib/flags.ts).
   const hide = !pricesVisible(row.store)
   return {
@@ -73,6 +75,8 @@ function toDeal(row: DealRow): Deal {
     status: row.status === 'ended' ? 'ended' : 'active',
     endedAt: row.ended_at ?? null,
     slug: row.slug ?? null,
+    description: row.description?.trim() || null,
+    category: row.category ?? null,
     ...(hide && { priceHidden: true }),
   }
 }

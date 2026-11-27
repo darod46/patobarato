@@ -43,6 +43,8 @@ export function truncate(text: string, max: number): string {
 }
 
 function productDescription(deal: Deal): string {
+  const about = deal.description?.trim()
+  if (deal.priceHidden && about) return truncate(about, MAX_DESCRIPTION)
   if (deal.priceHidden) {
     const tail = ` en ${storeInfo(deal.store).name}.${deal.coupon ? ` ${deal.coupon}.` : ''} Consulta el precio en la tienda.`
     return truncate(`${truncate(deal.title, Math.max(20, MAX_DESCRIPTION - tail.length))}${tail}`, MAX_DESCRIPTION)
@@ -55,6 +57,10 @@ function productDescription(deal: Deal): string {
     ? ` por ${formatPrice(deal.price)} sin cupón`
     : `: ${formatPrice(deal.price)}`
   const tail = `${price}${before} en ${storeInfo(deal.store).name}.${coupon}`
+  if (about) {
+    const lead = deal.priceBeforeCoupon ? `Por ${formatPrice(deal.price)} sin cupón` : `Por ${formatPrice(deal.price)}`
+    return truncate(`${lead}${before} en ${storeInfo(deal.store).name}.${coupon} ${about}`, MAX_DESCRIPTION)
+  }
   // The title gives way first; the tail is cut only when it alone is too long (very long coupon).
   const title = truncate(deal.title, Math.max(20, MAX_DESCRIPTION - tail.length))
   return truncate(`${title}${tail}`, MAX_DESCRIPTION)
@@ -107,6 +113,7 @@ export function productJsonLd(deal: Deal, url: string): Record<string, unknown> 
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: deal.title,
+    ...(deal.description && { description: deal.description }),
     ...(shareableImage(deal.imageUrl) && { image: shareableImage(deal.imageUrl) }),
     sku: deal.asin,
     // No Offer without a price we may show (lib/flags.ts).

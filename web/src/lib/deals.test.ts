@@ -120,6 +120,8 @@ describe('fetchDeals', () => {
       status: 'active',
       endedAt: null,
       slug: null,
+      description: null,
+      category: null,
     })
   })
 
