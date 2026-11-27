@@ -253,7 +253,9 @@ class Pipeline:
         link = web_url or affiliate_url
         caption = format_caption(offer, link, store.name, priced_at=self._clock(), web=web_url is not None)
         # A post that links to the web needs its deal page before anyone (or Telegram's link preview) can
-        # open it: the publication goes in first and is removed if the post never goes out.
+        # open it: the publication goes in first and is removed if the post never goes out. It starts as a
+        # web publication (the database requires Telegram ids on active Telegram ones) and becomes a
+        # Telegram one in mark_post_published.
         early_id: int | None = None
         if web_url is not None:
             try:
@@ -266,6 +268,7 @@ class Pipeline:
                     offer.price,
                     affiliate_url,
                     self._clock(),
+                    channel="web",
                     price_before_coupon=offer.price_before_coupon,
                 )
             except Exception:

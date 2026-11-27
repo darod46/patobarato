@@ -1108,6 +1108,10 @@ async def test_deal_page_exists_before_the_post_goes_out(make_pipeline, repo):
     pipeline = make_pipeline(pub=Watching(), settings=_settings(amazon_links_to_web=True))
     await pipeline.process(_msg())
     assert seen == [1]
+    # It starts as a web publication (the database rejects active Telegram rows without ids)…
+    # …and becomes the Telegram one once the post is out.
+    [pub] = repo.publications()
+    assert (pub["channel"], pub["chat_id"], pub["message_id"]) == ("telegram", -100, 7)
 
 
 async def test_failed_post_removes_the_early_publication(make_pipeline, repo):

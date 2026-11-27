@@ -113,7 +113,7 @@ class Repository(Protocol):
     async def mark_post_published(
         self, publication_id: int, chat_id: int, message_id: int, published_at: datetime
     ) -> None:
-        """Sets the Telegram ids and ``published_at``, status ``active``; the offer becomes ``published``."""
+        """Sets the Telegram ids and ``published_at``, channel ``telegram``, status ``active``; the offer becomes ``published``."""
         ...
 
     async def manual_source_id(self) -> int:
@@ -478,6 +478,9 @@ class InMemoryRepository(Repository):
         post_synced_at: datetime | None = None,
         ended_at: datetime | None = None,
     ) -> int:
+        # Mirrors the publications_telegram_ids check constraint.
+        if channel == "telegram" and status != PublicationStatus.DRAFT and (chat_id is None or message_id is None):
+            raise ValueError("publications_telegram_ids: active Telegram publications need chat_id and message_id")
         publication_id = self._new_id("publication")
         self._publications.append(
             {
@@ -562,6 +565,7 @@ class InMemoryRepository(Repository):
         for pub in self._publications:
             if pub["id"] == publication_id:
                 pub.update(
+                    channel="telegram",
                     chat_id=chat_id,
                     message_id=message_id,
                     published_at=published_at,

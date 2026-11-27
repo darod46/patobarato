@@ -38,7 +38,7 @@ async def _product(repo: InMemoryRepository, asin: str, title: str, status=Publi
     )
     product_id = await repo.upsert_product(offer)
     await repo.insert_publication(
-        offer_id=0, product_id=product_id, country="ES", channel="telegram", chat_id=None,
+        offer_id=0, product_id=product_id, country="ES", channel="web", chat_id=None,
         message_id=None, published_price=Decimal("1"), affiliate_url="u", published_at=NOW, status=status,
     )
     return product_id

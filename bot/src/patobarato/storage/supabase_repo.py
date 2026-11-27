@@ -318,6 +318,7 @@ class SupabaseRepository:
                 self._client.table("publications")
                 .update(
                     {
+                        "channel": "telegram",
                         "chat_id": chat_id,
                         "message_id": message_id,
                         "published_at": published_at.isoformat(),

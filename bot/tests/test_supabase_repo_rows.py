@@ -658,3 +658,16 @@ async def test_record_enrich_failure_sets_attempts():
     await SupabaseRepository(client).record_enrich_failure(9, 2)
     assert _calls(client, "update")[0][0][0] == {"enrich_attempts": 2}
     assert ("id", 9) in [a for a, _ in _calls(client, "eq")]
+
+
+async def test_mark_post_published_turns_the_early_web_row_into_the_telegram_one():
+    client = _Client([{"offer_id": 7}])
+    await SupabaseRepository(client).mark_post_published(3, -100, 42, NOW)
+    update = _calls(client, "update")[0][0][0]
+    assert update == {
+        "channel": "telegram",
+        "chat_id": -100,
+        "message_id": 42,
+        "published_at": NOW.isoformat(),
+        "status": "active",
+    }

@@ -596,7 +596,7 @@ async def test_list_ended_posts_to_edit():
     await repo.end_publication(old, NOW - timedelta(days=2))
     new = await _seed_pub(repo, "E2", status=PublicationStatus.ENDED)
     await repo.end_publication(new, NOW)
-    await _seed_pub(repo, "E3", status=PublicationStatus.ENDED, message_id=None)
+    await _seed_pub(repo, "E3", status=PublicationStatus.ENDED, channel="web", message_id=None)
     await _seed_pub(repo, "E4", status=PublicationStatus.ENDED, synced=True)
     await _seed_pub(repo, "E5")
     assert await repo.list_ended_posts_to_edit(10) == [new, old]
