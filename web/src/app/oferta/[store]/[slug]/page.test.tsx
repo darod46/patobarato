@@ -4,6 +4,8 @@ import { fetchDealByProduct } from '../../../../lib/deals'
 import { fetchGuidesByProduct } from '../../../../lib/guides-data'
 import type { Deal } from '../../../../lib/types'
 import { productPath } from '../../../../lib/urls'
+import nextConfig from '../../../../../next.config'
+import * as pageModule from './page'
 import ProductPage from './page'
 
 const deal: Deal = {
@@ -113,5 +115,20 @@ describe('ProductPage', () => {
       params: Promise.resolve({ store: 'amazon', slug: 'algo-b0abcdef12' }),
     }).catch((e: unknown) => e)
     expect((error as { digest?: string }).digest).toMatch(/NEXT_HTTP_ERROR_FALLBACK;404/)
+  })
+})
+
+
+describe('deal page caching (no ISR writes)', () => {
+  it('renders dynamically, without ISR revalidation or prerendered params', () => {
+    expect(pageModule.dynamic).toBe('force-dynamic')
+    expect(pageModule).not.toHaveProperty('revalidate')
+    expect(pageModule).not.toHaveProperty('generateStaticParams')
+  })
+
+  it('lets the Vercel CDN cache each deal page for 10 minutes', async () => {
+    const rules = await nextConfig.headers!()
+    const rule = rules.find((r) => r.source === '/oferta/:store/:slug')
+    expect(rule?.headers).toEqual([{ key: 'Vercel-CDN-Cache-Control', value: 'max-age=600, stale-while-revalidate=3600' }])
   })
 })

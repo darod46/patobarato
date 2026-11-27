@@ -14,6 +14,12 @@ const nextConfig: NextConfig = {
     // (without `q`) is indexable.
     return [
       {
+        // Deal pages are dynamic (no ISR writes); Vercel's CDN keeps each one 10 minutes and may serve it
+        // stale for another hour while it refreshes. Browsers do not cache them.
+        source: '/oferta/:store/:slug',
+        headers: [{ key: 'Vercel-CDN-Cache-Control', value: 'max-age=600, stale-while-revalidate=3600' }],
+      },
+      {
         source: '/:path*',
         has: [{ type: 'query', key: 'q' }],
         headers: [{ key: 'X-Robots-Tag', value: 'noindex' }],

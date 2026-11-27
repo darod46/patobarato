@@ -10,13 +10,11 @@ import { breadcrumbJsonLd, jsonLdScript, productJsonLd, productMetadata, type Br
 import { getSupabase } from '../../../../lib/supabase'
 import { SITE_URL, parseProductSlug, productPath, tagPath } from '../../../../lib/urls'
 
-// Product pages render on demand and are regenerated at most every 10 minutes.
-export const revalidate = 3600
-
-// Nothing is prerendered at build time; an empty list still enables on-demand ISR caching.
-export function generateStaticParams() {
-  return []
-}
+// Rendered on every request, without ISR: there are thousands of deal pages and crawlers visit each one
+// about once, so ISR wrote far more than it served (≈2.100 writes for 180 reads in 12 h) and used up
+// Vercel's ISR write quota. The CDN still caches each response for a few minutes (Vercel-CDN-Cache-Control
+// in next.config.ts), which costs no ISR writes.
+export const dynamic = 'force-dynamic'
 
 type Props = { params: Promise<{ store: string; slug: string }> }
 
