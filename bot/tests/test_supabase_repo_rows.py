@@ -691,3 +691,33 @@ async def test_upsert_coupon_writes_structured_values_only_when_present():
     row = next(a[0] for n, a, _ in client.log if n == "update")
     assert (row["discount_amount"], row["min_purchase"]) == ("7", "40")
     assert "discount_pct" not in row
+
+
+async def test_list_user_alerts_maps_nested_rows():
+    client = _Client([{
+        "id": 4, "product_id": 9, "baseline_price": 49.99,
+        "products": {"store": "amazon", "asin": "B0X", "title": "Largo", "short_title": "Corto", "slug": "corto",
+                     "product_prices": {"price": 45.5}},
+    }])
+    [item] = await SupabaseRepository(client).list_user_alerts(7)
+    assert (item.alert_id, item.product_id, item.title, item.slug) == (4, 9, "Corto", "corto")
+    assert (item.price, item.baseline_price) == (Decimal("45.5"), Decimal("49.99"))
+    assert ("telegram_id", 7) in [a for a, _ in _calls(client, "eq")]
+
+
+async def test_products_to_check_skips_recent_and_puts_never_checked_first():
+    recent = (NOW - timedelta(hours=1)).isoformat()
+    old = (NOW - timedelta(hours=20)).isoformat()
+    rows = [
+        {"product_id": 1, "products": {"store": "amazon", "asin": "A", "country": "ES", "url": "u", "title": "a",
+                                       "short_title": None, "slug": "a", "product_prices": [{"checked_at": old, "affiliate_url": "x"}]}},
+        {"product_id": 2, "products": {"store": "amazon", "asin": "B", "country": "ES", "url": "u", "title": "b",
+                                       "short_title": None, "slug": "b", "product_prices": None}},
+        {"product_id": 3, "products": {"store": "amazon", "asin": "C", "country": "ES", "url": "u", "title": "c",
+                                       "short_title": None, "slug": "c", "product_prices": {"checked_at": recent}}},
+        {"product_id": 1, "products": {"store": "amazon", "asin": "A", "country": "ES", "url": "u", "title": "a",
+                                       "short_title": None, "slug": "a", "product_prices": {"checked_at": old, "affiliate_url": "x"}}},
+    ]
+    due = await SupabaseRepository(_Client(rows)).products_to_check(NOW - timedelta(hours=12), 10)
+    assert [p.product_id for p in due] == [2, 1]
+    assert due[1].affiliate_url == "x"

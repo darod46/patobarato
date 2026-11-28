@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     # Without a key the runner is not registered.
     deepseek_api_key: str | None = None
     deepseek_model: str = "deepseek-flash"
+    # @patobaratobot (price-drop alerts). Without a token the alerts bot does not start.
+    alerts_bot_token: str | None = None
     # JSON in env: {"pccomponentes": 1234}. A null/missing mid still publishes plain links.
     awin_merchants: dict[str, int | None] = Field(
         default_factory=lambda: {"pccomponentes": None, "mediamarkt": None, "elcorteingles": None}

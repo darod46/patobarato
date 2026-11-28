@@ -8,6 +8,7 @@ from supabase import Client
 
 from patobarato.models import (
     AdminJob,
+    AlertToNotify,
     ApiSource,
     CatalogRow,
     CouponUpsert,
@@ -20,10 +21,12 @@ from patobarato.models import (
     OfferStatus,
     ParsedOffer,
     PostData,
+    ProductToCheck,
     ProductToEnrich,
     PublicationChannel,
     PublicationStatus,
     Source,
+    TrackedProduct,
 )
 from patobarato.storage.repository import clean_hashtags
 
@@ -812,6 +815,156 @@ class SupabaseRepository:
 
         await asyncio.to_thread(run)
 
+    # --- Price alerts (@patobaratobot) ---
+
+    async def upsert_alert_user(
+        self, telegram_id: int, chat_id: int, username: str | None, first_name: str | None
+    ) -> None:
+        row = {
+            "telegram_id": telegram_id,
+            "chat_id": chat_id,
+            "username": username,
+            "first_name": first_name,
+            "blocked_at": None,
+        }
+
+        def run():
+            self._client.table("alert_users").upsert(row, on_conflict="telegram_id").execute()
+
+        await asyncio.to_thread(run)
+
+    async def list_user_alerts(self, telegram_id: int) -> list[TrackedProduct]:
+        def run():
+            return (
+                self._client.table("price_alerts")
+                .select(
+                    "id, product_id, baseline_price, "
+                    "products(store, asin, title, short_title, slug, product_prices(price))"
+                )
+                .eq("telegram_id", telegram_id)
+                .order("created_at")
+                .execute()
+            )
+
+        response = await asyncio.to_thread(run)
+        items = []
+        for r in response.data or []:
+            product = r.get("products") or {}
+            prices = _one(product.get("product_prices"))
+            items.append(
+                TrackedProduct(
+                    alert_id=r["id"],
+                    product_id=r["product_id"],
+                    store=product.get("store") or "",
+                    asin=product.get("asin") or "",
+                    title=product.get("short_title") or product.get("title") or "",
+                    slug=product.get("slug"),
+                    price=_decimal_or_none(prices.get("price")),
+                    baseline_price=Decimal(str(r["baseline_price"])),
+                )
+            )
+        return items
+
+    async def add_price_alert(self, telegram_id: int, product_id: int, price: Decimal) -> bool:
+        row = {
+            "telegram_id": telegram_id,
+            "product_id": product_id,
+            "initial_price": _money(price),
+            "baseline_price": _money(price),
+        }
+
+        def run():
+            try:
+                self._client.table("price_alerts").insert(row).execute()
+                return True
+            except APIError as e:
+                if getattr(e, "code", None) == "23505":  # already following it
+                    return False
+                raise
+
+        return await asyncio.to_thread(run)
+
+    async def delete_price_alert(self, telegram_id: int, alert_id: int) -> None:
+        def run():
+            self._client.table("price_alerts").delete().eq("id", alert_id).eq(
+                "telegram_id", telegram_id
+            ).execute()
+
+        await asyncio.to_thread(run)
+
+    async def products_to_check(self, checked_before: datetime, limit: int) -> list[ProductToCheck]:
+        def run():
+            return (
+                self._client.table("price_alerts")
+                .select(
+                    "product_id, products(store, asin, country, url, title, short_title, slug, "
+                    "product_prices(checked_at, affiliate_url))"
+                )
+                .execute()
+            )
+
+        response = await asyncio.to_thread(run)
+        due: dict[int, tuple[str, ProductToCheck]] = {}
+        for r in response.data or []:
+            product = r.get("products") or {}
+            prices = _one(product.get("product_prices"))
+            checked = prices.get("checked_at") or ""
+            if checked and datetime.fromisoformat(checked) >= checked_before:
+                continue
+            due[r["product_id"]] = (
+                checked,
+                ProductToCheck(
+                    product_id=r["product_id"],
+                    store=product.get("store") or "",
+                    asin=product.get("asin") or "",
+                    country=product.get("country") or "ES",
+                    url=product.get("url") or "",
+                    title=product.get("short_title") or product.get("title") or "",
+                    slug=product.get("slug"),
+                    affiliate_url=prices.get("affiliate_url"),
+                ),
+            )
+        ordered = sorted(due.values(), key=lambda d: d[0])  # never checked ("") first
+        return [p for _, p in ordered[:limit]]
+
+    async def alerts_for_product(self, product_id: int) -> list[AlertToNotify]:
+        def run():
+            return (
+                self._client.table("price_alerts")
+                .select("id, telegram_id, baseline_price, alert_users!inner(chat_id, blocked_at)")
+                .eq("product_id", product_id)
+                .is_("alert_users.blocked_at", "null")
+                .order("id")
+                .execute()
+            )
+
+        response = await asyncio.to_thread(run)
+        return [
+            AlertToNotify(
+                alert_id=r["id"],
+                telegram_id=r["telegram_id"],
+                chat_id=_one(r.get("alert_users"))["chat_id"],
+                baseline_price=Decimal(str(r["baseline_price"])),
+            )
+            for r in response.data or []
+        ]
+
+    async def set_alert_notified(self, alert_id: int, price: Decimal, at: datetime) -> None:
+        def run():
+            self._client.table("price_alerts").update(
+                {"baseline_price": _money(price), "last_notified_at": at.isoformat()}
+            ).eq("id", alert_id).execute()
+
+        await asyncio.to_thread(run)
+
+    async def mark_alert_user_blocked(self, telegram_id: int, at: datetime) -> None:
+        def run():
+            self._client.table("alert_users").update({"blocked_at": at.isoformat()}).eq(
+                "telegram_id", telegram_id
+            ).execute()
+
+        await asyncio.to_thread(run)
+
     async def upsert_channel_stats(self, members: int, checked_at: datetime) -> None:
         def run():
             self._client.table("channel_stats").upsert(
@@ -1037,3 +1190,14 @@ class SupabaseRepository:
             feed_updated_at=_parse_timestamp(r["feed_updated_at"]) if r.get("feed_updated_at") else None,
             updated_at=_parse_timestamp(r["updated_at"]) if r.get("updated_at") else None,
         )
+
+
+def _one(value: object) -> dict:
+    """An embedded one-to-one row: PostgREST may return it as an object, a list or null."""
+    if isinstance(value, list):
+        return value[0] if value else {}
+    return value if isinstance(value, dict) else {}
+
+
+def _decimal_or_none(value: object) -> Decimal | None:
+    return None if value is None else Decimal(str(value))

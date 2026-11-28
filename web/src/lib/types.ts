@@ -31,6 +31,8 @@ export type Deal = {
   description?: string | null
   /** Product category (one of the web's category keys or `otros`); null until assigned. */
   category?: string | null
+  /** Only followed by a price alert, never published as a deal (no publication): not indexed. */
+  tracked?: boolean
 }
 
 export type HashtagCount = { tag: string; count: number }

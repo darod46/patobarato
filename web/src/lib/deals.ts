@@ -10,7 +10,9 @@ export const PAGE_SIZE = 24
 export const ENDED_INDEXABLE_DAYS = 30
 
 /** Active deals, and ended ones for `ENDED_INDEXABLE_DAYS` after they ended, may be indexed. */
-export function isDealIndexable(deal: Pick<Deal, 'status' | 'endedAt'>, now: Date): boolean {
+export function isDealIndexable(deal: Pick<Deal, 'status' | 'endedAt' | 'tracked'>, now: Date): boolean {
+  // Pages of products only followed by price alerts are not deals: reachable, not indexed.
+  if (deal.tracked) return false
   if (deal.status === 'active') return true
   if (!deal.endedAt) return false
   return now.getTime() - new Date(deal.endedAt).getTime() <= ENDED_INDEXABLE_DAYS * 86400000
@@ -25,7 +27,7 @@ export function parseDealSort(raw: string | null | undefined): DealSort {
 }
 
 type DealRow = {
-  publication_id: number | string
+  publication_id: number | string | null
   published_at: string
   price: number | string
   previous_price: number | string | null
@@ -80,6 +82,7 @@ function toDeal(row: DealRow): Deal {
     description: row.description?.trim() || null,
     category: row.category ?? null,
     ...(hide && { priceHidden: true }),
+    ...(row.publication_id === null && { tracked: true }),
   }
 }
 
@@ -150,6 +153,20 @@ export async function fetchLatestDeal(client: SupabaseClient): Promise<Deal | nu
   return rows.length ? toDeal(rows[0]) : null
 }
 
+/** A product followed by price alerts (@patobaratobot) and never published: its page, outside every listing. */
+async function fetchTrackedProduct(client: SupabaseClient, store: string, id: string): Promise<Deal | null> {
+  const { data, error } = await client
+    .from('web_tracked_pages')
+    .select('*')
+    .eq('store', store)
+    .eq('asin', store === 'amazon' ? id.toUpperCase() : id)
+    .limit(1)
+  // Optional: without the view (or on an error) the page is simply not found.
+  if (error) return null
+  const rows = (data ?? []) as DealRow[]
+  return rows.length ? toDeal(rows[0]) : null
+}
+
 export async function fetchDealByProduct(
   client: SupabaseClient,
   store: string,
@@ -165,7 +182,8 @@ export async function fetchDealByProduct(
     .limit(1)
   if (error) throw new Error(error.message)
   const rows = (data ?? []) as DealRow[]
-  return rows.length ? toDeal(rows[0]) : null
+  if (rows.length) return toDeal(rows[0])
+  return fetchTrackedProduct(client, store, id)
 }
 
 async function fetchOthers(client: SupabaseClient, deal: Deal, limit: number, tag?: string) {

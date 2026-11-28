@@ -16,6 +16,9 @@ from supabase import create_client
 from telethon import TelegramClient
 
 from patobarato.admin.jobs import JobRunner
+from patobarato.alerts.checker import PriceAlertChecker, Sender
+from patobarato.alerts.service import AlertService
+from patobarato.alerts.telegram_bot import make_sender, register_handlers
 from patobarato.admin.posts import PostService
 from patobarato.admin.revalidate import RevalidateError, WebRevalidator
 from patobarato.admin.users import UserAdmin
@@ -48,6 +51,7 @@ from patobarato.stores.registry import StoreRegistry, build_registry
 logger = logging.getLogger("patobarato.main")
 
 BOT_SESSION_PATH = "data/bot.session"
+ALERTS_SESSION_PATH = "data/alerts.session"
 LOGIN_FIRST_MESSAGE = "Ejecuta primero: docker compose run --rm bot login"
 BOT_START_FAILED_MESSAGE = "No se pudo iniciar el bot (revisa TELEGRAM_BOT_TOKEN)"
 EXIT_CONFIG_ERROR = 2
@@ -131,6 +135,7 @@ def build_runners(
     clock: Callable[[], datetime],
     http: httpx.AsyncClient | None = None,
     bot: TelegramClient | None = None,
+    alerts_send: Sender | None = None,
 ) -> list[ApiSourceRunner]:
     """API source runners available with the configured credentials."""
     runners: list[ApiSourceRunner] = []
@@ -158,6 +163,8 @@ def build_runners(
             model=settings.deepseek_model,
         )
         runners.append(ProductEnricher(deepseek, repo, clock))
+    if alerts_send is not None:
+        runners.append(PriceAlertChecker(repo, registry, alerts_send, settings.site_url, clock))
     if bot is not None:
         runners.append(ChannelStatsSource(bot, repo, settings.target_channel, clock))
         download_http = http or httpx.AsyncClient(timeout=settings.http_timeout_seconds)
@@ -190,6 +197,17 @@ async def run(settings: Settings) -> int:
         await reader.disconnect()
         return 1
 
+    alerts: TelegramClient | None = None
+    if settings.alerts_bot_token:
+        alerts = _client(ALERTS_SESSION_PATH, settings)
+        try:
+            await alerts.start(bot_token=settings.alerts_bot_token)
+        except Exception as e:
+            # The alerts bot is optional: the rest keeps running without it.
+            logger.error("Alerts bot login failed: %s: %s", type(e).__name__, e)
+            await alerts.disconnect()
+            alerts = None
+
     async with (
         httpx.AsyncClient(timeout=settings.http_timeout_seconds) as http,
         httpx.AsyncClient(timeout=settings.http_timeout_seconds, http2=True) as amazon_http,
@@ -208,8 +226,19 @@ async def run(settings: Settings) -> int:
             registry=registry,
             image_downloader=lambda url: download_photo(http, url),
         )
+        if alerts is not None:
+            register_handlers(alerts, AlertService(repo, registry, resolver, settings.site_url))
         scheduler = ApiScheduler(
-            repo, build_runners(registry, repo, settings, utcnow, http, bot=bot)
+            repo,
+            build_runners(
+                registry,
+                repo,
+                settings,
+                utcnow,
+                http,
+                bot=bot,
+                alerts_send=make_sender(alerts) if alerts is not None else None,
+            ),
         )
         runner = JobRunner(
             repo,
@@ -237,7 +266,7 @@ async def run(settings: Settings) -> int:
         await listener.start()
         logger.info("PatoBarato en marcha; publicando en %s", settings.target_channel)
         try:
-            return await _supervise(
+            tasks = dict(
                 pipeline=pipeline.run(),
                 scheduler=scheduler.run(),
                 refresh=listener.run_refresh_loop(),
@@ -245,9 +274,15 @@ async def run(settings: Settings) -> int:
                 reader=reader.run_until_disconnected(),
                 bot=bot.run_until_disconnected(),
             )
+            if alerts is not None:
+                tasks["alerts_bot"] = alerts.run_until_disconnected()
+                logger.info("Bot de alertas de precio en marcha")
+            return await _supervise(**tasks)
         finally:
             await reader.disconnect()
             await bot.disconnect()
+            if alerts is not None:
+                await alerts.disconnect()
 
 
 async def backfill(settings: Settings) -> int:

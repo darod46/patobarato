@@ -149,13 +149,18 @@ export function ProductView({ deal, related, now, guides = [] }: Props) {
             <p className="price text-sm font-semibold text-success">{`Ahorras ${formatPrice(saving)}`}</p>
           )}
           {deal.coupon && <CouponCode coupon={deal.coupon} />}
-          <p className="text-sm text-muted">
-            {ended
-              ? `Publicado ${timeAgo(deal.publishedAt, clock)}`
-              : deal.priceHidden
+          {/* A tracked product (price alerts) was never published: no publication date. */}
+          {deal.tracked ? (
+            !deal.priceHidden && <p className="text-sm text-muted">El precio puede cambiar</p>
+          ) : (
+            <p className="text-sm text-muted">
+              {ended
                 ? `Publicado ${timeAgo(deal.publishedAt, clock)}`
-                : `Publicado ${timeAgo(deal.publishedAt, clock)} · El precio puede cambiar`}
-          </p>
+                : deal.priceHidden
+                  ? `Publicado ${timeAgo(deal.publishedAt, clock)}`
+                  : `Publicado ${timeAgo(deal.publishedAt, clock)} · El precio puede cambiar`}
+            </p>
+          )}
 
           {ended ? (
             <div className="w-full max-w-sm">

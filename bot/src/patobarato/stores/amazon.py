@@ -21,6 +21,7 @@ from patobarato.sources.amazon_page import (
     extract_image_url,
     _page_title,
     extract_price,
+    extract_title,
     resize_image_url,
 )
 from patobarato.stores.base import BaseStore
@@ -67,7 +68,14 @@ class AmazonStore(BaseStore):
     def last_failure(self) -> str | None:
         return self._prices.last_failure if self._prices else self._no_http_failure
 
-    async def fetch_price(self, product_id: str, canonical_url: str) -> PriceQuote | None:
+    async def fetch_listing(self, product_id: str, canonical_url: str) -> PriceQuote | None:
+        """Like fetch_price, also with the product's title (for products added by URL alone)."""
+        return await self.fetch_price(product_id, canonical_url, with_title=True)
+
+    async def fetch_price(
+        self, product_id: str, canonical_url: str, with_title: bool = False
+    ) -> PriceQuote | None:
+        # The title is left out by default: the pipeline compares a quote's title with the message's.
         if self._prices is None:
             self._no_http_failure = "no HTTP client"
             return None
@@ -86,6 +94,8 @@ class AmazonStore(BaseStore):
             image = extract_image_url(page)
             if image is not None:
                 quote = replace(quote, image_url=resize_image_url(image))
+            if with_title and (title := extract_title(page)) is not None:
+                quote = replace(quote, title=title)
             self._prices.succeed(product_id)
             return quote
         except Exception as error:

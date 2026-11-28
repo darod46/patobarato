@@ -6,6 +6,7 @@ from typing import Protocol
 
 from patobarato.models import (
     AdminJob,
+    AlertToNotify,
     ApiSource,
     CatalogRow,
     CouponUpsert,
@@ -18,10 +19,12 @@ from patobarato.models import (
     OfferStatus,
     ParsedOffer,
     PostData,
+    ProductToCheck,
     ProductToEnrich,
     PublicationChannel,
     PublicationStatus,
     Source,
+    TrackedProduct,
 )
 from patobarato.publishing.format import normalize_hashtag
 from patobarato.publishing.web_links import product_slug
@@ -95,6 +98,38 @@ class Repository(Protocol):
     async def delete_publication(self, publication_id: int) -> None:
         """Removes a publication that never reached the channel."""
         ...
+
+    # --- Price alerts (@patobaratobot) ---
+
+    async def upsert_alert_user(
+        self, telegram_id: int, chat_id: int, username: str | None, first_name: str | None
+    ) -> None:
+        """Creates or refreshes the user (and clears a previous block: they wrote to the bot again)."""
+        ...
+
+    async def list_user_alerts(self, telegram_id: int) -> list[TrackedProduct]:
+        """The user's tracked products, oldest first."""
+        ...
+
+    async def add_price_alert(self, telegram_id: int, product_id: int, price: Decimal) -> bool:
+        """Starts tracking; False when the user already follows the product."""
+        ...
+
+    async def delete_price_alert(self, telegram_id: int, alert_id: int) -> None: ...
+
+    async def products_to_check(self, checked_before: datetime, limit: int) -> list[ProductToCheck]:
+        """Tracked products never checked or last checked before ``checked_before``, oldest first."""
+        ...
+
+    async def alerts_for_product(self, product_id: int) -> list[AlertToNotify]:
+        """Users following the product who have not blocked the bot."""
+        ...
+
+    async def set_alert_notified(self, alert_id: int, price: Decimal, at: datetime) -> None:
+        """The new baseline after a notice."""
+        ...
+
+    async def mark_alert_user_blocked(self, telegram_id: int, at: datetime) -> None: ...
 
     async def products_to_enrich(self, limit: int) -> list[ProductToEnrich]:
         """Newest products with a non-draft publication, no description, not edited by hand and < 3 attempts."""
@@ -297,6 +332,8 @@ class InMemoryRepository(Repository):
         self.product_texts: dict[int, dict] = {}
         self.enrich_attempts: dict[int, int] = {}
         self.manual_texts: set[int] = set()
+        self.alert_users: dict[int, dict] = {}
+        self.price_alerts: dict[int, dict] = {}
         self._offers: dict[int, dict] = {}
         self._offer_keys: dict[tuple[int, int, int], int] = {}
         self._publications: list[dict] = []
@@ -542,6 +579,109 @@ class InMemoryRepository(Repository):
 
     async def delete_publication(self, publication_id: int) -> None:
         self._publications = [p for p in self._publications if p["id"] != publication_id]
+
+    async def upsert_alert_user(
+        self, telegram_id: int, chat_id: int, username: str | None, first_name: str | None
+    ) -> None:
+        self.alert_users[telegram_id] = {
+            "chat_id": chat_id,
+            "username": username,
+            "first_name": first_name,
+            "blocked_at": None,
+        }
+
+    def _alert_product(self, product_id: int) -> tuple[str, str, str]:
+        store, country, asin = next(k for k, v in self._products.items() if v == product_id)
+        return store, country, asin
+
+    async def list_user_alerts(self, telegram_id: int) -> list[TrackedProduct]:
+        items = []
+        for alert_id, a in sorted(self.price_alerts.items()):
+            if a["telegram_id"] != telegram_id:
+                continue
+            store, _country, asin = self._alert_product(a["product_id"])
+            price = (self.prices.get(a["product_id"]) or {}).get("price")
+            items.append(
+                TrackedProduct(
+                    alert_id=alert_id,
+                    product_id=a["product_id"],
+                    store=store,
+                    asin=asin,
+                    title=self.product_titles.get(a["product_id"], ""),
+                    slug=self.product_slugs.get(a["product_id"]),
+                    price=price,
+                    baseline_price=a["baseline_price"],
+                )
+            )
+        return items
+
+    async def add_price_alert(self, telegram_id: int, product_id: int, price: Decimal) -> bool:
+        if any(
+            a["telegram_id"] == telegram_id and a["product_id"] == product_id
+            for a in self.price_alerts.values()
+        ):
+            return False
+        alert_id = len(self.price_alerts) + 1
+        while alert_id in self.price_alerts:
+            alert_id += 1
+        self.price_alerts[alert_id] = {
+            "telegram_id": telegram_id,
+            "product_id": product_id,
+            "initial_price": price,
+            "baseline_price": price,
+            "last_notified_at": None,
+        }
+        return True
+
+    async def delete_price_alert(self, telegram_id: int, alert_id: int) -> None:
+        alert = self.price_alerts.get(alert_id)
+        if alert is not None and alert["telegram_id"] == telegram_id:
+            del self.price_alerts[alert_id]
+
+    async def products_to_check(self, checked_before: datetime, limit: int) -> list[ProductToCheck]:
+        due = []
+        for product_id in sorted({a["product_id"] for a in self.price_alerts.values()}):
+            checked = (self.prices.get(product_id) or {}).get("checked_at")
+            if checked is not None and checked >= checked_before:
+                continue
+            store, country, asin = self._alert_product(product_id)
+            due.append(
+                (
+                    checked or datetime.min.replace(tzinfo=UTC),
+                    ProductToCheck(
+                        product_id=product_id,
+                        store=store,
+                        asin=asin,
+                        country=country,
+                        url=self.product_urls.get(product_id, ""),
+                        title=self.product_titles.get(product_id, ""),
+                        slug=self.product_slugs.get(product_id),
+                        affiliate_url=(self.prices.get(product_id) or {}).get("affiliate_url"),
+                    ),
+                )
+            )
+        due.sort(key=lambda d: d[0])
+        return [p for _, p in due[:limit]]
+
+    async def alerts_for_product(self, product_id: int) -> list[AlertToNotify]:
+        return [
+            AlertToNotify(
+                alert_id=alert_id,
+                telegram_id=a["telegram_id"],
+                chat_id=self.alert_users[a["telegram_id"]]["chat_id"],
+                baseline_price=a["baseline_price"],
+            )
+            for alert_id, a in sorted(self.price_alerts.items())
+            if a["product_id"] == product_id
+            and self.alert_users.get(a["telegram_id"], {}).get("blocked_at") is None
+        ]
+
+    async def set_alert_notified(self, alert_id: int, price: Decimal, at: datetime) -> None:
+        self.price_alerts[alert_id].update(baseline_price=price, last_notified_at=at)
+
+    async def mark_alert_user_blocked(self, telegram_id: int, at: datetime) -> None:
+        if telegram_id in self.alert_users:
+            self.alert_users[telegram_id]["blocked_at"] = at
 
     async def products_to_enrich(self, limit: int) -> list[ProductToEnrich]:
         shown = {p["product_id"] for p in self._publications if p["status"] != "draft"}

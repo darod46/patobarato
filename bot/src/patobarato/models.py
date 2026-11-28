@@ -240,3 +240,43 @@ class CatalogRow:
     affiliate_url: str
     feed_updated_at: datetime | None
     updated_at: datetime | None = None
+
+
+@dataclass(frozen=True)
+class TrackedProduct:
+    """A product in a user's price-alert list (@patobaratobot)."""
+
+    alert_id: int
+    product_id: int
+    store: str
+    asin: str
+    title: str
+    slug: str | None
+    # Last price read; None until the first check.
+    price: Decimal | None
+    baseline_price: Decimal
+
+
+@dataclass(frozen=True)
+class ProductToCheck:
+    """A tracked product whose price is due for a new reading."""
+
+    product_id: int
+    store: str
+    asin: str
+    country: str
+    url: str
+    title: str
+    slug: str | None
+    # Kept on every price update (product_prices rewrites the column).
+    affiliate_url: str | None
+
+
+@dataclass(frozen=True)
+class AlertToNotify:
+    """A user following a product, with the price a drop is measured against."""
+
+    alert_id: int
+    telegram_id: int
+    chat_id: int
+    baseline_price: Decimal

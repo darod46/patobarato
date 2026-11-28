@@ -214,6 +214,16 @@ def extract_price(page: str) -> PriceQuote | None:
 
 
 _TITLE_RE = re.compile(r"<title[^>]*>(.*?)</title>", re.IGNORECASE | re.DOTALL)
+_PRODUCT_TITLE_RE = re.compile(r'<span[^>]*id="productTitle"[^>]*>(.*?)</span>', re.IGNORECASE | re.DOTALL)
+
+
+def extract_title(page: str) -> str | None:
+    """The product's name from the page (``#productTitle``)."""
+    match = _PRODUCT_TITLE_RE.search(page)
+    if not match:
+        return None
+    title = " ".join(html.unescape(re.sub(r"<[^>]+>", "", match.group(1))).split())
+    return title or None
 
 
 def _page_title(page: str) -> str:
